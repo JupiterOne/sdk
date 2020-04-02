@@ -4,7 +4,7 @@
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "git@github.com:JupiterOne/jupiterone-client-nodejs.git",
+  "repository": "git@github.com:JupiterOne/integration-sdk.git",
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "files": [
