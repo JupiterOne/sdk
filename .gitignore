@@ -1,0 +1,11 @@
+dist/
+node_modules/
+coverage/
+.vscode/
+.env
+
+.DS_Store
+yarn-error.log
+.npmrc
+
+.eslintcache
