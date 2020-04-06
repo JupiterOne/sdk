@@ -467,6 +467,22 @@ An example summary of the phases and steps will like this:
 Options for pretty printing this data in a more concise format may come in the
 future.
 
+##### Phase and step status codes
+
+For steps:
+`success` - the step has successfully completed without any errors occurring
+`failure` - an error has occurred and it is possible that we have a partial dataset
+`partial_success_from_dependency_failure` - the step has successfully completed but
+a dependent step was found in the `failure` or `partial_success_from_dependency_failure`,
+meaning it is possible that a failure has happened.
+
+For phases:
+`success` - all of the steps within the phase has successfully completed
+`failure` - all of the steps within the phase have failed to complete
+`partial_success` - all of the steps have completed but one or more
+steps have returned a `partial_success_from_dependency_failure`
+`partial_failure` - one or more steps have failed
+
 #### Letting the synchronizer know about partial datasets
 
 The framework's state machine will utilize the `types` and `dependsOn` fields
