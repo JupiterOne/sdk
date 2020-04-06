@@ -208,19 +208,57 @@ Finally, the phases in `integrationStepPhases` are then executed in sequence.
 
 ### What's in the `IntegrationExecutionContext` and `IntegrationExecutionStepContext`?
 
+#### `IntegrationExecutionContext`
+
 The `IntegrationExecutionContext` contains some basic utilities to provide some
 information about the entity data.
 
-It includes a `logger` that can be used to display additional information
-throughout an integration run. An `instance` field containing the integration
+##### `instance`
+
+An `instance` field containing the integration
 instance, which contains configuration field values stored under a `config`
-field.
+field. When only performing local data collection, this is mocked out.
+
+##### `logger`
+
+It includes a `logger` that can be used by the integration developer
+for debugging their integration. This follows a similar api to other Node.js
+loggers such as [bunyan](https://github.com/trentm/node-bunyan) or
+[pino](https://github.com/pinojs/pino), providing a standard set of log levels
+(`debug`, `trace`, `info`, `warn`, and `error`)
+and also allowing for child loggers to be created via the `child` function.
+
+Messages logged via the `logger` are not displayed to customers via the
+integration job event log.
+
+##### `jobLog`
+
+A `jobLog` utility will also be provided for reporting events to the JupiterOne
+integration events job log. This can be used for displaying information about
+an integration's progress.
+
+A limited interface be available for developers using the api display
+special messages to consumers. This interface may expand in the future
+as the need for different message types arise.
+
+###### `forbiddenResource`
+
+The `forbiddenResource` function will be exposed to allow developers to
+display warnings that the integration's access to a given resource is
+not allowed. This message helps integration consumers understand
+that the configuration they have provided has insufficient permissions
+and if they want to resolve this, changes need to be made.
+
+#### `IntegrationExecutionStepContext`
 
 The `IntegrationExecutionStepContext` contains the same data stored in the
 `IntegrationExecutionContext` but also contains a `jobState` object that
-provides utilities for collecting and validating graph data. More details about
-the `jobState` is detailed in the [Data collection](# Data collection) section
-below.
+provides utilities for collecting and validating graph data.
+
+##### `jobState`
+
+More details about the `jobState` is detailed in
+the [Data collection](# Data collection) section below.
 
 ### Additional utilities
 
@@ -244,12 +282,17 @@ types will come later.
 
 ### Auto-magic behind the framework
 
-#### Logging
+#### Event reporting
 
-When running an integration via the CLI tool will automatically log out
-information about the state changes that the integration. This allows for
-developers to keep track of what phase and step an integration is performing
-without the need to explicily add logging information themselves.
+When running an integration, debug information will automatically be logged
+to `stdout` about the `phase` and `step` being run.
+This allows for developers to keep track of how the integration is progressing
+without the need to explicitly add logging information themselves.
+
+When the integration is run with context about an integration instance
+(via the `run` command exposed by the [The CLI](# The CLI)), the transitions
+between each `phase` and `step` are also published to
+JupiterOne via the `jobLog` utility.
 
 #### Data collection
 
