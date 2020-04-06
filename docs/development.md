@@ -44,7 +44,7 @@ export const invocationConfig = config;
 
 Here is an example of an integration configuration:
 
-```ts
+```typescript
 export const invocationConfig: IntegrationInvocationConfig = {
   instanceConfigFields: {
     clientId: {
@@ -222,18 +222,21 @@ loggers such as [bunyan](https://github.com/trentm/node-bunyan) or
 (`debug`, `trace`, `info`, `warn`, and `error`)
 and also allowing for child loggers to be created via the `child` function.
 
-Messages logged via the `logger` are not displayed to customers via the
-integration job event log.
+Most information logged via the `logger` will _not_ be displayed to customers via the
+integration job event log, but there are some special messages that need
+to be displayed to customers to allow them to know if there are
+issues preventing integrations from collecting data.
 
-##### `jobLog`
+For these cases, we will provide specialized functions on the
+`logger` to assist with displaying those kinds of messages.
 
-A `jobLog` utility will also be provided for reporting events to the JupiterOne
-integration events job log. This can be used for displaying information about
-an integration's progress.
+A `logger.auth` function for displaying authorization related warnings
+or errors encountered while data is being collected
+in the steps.
 
-A limited interface be available for developers using the api display
-special messages to consumers. This interface may expand in the future
-as the need for different message types arise.
+Additionally, errors logged via `logger.error` will be displayed by customers as well.
+This is helpful for providing customers with some context about provider api issues
+that prevent data from being collected.
 
 ###### `forbiddenResource`
 
@@ -262,7 +265,7 @@ property, but in the future will allow provide more options for collecting.
 
 Example usage:
 
-```ts
+```typescript
 await iterateEntities({_type: 'my_integration_user'}, async (userEntity) => {
   await doWorkWithEntity(userEntity);
 });
@@ -295,15 +298,16 @@ types will come later.
 
 #### Event reporting
 
-When running an integration, debug information will automatically be logged
-to `stdout` about the `step` being run.
+When running an integration, information logged via the `logger` will
+automatically be published `stdout`. For convenience, the integration framework
+will automatically log out transitions between steps.
 This allows for developers to keep track of how the integration is progressing
 without the need to explicitly add logging information themselves.
 
 When the integration is run with context about an integration instance
 (via the `run` command exposed by the [The CLI](# The CLI)), the transitions
-between each `step` are also published to
-JupiterOne via the `jobLog` utility.
+between each `step` will be published to the JupiterOne integration events log.
+`auth` and `error` logs will also be published there.
 
 #### Data collection
 
@@ -472,7 +476,7 @@ metadata will be written to disk in the `.j1-integration/summary.json` file.
 
 Here is an example of what the summary file would look like.
 
-```
+```json
 {
   "integrationStepsResult": [
     {
