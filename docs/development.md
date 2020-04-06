@@ -531,6 +531,15 @@ The `metadata` field will be sent to JupiterOne upon performing the
 To assist developers working with the integration framework, a `j1-integration`
 CLI tool will also be exposed by this project.
 
+### Authentication
+
+For commands that require interaction with JupiterOne's API, the
+CLI will provide ways or inputing credentials. To support that,
+all commands that interact with an API will accept an `--api-key` option.
+
+For convenience when developing locally, we will also look for a
+`JUPITERONE_API_KEY` environment variable for an API key to use.
+
 ### Supported commands
 
 Initially, the CLI will support a limited interface consisting of only three
@@ -601,7 +610,7 @@ supply an instance id. The CLI will leverage the values stored on the
 integration instance instead of locally defined environment variables.
 
 By default, when an `--instance` is specified, a developer will be prompted to
-input some credentials.
+input some credentials or provide an `--api-key` option.
 
 ex: `j1-integration collect --instance <integration instance id>`
 
