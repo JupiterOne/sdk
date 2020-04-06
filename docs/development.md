@@ -90,12 +90,12 @@ export const invocationConfig: IntegrationInvocationConfig = {
 
   integrationStepPhases: [
     {
-      id: 'account-phase',
+      id: 'phase-account',
       name: 'Collect accounts',
       types: ['my_integration_account'],
       steps: [
         {
-          id: 'fetch-accounts',
+          id: 'step-fetch-accounts',
           name: 'Fetch Accounts',
           async executionHandler (
             executionContext: IntegrationStepExecutionContext,
@@ -106,11 +106,11 @@ export const invocationConfig: IntegrationInvocationConfig = {
       ],
     },
     {
-      id: 'users-and-groups',
+      id: 'phase-users-and-groups',
       name: 'Collect users and groups',
       steps: [
         {
-          id: 'fetch-users',
+          id: 'step-fetch-users',
           name: 'Fetch Users',
           types: ['my_integration_user'],
           async executionHandler (
@@ -120,7 +120,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
           },
         },
         {
-          id: 'fetch-groups',
+          id: 'step-fetch-groups',
           name: 'Fetch Groups',
           types: ['my_integration_group'],
           executionHandler (
@@ -132,14 +132,14 @@ export const invocationConfig: IntegrationInvocationConfig = {
       ],
     },
     {
-      id: 'build-relationships',
+      id: 'phase-build-relationships',
       name: 'Collect accounts',
       steps: [
         {
-          id: 'build-user-to-group-relationships',
+          id: 'step-build-user-to-group-relationships',
           name: 'Fetch Accounts',
           types: ['my_integration_user_to_group_relationship'],
-          dependsOn: ['fetch-users', 'fetch-groups'], // alternatively ['users-and-groups-phase']
+          dependsOn: ['step-fetch-users', 'step-fetch-groups'], // alternatively ['phase-users-and-groups']
           async executionHandler (
             executionContext: IntegrationStepExecutionContext,
           ) {
@@ -292,23 +292,23 @@ integration will bucket data collected from each phase and step.
         my_integration_user_to_group_relationship/
           867a2a95-8952-4788-b7c4-31c45fcc5e82.json
   /graph
-    /phase-00-accounts
-      /step-00-fetch-accounts
+    /00-phase-accounts
+      /00-step-fetch-accounts
         /entities/
           11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
         /relationships
-    /phase-01-users-and-groups
-      /step-00-fetch-users
+    /01-phase-users-and-groups
+      /00-step-fetch-users
         /entities
           9cb7bee4-c037-4041-83b7-d532488f26a3.json
           96992893-898d-4cda-8129-4695b0323642.json
         /relationships
-      /step-01-fetch-groups
+      /01-step-fetch-groups
         /entities
           a76695f8-7d84-411e-a4e1-c012de041034.json
           f983f07d-f7d8-4f8e-87da-743940a5f48d.json
         /relationships
-    /phase-02-build-relationships
+    /02-phase-build-relationships
         /relationships
           8fcc6865-817d-4952-ac53-8248b357b5d8.json
 ```
@@ -359,23 +359,23 @@ An example summary of the phases and steps will like this:
 ```json
 [
   {
-    "id": "account-phase",
+    "id": "phase-account",
     "name": "Collect accounts",
     "status": "success"
   },
   {
-    "id": "users-and-groups-phase",
+    "id": "phase-users-and-groups",
     "name": "Collect users and groups",
     "status": "partial_failure",
     "steps": [
       {
-        "id": "fetch-users",
+        "id": "step-fetch-users",
         "name": "Fetch Users",
         "types": ["my_integration_user"],
         "status": "failure"
       },
       {
-        "id": "fetch-groups",
+        "id": "step-fetch-groups",
         "name": "Fetch Groups",
         "types": ["my_integration_group"],
         "status": "success"
@@ -383,15 +383,15 @@ An example summary of the phases and steps will like this:
     ]
   },
   {
-    "id": "build-relationships-phase",
+    "id": "phase-build-relationship",
     "name": "Collect accounts",
     "status": "partial_success",
     "steps": [
       {
-        "id": "build-user-to-group-relationships",
+        "id": "step-build-user-to-group-relationships",
         "name": "Fetch Accounts",
         "types": ["my_integration_user_to_group_relationship"],
-        "dependsOn": ["fetch-users", "fetch-groups"],
+        "dependsOn": ["step-fetch-users", "step-fetch-groups"],
         "status": "partial_success_from_dependency_failure"
       }
     ]
@@ -422,23 +422,23 @@ Here is an example of what the summary file would look like.
 {
   "integrationStepPhasesResult": [
     {
-      id: "account-phase",
+      id: "phase-account",
       name: "Collect accounts",
       status: "success"
     },
     {
-      id: "users-and-groups-phase",
+      id: "phase-users-and-groups",
       name: "Collect users and groups",
       status: "partial_failure",
       steps: [
         {
-          id: "fetch-users",
+          id: "step-fetch-users",
           name: "Fetch Users",
           types: ["my_integration_user"],
           status: "failure",
         },
         {
-          id: "fetch-groups",
+          id: "step-fetch-groups",
           name: "Fetch Groups",
           types: ["my_integration_group"],
           status: "success",
@@ -446,15 +446,15 @@ Here is an example of what the summary file would look like.
       ],
     },
     {
-      id: "build-relationships-phase",
+      id: "phase-build-relationships",
       name: "Collect accounts",
       status: "partial_success",
       steps: [
         {
-          id: "build-user-to-group-relationships",
+          id: "step-build-user-to-group-relationships",
           name: "Fetch Accounts",
           types: ["my_integration_user_to_group_relationship"],
-          dependsOn: ["fetch-users", "fetch-groups"],
+          dependsOn: ["step-fetch-users", "step-fetch-groups"],
           status: "partial_success_from_dependency_failure",
         },
       ],
