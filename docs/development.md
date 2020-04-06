@@ -17,8 +17,8 @@ either JavaScript or TypeScript.
 It is expected that an integration exposes an `.js` or `.ts` file that contains
 an object that defines required configuration fields needed to run the
 integration, a function for performing config field validation, a function for
-determining which phases and steps of an integration should be ignored, and a
-list of phases that define how an integration should collect data. It is
+determining which steps of an integration should be ignored and a
+list of steps that define how an integration should collect data. It is
 expected that the integration configuration file exposes an `invocationConfig`
 from the module.
 
@@ -88,67 +88,48 @@ export const invocationConfig: IntegrationInvocationConfig = {
     }
   },
 
-  integrationStepPhases: [
+  integrationSteps: [
     {
-      id: 'phase-account',
-      name: 'Collect accounts',
+      id: 'step-fetch-accounts',
+      name: 'Fetch Accounts',
       types: ['my_integration_account'],
-      steps: [
-        {
-          id: 'step-fetch-accounts',
-          name: 'Fetch Accounts',
-          async executionHandler (
-            executionContext: IntegrationStepExecutionContext,
-          ) {
-            return fetchAccounts(executionContext);
-          },
-        },
-      ],
+      async executionHandler (
+        executionContext: IntegrationStepExecutionContext,
+      ) {
+        return fetchAccounts(executionContext);
+      },
     },
     {
-      id: 'phase-users-and-groups',
-      name: 'Collect users and groups',
-      steps: [
-        {
-          id: 'step-fetch-users',
-          name: 'Fetch Users',
-          types: ['my_integration_user'],
-          async executionHandler (
-            executionContext: IntegrationStepExecutionContext,
-          ) {
-            return fetchUsers(executionContext);
-          },
-        },
-        {
-          id: 'step-fetch-groups',
-          name: 'Fetch Groups',
-          types: ['my_integration_group'],
-          executionHandler (
-            executionContext: IntegrationStepExecutionContext,
-          ) {
-            return fetchGroups(executionContext);
-          },
-        },
-      ],
+      id: 'step-fetch-users',
+      name: 'Fetch Users',
+      types: ['my_integration_user'],
+      async executionHandler (
+        executionContext: IntegrationStepExecutionContext,
+      ) {
+        return fetchUsers(executionContext);
+      },
     },
     {
-      id: 'phase-build-relationships',
-      name: 'Collect accounts',
-      steps: [
-        {
-          id: 'step-build-user-to-group-relationships',
-          name: 'Fetch Accounts',
-          types: ['my_integration_user_to_group_relationship'],
-          dependsOn: ['step-fetch-users', 'step-fetch-groups'], // alternatively ['phase-users-and-groups']
-          async executionHandler (
-            executionContext: IntegrationStepExecutionContext,
-          ) {
-            return fetchAccounts(executionContext);
-          },
-        },
-      ],
+      id: 'step-fetch-groups',
+      name: 'Fetch Groups',
+      types: ['my_integration_group'],
+      executionHandler (
+        executionContext: IntegrationStepExecutionContext,
+      ) {
+        return fetchGroups(executionContext);
+      },
     },
-
+    {
+      id: 'step-build-user-to-group-relationships',
+      name: 'Build relationships',
+      types: ['my_integration_user_to_group_relationship'],
+      dependsOn: ['step-fetch-users', 'step-fetch-groups'],
+      async executionHandler (
+        executionContext: IntegrationStepExecutionContext,
+      ) {
+        return fetchAccounts(executionContext);
+      },
+    },
   ],
 };
 ```
@@ -171,17 +152,13 @@ configured properly.
 #### `getStepStartStates`
 
 The `getStepStartStates` is an optional function that can be provided for
-determining if a certain phase or step should be run or not.
+determining if a certain step should be run or not.
 
-#### `integrationStepPhases`
+#### `integrationSteps`
 
-The `integrationStepPhases` field is used to define how an integration collects
-data. It is expected that an array of phases that contain "steps" to perform the
-collection of data needs to be passed in. Phases are run in sequence and steps
-are run in parallel. This allows for data from a previous phase to be referenced
-in a later stage.
-
-A `phase` must contain an `id`, `name`, and array of `steps` to perform.
+The `integrationSteps` field is used to define how an integration collects
+data. It is expected that an array of "steps" to perform the
+collection of data needs to be passed in.
 
 A `step` must contain an `id`, `name`, list of `types` that the step expects to
 generate and an `executionHandler` function that performs the data collection
@@ -189,11 +166,12 @@ work. It is important to provide `types` because that data will be used to
 provide context for the backend synchronization process and determine how
 updates and deletes should be applied.
 
-Optionally, a `step` can contain a `dependsOn` list that references previous
-phases and steps. This field will be used to determine if previous work has
+Optionally, a `step` can contain a `dependsOn` list that references to
+steps that need to execute before the current step can run. This field will
+be used to determine if previous work has
 failed to complete and if the synchronization process should treat the data
 retrieved in the step as a partial dataset. See the [Failure handling](#Failure
-handling) section below for more information.
+handling) section below for more information on partial datasets.
 
 ### How integrations are executed
 
@@ -201,10 +179,26 @@ The `IntegrationInvocationConfig` declaratively defines how an integration runs.
 The CLI that is provided by this package will consume the invocation
 configuration and construct a state machine to execute work in a specific order.
 
+#### Validation
+
 The `invocationValidator` function will run first to ensure the integration is
 capable of interfacing with a given provider. Next, the `getStepStartStates`
-will run to get a list of integration phases and steps that should be executed.
-Finally, the phases in `integrationStepPhases` are then executed in sequence.
+will run to get a list of integration steps that should be executed.
+
+#### Collection
+
+Finally, the steps defined in `integrationSteps` are executed based on
+the dependency list provided by each step's `dependsOn` field.
+
+The integration sdk will construct a dependency graph to determine the
+order in which steps will be executed (likely be using
+a third party library like
+[dependency-graph](https://github.com/jriecken/dependency-graph#readme)).
+
+After the dependency graph was constructed, the integration sdk will in
+begin execution of all leaf steps first. As a step completes, the integration sdk will
+check for dependent steps that are now eligible to run and invoke them.
+This process will repeat until there are no more steps to run.
 
 ### What's in the `IntegrationExecutionContext` and `IntegrationExecutionStepContext`?
 
@@ -302,13 +296,13 @@ types will come later.
 #### Event reporting
 
 When running an integration, debug information will automatically be logged
-to `stdout` about the `phase` and `step` being run.
+to `stdout` about the `step` being run.
 This allows for developers to keep track of how the integration is progressing
 without the need to explicitly add logging information themselves.
 
 When the integration is run with context about an integration instance
 (via the `run` command exposed by the [The CLI](# The CLI)), the transitions
-between each `phase` and `step` are also published to
+between each `step` are also published to
 JupiterOne via the `jobLog` utility.
 
 #### Data collection
@@ -318,13 +312,13 @@ The `executionContext` that is provided in the `executionHandler` step exposes a
 `addEntities` and `addRelationships` functions. The `jobState` utility will
 automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that based
-on the phase and step that was run. Entities and relationships will also be grouped
+on the step that was run. Entities and relationships will also be grouped
 by the `_type` and linked into separate directories to provide faster look ups.
 These directories will be used by the `iterateEntities` and `iterateRelationships`
 functions to provide faster lookups.
 
 From our experience, integrations most
-commonly query collected data from previous phases via the `_type` property for
+commonly query collected data from previous steps the `_type` property for
 constructing relationships, so the integration framework currently optimizes for
 this case. In the future, we plan to allow data to be indexed in different ways
 to assist with optimizing different approaches constructing entities and
@@ -336,7 +330,7 @@ will be written to disk in the following structure (relative to the
 integration's current working directory).
 
 To assist with debugging and visibilty into exactly what data was collected, the
-integration will bucket data collected from each phase and step. Here is
+integration will bucket data collected from each step. Here is
 an example of what the `.j1-integration` directory may look like.
 
 ```
@@ -357,23 +351,21 @@ an example of what the `.j1-integration` directory may look like.
         my_integration_user_to_group_relationship/
           8fcc6865-817d-4952-ac53-8248b357b5d8.json
   /graph
-    /00-phase-accounts
-      /00-step-fetch-accounts
-        /entities/
-          11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
-        /relationships
-    /01-phase-users-and-groups
-      /00-step-fetch-users
-        /entities
-          9cb7bee4-c037-4041-83b7-d532488f26a3.json
-          96992893-898d-4cda-8129-4695b0323642.json
-        /relationships
-      /01-step-fetch-groups
-        /entities
-          a76695f8-7d84-411e-a4e1-c012de041034.json
-          f983f07d-f7d8-4f8e-87da-743940a5f48d.json
-        /relationships
-    /02-phase-build-relationships
+    /step-fetch-accounts
+      /entities/
+        11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
+      /relationships
+    /step-fetch-users
+      /entities
+        9cb7bee4-c037-4041-83b7-d532488f26a3.json
+        96992893-898d-4cda-8129-4695b0323642.json
+      /relationships
+    /step-fetch-groups
+      /entities
+        a76695f8-7d84-411e-a4e1-c012de041034.json
+        f983f07d-f7d8-4f8e-87da-743940a5f48d.json
+      /relationships
+    /step-build-relationships
         /relationships
           8fcc6865-817d-4952-ac53-8248b357b5d8.json
 ```
@@ -383,7 +375,7 @@ Integration data that is staged for publishing will be stored under the
 with `.entities.json` and files containing Relationships will be suffixed with
 `.relationships.json`. This is done because the directory structure of the
 `graph` directory is meant to assist with debugging and provide developrs
-insight about the data collect in each phase. During synchronization, the
+insight about the data collect in each step. During synchronization, the
 directory will be blind
 
 Data will be indexed by `_type` and stored under the
@@ -411,55 +403,43 @@ data from disk is decently fast.
 
 By default, the framework will only halt the execution of an integration if the
 configuration validation fails. Failures that occur during the execution of a
-phase or step will not halt the execution of later phases. Information on which
-steps and phases that have failed will be collected and published as metadata
-when performing synchronization with JupiterOne. A failure in a step or phase
+step will not halt the execution of later steps that depend on it.
+Information on which
+steps that have failed will be collected and published as metadata
+when performing synchronization with JupiterOne. A failure in a step
 will automatically be logged along with context about the error that occurred.
 At the end of an integration run, a summary will be displayed of the overall
 status to give developers a good idea of how failures will have affected the
 JupiterOne graph.
 
-An example summary of the phases and steps will like this:
+An example summary of the steps will like this:
 
 ```json
 [
   {
-    "id": "phase-account",
-    "name": "Collect accounts",
+    "id": "step-fetch-accounts",
+    "name": "Fetch Accounts",
+    "types": ["my_integration_account"],
     "status": "success"
   },
   {
-    "id": "phase-users-and-groups",
-    "name": "Collect users and groups",
-    "status": "partial_failure",
-    "steps": [
-      {
-        "id": "step-fetch-users",
-        "name": "Fetch Users",
-        "types": ["my_integration_user"],
-        "status": "failure"
-      },
-      {
-        "id": "step-fetch-groups",
-        "name": "Fetch Groups",
-        "types": ["my_integration_group"],
-        "status": "success"
-      }
-    ]
+    "id": "step-fetch-users",
+    "name": "Fetch Users",
+    "types": ["my_integration_user"],
+    "status": "failure"
   },
   {
-    "id": "phase-build-relationship",
-    "name": "Collect accounts",
-    "status": "partial_success",
-    "steps": [
-      {
-        "id": "step-build-user-to-group-relationships",
-        "name": "Fetch Accounts",
-        "types": ["my_integration_user_to_group_relationship"],
-        "dependsOn": ["step-fetch-users", "step-fetch-groups"],
-        "status": "partial_success_from_dependency_failure"
-      }
-    ]
+    "id": "step-fetch-groups",
+    "name": "Fetch Groups",
+    "types": ["my_integration_group"],
+    "status": "success"
+  },
+  {
+    "id": "step-build-user-to-group-relationships",
+    "name": "Fetch Accounts",
+    "types": ["my_integration_user_to_group_relationship"],
+    "dependsOn": ["step-fetch-users", "step-fetch-groups"],
+    "status": "partial_success_from_dependency_failure"
   }
 ]
 ```
@@ -467,7 +447,7 @@ An example summary of the phases and steps will like this:
 Options for pretty printing this data in a more concise format may come in the
 future.
 
-##### Phase and step status codes
+##### Step status codes
 
 For steps:
 `success` - the step has successfully completed without any errors occurring
@@ -476,19 +456,12 @@ For steps:
 a dependent step was found in the `failure` or `partial_success_from_dependency_failure`,
 meaning it is possible that a failure has happened.
 
-For phases:
-`success` - all of the steps within the phase has successfully completed
-`failure` - all of the steps within the phase have failed to complete
-`partial_success` - all of the steps have completed but one or more
-steps have returned a `partial_success_from_dependency_failure`
-`partial_failure` - one or more steps have failed
-
 #### Letting the synchronizer know about partial datasets
 
 The framework's state machine will utilize the `types` and `dependsOn` fields
 for constructing a list of entity and relationship types that should be
 considered a partial dataset. The backend synchronization process that performs
-the diffing of the data will receive a list of types that have been affected by
+he diffing of the data will receive a list of types that have been affected by
 a failure to help determine how updates should be applied and what data is safe
 to delete. The information about partial datasets will be sent when starting the
 synchronization process to prevent data that should be retained in the graph
@@ -501,44 +474,31 @@ Here is an example of what the summary file would look like.
 
 ```
 {
-  "integrationStepPhasesResult": [
+  "integrationStepsResult": [
     {
-      id: "phase-account",
-      name: "Collect accounts",
-      status: "success"
+      "id": "step-fetch-accounts",
+      "name": "Fetch Accounts",
+      "types": ["my_integration_account"],
+      "status": "success"
     },
     {
-      id: "phase-users-and-groups",
-      name: "Collect users and groups",
-      status: "partial_failure",
-      steps: [
-        {
-          id: "step-fetch-users",
-          name: "Fetch Users",
-          types: ["my_integration_user"],
-          status: "failure",
-        },
-        {
-          id: "step-fetch-groups",
-          name: "Fetch Groups",
-          types: ["my_integration_group"],
-          status: "success",
-        },
-      ],
+      "id": "step-fetch-users",
+      "name": "Fetch Users",
+      "types": ["my_integration_user"],
+      "status": "failure"
     },
     {
-      id: "phase-build-relationships",
-      name: "Collect accounts",
-      status: "partial_success",
-      steps: [
-        {
-          id: "step-build-user-to-group-relationships",
-          name: "Fetch Accounts",
-          types: ["my_integration_user_to_group_relationship"],
-          dependsOn: ["step-fetch-users", "step-fetch-groups"],
-          status: "partial_success_from_dependency_failure",
-        },
-      ],
+      "id": "step-fetch-groups",
+      "name": "Fetch Groups",
+      "types": ["my_integration_group"],
+      "status": "success"
+    },
+    {
+      "id": "step-build-user-to-group-relationships",
+      "name": "Fetch Accounts",
+      "types": ["my_integration_user_to_group_relationship"],
+      "dependsOn": ["step-fetch-users", "step-fetch-groups"],
+      "status": "partial_success_from_dependency_failure"
     },
   ],
   "metadata": {
@@ -552,8 +512,8 @@ Here is an example of what the summary file would look like.
 }
 ```
 
-The `integrationStepPhasesResult` is made available for developers to understand
-the status of each phase after collection has been completed.
+The `integrationStepsResult` is made available for developers to understand
+the status of each step after collection has been completed.
 
 The `metadata` contains a `partialDatasets` field that is a reduced collection
 of `types` from steps that have returned with a `failure` or
@@ -744,7 +704,7 @@ Instead of using a mock integration instance for during the `collect` phase,
 collection.
 
 After initial integration validation, `run` will provision an integration job
-and work performed by phases and steps will automatically be published to our
+and work performed by steps will automatically be published to our
 event log via the
 `https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/events`
 API.
@@ -758,8 +718,8 @@ API.
 We hope to make it easy for developers to understand how an integration collects
 data and the order in which it performs work.
 
-We hope to support a `j1-integration plan` command to display a dependency graph
-of the phases, steps, and types required for a successful integration run.
+We hope to support a `j1-integration plan` command to display the dependency graph
+of the steps and types required for a successful integration run.
 
 ###### `j1-integration sync --dry-run`
 
@@ -788,7 +748,7 @@ A project generator might be helpful for getting new integration developers up
 and running quickly. For our own integration developers, it would provide a
 consistent interface and allow developers a unified interface for building
 integrations. This may even go an `ember` or `angular` cli route and provide an
-opinionated interface for generating new phases and steps.
+opinionated interface for generating new steps.
 
 ##### One CLI tool for all JupiterOne development
 
