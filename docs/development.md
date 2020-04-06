@@ -257,7 +257,24 @@ provides utilities for collecting and validating graph data.
 
 ##### `jobState`
 
-More details about the `jobState` is detailed in
+The `jobState` object is used for collecting entities and relationships
+that have been created throughout the integration run via the
+`addEntities` and `addRelationships` functions.
+
+Previously collected integration data can be collected via
+the `iterateEntities` and `iterateRelationships` function.
+These functions will initially allow for data to be fetched via the `_type`
+property, but in the future will allow provide more options for collecting.
+
+Example usage:
+
+```ts
+await iterateEntities({_type: 'my_integration_user'}, async (userEntity) => {
+  await doWorkWithEntity(userEntity);
+});
+```
+
+More details about how the framework uses `jobState` is detailed in
 the [Data collection](# Data collection) section below.
 
 ### Additional utilities
@@ -298,26 +315,29 @@ JupiterOne via the `jobLog` utility.
 
 The `executionContext` that is provided in the `executionHandler` step exposes a
 `jobState` utility that can be used to collect entity and relationship data via
-`addEntities` and `addRelationship` functions. The `jobState` utility will
+`addEntities` and `addRelationships` functions. The `jobState` utility will
 automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that based
-on the phase and step that was run. Flushed data will be replicated to a
-separate directory that groups data by an entity or relationship's `_type`.
-Additional utilities for reading in entities or relationships via the `_type`
-are provided on the `jobState` object (the `listEntitiesByType` and
-`listRelationshipsByType` functions). From our experience, integrations most
+on the phase and step that was run. Entities and relationships will also be grouped
+by the `_type` and linked into separate directories to provide faster look ups.
+These directories will be used by the `iterateEntities` and `iterateRelationships`
+functions to provide faster lookups.
+
+From our experience, integrations most
 commonly query collected data from previous phases via the `_type` property for
 constructing relationships, so the integration framework currently optimizes for
 this case. In the future, we plan to allow data to be indexed in different ways
 to assist with optimizing different approaches constructing entities and
-relationships.
+relationships. It is worth noting that the method in which data is
+indexed can change in the future.
 
 Using the integration configuration that was provided as a sample earlier, data
 will be written to disk in the following structure (relative to the
 integration's current working directory).
 
 To assist with debugging and visibilty into exactly what data was collected, the
-integration will bucket data collected from each phase and step.
+integration will bucket data collected from each phase and step. Here is
+an example of what the `.j1-integration` directory may look like.
 
 ```
 .j1-integration/
@@ -325,15 +345,17 @@ integration will bucket data collected from each phase and step.
     /entities/
       _type
         my_integration_account/
-          b414e421-49b5-4ea7-acfe-356a46aa1fb2.json
+          11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
         my_integration_group/
-          31471879-d8c5-4682-836d-a516991f71e1.json
+          f983f07d-f7d8-4f8e-87da-743940a5f48d.json
+          a76695f8-7d84-411e-a4e1-c012de041034.json
         my_integration_user/
-          fc6139eb-d087-4196-9568-0690514c34fb.json
+          9cb7bee4-c037-4041-83b7-d532488f26a3.json
+          96992893-898d-4cda-8129-4695b0323642.json
     /relationships
       _type/
         my_integration_user_to_group_relationship/
-          867a2a95-8952-4788-b7c4-31c45fcc5e82.json
+          8fcc6865-817d-4952-ac53-8248b357b5d8.json
   /graph
     /00-phase-accounts
       /00-step-fetch-accounts
