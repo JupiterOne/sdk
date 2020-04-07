@@ -14,8 +14,11 @@ interface WriteDataToPathInput {
 }
 
 /**
- * Helper function for writing arbirary data to a path
- * relative to the cache directory
+ * Function for writing arbirary data to a path
+ * relative to the cache directory.
+ *
+ * This will ensure that the directories exists or have been
+ * created prior to writing the file.
  */
 export async function writeJsonToPath({
   cacheDirectory,
@@ -35,6 +38,12 @@ interface SymlinkInput {
   destinationPath: string;
 }
 
+/**
+ * Function for creating a symlink from on file to another.
+ *
+ * This will ensure that the directories exists or have been
+ * created prior to writing the file.
+ */
 export async function symlink({
   cacheDirectory,
   sourcePath,

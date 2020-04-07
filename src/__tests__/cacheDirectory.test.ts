@@ -11,8 +11,7 @@ import {
 jest.mock('fs'); // applies manual mock which uses memfs
 
 afterEach(() => {
-  jest.clearAllMocks();
-  vol.reset(); // clear out memory
+  vol.reset(); // clear out file system
 });
 
 describe('getDefaultCacheDirectory', () => {
