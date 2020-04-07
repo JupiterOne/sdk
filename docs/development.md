@@ -17,10 +17,9 @@ either JavaScript or TypeScript.
 It is expected that an integration exposes an `.js` or `.ts` file that contains
 an object that defines required configuration fields needed to run the
 integration, a function for performing config field validation, a function for
-determining which steps of an integration should be ignored and a
-list of steps that define how an integration should collect data. It is
-expected that the integration configuration file exposes an `invocationConfig`
-from the module.
+determining which steps of an integration should be ignored and a list of steps
+that define how an integration should collect data. It is expected that the
+integration configuration file exposes an `invocationConfig` from the module.
 
 This could be done a variety of ways:
 
@@ -156,9 +155,9 @@ determining if a certain step should be run or not.
 
 #### `integrationSteps`
 
-The `integrationSteps` field is used to define how an integration collects
-data. It is expected that an array of "steps" to perform the
-collection of data needs to be passed in.
+The `integrationSteps` field is used to define how an integration collects data.
+It is expected that an array of "steps" to perform the collection of data needs
+to be passed in.
 
 A `step` must contain an `id`, `name`, list of `types` that the step expects to
 generate and an `executionHandler` function that performs the data collection
@@ -166,12 +165,12 @@ work. It is important to provide `types` because that data will be used to
 provide context for the backend synchronization process and determine how
 updates and deletes should be applied.
 
-Optionally, a `step` can contain a `dependsOn` list that references to
-steps that need to execute before the current step can run. This field will
-be used to determine if previous work has
-failed to complete and if the synchronization process should treat the data
-retrieved in the step as a partial dataset. See the [Failure handling](#Failure
-handling) section below for more information on partial datasets.
+Optionally, a `step` can contain a `dependsOn` list that references to steps
+that need to execute before the current step can run. This field will be used to
+determine if previous work has failed to complete and if the synchronization
+process should treat the data retrieved in the step as a partial dataset. See
+the [Failure handling](#Failure handling) section below for more information on
+partial datasets.
 
 ### How integrations are executed
 
@@ -187,18 +186,17 @@ will run to get a list of integration steps that should be executed.
 
 #### Collection
 
-Finally, the steps defined in `integrationSteps` are executed based on
-the dependency list provided by each step's `dependsOn` field.
+Finally, the steps defined in `integrationSteps` are executed based on the
+dependency list provided by each step's `dependsOn` field.
 
-The integration sdk will construct a dependency graph to determine the
-order in which steps will be executed (likely be using
-a third party library like
+The integration sdk will construct a dependency graph to determine the order in
+which steps will be executed (likely be using a third party library like
 [dependency-graph](https://github.com/jriecken/dependency-graph#readme)).
 
-After the dependency graph was constructed, the integration sdk will in
-begin execution of all leaf steps first. As a step completes, the integration sdk will
-check for dependent steps that are now eligible to run and invoke them.
-This process will repeat until there are no more steps to run.
+After the dependency graph was constructed, the integration sdk will in begin
+execution of all leaf steps first. As a step completes, the integration sdk will
+check for dependent steps that are now eligible to run and invoke them. This
+process will repeat until there are no more steps to run.
 
 ### What's in the `IntegrationExecutionContext` and `IntegrationExecutionStepContext`?
 
@@ -209,42 +207,41 @@ information about the entity data.
 
 ##### `instance`
 
-An `instance` field containing the integration
-instance, which contains configuration field values stored under a `config`
-field. When only performing local data collection, this is mocked out.
+An `instance` field containing the integration instance, which contains
+configuration field values stored under a `config` field. When only performing
+local data collection, this is mocked out.
 
 ##### `logger`
 
-It includes a `logger` that can be used by the integration developer
-for debugging their integration. This follows a similar api to other Node.js
-loggers such as [bunyan](https://github.com/trentm/node-bunyan) or
+It includes a `logger` that can be used by the integration developer for
+debugging their integration. This follows a similar api to other Node.js loggers
+such as [bunyan](https://github.com/trentm/node-bunyan) or
 [pino](https://github.com/pinojs/pino), providing a standard set of log levels
-(`debug`, `trace`, `info`, `warn`, and `error`)
-and also allowing for child loggers to be created via the `child` function.
+(`debug`, `trace`, `info`, `warn`, and `error`) and also allowing for child
+loggers to be created via the `child` function.
 
-Most information logged via the `logger` will _not_ be displayed to customers via the
-integration job event log, but there are some special messages that need
-to be displayed to customers to allow them to know if there are
-issues preventing integrations from collecting data.
+Most information logged via the `logger` will _not_ be displayed to customers
+via the integration job event log, but there are some special messages that need
+to be displayed to customers to allow them to know if there are issues
+preventing integrations from collecting data.
 
-For these cases, we will provide specialized functions on the
-`logger` to assist with displaying those kinds of messages.
+For these cases, we will provide specialized functions on the `logger` to assist
+with displaying those kinds of messages.
 
-A `logger.auth` function for displaying authorization related warnings
-or errors encountered while data is being collected
-in the steps.
+A `logger.auth` function for displaying authorization related warnings or errors
+encountered while data is being collected in the steps.
 
-Additionally, errors logged via `logger.error` will be displayed by customers as well.
-This is helpful for providing customers with some context about provider api issues
-that prevent data from being collected.
+Additionally, errors logged via `logger.error` will be displayed by customers as
+well. This is helpful for providing customers with some context about provider
+api issues that prevent data from being collected.
 
 ###### `forbiddenResource`
 
-The `forbiddenResource` function will be exposed to allow developers to
-display warnings that the integration's access to a given resource is
-not allowed. This message helps integration consumers understand
-that the configuration they have provided has insufficient permissions
-and if they want to resolve this, changes need to be made.
+The `forbiddenResource` function will be exposed to allow developers to display
+warnings that the integration's access to a given resource is not allowed. This
+message helps integration consumers understand that the configuration they have
+provided has insufficient permissions and if they want to resolve this, changes
+need to be made.
 
 #### `IntegrationExecutionStepContext`
 
@@ -254,25 +251,25 @@ provides utilities for collecting and validating graph data.
 
 ##### `jobState`
 
-The `jobState` object is used for collecting entities and relationships
-that have been created throughout the integration run via the
-`addEntities` and `addRelationships` functions.
+The `jobState` object is used for collecting entities and relationships that
+have been created throughout the integration run via the `addEntities` and
+`addRelationships` functions.
 
-Previously collected integration data can be collected via
-the `iterateEntities` and `iterateRelationships` function.
-These functions will initially allow for data to be fetched via the `_type`
-property, but in the future will allow provide more options for collecting.
+Previously collected integration data can be collected via the `iterateEntities`
+and `iterateRelationships` function. These functions will initially allow for
+data to be fetched via the `_type` property, but in the future will allow
+provide more options for collecting.
 
 Example usage:
 
 ```typescript
-await iterateEntities({_type: 'my_integration_user'}, async (userEntity) => {
+await iterateEntities({ _type: 'my_integration_user' }, async (userEntity) => {
   await doWorkWithEntity(userEntity);
 });
 ```
 
-More details about how the framework uses `jobState` is detailed in
-the [Data collection](# Data collection) section below.
+More details about how the framework uses `jobState` is detailed in the [Data
+collection](# Data collection) section below.
 
 ### Additional utilities
 
@@ -300,14 +297,14 @@ types will come later.
 
 When running an integration, information logged via the `logger` will
 automatically be published `stdout`. For convenience, the integration framework
-will automatically log out transitions between steps.
-This allows for developers to keep track of how the integration is progressing
-without the need to explicitly add logging information themselves.
+will automatically log out transitions between steps. This allows for developers
+to keep track of how the integration is progressing without the need to
+explicitly add logging information themselves.
 
-When the integration is run with context about an integration instance
-(via the `run` command exposed by the [The CLI](# The CLI)), the transitions
-between each `step` will be published to the JupiterOne integration events log.
-`auth` and `error` logs will also be published there.
+When the integration is run with context about an integration instance (via the
+`run` command exposed by the [The CLI](# The CLI)), the transitions between each
+`step` will be published to the JupiterOne integration events log. `auth` and
+`error` logs will also be published there.
 
 #### Data collection
 
@@ -316,26 +313,25 @@ The `executionContext` that is provided in the `executionHandler` step exposes a
 `addEntities` and `addRelationships` functions. The `jobState` utility will
 automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that based
-on the step that was run. Entities and relationships will also be grouped
-by the `_type` and linked into separate directories to provide faster look ups.
-These directories will be used by the `iterateEntities` and `iterateRelationships`
+on the step that was run. Entities and relationships will also be grouped by the
+`_type` and linked into separate directories to provide faster look ups. These
+directories will be used by the `iterateEntities` and `iterateRelationships`
 functions to provide faster lookups.
 
-From our experience, integrations most
-commonly query collected data from previous steps the `_type` property for
-constructing relationships, so the integration framework currently optimizes for
-this case. In the future, we plan to allow data to be indexed in different ways
-to assist with optimizing different approaches constructing entities and
-relationships. It is worth noting that the method in which data is
-indexed can change in the future.
+From our experience, integrations most commonly query collected data from
+previous steps the `_type` property for constructing relationships, so the
+integration framework currently optimizes for this case. In the future, we plan
+to allow data to be indexed in different ways to assist with optimizing
+different approaches constructing entities and relationships. It is worth noting
+that the method in which data is indexed can change in the future.
 
 Using the integration configuration that was provided as a sample earlier, data
 will be written to disk in the following structure (relative to the
 integration's current working directory).
 
 To assist with debugging and visibilty into exactly what data was collected, the
-integration will bucket data collected from each step. Here is
-an example of what the `.j1-integration` directory may look like.
+integration will bucket data collected from each step. Here is an example of
+what the `.j1-integration` directory may look like.
 
 ```
 .j1-integration/
@@ -407,14 +403,13 @@ data from disk is decently fast.
 
 By default, the framework will only halt the execution of an integration if the
 configuration validation fails. Failures that occur during the execution of a
-step will not halt the execution of later steps that depend on it.
-Information on which
-steps that have failed will be collected and published as metadata
-when performing synchronization with JupiterOne. A failure in a step
-will automatically be logged along with context about the error that occurred.
-At the end of an integration run, a summary will be displayed of the overall
-status to give developers a good idea of how failures will have affected the
-JupiterOne graph.
+step will not halt the execution of later steps that depend on it. Information
+on which steps that have failed will be collected and published as metadata when
+performing synchronization with JupiterOne. A failure in a step will
+automatically be logged along with context about the error that occurred. At the
+end of an integration run, a summary will be displayed of the overall status to
+give developers a good idea of how failures will have affected the JupiterOne
+graph.
 
 An example summary of the steps will like this:
 
@@ -453,21 +448,21 @@ future.
 
 ##### Step status codes
 
-For steps:
-`success` - the step has successfully completed without any errors occurring
-`failure` - an error has occurred and it is possible that we have a partial dataset
-`partial_success_from_dependency_failure` - the step has successfully completed but
-a dependent step was found in the `failure` or `partial_success_from_dependency_failure`,
-meaning it is possible that a failure has happened.
+For steps: `success` - the step has successfully completed without any errors
+occurring `failure` - an error has occurred and it is possible that we have a
+partial dataset `partial_success_from_dependency_failure` - the step has
+successfully completed but a dependent step was found in the `failure` or
+`partial_success_from_dependency_failure`, meaning it is possible that a failure
+has happened.
 
 #### Letting the synchronizer know about partial datasets
 
 The framework's state machine will utilize the `types` and `dependsOn` fields
 for constructing a list of entity and relationship types that should be
 considered a partial dataset. The backend synchronization process that performs
-he diffing of the data will receive a list of types that have been affected by
-a failure to help determine how updates should be applied and what data is safe
-to delete. The information about partial datasets will be sent when starting the
+he diffing of the data will receive a list of types that have been affected by a
+failure to help determine how updates should be applied and what data is safe to
+delete. The information about partial datasets will be sent when starting the
 synchronization process to prevent data that should be retained in the graph
 from being removed.
 
@@ -503,21 +498,21 @@ Here is an example of what the summary file would look like.
       "types": ["my_integration_user_to_group_relationship"],
       "dependsOn": ["step-fetch-users", "step-fetch-groups"],
       "status": "partial_success_from_dependency_failure"
-    },
+    }
   ],
   "metadata": {
     "partialDatasets": {
       "types": [
         "my_integration_user",
         "my_integration_user_to_group_relationship"
-      ],
-    },
+      ]
+    }
   }
 }
 ```
 
-The `integrationStepsResult` is made available for developers to understand
-the status of each step after collection has been completed.
+The `integrationStepsResult` is made available for developers to understand the
+status of each step after collection has been completed.
 
 The `metadata` contains a `partialDatasets` field that is a reduced collection
 of `types` from steps that have returned with a `failure` or
@@ -533,9 +528,9 @@ CLI tool will also be exposed by this project.
 
 ### Authentication
 
-For commands that require interaction with JupiterOne's API, the
-CLI will provide ways or inputing credentials. To support that,
-all commands that interact with an API will accept an `--api-key` option.
+For commands that require interaction with JupiterOne's API, the CLI will
+provide ways or inputing credentials. To support that, all commands that
+interact with an API will accept an `--api-key` option.
 
 For convenience when developing locally, we will also look for a
 `JUPITERONE_API_KEY` environment variable for an API key to use.
@@ -621,6 +616,28 @@ For developers that have an API key or prefer to not input credentials, an
 
 ex:
 `j1-integration collect --instance <integration instance id> --api-key <my api key>`
+
+###### `--step` or `-s`
+
+For larger integrations, a full collection run may take a long time. To help
+address this, a `--step` option can be provided to selectively run a step along
+with all of it's dependent steps.
+
+Multiple `--step` options can be provided to allow for more than one step to be
+run.
+
+ex: `j1-integration collect --step step-fetch-users --step step-fetch-groups`
+
+For convenience, steps can allow be provided as a comma delimited list.
+
+ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
+
+###### `--ignore-step-dependencies`
+
+If you only want to run a single step or an explicit list of steps without
+invoking the dependencies of those steps, you can do so via the
+`--ignore-step-dependencies` flag. This is useful for speeding up testing by
+utilizing the data that has already been collected and stored on disk.
 
 #### `j1-integration sync`
 
@@ -717,8 +734,8 @@ Instead of using a mock integration instance for during the `collect` phase,
 collection.
 
 After initial integration validation, `run` will provision an integration job
-and work performed by steps will automatically be published to our
-event log via the
+and work performed by steps will automatically be published to our event log via
+the
 `https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/events`
 API.
 
@@ -731,8 +748,8 @@ API.
 We hope to make it easy for developers to understand how an integration collects
 data and the order in which it performs work.
 
-We hope to support a `j1-integration plan` command to display the dependency graph
-of the steps and types required for a successful integration run.
+We hope to support a `j1-integration plan` command to display the dependency
+graph of the steps and types required for a successful integration run.
 
 ###### `j1-integration sync --dry-run`
 
