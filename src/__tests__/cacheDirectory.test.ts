@@ -1,10 +1,14 @@
 import { promises as fs } from 'fs';
+import path from 'path';
+
+import pMap from 'p-map';
 import { v4 as uuid } from 'uuid';
 import { vol } from 'memfs';
 
 import {
   getDefaultCacheDirectory,
   writeJsonToPath,
+  walkDirectory,
   symlink,
 } from '../cacheDirectory';
 
@@ -171,5 +175,68 @@ describe('symlink', () => {
 
     const stats = await fs.lstat(expectedFilePath);
     expect(stats.isSymbolicLink()).toEqual(true);
+  });
+});
+
+describe('walkDirectory', () => {
+  test('should iteratively read files from the specified directory', async () => {
+    // populate vol with test files
+    vol.fromJSON({
+      '/.j1-integration/index/entities/cat/1.json': 'meow',
+      '/.j1-integration/graph/summary.json': 'summary',
+      '/.j1-integration/graph/step-1/entities/1.json': '1',
+      '/.j1-integration/graph/step-1/entities/2.json': '2',
+      '/.j1-integration/graph/step-1/entities/3.json': '3',
+      '/.j1-integration/graph/step-2/entities/4.json': '4',
+    });
+
+    const cacheDirectory = '/.j1-integration';
+
+    const expectedData = ['summary', '1', '2', '3', '4'];
+    const collectedData: string[] = [];
+
+    await walkDirectory({
+      cacheDirectory,
+      path: 'graph',
+      iteratee: ({ data }) => {
+        collectedData.push(data);
+      },
+    });
+
+    expect(collectedData).toHaveLength(expectedData.length);
+    expect(collectedData).toEqual(expect.arrayContaining(expectedData));
+  });
+
+  test('should be able to walk and resolve symlinked files', async () => {
+    // populate vol with test files
+    vol.fromJSON({
+      '/.j1-integration/graph/step-1/entities/1.json': '1',
+      '/.j1-integration/graph/step-1/entities/2.json': '2',
+      '/.j1-integration/graph/step-1/entities/3.json': '3',
+      '/.j1-integration/graph/step-2/entities/4.json': '4',
+    });
+
+    const cacheDirectory = '/.j1-integration';
+    await pMap(Object.keys(vol.toJSON()), async (sourcePath: string) => {
+      await symlink({
+        cacheDirectory,
+        sourcePath: sourcePath.substring(cacheDirectory.length + 1),
+        destinationPath: `index/entities/type/${path.basename(sourcePath)}`,
+      });
+    });
+
+    const expectedData = ['1', '2', '3', '4'];
+    const collectedData: string[] = [];
+
+    await walkDirectory({
+      cacheDirectory,
+      path: 'index',
+      iteratee: ({ data }) => {
+        collectedData.push(data);
+      },
+    });
+
+    expect(collectedData).toHaveLength(expectedData.length);
+    expect(collectedData).toEqual(expect.arrayContaining(expectedData));
   });
 });
