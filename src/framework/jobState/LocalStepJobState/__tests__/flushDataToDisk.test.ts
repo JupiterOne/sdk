@@ -12,6 +12,8 @@ import { generateEntity } from './util/graphObjects';
 
 jest.mock('fs');
 
+afterEach(() => vol.reset());
+
 test('should group objects by "_type" and write them to separate files', async () => {
   const testEntityData = {
     A: times(25, () => generateEntity({ _type: 'A' })),
@@ -36,7 +38,7 @@ test('should group objects by "_type" and write them to separate files', async (
   expect(entityFiles).toHaveLength(3); // matches number of types we have
 
   const writtenEntityBatches = await pMap(entityFiles, async (file: string) => {
-    const rawData = await fs.readFile(`${entitiesDirectory}/${file}`);
+    const rawData = await fs.readFile(`${entitiesDirectory}/${file}`, 'utf8');
     return JSON.parse(rawData).entities;
   });
   expect(sortBy(flatten(writtenEntityBatches), '_key')).toEqual(
