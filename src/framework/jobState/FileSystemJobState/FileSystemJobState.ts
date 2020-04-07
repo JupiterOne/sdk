@@ -1,5 +1,3 @@
-import { Promisable } from 'type-fest';
-
 import { Entity, Relationship } from '../../types';
 import { JobState, GraphObjectFilter, GraphObjectIteratee } from '../types';
 
@@ -12,7 +10,7 @@ interface LocalStepJobStateInput {
   cacheDirectory?: string;
 }
 
-export class LocalStepJobState implements JobState {
+export class FileSystemJobState implements JobState {
   readonly cacheDirectory?: string;
   readonly step: string;
 
@@ -60,38 +58,35 @@ export class LocalStepJobState implements JobState {
   }
 
   async flush() {
-    const work: Promisable<void>[] = [];
-
-    if (this.entities.length) {
-      work.push(this.flushEntitiesToDisk());
-    }
-
-    if (this.relationships.length) {
-      work.push(this.flushRelationshipsToDisk());
-    }
-
-    await Promise.all(work);
+    await Promise.all([
+      this.flushEntitiesToDisk(),
+      this.flushRelationshipsToDisk(),
+    ]);
   }
 
   async flushEntitiesToDisk() {
-    await flushDataToDisk({
-      step: this.step,
-      cacheDirectory: this.cacheDirectory,
-      collectionType: 'entities',
-      data: this.entities,
-    });
+    if (this.entities.length) {
+      await flushDataToDisk({
+        step: this.step,
+        cacheDirectory: this.cacheDirectory,
+        collectionType: 'entities',
+        data: this.entities,
+      });
 
-    this.entities = [];
+      this.entities = [];
+    }
   }
 
   async flushRelationshipsToDisk() {
-    await flushDataToDisk({
-      step: this.step,
-      cacheDirectory: this.cacheDirectory,
-      collectionType: 'relationships',
-      data: this.relationships,
-    });
+    if (this.relationships.length) {
+      await flushDataToDisk({
+        step: this.step,
+        cacheDirectory: this.cacheDirectory,
+        collectionType: 'relationships',
+        data: this.relationships,
+      });
 
-    this.relationships = [];
+      this.relationships = [];
+    }
   }
 }

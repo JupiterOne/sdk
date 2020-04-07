@@ -5,9 +5,9 @@ import { v4 as uuid } from 'uuid';
 import times from 'lodash/times';
 
 import {
-  LocalStepJobState,
+  FileSystemJobState,
   GRAPH_OBJECT_BUFFER_THRESHOLD,
-} from '../LocalStepJobState';
+} from '../FileSystemJobState';
 
 import { generateEntity, generateRelationship } from './util/graphObjects';
 
@@ -54,7 +54,7 @@ describe('flushRelationshipsToDisk', () => {
   test('should write relationships to the graph directory and symlink files to the index directory', async () => {
     const { cacheDirectory, step, jobState } = setupLocalStepJobState();
     const relationshipType = uuid();
-    const relationships = times(5, () =>
+    const relationships = times(25, () =>
       generateRelationship({ _type: relationshipType }),
     );
     await jobState.addRelationships(relationships);
@@ -100,38 +100,6 @@ describe('flush', () => {
     await jobState.flush();
 
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
-    expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
-  });
-
-  test('should only flush entities if there are no relationships to flush', async () => {
-    const { jobState } = setupLocalStepJobState();
-    await jobState.addEntities([generateEntity()]);
-
-    const flushEntitiesSpy = jest.spyOn(jobState, 'flushEntitiesToDisk');
-    const flushRelationshipsSpy = jest.spyOn(
-      jobState,
-      'flushRelationshipsToDisk',
-    );
-
-    await jobState.flush();
-
-    expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
-    expect(flushRelationshipsSpy).toHaveBeenCalledTimes(0);
-  });
-
-  test('should only flush relationships if there are no entities to flush', async () => {
-    const { jobState } = setupLocalStepJobState();
-    await jobState.addRelationships([generateRelationship()]);
-
-    const flushEntitiesSpy = jest.spyOn(jobState, 'flushEntitiesToDisk');
-    const flushRelationshipsSpy = jest.spyOn(
-      jobState,
-      'flushRelationshipsToDisk',
-    );
-
-    await jobState.flush();
-
-    expect(flushEntitiesSpy).toHaveBeenCalledTimes(0);
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
   });
 });
@@ -180,7 +148,7 @@ describe('addRelationships', () => {
 function setupLocalStepJobState() {
   const step = uuid();
   const cacheDirectory = '/' + uuid();
-  const jobState = new LocalStepJobState({ step, cacheDirectory });
+  const jobState = new FileSystemJobState({ step, cacheDirectory });
 
   return {
     step,
