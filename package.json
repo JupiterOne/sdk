@@ -19,7 +19,9 @@
     "prepublishOnly": "tsc --declaration"
   },
   "devDependencies": {
+    "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
+    "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
@@ -27,6 +29,7 @@
     "husky": "^4.2.3",
     "jest": "^25.2.6",
     "lint-staged": "^10.1.1",
+    "memfs": "^3.1.2",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.0",
     "typescript": "^3.8.3"
@@ -80,7 +83,9 @@
     "*.{js,jsx,ts,tsx,md,html,css}": "prettier --write"
   },
   "dependencies": {
+    "@types/lodash": "^4.14.149",
     "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-prettier": "^3.1.2"
+    "eslint-plugin-prettier": "^3.1.2",
+    "uuid": "^7.0.3"
   }
 }
