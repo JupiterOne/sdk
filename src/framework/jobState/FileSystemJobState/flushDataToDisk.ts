@@ -17,8 +17,8 @@ interface FlushDataToDiskInput {
 
 /**
  * Utility for flushing collected data to disk and
- * creating placing a symlink into an 'index' directory
- * based on type.
+ * creating a symlink in the 'index' directory
+ * based on the entity or relationship '_type'.
  */
 export async function flushDataToDisk({
   cacheDirectory,
