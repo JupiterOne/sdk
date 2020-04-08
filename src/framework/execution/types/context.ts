@@ -1,5 +1,5 @@
 import { JobState } from '../../jobState';
 
-export interface IntegrationStepContext {
+export interface IntegrationStepExecutionContext {
   jobState: JobState;
 }

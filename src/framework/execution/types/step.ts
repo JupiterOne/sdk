@@ -1,4 +1,4 @@
-import { IntegrationStepContext } from './context';
+import { IntegrationStepExecutionContext } from './context';
 
 export enum IntegrationStepResultStatus {
   SUCCESS = 'success',
@@ -12,7 +12,9 @@ export type IntegrationStep = IntegrationStepMetadata & {
   /**
    * Function that runs to perform the stpe that
    */
-  executionHandler: (context: IntegrationStepContext) => Promise<void> | void;
+  executionHandler: (
+    context: IntegrationStepExecutionContext,
+  ) => Promise<void> | void;
 };
 
 export type IntegrationStepResult = IntegrationStepMetadata & {
