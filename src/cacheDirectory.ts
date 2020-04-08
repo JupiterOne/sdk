@@ -57,6 +57,85 @@ export async function symlink({
   await fs.symlink(fullSourcePath, fullDestinationPath);
 }
 
+export interface WalkDirectoryIterateeInput {
+  filePath: string;
+  data: string;
+}
+
+type WalkDirectoryIteratee = (
+  input: WalkDirectoryIterateeInput,
+) => Promise<void> | void;
+
+interface WalkDirectoryInput {
+  cacheDirectory?: string;
+  path: string;
+  iteratee: WalkDirectoryIteratee;
+}
+
+/**
+ * Function for recursively walking through a directory
+ * and reading the data from each file.
+ */
+export async function walkDirectory({
+  cacheDirectory,
+  path: relativePath,
+  iteratee,
+}: WalkDirectoryInput) {
+  const directory = cacheDirectory ?? getDefaultCacheDirectory();
+  const fullPath = path.resolve(directory, relativePath);
+
+  const isDirectory = await isDirectoryPresent(fullPath);
+  if (!isDirectory) {
+    return;
+  }
+
+  const files = await fs.readdir(fullPath);
+
+  const onFile = async (filePath: string) => {
+    const data = await fs.readFile(filePath, 'utf8');
+    await iteratee({ filePath, data });
+  };
+
+  const handleFilePath = async (filePath: string) => {
+    const stats = await fs.lstat(filePath);
+    if (stats.isDirectory()) {
+      // continue walking the directory
+      await walkDirectory({
+        cacheDirectory,
+        iteratee,
+        path: filePath,
+      });
+    } else if (stats.isFile()) {
+      // handle the file
+      await onFile(filePath);
+    } else if (stats.isSymbolicLink()) {
+      // resolve the symlink then reperform check
+      // to determine path resolves to a file or
+      // if we should continue recursing
+      const realPath = await fs.realpath(filePath);
+      await handleFilePath(realPath);
+    }
+  };
+
+  for (const file of files) {
+    await handleFilePath(path.resolve(fullPath, file));
+  }
+}
+
+async function isDirectoryPresent(fullPath: string) {
+  try {
+    const stats = await fs.lstat(fullPath);
+    return stats.isDirectory();
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return false;
+    }
+
+    // not what we expected... throw error
+    throw err;
+  }
+}
+
 async function ensurePathCanBeWrittenTo(pathToWrite: string) {
   const directoryPath = path.dirname(pathToWrite);
   await fs.mkdir(directoryPath, { recursive: true });

@@ -11,6 +11,8 @@ import {
 
 import { generateEntity, generateRelationship } from './util/graphObjects';
 
+import { Entity, Relationship } from '../../../types';
+
 jest.mock('fs');
 
 afterEach(() => {
@@ -142,6 +144,67 @@ describe('addRelationships', () => {
     // adding an additional relationship should trigger the flushing
     await jobState.addRelationships([generateRelationship()]);
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('iterateEntities', () => {
+  test('should flush buffered entities and iterate the entity "_type" index stored on disk', async () => {
+    const { jobState } = setupLocalStepJobState();
+
+    const matchingType = uuid();
+
+    const nonMatchingEntities = times(25, () =>
+      generateEntity({ _type: uuid() }),
+    );
+    const matchingEntities = times(25, () =>
+      generateEntity({ _type: matchingType }),
+    );
+
+    await jobState.addEntities([...nonMatchingEntities, ...matchingEntities]);
+
+    const collectedEntities: Entity[] = [];
+    const collectEntity = (e: Entity) => {
+      collectedEntities.push(e);
+    };
+
+    await jobState.iterateEntities({ _type: matchingType }, collectEntity);
+    expect(jobState.entities).toHaveLength(0);
+
+    expect(collectedEntities).toEqual(matchingEntities);
+  });
+});
+
+describe('iterateRelationships', () => {
+  test('should flush buffered relationshipos and iterate the relationship "_type" index stored on disk', async () => {
+    const { jobState } = setupLocalStepJobState();
+
+    const matchingType = uuid();
+
+    const nonMatchingRelationships = times(25, () =>
+      generateRelationship({ _type: uuid() }),
+    );
+    const matchingRelationships = times(25, () =>
+      generateRelationship({ _type: matchingType }),
+    );
+
+    await jobState.addRelationships([
+      ...nonMatchingRelationships,
+      ...matchingRelationships,
+    ]);
+    await jobState.flush();
+
+    const collectedRelationships: Relationship[] = [];
+    const collectRelationship = (r: Relationship) => {
+      collectedRelationships.push(r);
+    };
+
+    await jobState.iterateRelationships(
+      { _type: matchingType },
+      collectRelationship,
+    );
+    expect(jobState.relationships).toHaveLength(0);
+
+    expect(collectedRelationships).toEqual(matchingRelationships);
   });
 });
 

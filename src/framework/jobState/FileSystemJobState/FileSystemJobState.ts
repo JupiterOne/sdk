@@ -3,6 +3,11 @@ import { JobState, GraphObjectFilter, GraphObjectIteratee } from '../types';
 
 import { flushDataToDisk } from './flushDataToDisk';
 
+import {
+  iterateEntityTypeIndex,
+  iterateRelationshipTypeIndex,
+} from './indices';
+
 export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subject to tuning
 
 interface FileSystemJobStateInput {
@@ -45,16 +50,26 @@ export class FileSystemJobState implements JobState {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<Entity>,
   ) {
-    /* stub for now */
-    return;
+    await this.flushEntitiesToDisk();
+
+    await iterateEntityTypeIndex({
+      cacheDirectory: this.cacheDirectory,
+      type: filter._type,
+      iteratee,
+    });
   }
 
   async iterateRelationships(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<Relationship>,
   ) {
-    /* stub for now */
-    return;
+    await this.flushRelationshipsToDisk();
+
+    await iterateRelationshipTypeIndex({
+      cacheDirectory: this.cacheDirectory,
+      type: filter._type,
+      iteratee,
+    });
   }
 
   async flush() {
