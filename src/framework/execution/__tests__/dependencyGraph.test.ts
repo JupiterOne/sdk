@@ -122,7 +122,7 @@ describe('executeStepDependencyGraph', () => {
     expect(jobStateFlushSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('should halt execution of dependant steps until current step has completed', async () => {
+  test('should hold execution of dependent steps until current step has completed', async () => {
     let resolveSpyA: Function;
     const spyA = jest.fn(
       (): Promise<void> =>
@@ -248,7 +248,7 @@ describe('executeStepDependencyGraph', () => {
     expect(spyB).toHaveBeenCalledBefore(spyC);
   });
 
-  test('should steps with dependencies resulting in a status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE should also assume the same status', async () => {
+  test('steps with dependencies resulting in PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE assume the same status', async () => {
     const spyA = jest.fn().mockRejectedValue(new Error('oops'));
     const spyB = jest.fn();
     const spyC = jest.fn();
@@ -493,7 +493,6 @@ describe('executeStepDependencyGraph', () => {
     expect(spyA).toHaveBeenCalledBefore(spyC);
     expect(spyB).toHaveBeenCalledBefore(spyD);
     expect(spyC).toHaveBeenCalledBefore(spyD);
-    expect(spyE).toHaveBeenCalledBefore(spyD);
     expect(spyE).toHaveBeenCalledBefore(spyD);
   });
 
