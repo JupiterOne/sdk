@@ -50,12 +50,7 @@ export class FileSystemJobState implements JobState {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<Entity>,
   ) {
-    const entitiesMatchingType = this.entities.filter(
-      (e) => e._type === filter._type,
-    );
-    for (const entity of entitiesMatchingType) {
-      await iteratee(entity);
-    }
+    await this.flushEntitiesToDisk();
 
     await iterateEntityTypeIndex({
       cacheDirectory: this.cacheDirectory,
@@ -68,12 +63,7 @@ export class FileSystemJobState implements JobState {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<Relationship>,
   ) {
-    const relationshipsMatchingType = this.relationships.filter(
-      (r) => r._type === filter._type,
-    );
-    for (const relationship of relationshipsMatchingType) {
-      await iteratee(relationship);
-    }
+    await this.flushRelationshipsToDisk();
 
     await iterateRelationshipTypeIndex({
       cacheDirectory: this.cacheDirectory,
