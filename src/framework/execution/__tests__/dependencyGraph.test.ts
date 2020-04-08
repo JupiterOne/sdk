@@ -180,13 +180,13 @@ describe('executeStepDependencyGraph', () => {
   });
 
   test('executes all leaf steps concurrently', async () => {
-    const resolvers: Function[] = [];
+    const resolveFunctions: Function[] = [];
 
     const testData = times(50, () => {
       const spy = jest.fn(
         (): Promise<void> =>
           new Promise((resolve) => {
-            resolvers.push(resolve);
+            resolveFunctions.push(resolve);
           }),
       );
 
@@ -205,16 +205,22 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    const executionPromise = executeStepDependencyGraph(graph);
+    let executionComplete = false;
+    const executionPromise = executeStepDependencyGraph(graph).then(() => {
+      executionComplete = true;
+    });
 
     // wait for all spies to have been called
     await waitForExpect(() => {
       spies.forEach((spy) => expect(spy).toHaveBeenCalledTimes(1));
     });
 
-    resolvers.forEach((resolve) => resolve());
+    expect(executionComplete).toEqual(false);
+
+    resolveFunctions.forEach((resolve) => resolve());
 
     await executionPromise;
+    expect(executionComplete).toEqual(true);
   });
 
   test('should mark steps failed executionHandlers with status FAILURE a dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE', async () => {
