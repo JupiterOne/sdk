@@ -5,7 +5,7 @@ import { flushDataToDisk } from './flushDataToDisk';
 
 export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subject to tuning
 
-interface LocalStepJobStateInput {
+interface FileSystemJobStateInput {
   step: string;
   cacheDirectory?: string;
 }
@@ -17,7 +17,7 @@ export class FileSystemJobState implements JobState {
   entities: Entity[];
   relationships: Relationship[];
 
-  constructor({ step, cacheDirectory }: LocalStepJobStateInput) {
+  constructor({ step, cacheDirectory }: FileSystemJobStateInput) {
     this.step = step;
     this.cacheDirectory = cacheDirectory;
 
