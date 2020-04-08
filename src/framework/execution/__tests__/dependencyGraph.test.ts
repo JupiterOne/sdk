@@ -103,7 +103,6 @@ describe('executeStepDependencyGraph', () => {
   });
 
   test('should perform a flush of the jobState after a step was executed', async () => {
-    const executionHandlerSpy = jest.fn();
     let jobStateFlushSpy;
 
     const steps: IntegrationStep[] = [
@@ -126,7 +125,7 @@ describe('executeStepDependencyGraph', () => {
   test('should halt execution of dependant steps until current step has completed', async () => {
     let resolveSpyA: Function;
     const spyA = jest.fn(
-      () =>
+      (): Promise<void> =>
         new Promise((resolve) => {
           resolveSpyA = resolve;
         }),
@@ -538,14 +537,14 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'd',
         name: 'd',
-        type: [],
+        types: [],
         dependsOn: ['b'],
         executionHandler: spyD,
       },
       {
         id: 'e',
         name: 'e',
-        type: [],
+        types: [],
         dependsOn: ['c', 'd'],
         executionHandler: spyE,
       },
