@@ -18,6 +18,12 @@
     "test": "jest --passWithNoTests",
     "prepublishOnly": "tsc --declaration"
   },
+  "dependencies": {
+    "@types/lodash": "^4.14.149",
+    "lodash": "^4.17.15",
+    "p-map": "^4.0.0",
+    "uuid": "^7.0.3"
+  },
   "devDependencies": {
     "@types/jest": "^25.2.1",
     "@types/node": "^13.11.0",
@@ -25,7 +31,9 @@
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-jest": "^23.8.2",
+    "eslint-plugin-prettier": "^3.1.2",
     "husky": "^4.2.3",
     "jest": "^25.2.6",
     "lint-staged": "^10.1.1",
@@ -37,6 +45,9 @@
   "jest": {
     "clearMocks": true,
     "preset": "ts-jest",
+    "testMatch": [
+      "**/__tests__/**/*test.(js|ts)"
+    ],
     "testPathIgnorePatterns": [
       "<rootDir>/dist/",
       "<rootDir>/node_modules/"
@@ -82,11 +93,5 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,html,css}": "prettier --write"
-  },
-  "dependencies": {
-    "@types/lodash": "^4.14.149",
-    "eslint-config-prettier": "^6.10.1",
-    "eslint-plugin-prettier": "^3.1.2",
-    "uuid": "^7.0.3"
   }
 }
