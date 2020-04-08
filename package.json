@@ -20,8 +20,10 @@
   },
   "dependencies": {
     "@types/lodash": "^4.14.149",
+    "dependency-graph": "^0.9.0",
     "lodash": "^4.17.15",
     "p-map": "^4.0.0",
+    "p-queue": "^6.3.0",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
@@ -36,13 +38,18 @@
     "eslint-plugin-prettier": "^3.1.2",
     "husky": "^4.2.3",
     "jest": "^25.2.6",
+    "jest-extended": "^0.11.5",
     "lint-staged": "^10.1.1",
     "memfs": "^3.1.2",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.0",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "wait-for-expect": "^3.0.2"
   },
   "jest": {
+    "setupFilesAfterEnv": [
+      "./testSetup.ts"
+    ],
     "clearMocks": true,
     "preset": "ts-jest",
     "testMatch": [
