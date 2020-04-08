@@ -57,7 +57,7 @@ export async function symlink({
   await fs.symlink(fullSourcePath, fullDestinationPath);
 }
 
-interface WalkDirectoryIterateeInput {
+export interface WalkDirectoryIterateeInput {
   filePath: string;
   data: string;
 }
@@ -83,6 +83,11 @@ export async function walkDirectory({
 }: WalkDirectoryInput) {
   const directory = cacheDirectory ?? getDefaultCacheDirectory();
   const fullPath = path.resolve(directory, relativePath);
+
+  const isDirectory = await isDirectoryPresent(fullPath);
+  if (!isDirectory) {
+    return;
+  }
 
   const files = await fs.readdir(fullPath);
 
@@ -114,6 +119,20 @@ export async function walkDirectory({
 
   for (const file of files) {
     await handleFilePath(path.resolve(fullPath, file));
+  }
+}
+
+async function isDirectoryPresent(fullPath: string) {
+  try {
+    const stats = await fs.lstat(fullPath);
+    return stats.isDirectory();
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return false;
+    }
+
+    // not what we expected... throw error
+    throw err;
   }
 }
 

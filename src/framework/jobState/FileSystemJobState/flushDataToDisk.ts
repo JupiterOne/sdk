@@ -5,8 +5,11 @@ import groupBy from 'lodash/groupBy';
 import { writeJsonToPath, symlink } from '../../../cacheDirectory';
 
 import { Entity, Relationship } from '../../types';
-
-export type CollectionType = 'entities' | 'relationships';
+import {
+  CollectionType,
+  buildIndexFilePath,
+  buildStepCollectionFilePath,
+} from './path';
 
 interface FlushDataToDiskInput {
   cacheDirectory?: string;
@@ -35,12 +38,12 @@ export async function flushDataToDisk({
     Object.entries(groupedCollections),
     async ([type, collection]) => {
       const filename = generateJsonFilename();
-      const graphDataPath = buildStepDataPath({
+      const graphDataPath = buildStepCollectionFilePath({
         step,
         collectionType,
         filename,
       });
-      const indexPath = buildIndexPath({ type, collectionType, filename });
+      const indexPath = buildIndexFilePath({ type, collectionType, filename });
 
       await writeJsonToPath({
         cacheDirectory,
@@ -62,30 +65,4 @@ export async function flushDataToDisk({
 
 function generateJsonFilename() {
   return `${uuid()}.json`;
-}
-
-interface BuildStepDataPathInput {
-  step: string;
-  collectionType: CollectionType;
-  filename: string;
-}
-function buildStepDataPath({
-  step,
-  collectionType,
-  filename,
-}: BuildStepDataPathInput) {
-  return ['graph', step, collectionType, filename].join('/');
-}
-
-interface BuildIndexPathInput {
-  collectionType: CollectionType;
-  type: string;
-  filename: string;
-}
-function buildIndexPath({
-  collectionType,
-  type,
-  filename,
-}: BuildIndexPathInput) {
-  return ['index', collectionType, type, filename].join('/');
 }
