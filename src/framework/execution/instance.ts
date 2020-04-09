@@ -10,21 +10,6 @@ export const LOCAL_INTEGRATION_INSTANCE: IntegrationInstance = {
   config: undefined,
 } as const;
 
-export async function fetchIntegrationInstance(
-  config: IntegrationInvocationConfig,
-  integrationInstanceId?: string,
-): Promise<IntegrationInstance> {
-  return integrationInstanceId
-    ? await fetchIntegrationInstanceFromJupiterOne(integrationInstanceId)
-    : createIntegrationInstanceForLocalExecution(config);
-}
-
-export async function fetchIntegrationInstanceFromJupiterOne(
-  integrationInstanceId: string,
-): Promise<IntegrationInstance> {
-  throw new Error('Not implemented yet.');
-}
-
 export function createIntegrationInstanceForLocalExecution(
   config: IntegrationInvocationConfig,
 ): IntegrationInstance {

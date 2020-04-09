@@ -1,21 +1,14 @@
-import { IntegrationActionName, IntegrationExecutionContext } from '../types';
-import { executeIntegration } from '../executeIntegration';
+import { IntegrationExecutionContext } from '../types';
+import { executeIntegrationLocally } from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 
 test('should execute validator function if provided in config', async () => {
   const validate = jest.fn();
 
-  await executeIntegration(
-    {
-      invocationValidator: validate,
-      integrationSteps: [],
-    },
-    {
-      action: {
-        name: IntegrationActionName.INGEST,
-      },
-    },
-  );
+  await executeIntegrationLocally({
+    invocationValidator: validate,
+    integrationSteps: [],
+  });
 
   const expectedContext: IntegrationExecutionContext = {
     instance: LOCAL_INTEGRATION_INSTANCE,

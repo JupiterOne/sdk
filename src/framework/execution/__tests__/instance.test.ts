@@ -1,11 +1,19 @@
 import {
-  fetchIntegrationInstance,
+  createIntegrationInstanceForLocalExecution,
   LOCAL_INTEGRATION_INSTANCE,
 } from '../instance';
 
-describe('fetchIntegrationInstance', () => {
+describe('createIntegrationInstanceForLocalExecution', () => {
+  beforeEach(() => {
+    process.env.MY_FIELD = 'test';
+  });
+
+  afterEach(() => {
+    delete process.env.MY_FIELD;
+  });
+
   test('creates local integration instance with config loaded from env if no instance id is provided', async () => {
-    const instance = await fetchIntegrationInstance({
+    const instance = await createIntegrationInstanceForLocalExecution({
       invocationValidator: jest.fn(),
       integrationSteps: [],
     });
@@ -13,16 +21,22 @@ describe('fetchIntegrationInstance', () => {
     expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
   });
 
-  test('throws error when fetching instance by id (not implemented yet)', async () => {
-    await expect(
-      fetchIntegrationInstance(
-        {
-          instanceConfigFields: {},
-          invocationValidator: jest.fn(),
-          integrationSteps: [],
+  test('should load config from env onto instance', async () => {
+    const instance = await createIntegrationInstanceForLocalExecution({
+      invocationValidator: jest.fn(),
+      integrationSteps: [],
+      instanceConfigFields: {
+        myField: {
+          type: 'string',
         },
-        'test-instance-id',
-      ),
-    ).rejects.toThrow(/Not implemented yet./);
+      },
+    });
+
+    expect(instance).toEqual({
+      ...LOCAL_INTEGRATION_INSTANCE,
+      config: {
+        myField: 'test',
+      },
+    });
   });
 });
