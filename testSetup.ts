@@ -26,9 +26,5 @@ jest.mock('bunyan', () => {
 
   MockLogger.stdSerializers = Logger.stdSerializers;
 
-  if (process.env.ENABLE_LOGGING === 'true') {
-    return Logger;
-  } else {
-    return MockLogger;
-  }
+  return MockLogger;
 });

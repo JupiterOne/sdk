@@ -3,6 +3,7 @@ import {
   IntegrationExecutionContext,
 } from './types';
 
+import { createIntegrationLogger } from './logger';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 
 /**
@@ -10,7 +11,11 @@ import { createIntegrationInstanceForLocalExecution } from './instance';
  */
 export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
   const instance = createIntegrationInstanceForLocalExecution(config);
-  const context: IntegrationExecutionContext = { instance };
+  const logger = createIntegrationLogger(instance.name, config);
+  const context: IntegrationExecutionContext = {
+    instance,
+    logger,
+  };
 
   return executeIntegration(context, config);
 }
