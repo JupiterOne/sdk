@@ -15,7 +15,8 @@
     "lint": "eslint . --cache --fix --ext .ts,.tsx",
     "format": "prettier --write '**/*.{ts,js,json,css,md,yml}'",
     "type-check": "tsc --noEmit",
-    "test": "jest --passWithNoTests",
+    "test": "jest",
+    "test:ci": "yarn lint && yarn type-check && yarn test",
     "prepublishOnly": "tsc --declaration"
   },
   "dependencies": {

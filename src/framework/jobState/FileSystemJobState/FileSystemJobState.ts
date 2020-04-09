@@ -10,7 +10,7 @@ import {
 
 export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subject to tuning
 
-interface LocalStepJobStateInput {
+interface FileSystemJobStateInput {
   step: string;
   cacheDirectory?: string;
 }
@@ -22,7 +22,7 @@ export class FileSystemJobState implements JobState {
   entities: Entity[];
   relationships: Relationship[];
 
-  constructor({ step, cacheDirectory }: LocalStepJobStateInput) {
+  constructor({ step, cacheDirectory }: FileSystemJobStateInput) {
     this.step = step;
     this.cacheDirectory = cacheDirectory;
 
@@ -50,12 +50,7 @@ export class FileSystemJobState implements JobState {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<Entity>,
   ) {
-    const entitiesMatchingType = this.entities.filter(
-      (e) => e._type === filter._type,
-    );
-    for (const entity of entitiesMatchingType) {
-      await iteratee(entity);
-    }
+    await this.flushEntitiesToDisk();
 
     await iterateEntityTypeIndex({
       cacheDirectory: this.cacheDirectory,
@@ -68,12 +63,7 @@ export class FileSystemJobState implements JobState {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<Relationship>,
   ) {
-    const relationshipsMatchingType = this.relationships.filter(
-      (r) => r._type === filter._type,
-    );
-    for (const relationship of relationshipsMatchingType) {
-      await iteratee(relationship);
-    }
+    await this.flushRelationshipsToDisk();
 
     await iterateRelationshipTypeIndex({
       cacheDirectory: this.cacheDirectory,

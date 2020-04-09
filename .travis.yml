@@ -8,4 +8,4 @@ notifications:
     on_success: never
     on_failure: always
 
-script: yarn test
+script: yarn test:ci
