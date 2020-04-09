@@ -1,0 +1,205 @@
+import { DepGraph } from 'dependency-graph';
+import PromiseQueue from 'p-queue';
+
+import { FileSystemJobState } from '../jobState';
+
+import {
+  IntegrationStep,
+  IntegrationStepResult,
+  IntegrationStepResultStatus,
+} from './types';
+
+/**
+ * This function accepts a list of steps and constructs a dependency graph
+ * using the `dependsOn` field from each step.
+ */
+export function buildStepDependencyGraph(
+  steps: IntegrationStep[],
+): DepGraph<IntegrationStep> {
+  const dependencyGraph = new DepGraph<IntegrationStep>();
+
+  // add all nodes first
+  steps.forEach((step) => {
+    dependencyGraph.addNode(step.id, step);
+  });
+
+  // add dependencies
+  steps.forEach((step) => {
+    step.dependsOn?.forEach((dependency) => {
+      dependencyGraph.addDependency(step.id, dependency);
+    });
+  });
+
+  // executing overallOrder will throw an error
+  // if a circular dependency is found
+  dependencyGraph.overallOrder();
+
+  return dependencyGraph;
+}
+
+/**
+ * This function takes a step dependency graph and executes
+ * the steps in order based on the values of their `dependsOn`.
+ *
+ * How execution works:
+ *
+ * First, all leaf nodes are executed.
+ *
+ * After each node's work completes, the node is removed from
+ * the dependency graph. After the node is removed,
+ * the graph checks to see if the removal of the node has
+ * created more leaf nodes and executes them. This continues
+ * until there are no more nodes to execute.
+ */
+export function executeStepDependencyGraph(
+  inputGraph: DepGraph<IntegrationStep>,
+): Promise<IntegrationStepResult[]> {
+  // create a clone of the dependencyGraph because mutating
+  // the input graph is icky
+  //
+  // cloned graph is mutated because it is slightly easier to
+  // remove nodes from the graph to find new leaf nodes
+  // instead of tracking state ourselves
+  const stepResultsMap = buildStepResultsMap(inputGraph);
+  const workingGraph = inputGraph.clone();
+
+  // create a queue for managing promises to be executed
+  const promiseQueue = new PromiseQueue();
+
+  /**
+   * Updates the result of a step result with the provided satus
+   */
+  function updateStepResultStatus(
+    step: IntegrationStep,
+    status: IntegrationStepResultStatus,
+  ) {
+    const existingResult = stepResultsMap.get(step.id);
+    if (existingResult) {
+      stepResultsMap.set(step.id, { ...existingResult, status });
+    }
+  }
+
+  /**
+   * Finds a result from the dependency graph that contains
+   * a status of FAILURE or PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE.
+   *
+   * NOTE: the untouched input graph is used for determining
+   * results since the working graph gets mutated.
+   */
+  function stepHasDependencyFailure(step: IntegrationStep) {
+    return inputGraph
+      .dependenciesOf(step.id)
+      .map((id) => stepResultsMap.get(id))
+      .find(
+        (result) =>
+          result.status === IntegrationStepResultStatus.FAILURE ||
+          result.status ===
+            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+      );
+  }
+
+  /**
+   * Safely removes a step from the workingGraph, ensuring
+   * that dependencys are removed.
+   *
+   * This function helps create new leaf nodes to execute.
+   */
+  function removeStepFromWorkingGraph(step: IntegrationStep) {
+    workingGraph.dependantsOf(step.id).forEach((dependent) => {
+      workingGraph.removeDependency(dependent, step.id);
+    });
+
+    workingGraph.removeNode(step.id);
+  }
+
+  return new Promise((resolve, reject) => {
+    /**
+     * If an unexpected error occurs during the execution of a step,
+     * this function catch that, pause the queue so that
+     * additional work is not executed and reject the promise.
+     */
+    function handleUnexpectedError(err) {
+      promiseQueue.pause();
+      reject(err);
+    }
+
+    /**
+     * This function finds leaf steps that can be executed
+     * and adds the step execution to the promise queue.
+     *
+     * As prior to enqueuing the work, step is removed from the
+     * working graph.
+     */
+    function enqueueLeafSteps() {
+      // do not add more work if promise queue has been paused.
+      if (promiseQueue.isPaused) {
+        return;
+      }
+
+      workingGraph.overallOrder(true).forEach((stepId) => {
+        const step = workingGraph.getNodeData(stepId);
+        removeStepFromWorkingGraph(step);
+        promiseQueue.add(() => executeStep(step).catch(handleUnexpectedError));
+      });
+    }
+
+    /**
+     * This function runs a step's executionHandler.
+     *
+     * Errors from an execution handler are caught and used to
+     * determine a status code for the step's result.
+     */
+    async function executeStep(step: IntegrationStep) {
+      const context = buildStepContext(step);
+      let status: IntegrationStepResultStatus;
+
+      try {
+        await step.executionHandler(context);
+
+        if (stepHasDependencyFailure(step)) {
+          status =
+            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
+        } else {
+          status = IntegrationStepResultStatus.SUCCESS;
+        }
+      } catch (err) {
+        status = IntegrationStepResultStatus.FAILURE;
+      }
+
+      await context.jobState.flush();
+      updateStepResultStatus(step, status);
+      enqueueLeafSteps();
+    }
+
+    // kick off work for all leaf nodes
+    enqueueLeafSteps();
+
+    promiseQueue.onIdle().then(() => resolve([...stepResultsMap.values()]));
+  });
+}
+
+function buildStepContext(step: IntegrationStep) {
+  const jobState = new FileSystemJobState({ step: step.id });
+
+  return { jobState };
+}
+
+function buildStepResultsMap(dependencyGraph: DepGraph<IntegrationStep>) {
+  const stepResultMapEntries = dependencyGraph
+    .overallOrder()
+    .map(
+      (stepId): IntegrationStepResult => {
+        const step = dependencyGraph.getNodeData(stepId);
+        return {
+          id: step.id,
+          name: step.name,
+          types: step.types,
+          dependsOn: step.dependsOn,
+          status: IntegrationStepResultStatus.NOT_EXECUTED,
+        };
+      },
+    )
+    .map((result): [string, IntegrationStepResult] => [result.id, result]);
+
+  return new Map<string, IntegrationStepResult>(stepResultMapEntries);
+}
