@@ -21,12 +21,12 @@ export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
 }
 
 /**
- * Executes an integration based and performs actions based on the
- * event that was provided.
+ * Executes an integration and performs actions defined by the config
+ * using context that was provided.
  */
 async function executeIntegration(
   context: IntegrationExecutionContext,
   config: IntegrationInvocationConfig,
 ) {
-  await config.invocationValidator?.(context);
+  await config.validateInvocation?.(context);
 }

@@ -3,7 +3,7 @@ import { InvocationValidationFunction } from './validation';
 
 export interface IntegrationInvocationConfig {
   instanceConfigFields?: IntegrationInstanceConfigFieldMap;
-  invocationValidator?: InvocationValidationFunction;
+  validateInvocation?: InvocationValidationFunction;
   integrationSteps: IntegrationStep[];
 }
 

@@ -8,7 +8,7 @@ test('should execute validator function if provided in config', async () => {
   const validate = jest.fn();
 
   await executeIntegrationLocally({
-    invocationValidator: validate,
+    validateInvocation: validate,
     integrationSteps: [],
   });
 

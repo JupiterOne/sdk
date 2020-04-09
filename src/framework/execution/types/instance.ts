@@ -1,6 +1,6 @@
 /**
  * A stored user configuration for executing the integration defined by
- * associated the `integrationDefinitionId`.
+ * the associated `integrationDefinitionId`.
  */
 export interface IntegrationInstance {
   /**
@@ -39,17 +39,4 @@ export interface IntegrationInstance {
    * messages.
    */
   config: any;
-
-  /**
-   * Ternary marker for offsite flow state.
-   *
-   * Integrations supporting an offsite installation flow will set this value to
-   * `false` when the instance is created, indicating that the configuration is
-   * incomplete. The value will become `true` when the offsite flow has
-   * completed successfully.
-   *
-   * Integrations that do/will not support an offsite installation flow will
-   * leave this value `undefined`.
-   */
-  offsiteComplete?: boolean;
 }
