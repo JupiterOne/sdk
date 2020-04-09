@@ -60,7 +60,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
     },
   },
 
-  invocationValidator (context: IntegrationExecutionContext) {
+  validateInvocation(context: IntegrationExecutionContext) {
     const { config } = context.instance;
 
     if (!config.clientId || !config.clientSecret) {
@@ -141,9 +141,9 @@ The `instanceConfigFields` field contains a map of integration fields that are
 required to be provided for authenticating with a given provider API. This
 varies between services.
 
-#### `invocationValidator`
+#### `validateInvocation`
 
-The `invocationValidator` field is a validation function that is required for
+The `validateInvocation` field is a validation function that is required for
 ensuring the integration has received a valid set of `instanceConfigFields`. It
 is common practice to execute a test API call to ensure everything has been
 configured properly.
@@ -180,7 +180,7 @@ configuration and construct a state machine to execute work in a specific order.
 
 #### Validation
 
-The `invocationValidator` function will run first to ensure the integration is
+The `validateInvocation` function will run first to ensure the integration is
 capable of interfacing with a given provider. Next, the `getStepStartStates`
 will run to get a list of integration steps that should be executed.
 
