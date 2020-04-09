@@ -1,6 +1,6 @@
 /**
  * A stored user configuration for executing the integration defined by
- * associated the `integrationDefinitionId`.
+ * the associated `integrationDefinitionId`.
  */
 export interface IntegrationInstance {
   /**
