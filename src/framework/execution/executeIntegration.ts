@@ -23,5 +23,5 @@ async function executeIntegration(
   context: IntegrationExecutionContext,
   config: IntegrationInvocationConfig,
 ) {
-  await config.invocationValidator?.(context);
+  await config.validateInvocation?.(context);
 }

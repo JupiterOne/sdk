@@ -14,7 +14,7 @@ describe('createIntegrationInstanceForLocalExecution', () => {
 
   test('creates local integration instance with config loaded from env if no instance id is provided', async () => {
     const instance = await createIntegrationInstanceForLocalExecution({
-      invocationValidator: jest.fn(),
+      validateInvocation: jest.fn(),
       integrationSteps: [],
     });
 
@@ -23,7 +23,7 @@ describe('createIntegrationInstanceForLocalExecution', () => {
 
   test('should load config from env onto instance', async () => {
     const instance = await createIntegrationInstanceForLocalExecution({
-      invocationValidator: jest.fn(),
+      validateInvocation: jest.fn(),
       integrationSteps: [],
       instanceConfigFields: {
         myField: {
