@@ -1,10 +1,10 @@
 import { PersistedObject } from './persistedObject';
 
-export type Entity = EntityCoreProperties & EntityAdditionalProperties;
+export type Entity = EntityCoreProperties &
+  RawDataTracking &
+  EntityAdditionalProperties;
 
-type EntityCoreProperties = PersistedObject & EntityOverrides & RawDataTracking;
-
-interface EntityOverrides {
+interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
   // entity can have multiple classes
   _class: string | string[];
 }

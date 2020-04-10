@@ -92,9 +92,9 @@ export type IntegrationEntityData = {
  * A generated `Entity` that includes additional properties
  * specific to the entity class and some properties are guaranteed.
  */
-type GeneratedEntity = AdditionalEntityProperties &
-  Omit<Entity, '_class'> &
-  RawDataTracking & { _class: string[] };
+type GeneratedEntity = Omit<Entity, '_class'> &
+  AdditionalEntityProperties &
+  RawDataTracking & { _class: string[]; _key: string; _type: string };
 
 export type IntegrationEntityBuilderInput = {
   /**
