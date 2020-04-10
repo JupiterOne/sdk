@@ -1,19 +1,21 @@
-import { EntityFromIntegration } from '../../persister';
-import { validateRawData } from '../../persister/rawData';
-import { RawUploadJobInput } from '../../persister/types';
+import { Entity, RawDataTracking, EntityRawData } from '../types';
+
 import {
   IntegrationEntitySchema,
   getSchema,
   validateEntityWithSchema,
 } from '@jupiterone/data-model';
+
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
-import { getTime } from '.';
+import { getTime } from './converters';
+
+import { validateRawData } from './validation';
 
 /**
- * Properties required to build a valid `EntityFromIntegration`.
+ * Properties required to build a valid `Entity`.
  *
  * These properties are more strict (than their counterpart definitions on
- * `EntityFromIntegration`) to prevent literal assignments of `undefined`
+ * `Entity`) to prevent literal assignments of `undefined`
  * values.
  */
 type RequiredEntityProperties = { _class: string | string[]; _type: string };
@@ -37,10 +39,10 @@ type AdditionalEntityProperties = { [key: string]: any };
  * Many values can be transferred from the `ProviderSourceData` without any
  * additional effort. Other properties must transferred by using code to specify
  * the property value. These properties can be any name/value, but the list
- * certainly includes those of `EntityFromIntegration`, and some properties
+ * certainly includes those of `Entity`, and some properties
  * *must* be provided.
  */
-type LiteralAssignments = Partial<EntityFromIntegration> &
+type LiteralAssignments = Partial<Entity> &
   RequiredEntityProperties &
   AdditionalEntityProperties;
 
@@ -61,12 +63,12 @@ type ProviderSourceData = {
 };
 
 /**
- * Data used to generate an `EntityFromIntegration`.
+ * Data used to generate an `Entity`.
  */
 export type IntegrationEntityData = {
   /**
    * Data from a provider API that will be selectively transferred to an
-   * `EntityFromIntegration`.
+   * `Entity`.
    *
    * The common properties defined by data model schemas, selected by the
    * `assign._class`, will be found and transferred to the generated entity.
@@ -87,15 +89,16 @@ export type IntegrationEntityData = {
 };
 
 /**
- * A generated `EntityFromIntegration` that includes additional properties
+ * A generated `Entity` that includes additional properties
  * specific to the entity class and some properties are guaranteed.
  */
-type GeneratedEntityFromIntegration = EntityFromIntegration &
-  AdditionalEntityProperties & { _key: string; _class: string[] };
+type GeneratedEntity = AdditionalEntityProperties &
+  Omit<Entity, '_class'> &
+  RawDataTracking & { _class: string[] };
 
 export type IntegrationEntityBuilderInput = {
   /**
-   * Data used to generate an `EntityFromIntegration`.
+   * Data used to generate an `Entity`.
    */
   entityData: IntegrationEntityData;
 
@@ -106,21 +109,18 @@ export type IntegrationEntityBuilderInput = {
 };
 
 /**
- * Generates an `EntityFromIntegration` using the provided `entityData`.
+ * Generates an `Entity` using the provided `entityData`.
  *
  * WARNING: This is a work in progress. Only certain schemas are supported as
  * the API is worked out in the Azure integration.
  */
 export function createIntegrationEntity(
   input: IntegrationEntityBuilderInput,
-): GeneratedEntityFromIntegration {
+): GeneratedEntity {
   const generatedEntity = generateEntity(input.entityData);
 
   validateRawData(generatedEntity);
-
-  if (process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION) {
-    validateEntityWithSchema(generatedEntity);
-  }
+  validateEntityWithSchema(generatedEntity);
 
   return generatedEntity;
 }
@@ -129,8 +129,8 @@ function generateEntity({
   source,
   assign,
   tagProperties,
-}: IntegrationEntityData): GeneratedEntityFromIntegration {
-  const _rawData: RawUploadJobInput[] = [];
+}: IntegrationEntityData): GeneratedEntity {
+  const _rawData: EntityRawData[] = [];
   if (Object.entries(source).length > 0) {
     _rawData.push({ name: 'default', rawData: source });
   }
@@ -141,7 +141,7 @@ function generateEntity({
   const _key = assign._key || generateEntityKey(assign._type, source);
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
-  const entity: GeneratedEntityFromIntegration = {
+  const entity: GeneratedEntity = {
     ...whitelistedProviderData(source, _class),
     ...assign,
     _key,
@@ -198,7 +198,7 @@ function generateEntityKey(_type: string, data: any): string {
 function whitelistedProviderData(
   source: ProviderSourceData,
   _class: string[],
-): ProviderSourceData {
+): Omit<ProviderSourceData, 'tags'> {
   const whitelistedProviderData: ProviderSourceData = {};
   const schemaProperties = schemaWhitelistedPropertyNames(_class);
   for (const e of Object.entries(source)) {

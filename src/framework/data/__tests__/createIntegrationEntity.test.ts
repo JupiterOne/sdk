@@ -224,21 +224,6 @@ describe('createIntegrationEntity', () => {
     ).toThrowError(/duplicate/i);
   });
 
-  test('assigning duplicate rawData is an error', () => {
-    const rawData = [
-      { name: 'another', rawData: 'anything' },
-      { name: 'another', rawData: 'another' },
-    ];
-    expect(() =>
-      createIntegrationEntity({
-        entityData: {
-          assign: { ...networkAssigns, _rawData: rawData },
-          source: networkSourceData,
-        },
-      }),
-    ).toThrowError(/duplicate/i);
-  });
-
   test('empty source is no rawData', () => {
     expect(
       createIntegrationEntity({
