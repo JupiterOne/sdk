@@ -7,6 +7,7 @@ import {
   IntegrationStep,
   IntegrationStepResult,
   IntegrationStepResultStatus,
+  IntegrationExecutionContext,
 } from './types';
 
 /**
@@ -52,6 +53,7 @@ export function buildStepDependencyGraph(
  * until there are no more nodes to execute.
  */
 export function executeStepDependencyGraph(
+  executionContext: IntegrationExecutionContext,
   inputGraph: DepGraph<IntegrationStep>,
 ): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
@@ -150,7 +152,7 @@ export function executeStepDependencyGraph(
      * determine a status code for the step's result.
      */
     async function executeStep(step: IntegrationStep) {
-      const context = buildStepContext(step);
+      const context = buildStepContext(executionContext, step);
       let status: IntegrationStepResultStatus;
 
       try {
@@ -178,10 +180,21 @@ export function executeStepDependencyGraph(
   });
 }
 
-function buildStepContext(step: IntegrationStep) {
+function buildStepContext(
+  context: IntegrationExecutionContext,
+  step: IntegrationStep,
+) {
+  const logger = context.logger.child({
+    step: step.id,
+    stepName: step.name,
+  });
   const jobState = new FileSystemJobState({ step: step.id });
 
-  return { jobState };
+  return {
+    ...context,
+    logger,
+    jobState,
+  };
 }
 
 function buildStepResultsMap(dependencyGraph: DepGraph<IntegrationStep>) {
