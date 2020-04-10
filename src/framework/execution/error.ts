@@ -17,9 +17,9 @@ export class IntegrationConfigValidationError extends Error
   code = 'LocalConfigFieldTypeMismatch';
 }
 
-export class IntegrationStepStartStateInvalidStepIdError extends Error
+export class IntegrationStepStartStateUnknownStepIdsError extends Error
   implements IntegrationError {
-  code = 'InvalidStepIdSpecifiedInStartState';
+  code = 'UnknownStepIdSpecifiedInStartState';
 }
 
 export class IntegrationUnaccountedStepStartStatesError extends Error

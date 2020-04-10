@@ -3,12 +3,15 @@ import { IntegrationStep, IntegrationStepStartStates } from '../types';
 import { validateStepStartStates } from '../validation';
 
 describe('validateStepStartStates', () => {
-  test('throws error if step is provided in start states', () => {
+  test('throws error if unknown steps are found in start states', () => {
     const states: IntegrationStepStartStates = {
       a: {
         disabled: false,
       },
       b: {
+        disabled: true,
+      },
+      c: {
         disabled: true,
       },
     };
@@ -22,11 +25,11 @@ describe('validateStepStartStates', () => {
     ];
 
     expect(() => validateStepStartStates(steps, states)).toThrow(
-      `Invalid step id "b" found in start states.`,
+      `Unknown steps found in start states: "b", "c"`,
     );
   });
 
-  test('throws steps are not accounted for in start states', () => {
+  test('throws error when steps are not accounted for in start states', () => {
     const states: IntegrationStepStartStates = {
       a: {
         disabled: false,
@@ -54,7 +57,7 @@ describe('validateStepStartStates', () => {
     ];
 
     expect(() => validateStepStartStates(steps, states)).toThrow(
-      `Steps not defined in start states found: "b", "c"`,
+      `Start states not found for: "b", "c"`,
     );
   });
 

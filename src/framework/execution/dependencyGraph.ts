@@ -227,7 +227,7 @@ function buildStepResultsMap(dependencyGraph: DepGraph<IntegrationStep>) {
           name: step.name,
           types: step.types,
           dependsOn: step.dependsOn,
-          status: IntegrationStepResultStatus.NOT_EXECUTED,
+          status: IntegrationStepResultStatus.DISABLED,
         };
       },
     )

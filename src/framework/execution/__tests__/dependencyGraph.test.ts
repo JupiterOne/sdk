@@ -686,7 +686,7 @@ describe('executeStepDependencyGraph', () => {
     expect(spyD).toHaveBeenCalledBefore(spyE);
   });
 
-  test('does not execute step if marked ', async () => {
+  test('does not execute step if marked as disabled', async () => {
     const spyA = jest.fn();
 
     /**
@@ -728,7 +728,7 @@ describe('executeStepDependencyGraph', () => {
         id: 'a',
         name: 'a',
         types: [],
-        status: IntegrationStepResultStatus.NOT_EXECUTED,
+        status: IntegrationStepResultStatus.DISABLED,
       },
     ]);
   });
@@ -809,7 +809,7 @@ describe('executeStepDependencyGraph', () => {
           id: 'b',
           name: 'b',
           types: [],
-          status: IntegrationStepResultStatus.NOT_EXECUTED,
+          status: IntegrationStepResultStatus.DISABLED,
         },
         {
           id: 'c',
@@ -823,7 +823,7 @@ describe('executeStepDependencyGraph', () => {
           name: 'd',
           types: [],
           dependsOn: ['b', 'c', 'e'],
-          status: IntegrationStepResultStatus.NOT_EXECUTED,
+          status: IntegrationStepResultStatus.DISABLED,
         },
         {
           id: 'e',
