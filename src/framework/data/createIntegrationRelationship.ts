@@ -1,18 +1,18 @@
 import {
-  EntityFromIntegration,
-  IntegrationRelationship,
-  RelationshipFromIntegration,
+  Entity,
+  Relationship,
+  ExplicitRelationship,
   RelationshipMapping,
   RelationshipDirection,
   TargetEntityProperties,
   TargetFilterKey,
-  MappedRelationshipFromIntegration,
-} from '../../persister';
+  MappedRelationship,
+} from '../types';
 
 type DirectRelationshipOptions = {
   _class: string;
-  from: EntityFromIntegration;
-  to: EntityFromIntegration;
+  from: Entity;
+  to: Entity;
   properties?: AdditionalRelationshipProperties;
 };
 
@@ -27,7 +27,7 @@ type DirectRelationshipLiteralOptions = {
 
 type MappedRelationshipOptions = {
   _class: string;
-  source: EntityFromIntegration;
+  source: Entity;
   target: TargetEntity;
   properties?: AdditionalRelationshipProperties;
 
@@ -80,7 +80,7 @@ export function createIntegrationRelationship(
     | DirectRelationshipLiteralOptions
     | MappedRelationshipOptions
     | MappedRelationshipLiteralOptions,
-): IntegrationRelationship {
+): Relationship {
   if ('_mapping' in options) {
     return createMappedRelationship(options);
   } else if ('target' in options) {
@@ -97,9 +97,9 @@ export function createIntegrationRelationship(
       properties: options.properties,
     });
   } else if ('fromType' in options) {
-    return createRelationshipFromIntegration(options);
+    return createRelationship(options);
   } else {
-    return createRelationshipFromIntegration({
+    return createRelationship({
       _class: options._class,
       fromType: options.from._type,
       fromKey: options.from._key,
@@ -112,7 +112,7 @@ export function createIntegrationRelationship(
 
 function createMappedRelationship(
   options: MappedRelationshipLiteralOptions,
-): MappedRelationshipFromIntegration {
+): MappedRelationship {
   const mapping = options._mapping;
 
   if (mapping.skipTargetCreation === undefined) {
@@ -143,14 +143,14 @@ function createMappedRelationship(
   };
 }
 
-function createRelationshipFromIntegration({
+function createRelationship({
   _class,
   fromType,
   fromKey,
   toType,
   toKey,
   properties,
-}: DirectRelationshipLiteralOptions): RelationshipFromIntegration {
+}: DirectRelationshipLiteralOptions): ExplicitRelationship {
   const relationshipClass = _class.toUpperCase();
   const _type = generateRelationshipType(_class, fromType, toType);
   return {

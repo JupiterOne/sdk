@@ -1,28 +1,29 @@
 import {
-  EntityFromIntegration,
-  MappedRelationshipFromIntegration,
-  RelationshipFromIntegration,
-  RelationshipDirection,
-} from '../../persister';
-import {
   createIntegrationRelationship,
   generateRelationshipType,
 } from '../createIntegrationRelationship';
 
+import {
+  Entity,
+  Relationship,
+  RelationshipDirection,
+  MappedRelationship,
+} from '../../types';
+
 describe('DirectRelationshipOptions', () => {
-  const entityA: EntityFromIntegration = {
+  const entityA: Entity = {
     _type: 'a_entity',
     _class: 'A',
     _key: 'a',
   };
 
-  const entityB: EntityFromIntegration = {
+  const entityB: Entity = {
     _type: 'b_entity',
     _class: 'B',
     _key: 'b',
   };
 
-  const expected: RelationshipFromIntegration = {
+  const expected: Relationship = {
     _type: 'a_entity_has_b_entity',
     _class: 'HAS',
     _key: 'a|has|b',
@@ -66,7 +67,7 @@ describe('DirectRelationshipOptions', () => {
 });
 
 describe('DirectRelationshipLiteralOptions', () => {
-  const expected: RelationshipFromIntegration = {
+  const expected: Relationship = {
     _type: 'a_entity_has_b_entity',
     _class: 'HAS',
     _key: 'a|has|b',
@@ -101,19 +102,19 @@ describe('DirectRelationshipLiteralOptions', () => {
 });
 
 describe('MappedRelationshipOptions', () => {
-  const entityA: EntityFromIntegration = {
+  const entityA: Entity = {
     _type: 'a_entity',
     _class: 'A',
     _key: 'a',
   };
 
-  const entityB: EntityFromIntegration = {
+  const entityB: Entity = {
     _type: 'b_entity',
     _class: 'B',
     _key: 'b',
   };
 
-  const expected: MappedRelationshipFromIntegration = {
+  const expected: MappedRelationship = {
     _key: 'a|has|b',
     _type: 'mapping_source_has_b_entity',
     _class: 'HAS',
@@ -185,7 +186,7 @@ describe('MappedRelationshipOptions', () => {
 });
 
 describe('MappedRelationshipLiteralOptions', () => {
-  const expected: MappedRelationshipFromIntegration = {
+  const expected: MappedRelationship = {
     _key: 'a|has|b',
     _type: 'mapping_source_has_b_entity',
     _class: 'HAS',
@@ -284,13 +285,13 @@ describe('MappedRelationshipLiteralOptions', () => {
 });
 
 describe('generateRelationshipType', () => {
-  const entityA: EntityFromIntegration = {
+  const entityA: Entity = {
     _type: 'a_entity',
     _class: 'A',
     _key: 'a',
   };
 
-  const entityB: EntityFromIntegration = {
+  const entityB: Entity = {
     _type: 'b_entity',
     _class: 'B',
     _key: 'b',
