@@ -138,7 +138,7 @@ function generateEntity({
     _rawData.push(...assign._rawData);
   }
 
-  const _key = assign._key || generateEntityKey(assign._type, source);
+  const _key = assign._key || generateEntityKey(source);
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
   const entity: GeneratedEntity = {
@@ -185,7 +185,7 @@ function generateEntity({
   return entity;
 }
 
-function generateEntityKey(_type: string, data: any): string {
+function generateEntityKey(data: any): string {
   const id = data.providerId || data.id;
   if (!id) {
     throw new Error(
