@@ -1,4 +1,24 @@
-import { IntegrationStepExecutionContext } from './context';
+import {
+  IntegrationExecutionContext,
+  IntegrationStepExecutionContext,
+} from './context';
+
+export interface IntegrationStepStartState {
+  /**
+   * Indicates the step is disabled and should not be
+   * executed by the state machine.
+   */
+  disabled: boolean;
+}
+
+export type IntegrationStepStartStates = Record<
+  string,
+  IntegrationStepStartState
+>;
+
+export type DetermineStepStartStatesFunction = (
+  context: IntegrationExecutionContext,
+) => IntegrationStepStartStates;
 
 export enum IntegrationStepResultStatus {
   SUCCESS = 'success',

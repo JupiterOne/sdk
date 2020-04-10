@@ -8,6 +8,7 @@ import {
   IntegrationStepResult,
   IntegrationStepResultStatus,
   IntegrationExecutionContext,
+  IntegrationStepExecutionContext,
 } from './types';
 
 /**
@@ -183,7 +184,7 @@ export function executeStepDependencyGraph(
 function buildStepContext(
   context: IntegrationExecutionContext,
   step: IntegrationStep,
-) {
+): IntegrationStepExecutionContext {
   const logger = context.logger.child({
     step: step.id,
     stepName: step.name,
