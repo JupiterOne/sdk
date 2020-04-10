@@ -12,6 +12,7 @@ test('should execute validator function if provided in config', async () => {
 
   const expectedContext: IntegrationExecutionContext = {
     instance: LOCAL_INTEGRATION_INSTANCE,
+    logger: expect.any(jest.requireActual('bunyan')),
   };
 
   expect(validate).toHaveBeenCalledWith(expectedContext);
