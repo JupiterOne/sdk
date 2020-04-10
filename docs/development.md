@@ -473,7 +473,7 @@ Here is an example of what the summary file would look like.
 
 ```json
 {
-  "integrationStepsResult": [
+  "integrationStepResults": [
     {
       "id": "step-fetch-accounts",
       "name": "Fetch Accounts",
@@ -511,7 +511,7 @@ Here is an example of what the summary file would look like.
 }
 ```
 
-The `integrationStepsResult` is made available for developers to understand the
+The `integrationStepResults` is made available for developers to understand the
 status of each step after collection has been completed.
 
 The `metadata` contains a `partialDatasets` field that is a reduced collection
