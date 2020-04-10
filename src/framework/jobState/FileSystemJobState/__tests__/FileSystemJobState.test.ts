@@ -126,7 +126,7 @@ describe('addEntities', () => {
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('accepts GeneratedEntity type from createIntegrationEntity utililty', async () => {
+  test('accepts GeneratedEntity type from createIntegrationEntity utility', async () => {
     const { jobState } = setupLocalStepJobState();
 
     const networkAssigns = {
