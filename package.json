@@ -20,6 +20,7 @@
     "prepublishOnly": "tsc --declaration"
   },
   "dependencies": {
+    "@jupiterone/data-model": "^0.2.0",
     "bunyan": "^1.8.12",
     "dependency-graph": "^0.9.0",
     "lodash": "^4.17.15",

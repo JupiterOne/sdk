@@ -423,6 +423,13 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
+"@jupiterone/data-model@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.2.0.tgz#c068be27d8dd91f5d250fc7666c4f88edca5eaef"
+  integrity sha512-dhRxi5T+2bWoee52KIiw7yOEam7uMe+tCWd8yaEwAOBkKCctQIiyQXrQDkEMPDobSwn0KQHwHUN38JM0eWrjIA==
+  dependencies:
+    ajv "^6.12.0"
+
 "@samverschueren/stream-to-observable@^0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@samverschueren/stream-to-observable/-/stream-to-observable-0.3.0.tgz#ecdf48d532c58ea477acfcab80348424f8d0662f"
@@ -658,7 +665,7 @@ aggregate-error@^3.0.0:
     clean-stack "^2.0.0"
     indent-string "^4.0.0"
 
-ajv@^6.10.0, ajv@^6.10.2, ajv@^6.5.5:
+ajv@^6.10.0, ajv@^6.10.2, ajv@^6.12.0, ajv@^6.5.5:
   version "6.12.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-6.12.0.tgz#06d60b96d87b8454a5adaba86e7854da629db4b7"
   integrity sha512-D6gFiFA0RRLyUbvijN74DWAjXSFxWKaWP7mldxkVhyhAV3+SWA9HEJPHQ2c9soIeTFJqcSdFDGFgdqs1iUU2Hw==
