@@ -8,6 +8,7 @@ export interface IntegrationExecutionContext {
   logger: IntegrationLogger;
 }
 
-export interface IntegrationStepExecutionContext {
+export interface IntegrationStepExecutionContext
+  extends IntegrationExecutionContext {
   jobState: JobState;
 }

@@ -1,9 +1,10 @@
 import { v4 as uuid } from 'uuid';
 import times from 'lodash/times';
 import waitForExpect from 'wait-for-expect';
+
 import { createIntegrationLogger } from '../logger';
 
-import { FileSystemJobState } from '../../jobState';
+import { FileSystemJobState, JobState } from '../../jobState';
 
 import {
   buildStepDependencyGraph,
@@ -14,8 +15,11 @@ import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 
 import {
   IntegrationStep,
+  IntegrationInstance,
   IntegrationStepResultStatus,
   IntegrationExecutionContext,
+  IntegrationStepExecutionContext,
+  IntegrationLogger,
 } from '../types';
 
 const executionContext: IntegrationExecutionContext = {
@@ -99,7 +103,17 @@ describe('buildStepDependencyGraph', () => {
 
 describe('executeStepDependencyGraph', () => {
   test('executionHandler should have access to "jobState", "logger", and "instance" objects', async () => {
-    const executionHandlerSpy = jest.fn();
+    let jobState: JobState;
+    let instance: IntegrationInstance;
+    let logger: IntegrationLogger;
+
+    const executionHandlerSpy = jest.fn(
+      (context: IntegrationStepExecutionContext) => {
+        jobState = context.jobState;
+        instance = context.instance;
+        logger = context.logger;
+      },
+    );
 
     const steps: IntegrationStep[] = [
       {
@@ -114,10 +128,10 @@ describe('executeStepDependencyGraph', () => {
     await executeStepDependencyGraph(executionContext, graph);
 
     expect(executionHandlerSpy).toHaveBeenCalledTimes(1);
-    const args = executionHandlerSpy.mock.calls[0][0];
-    expect(args.jobState).toBeInstanceOf(FileSystemJobState);
-    expect(args.logger).toBeInstanceOf(jest.requireActual('bunyan'));
-    expect(args.instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
+
+    expect(jobState).toBeInstanceOf(FileSystemJobState);
+    expect(logger).toBeInstanceOf(jest.requireActual('bunyan'));
+    expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
   });
 
   test('should perform a flush of the jobState after a step was executed', async () => {
