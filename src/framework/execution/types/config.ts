@@ -1,7 +1,9 @@
 import { IntegrationStep } from './step';
+import { InvocationValidationFunction } from './validation';
 
 export interface IntegrationInvocationConfig {
-  instanceConfigFields: IntegrationInstanceConfigFieldMap;
+  instanceConfigFields?: IntegrationInstanceConfigFieldMap;
+  validateInvocation?: InvocationValidationFunction;
   integrationSteps: IntegrationStep[];
 }
 

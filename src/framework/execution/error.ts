@@ -11,3 +11,8 @@ export class IntegrationLocalConfigFieldTypeMismatch extends Error
   implements IntegrationError {
   code = 'LocalConfigFieldTypeMismatch';
 }
+
+export class IntegrationConfigValidationError extends Error
+  implements IntegrationError {
+  code = 'LocalConfigFieldTypeMismatch';
+}
