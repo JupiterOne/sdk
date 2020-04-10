@@ -7,6 +7,7 @@ import {
   IntegrationStep,
   IntegrationStepResult,
   IntegrationStepResultStatus,
+  IntegrationStepStartStates,
   IntegrationExecutionContext,
   IntegrationStepExecutionContext,
 } from './types';
@@ -56,6 +57,7 @@ export function buildStepDependencyGraph(
 export function executeStepDependencyGraph(
   executionContext: IntegrationExecutionContext,
   inputGraph: DepGraph<IntegrationStep>,
+  stepStartStates: IntegrationStepStartStates,
 ): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -68,6 +70,10 @@ export function executeStepDependencyGraph(
 
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
+
+  function isStepEnabled(step: IntegrationStep) {
+    return stepStartStates[step.id].disabled === false;
+  }
 
   /**
    * Updates the result of a step result with the provided satus
@@ -141,8 +147,20 @@ export function executeStepDependencyGraph(
 
       workingGraph.overallOrder(true).forEach((stepId) => {
         const step = workingGraph.getNodeData(stepId);
-        removeStepFromWorkingGraph(step);
-        promiseQueue.add(() => executeStep(step).catch(handleUnexpectedError));
+
+        /**
+         * We only remove the node from the graph and
+         * execute the step if it is enabled.
+         *
+         * This allows for dependencies to remain in the graph
+         * and prevents dependent steps from executing.
+         */
+        if (isStepEnabled(step)) {
+          removeStepFromWorkingGraph(step);
+          promiseQueue.add(() =>
+            executeStep(step).catch(handleUnexpectedError),
+          );
+        }
       });
     }
 
@@ -209,7 +227,7 @@ function buildStepResultsMap(dependencyGraph: DepGraph<IntegrationStep>) {
           name: step.name,
           types: step.types,
           dependsOn: step.dependsOn,
-          status: IntegrationStepResultStatus.NOT_EXECUTED,
+          status: IntegrationStepResultStatus.DISABLED,
         };
       },
     )
