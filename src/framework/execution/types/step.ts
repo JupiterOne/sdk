@@ -16,7 +16,7 @@ export type IntegrationStepStartStates = Record<
   IntegrationStepStartState
 >;
 
-export type DetermineStepStartStatesFunction = (
+export type GetStepStartStatesFunction = (
   context: IntegrationExecutionContext,
 ) => IntegrationStepStartStates;
 

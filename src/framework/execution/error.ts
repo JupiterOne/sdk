@@ -16,3 +16,13 @@ export class IntegrationConfigValidationError extends Error
   implements IntegrationError {
   code = 'LocalConfigFieldTypeMismatch';
 }
+
+export class IntegrationStepStartStateInvalidStepIdError extends Error
+  implements IntegrationError {
+  code = 'InvalidStepIdSpecifiedInStartState';
+}
+
+export class IntegrationUnaccountedStepStartStatesError extends Error
+  implements IntegrationError {
+  code = 'UnaccountedStepStartStates';
+}

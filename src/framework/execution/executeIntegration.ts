@@ -6,6 +6,7 @@ import {
   IntegrationExecutionContext,
   IntegrationStepResult,
   IntegrationStepResultStatus,
+  IntegrationStepStartStates,
   PartialDatasets,
 } from './types';
 
@@ -47,10 +48,17 @@ async function executeIntegration(
   config: IntegrationInvocationConfig,
 ): Promise<ExecuteIntegrationResult> {
   await config.validateInvocation?.(context);
+
+  const stepStates =
+    config.getStepStartStates?.(context) ??
+    getDefaultStepStartStates(config.integrationSteps);
+
   const integrationStepResults = await executeSteps(
     context,
+    stepStates,
     config.integrationSteps,
   );
+
   const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
     integrationStepResults,
   );
@@ -84,5 +92,19 @@ function determinePartialDatasetsFromStepExecutionResults(
       return partialDatasets;
     },
     { types: [] },
+  );
+}
+
+function getDefaultStepStartStates(
+  steps: IntegrationStep[],
+): IntegrationStepStartStates {
+  return steps.reduce(
+    (states: IntegrationStepStartStates, step: IntegrationStep) => {
+      states[step.id] = {
+        disabled: false,
+      };
+      return states;
+    },
+    {},
   );
 }
