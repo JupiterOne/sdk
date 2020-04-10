@@ -6,12 +6,12 @@ import {
 } from './error';
 
 export function validateStepStartStates(
-  states: IntegrationStepStartStates,
   steps: IntegrationStep[],
+  stepStartStates: IntegrationStepStartStates,
 ) {
   const stepSet = new Set<string>(steps.map((step) => step.id));
 
-  Object.keys(states).forEach((stepId) => {
+  Object.keys(stepStartStates).forEach((stepId) => {
     if (!stepSet.has(stepId)) {
       throw new IntegrationStepStartStateInvalidStepIdError(
         `Invalid step id "${stepId}" found in start states.`,

@@ -24,7 +24,6 @@ export enum IntegrationStepResultStatus {
   SUCCESS = 'success',
   FAILURE = 'failure',
   PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE = 'partial_success_due_to_dependency_failure',
-  SKIPPED = 'skipped',
   NOT_EXECUTED = 'not_executed',
 }
 

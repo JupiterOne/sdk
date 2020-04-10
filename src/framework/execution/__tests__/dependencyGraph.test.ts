@@ -11,6 +11,8 @@ import {
   executeStepDependencyGraph,
 } from '../dependencyGraph';
 
+import { getDefaultStepStartStates } from '../step';
+
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 
 import {
@@ -125,7 +127,11 @@ describe('executeStepDependencyGraph', () => {
     ];
 
     const graph = buildStepDependencyGraph(steps);
-    await executeStepDependencyGraph(executionContext, graph);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
 
     expect(executionHandlerSpy).toHaveBeenCalledTimes(1);
 
@@ -149,7 +155,11 @@ describe('executeStepDependencyGraph', () => {
     ];
 
     const graph = buildStepDependencyGraph(steps);
-    await executeStepDependencyGraph(executionContext, graph);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
 
     expect(jobStateFlushSpy).toHaveBeenCalledTimes(1);
   });
@@ -192,6 +202,7 @@ describe('executeStepDependencyGraph', () => {
     const executionPromise = executeStepDependencyGraph(
       executionContext,
       graph,
+      getDefaultStepStartStates(steps),
     );
 
     // wait for spyA to have been called
@@ -242,6 +253,7 @@ describe('executeStepDependencyGraph', () => {
     const executionPromise = executeStepDependencyGraph(
       executionContext,
       graph,
+      getDefaultStepStartStates(steps),
     ).then(() => {
       executionComplete = true;
     });
@@ -297,7 +309,11 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    const result = await executeStepDependencyGraph(executionContext, graph);
+    const result = await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
     expect(result).toEqual([
       {
         id: 'a',
@@ -368,7 +384,11 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    const result = await executeStepDependencyGraph(executionContext, graph);
+    const result = await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
     expect(result).toEqual([
       {
         id: 'a',
@@ -440,7 +460,11 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    await executeStepDependencyGraph(executionContext, graph);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -497,7 +521,11 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    await executeStepDependencyGraph(executionContext, graph);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -564,7 +592,11 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    await executeStepDependencyGraph(executionContext, graph);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -633,7 +665,11 @@ describe('executeStepDependencyGraph', () => {
 
     const graph = buildStepDependencyGraph(steps);
 
-    await executeStepDependencyGraph(executionContext, graph);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -648,5 +684,165 @@ describe('executeStepDependencyGraph', () => {
 
     expect(spyC).toHaveBeenCalledBefore(spyE);
     expect(spyD).toHaveBeenCalledBefore(spyE);
+  });
+
+  test('does not execute step if marked ', async () => {
+    const spyA = jest.fn();
+
+    /**
+     *     e
+     *       \
+     * a - c - d
+     *       /
+     *     b
+     *
+     * In this situation, 'a', 'e', and 'b' are leaf nodes
+     * 'c' depends on 'a',
+     * 'd' depends on 'e', 'c', and 'b'
+     */
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: [],
+        executionHandler: spyA,
+      },
+    ];
+
+    const graph = buildStepDependencyGraph(steps);
+    const stepStartStates = getDefaultStepStartStates(steps);
+    stepStartStates['a'] = {
+      disabled: true,
+    };
+
+    const result = await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      stepStartStates,
+    );
+
+    expect(spyA).toHaveBeenCalledTimes(0);
+
+    expect(result).toEqual([
+      {
+        id: 'a',
+        name: 'a',
+        types: [],
+        status: IntegrationStepResultStatus.NOT_EXECUTED,
+      },
+    ]);
+  });
+  test("does not execute step and it's dependencies if marked as disabled", async () => {
+    const spyA = jest.fn();
+    const spyB = jest.fn();
+    const spyC = jest.fn();
+    const spyD = jest.fn();
+    const spyE = jest.fn();
+
+    /**
+     *     e
+     *       \
+     * a - c - d
+     *       /
+     *     b
+     *
+     * In this situation, 'a', 'e', and 'b' are leaf nodes
+     * 'c' depends on 'a',
+     * 'd' depends on 'e', 'c', and 'b'
+     */
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: [],
+        executionHandler: spyA,
+      },
+      {
+        id: 'b',
+        name: 'b',
+        types: [],
+        executionHandler: spyB,
+      },
+      {
+        id: 'c',
+        name: 'c',
+        types: [],
+        dependsOn: ['a'],
+        executionHandler: spyC,
+      },
+      {
+        id: 'd',
+        name: 'd',
+        types: [],
+        dependsOn: ['b', 'c', 'e'],
+        executionHandler: spyD,
+      },
+      {
+        id: 'e',
+        name: 'e',
+        types: [],
+        executionHandler: spyE,
+      },
+    ];
+
+    const graph = buildStepDependencyGraph(steps);
+    const stepStartStates = getDefaultStepStartStates(steps);
+    stepStartStates['b'] = {
+      disabled: true,
+    };
+
+    const results = await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      stepStartStates,
+    );
+
+    expect(results).toEqual(
+      expect.arrayContaining([
+        {
+          id: 'a',
+          name: 'a',
+          types: [],
+          status: IntegrationStepResultStatus.SUCCESS,
+        },
+        {
+          id: 'b',
+          name: 'b',
+          types: [],
+          status: IntegrationStepResultStatus.NOT_EXECUTED,
+        },
+        {
+          id: 'c',
+          name: 'c',
+          types: [],
+          dependsOn: ['a'],
+          status: IntegrationStepResultStatus.SUCCESS,
+        },
+        {
+          id: 'd',
+          name: 'd',
+          types: [],
+          dependsOn: ['b', 'c', 'e'],
+          status: IntegrationStepResultStatus.NOT_EXECUTED,
+        },
+        {
+          id: 'e',
+          name: 'e',
+          types: [],
+          status: IntegrationStepResultStatus.SUCCESS,
+        },
+      ]),
+    );
+
+    expect(spyA).toHaveBeenCalledTimes(1);
+    expect(spyC).toHaveBeenCalledTimes(1);
+    expect(spyE).toHaveBeenCalledTimes(1);
+
+    expect(spyB).toHaveBeenCalledTimes(0);
+    expect(spyD).toHaveBeenCalledTimes(0);
+
+    expect(spyA).toHaveBeenCalledBefore(spyC);
+    expect(spyC).toHaveBeenCalledBefore(spyD);
+    expect(spyE).toHaveBeenCalledBefore(spyD);
   });
 });

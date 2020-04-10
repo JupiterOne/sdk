@@ -21,7 +21,7 @@ describe('validateStepStartStates', () => {
       },
     ];
 
-    expect(() => validateStepStartStates(states, steps)).toThrow(
+    expect(() => validateStepStartStates(steps, states)).toThrow(
       `Invalid step id "b" found in start states.`,
     );
   });
@@ -53,7 +53,7 @@ describe('validateStepStartStates', () => {
       },
     ];
 
-    expect(() => validateStepStartStates(states, steps)).toThrow(
+    expect(() => validateStepStartStates(steps, states)).toThrow(
       `Steps not defined in start states found: "b", "c"`,
     );
   });
@@ -73,6 +73,6 @@ describe('validateStepStartStates', () => {
       },
     ];
 
-    expect(() => validateStepStartStates(states, steps)).not.toThrow();
+    expect(() => validateStepStartStates(steps, states)).not.toThrow();
   });
 });
