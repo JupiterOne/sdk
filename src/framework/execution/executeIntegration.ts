@@ -1,10 +1,16 @@
 import {
+  IntegrationStep,
   IntegrationInvocationConfig,
   IntegrationExecutionContext,
 } from './types';
 
 import { createIntegrationLogger } from './logger';
 import { createIntegrationInstanceForLocalExecution } from './instance';
+
+import {
+  buildStepDependencyGraph,
+  executeStepDependencyGraph,
+} from './dependencyGraph';
 
 /**
  * Starts local execution of an integration
@@ -29,4 +35,13 @@ async function executeIntegration(
   config: IntegrationInvocationConfig,
 ) {
   await config.validateInvocation?.(context);
+  await executeSteps(context, config.integrationSteps);
+}
+
+async function executeSteps(
+  context: IntegrationExecutionContext,
+  steps: IntegrationStep[],
+) {
+  const stepGraph = buildStepDependencyGraph(steps);
+  return executeStepDependencyGraph(context, stepGraph);
 }
