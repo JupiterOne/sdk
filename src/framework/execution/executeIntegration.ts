@@ -45,20 +45,20 @@ export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
 async function executeIntegration(
   context: IntegrationExecutionContext,
   config: IntegrationInvocationConfig,
-) {
+): Promise<ExecuteIntegrationResult> {
   await config.validateInvocation?.(context);
   const integrationStepResults = await executeSteps(
     context,
     config.integrationSteps,
   );
-  const partialDatasetMetadata = determinePartialDatasetsFromStepExecutionResults(
+  const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
     integrationStepResults,
   );
 
   return {
     integrationStepResults,
     metadata: {
-      partialDatasets: partialDatasetMetadata,
+      partialDatasets,
     },
   };
 }
@@ -75,10 +75,7 @@ function determinePartialDatasetsFromStepExecutionResults(
   stepResults: IntegrationStepResult[],
 ): PartialDatasets {
   return stepResults.reduce(
-    (
-      partialDatasets: PartialDatasetMetadata,
-      stepResult: IntegrationStepResult,
-    ) => {
+    (partialDatasets: PartialDatasets, stepResult: IntegrationStepResult) => {
       if (stepResult.status !== IntegrationStepResultStatus.SUCCESS) {
         partialDatasets.types = uniq(
           partialDatasets.types.concat(stepResult.types),
