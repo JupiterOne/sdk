@@ -24,16 +24,16 @@ test('should group objects by "_type" and write them to separate files', async (
   const allEntities = randomizeOrder(flatten(Object.values(testEntityData)));
 
   const cacheDirectory = '/' + uuid();
-  const step = uuid();
+  const storageDirectoryPath = uuid();
 
   await flushDataToDisk({
     cacheDirectory,
-    step,
+    storageDirectoryPath,
     collectionType: 'entities',
     data: allEntities,
   });
 
-  const entitiesDirectory = `${cacheDirectory}/graph/${step}/entities`;
+  const entitiesDirectory = `${cacheDirectory}/graph/${storageDirectoryPath}/entities`;
   const entityFiles = await fs.readdir(entitiesDirectory);
   expect(entityFiles).toHaveLength(3); // matches number of types we have
 

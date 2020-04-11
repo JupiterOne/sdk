@@ -1,11 +1,11 @@
+import pMap from 'p-map';
+import { Sema } from 'async-sema';
+
 import { Entity, Relationship } from '../../types';
-import {
-  JobState,
-  GraphObjectFilter,
-  GraphObjectIteratee,
-} from '../../execution/types';
+import { GraphObjectFilter, GraphObjectIteratee } from '../../execution/types';
 
 import { flushDataToDisk } from './flushDataToDisk';
+import { BucketMap } from './BucketMap';
 
 import {
   iterateEntityTypeIndex,
@@ -15,37 +15,43 @@ import {
 export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subject to tuning
 
 interface FileSystemGraphObjectStoreInput {
-  step: string;
   cacheDirectory?: string;
 }
 
-export class FileSystemGraphObjectStore implements JobState {
+export class FileSystemGraphObjectStore {
   readonly cacheDirectory?: string;
-  readonly step: string;
 
-  entities: Entity[];
-  relationships: Relationship[];
+  semaphore: Sema;
+  entityStorageMap: BucketMap<Entity>;
+  relationshipStorageMap: BucketMap<Relationship>;
 
-  constructor({ step, cacheDirectory }: FileSystemGraphObjectStoreInput) {
-    this.step = step;
-    this.cacheDirectory = cacheDirectory;
+  constructor(options?: FileSystemGraphObjectStoreInput) {
+    this.cacheDirectory = options?.cacheDirectory;
 
-    this.entities = [];
-    this.relationships = [];
+    this.entityStorageMap = new BucketMap();
+    this.relationshipStorageMap = new BucketMap();
+
+    this.semaphore = new Sema(1);
   }
 
-  async addEntities(newEntities: Entity[]) {
-    this.entities = this.entities.concat(newEntities);
+  async addEntities(storageDirectoryPath: string, newEntities: Entity[]) {
+    this.entityStorageMap.add(storageDirectoryPath, newEntities);
 
-    if (this.entities.length >= GRAPH_OBJECT_BUFFER_THRESHOLD) {
+    if (this.entityStorageMap.totalItemCount >= GRAPH_OBJECT_BUFFER_THRESHOLD) {
       await this.flushEntitiesToDisk();
     }
   }
 
-  async addRelationships(newRelationships: Relationship[]) {
-    this.relationships = this.relationships.concat(newRelationships);
+  async addRelationships(
+    storageDirectoryPath: string,
+    newRelationships: Relationship[],
+  ) {
+    this.relationshipStorageMap.add(storageDirectoryPath, newRelationships);
 
-    if (this.relationships.length >= GRAPH_OBJECT_BUFFER_THRESHOLD) {
+    if (
+      this.relationshipStorageMap.totalItemCount >=
+      GRAPH_OBJECT_BUFFER_THRESHOLD
+    ) {
       await this.flushRelationshipsToDisk();
     }
   }
@@ -84,28 +90,49 @@ export class FileSystemGraphObjectStore implements JobState {
   }
 
   async flushEntitiesToDisk() {
-    if (this.entities.length) {
-      await flushDataToDisk({
-        step: this.step,
-        cacheDirectory: this.cacheDirectory,
-        collectionType: 'entities',
-        data: this.entities,
-      });
+    await this.lockOperation(
+      () => pMap(
+        [...this.entityStorageMap.keys()],
+        (storageDirectoryPath) => {
+          const entities = this.entityStorageMap.get(storageDirectoryPath) ?? [];
+          this.entityStorageMap.delete(storageDirectoryPath);
 
-      this.entities = [];
-    }
+          return flushDataToDisk({
+            storageDirectoryPath,
+            cacheDirectory: this.cacheDirectory,
+            collectionType: 'entities',
+            data: entities,
+          });
+        },
+      )
+    )
   }
 
   async flushRelationshipsToDisk() {
-    if (this.relationships.length) {
-      await flushDataToDisk({
-        step: this.step,
-        cacheDirectory: this.cacheDirectory,
-        collectionType: 'relationships',
-        data: this.relationships,
-      });
+    await this.lockOperation(
+      () => pMap(
+        [...this.relationshipStorageMap.keys()],
+        (storageDirectoryPath) => {
+          const relationships = this.relationshipStorageMap.get(storageDirectoryPath) ?? [];
+          this.relationshipStorageMap.delete(storageDirectoryPath);
 
-      this.relationships = [];
+          return flushDataToDisk({
+            storageDirectoryPath,
+            cacheDirectory: this.cacheDirectory,
+            collectionType: 'relationships',
+            data: relationships,
+          });
+        },
+      )
+    );
+  }
+
+  async lockOperation (operation: () => Promise<any>) {
+    await this.semaphore.acquire();
+    try {
+      await operation();
+    } finally {
+      this.semaphore.release();
     }
   }
 }
