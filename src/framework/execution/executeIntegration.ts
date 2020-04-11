@@ -25,8 +25,14 @@ interface ExecuteIntegrationResult {
  * Starts local execution of an integration
  */
 export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
+  const logger = createIntegrationLogger({
+    name: 'Local',
+    invocationConfig: config,
+    pretty: true,
+  });
+
   const instance = createIntegrationInstanceForLocalExecution(config);
-  const logger = createIntegrationLogger(instance.name, config);
+
   const context: IntegrationExecutionContext = {
     instance,
     logger,
