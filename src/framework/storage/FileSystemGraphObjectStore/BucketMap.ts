@@ -6,7 +6,7 @@
  * and also tracks the total count of objects stored.
  */
 export class BucketMap<T = any> extends Map<string, T[]> {
-  totalItemCount: number = 0;
+  totalItemCount = 0;
 
   add(key: string, values: T[]) {
     const existingValues = this.get(key);

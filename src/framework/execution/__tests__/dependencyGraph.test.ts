@@ -4,8 +4,6 @@ import waitForExpect from 'wait-for-expect';
 
 import { createIntegrationLogger } from '../logger';
 
-import { FileSystemGraphObjectStore } from '../../storage';
-
 import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
@@ -136,9 +134,19 @@ describe('executeStepDependencyGraph', () => {
 
     expect(executionHandlerSpy).toHaveBeenCalledTimes(1);
 
-    expect(jobState).toBeInstanceOf(FileSystemGraphObjectStore);
     expect(logger).toBeInstanceOf(jest.requireActual('bunyan'));
     expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
+
+    // ensure job state has expected functions
+    [
+      'addEntities',
+      'addRelationships',
+      'iterateEntities',
+      'iterateRelationships',
+      'flush',
+    ].forEach((fn) => {
+      expect(jobState[fn]).toEqual(expect.any(Function));
+    });
   });
 
   test('should perform a flush of the jobState after a step was executed', async () => {

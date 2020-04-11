@@ -2,6 +2,7 @@ import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
 import { FileSystemGraphObjectStore } from '../storage';
+import { createStepJobState } from './jobState';
 
 import {
   IntegrationStep,
@@ -70,6 +71,8 @@ export function executeStepDependencyGraph(
 
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
+
+  const graphObjectStore = new FileSystemGraphObjectStore();
 
   function isStepEnabled(step: IntegrationStep) {
     return stepStartStates[step.id].disabled === false;
@@ -171,7 +174,11 @@ export function executeStepDependencyGraph(
      * determine a status code for the step's result.
      */
     async function executeStep(step: IntegrationStep) {
-      const context = buildStepContext(executionContext, step);
+      const context = buildStepContext(
+        executionContext,
+        step,
+        graphObjectStore,
+      );
       let status: IntegrationStepResultStatus;
 
       try {
@@ -202,17 +209,15 @@ export function executeStepDependencyGraph(
 function buildStepContext(
   context: IntegrationExecutionContext,
   step: IntegrationStep,
+  graphObjectStore: FileSystemGraphObjectStore,
 ): IntegrationStepExecutionContext {
-  const logger = context.logger.child({
-    step: step.id,
-    stepName: step.name,
-  });
-  const jobState = new FileSystemGraphObjectStore({ step: step.id });
-
   return {
     ...context,
-    logger,
-    jobState,
+    logger: context.logger.child({
+      step: step.id,
+      stepName: step.name,
+    }),
+    jobState: createStepJobState(step, graphObjectStore),
   };
 }
 
