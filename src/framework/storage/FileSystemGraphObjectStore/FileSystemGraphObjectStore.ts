@@ -14,19 +14,19 @@ import {
 
 export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subject to tuning
 
-interface FileSystemJobStateInput {
+interface FileSystemGraphObjectStoreInput {
   step: string;
   cacheDirectory?: string;
 }
 
-export class FileSystemJobState implements JobState {
+export class FileSystemGraphObjectStore implements JobState {
   readonly cacheDirectory?: string;
   readonly step: string;
 
   entities: Entity[];
   relationships: Relationship[];
 
-  constructor({ step, cacheDirectory }: FileSystemJobStateInput) {
+  constructor({ step, cacheDirectory }: FileSystemGraphObjectStoreInput) {
     this.step = step;
     this.cacheDirectory = cacheDirectory;
 

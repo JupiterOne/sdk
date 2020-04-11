@@ -5,9 +5,9 @@ import { v4 as uuid } from 'uuid';
 import times from 'lodash/times';
 
 import {
-  FileSystemJobState,
+  FileSystemGraphObjectStore,
   GRAPH_OBJECT_BUFFER_THRESHOLD,
-} from '../FileSystemJobState';
+} from '../FileSystemGraphObjectStore';
 
 import { generateEntity, generateRelationship } from './util/graphObjects';
 
@@ -211,7 +211,7 @@ describe('iterateRelationships', () => {
 function setupLocalStepJobState() {
   const step = uuid();
   const cacheDirectory = '/' + uuid();
-  const jobState = new FileSystemJobState({ step, cacheDirectory });
+  const jobState = new FileSystemGraphObjectStore({ step, cacheDirectory });
 
   return {
     step,
