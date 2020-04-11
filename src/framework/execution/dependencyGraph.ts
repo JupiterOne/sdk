@@ -1,7 +1,7 @@
 import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
-import { FileSystemJobState } from '../storage';
+import { FileSystemGraphObjectStore } from '../storage';
 
 import {
   IntegrationStep,
@@ -207,7 +207,7 @@ function buildStepContext(
     step: step.id,
     stepName: step.name,
   });
-  const jobState = new FileSystemJobState({ step: step.id });
+  const jobState = new FileSystemGraphObjectStore({ step: step.id });
 
   return {
     ...context,

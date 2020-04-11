@@ -4,7 +4,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { createIntegrationLogger } from '../logger';
 
-import { FileSystemJobState } from '../../storage';
+import { FileSystemGraphObjectStore } from '../../storage';
 
 import {
   buildStepDependencyGraph,
@@ -139,7 +139,7 @@ describe('executeStepDependencyGraph', () => {
 
     expect(executionHandlerSpy).toHaveBeenCalledTimes(1);
 
-    expect(jobState).toBeInstanceOf(FileSystemJobState);
+    expect(jobState).toBeInstanceOf(FileSystemGraphObjectStore);
     expect(logger).toBeInstanceOf(jest.requireActual('bunyan'));
     expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
   });
