@@ -25,8 +25,11 @@ import {
 } from '../types';
 
 const executionContext: IntegrationExecutionContext = {
-  logger: createIntegrationLogger('step logger', {
-    integrationSteps: [],
+  logger: createIntegrationLogger({
+    name: 'step logger',
+    invocationConfig: {
+      integrationSteps: [],
+    },
   }),
   instance: LOCAL_INTEGRATION_INSTANCE,
 };

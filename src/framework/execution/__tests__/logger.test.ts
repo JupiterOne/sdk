@@ -1,16 +1,18 @@
+import { Writable } from 'stream';
+
 import { createIntegrationLogger } from '../logger';
 import Logger from 'bunyan';
 import { IntegrationInvocationConfig } from '../types';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
-const loggerName = 'integration-logger';
+const name = 'integration-logger';
 
 describe('logger.trace', () => {
   test('includes verbose: true for downstream verbose log pruning', () => {
-    const integrationLogger = createIntegrationLogger(
-      loggerName,
+    const integrationLogger = createIntegrationLogger({
+      name,
       invocationConfig,
-    );
+    });
     const stream = (integrationLogger as any).streams[0]
       .stream as Logger.RingBuffer;
 
@@ -42,10 +44,10 @@ describe('logger.trace', () => {
   });
 
   test('logger.child.trace', () => {
-    const integrationLogger = createIntegrationLogger(
-      loggerName,
+    const integrationLogger = createIntegrationLogger({
+      name,
       invocationConfig,
-    );
+    });
     const childLogger = integrationLogger.child({
       mostuff: 'smile',
     });
@@ -85,7 +87,7 @@ describe('createIntegrationLogger', () => {
   });
 
   test('installs expected properties', async () => {
-    createIntegrationLogger(loggerName, invocationConfig);
+    createIntegrationLogger({ name, invocationConfig });
 
     expect(Logger.createLogger).toHaveBeenCalledWith({
       name: 'integration-logger',
@@ -96,14 +98,36 @@ describe('createIntegrationLogger', () => {
     });
   });
 
+  test('allows pretty option to be specified', () => {
+    createIntegrationLogger({
+      name,
+      invocationConfig,
+      pretty: true,
+    });
+
+    expect(Logger.createLogger).toHaveBeenCalledTimes(1);
+    expect(Logger.createLogger).toHaveBeenCalledWith({
+      name: 'integration-logger',
+      level: 'info',
+      serializers: {
+        err: Logger.stdSerializers.err,
+      },
+      streams: [{ stream: expect.any(Writable) }],
+    });
+  });
+
   test('adds provided serializers', () => {
-    createIntegrationLogger(loggerName, invocationConfig, {});
+    createIntegrationLogger({
+      name,
+      invocationConfig,
+      serializers: {},
+    });
     expect(addSerializers).toHaveBeenLastCalledWith({});
   });
 
   describe('integrationInstanceConfig serializer', () => {
     test('is a function', () => {
-      createIntegrationLogger(loggerName, invocationConfig);
+      createIntegrationLogger({ name, invocationConfig });
 
       expect(addSerializers).toHaveBeenNthCalledWith(1, {
         integrationInstanceConfig: expect.any(Function),
@@ -112,14 +136,14 @@ describe('createIntegrationLogger', () => {
     });
 
     test('handles undefined config', () => {
-      createIntegrationLogger(loggerName, invocationConfig);
+      createIntegrationLogger({ name, invocationConfig });
       const serializer = addSerializers.mock.calls[0][0]
         .integrationInstanceConfig as Function;
       expect(serializer(undefined)).toEqual(undefined);
     });
 
     test('handles null config', () => {
-      createIntegrationLogger(loggerName, invocationConfig);
+      createIntegrationLogger({ name, invocationConfig });
       const serializer = addSerializers.mock.calls[0][0]
         .integrationInstanceConfig as Function;
 
@@ -127,7 +151,7 @@ describe('createIntegrationLogger', () => {
     });
 
     test('masks everything when field metadata not provided', () => {
-      createIntegrationLogger(loggerName, invocationConfig);
+      createIntegrationLogger({ name, invocationConfig });
       const serializer = addSerializers.mock.calls[0][0]
         .integrationInstanceConfig as Function;
 
@@ -138,14 +162,17 @@ describe('createIntegrationLogger', () => {
     });
 
     test('shows unmasked data', () => {
-      createIntegrationLogger(loggerName, {
-        ...invocationConfig,
-        instanceConfigFields: {
-          masked: {
-            mask: true,
-          },
-          unmasked: {
-            mask: false,
+      createIntegrationLogger({
+        name,
+        invocationConfig: {
+          ...invocationConfig,
+          instanceConfigFields: {
+            masked: {
+              mask: true,
+            },
+            unmasked: {
+              mask: false,
+            },
           },
         },
       });
