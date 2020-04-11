@@ -17,7 +17,8 @@
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:ci": "yarn lint && yarn type-check && yarn test",
-    "prepublishOnly": "tsc --declaration"
+    "build": "tsc -p tsconfig.dist.json --declaration",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "bunyan": "^1.8.12",
