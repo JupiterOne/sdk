@@ -1,5 +1,9 @@
 import { Entity, Relationship } from '../../types';
-import { JobState, GraphObjectFilter, GraphObjectIteratee } from '../types';
+import {
+  JobState,
+  GraphObjectFilter,
+  GraphObjectIteratee,
+} from '../../execution/types';
 
 import { flushDataToDisk } from './flushDataToDisk';
 

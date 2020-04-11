@@ -4,7 +4,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { createIntegrationLogger } from '../logger';
 
-import { FileSystemJobState, JobState } from '../../jobState';
+import { FileSystemJobState } from '../../storage';
 
 import {
   buildStepDependencyGraph,
@@ -16,6 +16,7 @@ import { getDefaultStepStartStates } from '../step';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 
 import {
+  JobState,
   IntegrationStep,
   IntegrationInstance,
   IntegrationStepResultStatus,

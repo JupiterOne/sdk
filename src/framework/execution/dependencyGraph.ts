@@ -1,7 +1,7 @@
 import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
-import { FileSystemJobState } from '../jobState';
+import { FileSystemJobState } from '../storage';
 
 import {
   IntegrationStep,
