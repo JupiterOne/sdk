@@ -1,4 +1,4 @@
-import { Entity, Relationship } from '../types';
+import { Entity, Relationship } from '../../types';
 
 export interface GraphObjectFilter {
   _type: string;

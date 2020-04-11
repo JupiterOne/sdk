@@ -1,4 +1,4 @@
-import { JobState } from '../../jobState';
+import { JobState } from './jobState';
 
 import { IntegrationInstance } from './instance';
 import { IntegrationLogger } from './logger';
