@@ -1,6 +1,8 @@
 import { v4 as uuid } from 'uuid';
 import times from 'lodash/times';
 import waitForExpect from 'wait-for-expect';
+import { promises as fs } from 'fs';
+import { vol } from 'memfs';
 
 import { createIntegrationLogger } from '../logger';
 
@@ -22,6 +24,12 @@ import {
   IntegrationStepExecutionContext,
   IntegrationLogger,
 } from '../types';
+
+import { Entity, Relationship } from '../../types';
+
+jest.mock('fs');
+
+afterEach(() => vol.reset());
 
 const executionContext: IntegrationExecutionContext = {
   logger: createIntegrationLogger('step logger', {
@@ -147,6 +155,104 @@ describe('executeStepDependencyGraph', () => {
     ].forEach((fn) => {
       expect(jobState[fn]).toEqual(expect.any(Function));
     });
+  });
+
+  test("writes data to the correct graph directory path using each step's id", async () => {
+    const workingDirectory = `/test`;
+    jest.spyOn(process, 'cwd').mockReturnValue(workingDirectory);
+
+    let entityA: Entity;
+    let entityB: Entity;
+    let relationship: Relationship;
+
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: ['my_type_a'],
+        executionHandler: async ({ jobState }) => {
+          await jobState.addEntities([
+            {
+              _key: 'my_keys_a',
+              _type: 'my_type_a',
+              _class: 'MyClassA',
+            },
+          ]);
+        },
+      },
+      {
+        id: 'b',
+        name: 'b',
+        types: ['my_type_b'],
+        executionHandler: async ({ jobState }) => {
+          await jobState.addEntities([
+            {
+              _key: 'my_key_b',
+              _type: 'my_type_b',
+              _class: 'MyClassB',
+            },
+          ]);
+        },
+      },
+      {
+        id: 'c',
+        name: 'c',
+        types: ['my_type_c'],
+        dependsOn: ['a', 'b'],
+        executionHandler: async ({ jobState }) => {
+          await jobState.iterateEntities({ _type: 'my_type_a' }, (e) => {
+            entityA = e;
+          });
+
+          await jobState.iterateEntities({ _type: 'my_type_b' }, (e) => {
+            entityB = e;
+          });
+
+          relationship = {
+            _key: 'my_key_c',
+            _type: 'my_type_c',
+            _class: 'MyClassC',
+            _fromEntityKey: entityA._key,
+            _toEntityKey: entityB._key,
+          };
+          await jobState.addRelationships([relationship]);
+        },
+      },
+    ];
+
+    const graph = buildStepDependencyGraph(steps);
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
+
+    const stepToDataMap = {
+      [steps[0].id]: {
+        type: 'entities',
+        data: [entityA],
+      },
+      [steps[1].id]: {
+        type: 'entities',
+        data: [entityB],
+      },
+      [steps[2].id]: {
+        type: 'relationships',
+        data: [relationship],
+      },
+    };
+
+    for (const [stepId, { type, data }] of Object.entries(stepToDataMap)) {
+      const directory = `${workingDirectory}/.j1-integration/graph/${stepId}/${type}`;
+      const files = await fs.readdir(directory);
+
+      // each step should have just generated one file
+      expect(files).toHaveLength(1);
+
+      // each step should have just generated one file
+      const writtenData = await fs.readFile(`${directory}/${files[0]}`, 'utf8');
+      expect(writtenData).toEqual(JSON.stringify({ [type]: data }, null, 2));
+    }
   });
 
   test('should perform a flush of the jobState after a step was executed', async () => {
