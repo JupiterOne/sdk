@@ -30,7 +30,7 @@ describe('flushEntitiesToDisk', () => {
       cacheDirectory,
       storageDirectoryPath,
       store,
-    } = setupLocalStepJobState();
+    } = setupFileSystemObjectStore();
     const entityType = uuid();
     const entities = times(25, () => generateEntity({ _type: entityType }));
     await store.addEntities(storageDirectoryPath, entities);
@@ -67,7 +67,7 @@ describe('flushRelationshipsToDisk', () => {
       cacheDirectory,
       storageDirectoryPath,
       store,
-    } = setupLocalStepJobState();
+    } = setupFileSystemObjectStore();
     const relationshipType = uuid();
     const relationships = times(25, () =>
       generateRelationship({ _type: relationshipType }),
@@ -104,7 +104,7 @@ describe('flushRelationshipsToDisk', () => {
 
 describe('flush', () => {
   test('should flush both entities and relationships to disk', async () => {
-    const { storageDirectoryPath, store } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     await store.addEntities(storageDirectoryPath, [generateEntity()]);
     await store.addRelationships(storageDirectoryPath, [
       generateRelationship(),
@@ -122,7 +122,7 @@ describe('flush', () => {
 
 describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
-    const { storageDirectoryPath, store } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const entities = times(GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
       generateEntity(),
     );
@@ -139,7 +139,7 @@ describe('addEntities', () => {
   });
 
   test('accepts GeneratedEntity type from createIntegrationEntity utility', async () => {
-    const { store } = setupLocalStepJobState();
+    const { store } = setupFileSystemObjectStore();
 
     const networkAssigns = {
       _class: 'Network',
@@ -169,7 +169,7 @@ describe('addEntities', () => {
 
 describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
-    const { storageDirectoryPath, store } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const relationships = times(GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
       generateRelationship(),
     );
@@ -188,7 +188,7 @@ describe('addRelationships', () => {
   });
 
   test('accepts Relationship from createIntegrationRelationship utility', async () => {
-    const { store } = setupLocalStepJobState();
+    const { store } = setupFileSystemObjectStore();
 
     const networkAssigns = {
       _class: 'Network',
@@ -231,7 +231,7 @@ describe('addRelationships', () => {
 
 describe('iterateEntities', () => {
   test('should flush buffered entities and iterate the entity "_type" index stored on disk', async () => {
-    const { storageDirectoryPath, store } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const matchingType = uuid();
 
@@ -261,7 +261,7 @@ describe('iterateEntities', () => {
 
 describe('iterateRelationships', () => {
   test('should flush buffered relationshipos and iterate the relationship "_type" index stored on disk', async () => {
-    const { storageDirectoryPath, store } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const matchingType = uuid();
 
@@ -293,7 +293,7 @@ describe('iterateRelationships', () => {
   });
 });
 
-function setupLocalStepJobState() {
+function setupFileSystemObjectStore() {
   const storageDirectoryPath = uuid();
   const cacheDirectory = '/' + uuid();
   const store = new FileSystemGraphObjectStore({ cacheDirectory });
