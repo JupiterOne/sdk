@@ -1,14 +1,19 @@
+/**
+ * Home of all file system interactions
+ *
+ * This module exports utilities for writing data
+ * relative to the .j1-integration root storage directoryPath.
+ */
 import { promises as fs } from 'fs';
 import path from 'path';
 
 export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
 
-export function getDefaultCacheDirectory() {
+export function getRootStorageDirectory() {
   return path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME);
 }
 
 interface WriteDataToPathInput {
-  cacheDirectory?: string;
   path: string;
   data: object;
 }
@@ -21,11 +26,10 @@ interface WriteDataToPathInput {
  * created prior to writing the file.
  */
 export async function writeJsonToPath({
-  cacheDirectory,
   path: relativePath,
   data,
 }: WriteDataToPathInput) {
-  const directory = cacheDirectory ?? getDefaultCacheDirectory();
+  const directory = getRootStorageDirectory();
   const fullPath = path.resolve(directory, relativePath);
 
   await ensurePathCanBeWrittenTo(fullPath);
@@ -33,7 +37,6 @@ export async function writeJsonToPath({
 }
 
 interface SymlinkInput {
-  cacheDirectory?: string;
   sourcePath: string;
   destinationPath: string;
 }
@@ -44,12 +47,8 @@ interface SymlinkInput {
  * This will ensure that the directories exists or have been
  * created prior to writing the file.
  */
-export async function symlink({
-  cacheDirectory,
-  sourcePath,
-  destinationPath,
-}: SymlinkInput) {
-  const directory = cacheDirectory ?? getDefaultCacheDirectory();
+export async function symlink({ sourcePath, destinationPath }: SymlinkInput) {
+  const directory = getRootStorageDirectory();
   const fullSourcePath = path.resolve(directory, sourcePath);
   const fullDestinationPath = path.resolve(directory, destinationPath);
 
@@ -67,7 +66,6 @@ type WalkDirectoryIteratee = (
 ) => Promise<void> | void;
 
 interface WalkDirectoryInput {
-  cacheDirectory?: string;
   path: string;
   iteratee: WalkDirectoryIteratee;
 }
@@ -77,11 +75,10 @@ interface WalkDirectoryInput {
  * and reading the data from each file.
  */
 export async function walkDirectory({
-  cacheDirectory,
   path: relativePath,
   iteratee,
 }: WalkDirectoryInput) {
-  const directory = cacheDirectory ?? getDefaultCacheDirectory();
+  const directory = getRootStorageDirectory();
   const fullPath = path.resolve(directory, relativePath);
 
   const isDirectory = await isDirectoryPresent(fullPath);
@@ -101,7 +98,6 @@ export async function walkDirectory({
     if (stats.isDirectory()) {
       // continue walking the directory
       await walkDirectory({
-        cacheDirectory,
         iteratee,
         path: filePath,
       });

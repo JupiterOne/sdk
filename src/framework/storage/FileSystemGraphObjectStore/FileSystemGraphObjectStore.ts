@@ -18,20 +18,12 @@ export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subje
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
-interface FileSystemGraphObjectStoreInput {
-  cacheDirectory?: string;
-}
-
 export class FileSystemGraphObjectStore {
-  readonly cacheDirectory?: string;
-
   semaphore: Sema;
   entityStorageMap: BucketMap<Entity>;
   relationshipStorageMap: BucketMap<Relationship>;
 
-  constructor(options?: FileSystemGraphObjectStoreInput) {
-    this.cacheDirectory = options?.cacheDirectory;
-
+  constructor() {
     this.entityStorageMap = new BucketMap();
     this.relationshipStorageMap = new BucketMap();
 
@@ -67,7 +59,6 @@ export class FileSystemGraphObjectStore {
     await this.flushEntitiesToDisk();
 
     await iterateEntityTypeIndex({
-      cacheDirectory: this.cacheDirectory,
       type: filter._type,
       iteratee,
     });
@@ -80,7 +71,6 @@ export class FileSystemGraphObjectStore {
     await this.flushRelationshipsToDisk();
 
     await iterateRelationshipTypeIndex({
-      cacheDirectory: this.cacheDirectory,
       type: filter._type,
       iteratee,
     });
@@ -101,7 +91,6 @@ export class FileSystemGraphObjectStore {
 
         return flushDataToDisk({
           storageDirectoryPath,
-          cacheDirectory: this.cacheDirectory,
           collectionType: 'entities',
           data: entities,
         });
@@ -118,7 +107,6 @@ export class FileSystemGraphObjectStore {
 
         return flushDataToDisk({
           storageDirectoryPath,
-          cacheDirectory: this.cacheDirectory,
           collectionType: 'relationships',
           data: relationships,
         });

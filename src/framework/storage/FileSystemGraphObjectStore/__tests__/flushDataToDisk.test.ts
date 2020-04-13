@@ -1,3 +1,4 @@
+import path from 'path';
 import { promises as fs } from 'fs';
 
 import { vol } from 'memfs';
@@ -7,6 +8,7 @@ import times from 'lodash/times';
 import sortBy from 'lodash/sortBy';
 import flatten from 'lodash/flatten';
 
+import { getRootStorageDirectory } from '../../../../fileSystem';
 import { flushDataToDisk } from '../flushDataToDisk';
 import { generateEntity } from './util/graphObjects';
 
@@ -23,22 +25,28 @@ test('should group objects by "_type" and write them to separate files', async (
 
   const allEntities = randomizeOrder(flatten(Object.values(testEntityData)));
 
-  const cacheDirectory = '/' + uuid();
   const storageDirectoryPath = uuid();
 
   await flushDataToDisk({
-    cacheDirectory,
     storageDirectoryPath,
     collectionType: 'entities',
     data: allEntities,
   });
 
-  const entitiesDirectory = `${cacheDirectory}/graph/${storageDirectoryPath}/entities`;
+  const entitiesDirectory = path.join(
+    getRootStorageDirectory(),
+    'graph',
+    storageDirectoryPath,
+    'entities',
+  );
   const entityFiles = await fs.readdir(entitiesDirectory);
   expect(entityFiles).toHaveLength(3); // matches number of types we have
 
   const writtenEntityBatches = await pMap(entityFiles, async (file: string) => {
-    const rawData = await fs.readFile(`${entitiesDirectory}/${file}`, 'utf8');
+    const rawData = await fs.readFile(
+      path.join(entitiesDirectory, file),
+      'utf8',
+    );
     return JSON.parse(rawData).entities;
   });
   expect(sortBy(flatten(writtenEntityBatches), '_key')).toEqual(
@@ -46,7 +54,7 @@ test('should group objects by "_type" and write them to separate files', async (
   );
 
   await pMap(['A', 'B', 'C'], async (entityType: string) => {
-    const indexDirectory = `${cacheDirectory}/index/entities/${entityType}`;
+    const indexDirectory = `${getRootStorageDirectory()}/index/entities/${entityType}`;
     const indexFiles = await fs.readdir(indexDirectory);
     expect(indexFiles).toHaveLength(1);
     expect(entityFiles).toContain(indexFiles[0]);

@@ -2,7 +2,7 @@ import pMap from 'p-map';
 import { v4 as uuid } from 'uuid';
 import groupBy from 'lodash/groupBy';
 
-import { writeJsonToPath, symlink } from '../../../cacheDirectory';
+import { writeJsonToPath, symlink } from '../../../fileSystem';
 
 import { Entity, Relationship } from '../../types';
 import {
@@ -12,7 +12,6 @@ import {
 } from './path';
 
 interface FlushDataToDiskInput {
-  cacheDirectory?: string;
   storageDirectoryPath: string;
   collectionType: CollectionType;
   data: Entity[] | Relationship[];
@@ -24,7 +23,6 @@ interface FlushDataToDiskInput {
  * based on the entity or relationship '_type'.
  */
 export async function flushDataToDisk({
-  cacheDirectory,
   storageDirectoryPath,
   collectionType,
   data,
@@ -46,7 +44,6 @@ export async function flushDataToDisk({
       const indexPath = buildIndexFilePath({ type, collectionType, filename });
 
       await writeJsonToPath({
-        cacheDirectory,
         path: graphDataPath,
         data: {
           [collectionType]: collection,
@@ -54,7 +51,6 @@ export async function flushDataToDisk({
       });
 
       await symlink({
-        cacheDirectory,
         sourcePath: graphDataPath,
         destinationPath: indexPath,
       });
