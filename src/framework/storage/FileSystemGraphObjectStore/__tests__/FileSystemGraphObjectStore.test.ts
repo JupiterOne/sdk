@@ -5,9 +5,9 @@ import { v4 as uuid } from 'uuid';
 import times from 'lodash/times';
 
 import {
-  FileSystemJobState,
+  FileSystemGraphObjectStore,
   GRAPH_OBJECT_BUFFER_THRESHOLD,
-} from '../FileSystemJobState';
+} from '../FileSystemGraphObjectStore';
 
 import {
   createIntegrationEntity,
@@ -26,31 +26,35 @@ afterEach(() => {
 
 describe('flushEntitiesToDisk', () => {
   test('should write entities to the graph directory and symlink files to the index directory', async () => {
-    const { cacheDirectory, step, jobState } = setupLocalStepJobState();
+    const {
+      cacheDirectory,
+      storageDirectoryPath,
+      store,
+    } = setupFileSystemObjectStore();
     const entityType = uuid();
     const entities = times(25, () => generateEntity({ _type: entityType }));
-    await jobState.addEntities(entities);
+    await store.addEntities(storageDirectoryPath, entities);
 
-    await jobState.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk();
 
-    const entitiesDirectory = `${cacheDirectory}/graph/${step}/entities`;
+    const entitiesDirectory = `${cacheDirectory}/graph/${storageDirectoryPath}/entities`;
 
-    const stepDataFiles = await fs.readdir(entitiesDirectory);
-    expect(stepDataFiles).toHaveLength(1);
+    const storageDirectoryPathDataFiles = await fs.readdir(entitiesDirectory);
+    expect(storageDirectoryPathDataFiles).toHaveLength(1);
 
     const writtenStepData = await fs.readFile(
-      `${entitiesDirectory}/${stepDataFiles[0]}`,
+      `${entitiesDirectory}/${storageDirectoryPathDataFiles[0]}`,
       'utf8',
     );
     expect(JSON.parse(writtenStepData)).toEqual({ entities });
 
     const stats = await fs.lstat(
-      `${cacheDirectory}/index/entities/${entityType}/${stepDataFiles[0]}`,
+      `${cacheDirectory}/index/entities/${entityType}/${storageDirectoryPathDataFiles[0]}`,
     );
     expect(stats.isSymbolicLink()).toEqual(true);
 
     const symlinkedData = await fs.readFile(
-      `${cacheDirectory}/index/entities/${entityType}/${stepDataFiles[0]}`,
+      `${cacheDirectory}/index/entities/${entityType}/${storageDirectoryPathDataFiles[0]}`,
       'utf8',
     );
     expect(symlinkedData).toEqual(writtenStepData);
@@ -59,33 +63,39 @@ describe('flushEntitiesToDisk', () => {
 
 describe('flushRelationshipsToDisk', () => {
   test('should write relationships to the graph directory and symlink files to the index directory', async () => {
-    const { cacheDirectory, step, jobState } = setupLocalStepJobState();
+    const {
+      cacheDirectory,
+      storageDirectoryPath,
+      store,
+    } = setupFileSystemObjectStore();
     const relationshipType = uuid();
     const relationships = times(25, () =>
       generateRelationship({ _type: relationshipType }),
     );
-    await jobState.addRelationships(relationships);
+    await store.addRelationships(storageDirectoryPath, relationships);
 
-    await jobState.flushRelationshipsToDisk();
+    await store.flushRelationshipsToDisk();
 
-    const relationshipsDirectory = `${cacheDirectory}/graph/${step}/relationships`;
+    const relationshipsDirectory = `${cacheDirectory}/graph/${storageDirectoryPath}/relationships`;
 
-    const stepDataFiles = await fs.readdir(relationshipsDirectory);
-    expect(stepDataFiles).toHaveLength(1);
+    const storageDirectoryPathDataFiles = await fs.readdir(
+      relationshipsDirectory,
+    );
+    expect(storageDirectoryPathDataFiles).toHaveLength(1);
 
     const writtenData = await fs.readFile(
-      `${relationshipsDirectory}/${stepDataFiles[0]}`,
+      `${relationshipsDirectory}/${storageDirectoryPathDataFiles[0]}`,
       'utf8',
     );
     expect(JSON.parse(writtenData)).toEqual({ relationships });
 
     const stats = await fs.lstat(
-      `${cacheDirectory}/index/relationships/${relationshipType}/${stepDataFiles[0]}`,
+      `${cacheDirectory}/index/relationships/${relationshipType}/${storageDirectoryPathDataFiles[0]}`,
     );
     expect(stats.isSymbolicLink()).toEqual(true);
 
     const symlinkedData = await fs.readFile(
-      `${cacheDirectory}/index/relationships/${relationshipType}/${stepDataFiles[0]}`,
+      `${cacheDirectory}/index/relationships/${relationshipType}/${storageDirectoryPathDataFiles[0]}`,
       'utf8',
     );
     expect(symlinkedData).toEqual(writtenData);
@@ -94,17 +104,16 @@ describe('flushRelationshipsToDisk', () => {
 
 describe('flush', () => {
   test('should flush both entities and relationships to disk', async () => {
-    const { jobState } = setupLocalStepJobState();
-    await jobState.addEntities([generateEntity()]);
-    await jobState.addRelationships([generateRelationship()]);
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+    await store.addEntities(storageDirectoryPath, [generateEntity()]);
+    await store.addRelationships(storageDirectoryPath, [
+      generateRelationship(),
+    ]);
 
-    const flushEntitiesSpy = jest.spyOn(jobState, 'flushEntitiesToDisk');
-    const flushRelationshipsSpy = jest.spyOn(
-      jobState,
-      'flushRelationshipsToDisk',
-    );
+    const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
+    const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
 
-    await jobState.flush();
+    await store.flush();
 
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
@@ -113,24 +122,24 @@ describe('flush', () => {
 
 describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const entities = times(GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
       generateEntity(),
     );
 
-    const flushEntitiesSpy = jest.spyOn(jobState, 'flushEntitiesToDisk');
-    await jobState.addEntities(entities);
+    const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
+    await store.addEntities(storageDirectoryPath, entities);
 
     // we have not hit the threshold yet, so flushing has not occurred
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(0);
 
     // adding an additional entity should trigger the flushing
-    await jobState.addEntities([generateEntity()]);
+    await store.addEntities(storageDirectoryPath, [generateEntity()]);
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
   });
 
   test('accepts GeneratedEntity type from createIntegrationEntity utility', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { store } = setupFileSystemObjectStore();
 
     const networkAssigns = {
       _class: 'Network',
@@ -154,33 +163,32 @@ describe('addEntities', () => {
       },
     });
 
-    await jobState.addEntities([entity]);
+    await store.addEntities('test', [entity]);
   });
 });
 
 describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const relationships = times(GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
       generateRelationship(),
     );
 
-    const flushRelationshipsSpy = jest.spyOn(
-      jobState,
-      'flushRelationshipsToDisk',
-    );
-    await jobState.addRelationships(relationships);
+    const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
+    await store.addRelationships(storageDirectoryPath, relationships);
 
     // we have not hit the threshold yet, so flushing has not occurred
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(0);
 
     // adding an additional relationship should trigger the flushing
-    await jobState.addRelationships([generateRelationship()]);
+    await store.addRelationships(storageDirectoryPath, [
+      generateRelationship(),
+    ]);
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
   });
 
   test('accepts Relationship from createIntegrationRelationship utility', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { store } = setupFileSystemObjectStore();
 
     const networkAssigns = {
       _class: 'Network',
@@ -217,13 +225,13 @@ describe('addRelationships', () => {
       to: entityB,
     });
 
-    await jobState.addRelationships([relationship]);
+    await store.addRelationships('test', [relationship]);
   });
 });
 
 describe('iterateEntities', () => {
   test('should flush buffered entities and iterate the entity "_type" index stored on disk', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const matchingType = uuid();
 
@@ -234,15 +242,18 @@ describe('iterateEntities', () => {
       generateEntity({ _type: matchingType }),
     );
 
-    await jobState.addEntities([...nonMatchingEntities, ...matchingEntities]);
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+      ...matchingEntities,
+    ]);
 
     const collectedEntities: Entity[] = [];
     const collectEntity = (e: Entity) => {
       collectedEntities.push(e);
     };
 
-    await jobState.iterateEntities({ _type: matchingType }, collectEntity);
-    expect(jobState.entities).toHaveLength(0);
+    await store.iterateEntities({ _type: matchingType }, collectEntity);
+    expect(store.entityStorageMap.totalItemCount).toEqual(0);
 
     expect(collectedEntities).toEqual(matchingEntities);
   });
@@ -250,7 +261,7 @@ describe('iterateEntities', () => {
 
 describe('iterateRelationships', () => {
   test('should flush buffered relationshipos and iterate the relationship "_type" index stored on disk', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const matchingType = uuid();
 
@@ -261,35 +272,35 @@ describe('iterateRelationships', () => {
       generateRelationship({ _type: matchingType }),
     );
 
-    await jobState.addRelationships([
+    await store.addRelationships(storageDirectoryPath, [
       ...nonMatchingRelationships,
       ...matchingRelationships,
     ]);
-    await jobState.flush();
+    await store.flush();
 
     const collectedRelationships: Relationship[] = [];
     const collectRelationship = (r: Relationship) => {
       collectedRelationships.push(r);
     };
 
-    await jobState.iterateRelationships(
+    await store.iterateRelationships(
       { _type: matchingType },
       collectRelationship,
     );
-    expect(jobState.relationships).toHaveLength(0);
+    expect(store.relationshipStorageMap.totalItemCount).toEqual(0);
 
     expect(collectedRelationships).toEqual(matchingRelationships);
   });
 });
 
-function setupLocalStepJobState() {
-  const step = uuid();
+function setupFileSystemObjectStore() {
+  const storageDirectoryPath = uuid();
   const cacheDirectory = '/' + uuid();
-  const jobState = new FileSystemJobState({ step, cacheDirectory });
+  const store = new FileSystemGraphObjectStore({ cacheDirectory });
 
   return {
-    step,
+    storageDirectoryPath,
     cacheDirectory,
-    jobState,
+    store,
   };
 }

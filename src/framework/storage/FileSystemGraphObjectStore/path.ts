@@ -1,17 +1,17 @@
 export type CollectionType = 'entities' | 'relationships';
 
-interface BuildStepCollectionFilePathInput {
-  step: string;
+interface BuildObjectCollectionFilePathInput {
+  storageDirectoryPath: string;
   collectionType: CollectionType;
   filename: string;
 }
 
-export function buildStepCollectionFilePath({
-  step,
+export function buildObjectCollectionFilePath({
+  storageDirectoryPath,
   collectionType,
   filename,
-}: BuildStepCollectionFilePathInput) {
-  return ['graph', step, collectionType, filename].join('/');
+}: BuildObjectCollectionFilePathInput) {
+  return ['graph', storageDirectoryPath, collectionType, filename].join('/');
 }
 
 interface BuildIndexFilePathInput extends BuildIndexDirectoryPathInput {

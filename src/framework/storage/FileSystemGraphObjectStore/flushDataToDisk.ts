@@ -8,12 +8,12 @@ import { Entity, Relationship } from '../../types';
 import {
   CollectionType,
   buildIndexFilePath,
-  buildStepCollectionFilePath,
+  buildObjectCollectionFilePath,
 } from './path';
 
 interface FlushDataToDiskInput {
   cacheDirectory?: string;
-  step: string;
+  storageDirectoryPath: string;
   collectionType: CollectionType;
   data: Entity[] | Relationship[];
 }
@@ -25,7 +25,7 @@ interface FlushDataToDiskInput {
  */
 export async function flushDataToDisk({
   cacheDirectory,
-  step,
+  storageDirectoryPath,
   collectionType,
   data,
 }: FlushDataToDiskInput) {
@@ -38,8 +38,8 @@ export async function flushDataToDisk({
     Object.entries(groupedCollections),
     async ([type, collection]) => {
       const filename = generateJsonFilename();
-      const graphDataPath = buildStepCollectionFilePath({
-        step,
+      const graphDataPath = buildObjectCollectionFilePath({
+        storageDirectoryPath,
         collectionType,
         filename,
       });

@@ -1,5 +1,5 @@
 import { Entity, Relationship } from '../../types';
-import { GraphObjectIteratee } from '../types';
+import { GraphObjectIteratee } from '../../execution/types';
 
 import {
   walkDirectory,
