@@ -32,7 +32,7 @@ export function displayExecutionResults(results: ExecuteIntegrationResult) {
 }
 
 function logStepStatus(stepResult: IntegrationStepResult) {
-  const stepPrefix = info(
+  const stepPrefix = chalk.white(
     `Step "${chalk.cyan(stepResult.id)}" completed with status:`,
   );
   const statusText = getStepStatusText(stepResult.status);
