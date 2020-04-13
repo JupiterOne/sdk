@@ -20,6 +20,7 @@
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:ci": "yarn lint && yarn type-check && yarn test",
+    "prebuild": "yarn test:ci",
     "build": "tsc -p tsconfig.dist.json --declaration",
     "prepublishOnly": "yarn build"
   },
