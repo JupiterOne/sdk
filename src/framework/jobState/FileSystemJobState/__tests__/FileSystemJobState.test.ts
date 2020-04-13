@@ -9,6 +9,8 @@ import {
   GRAPH_OBJECT_BUFFER_THRESHOLD,
 } from '../FileSystemJobState';
 
+import { createIntegrationEntity } from '../../../data';
+
 import { generateEntity, generateRelationship } from './util/graphObjects';
 
 import { Entity, Relationship } from '../../../types';
@@ -122,6 +124,34 @@ describe('addEntities', () => {
     // adding an additional entity should trigger the flushing
     await jobState.addEntities([generateEntity()]);
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('accepts GeneratedEntity type from createIntegrationEntity utility', async () => {
+    const { jobState } = setupLocalStepJobState();
+
+    const networkAssigns = {
+      _class: 'Network',
+      _type: 'azure_vpc',
+      public: false,
+      internal: true,
+    };
+
+    const networkSourceData = {
+      id: 'natural-identifier',
+      environment: 'production',
+      CIDR: '255.255.255.0',
+      name: 'My Network',
+      notInDataModel: 'Not In Data Model',
+    };
+
+    const entity = createIntegrationEntity({
+      entityData: {
+        assign: networkAssigns,
+        source: networkSourceData,
+      },
+    });
+
+    await jobState.addEntities([entity]);
   });
 });
 
