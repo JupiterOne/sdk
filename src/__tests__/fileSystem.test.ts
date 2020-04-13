@@ -54,7 +54,16 @@ describe('writeJsonToPath', () => {
   test('should recursively create directories prior to writing', async () => {
     const json = { woah: 'json' };
 
-    const filename = `test/dir/that/does/not/already/exist/${uuid()}.json`;
+    const dirThatDoesNotExist = path.join(
+      'test',
+      'dir',
+      'that',
+      'does',
+      'not',
+      'already',
+      'exist',
+    );
+    const filename = path.join(dirThatDoesNotExist, `${uuid()}.json`);
 
     const mkdirSpy = jest.spyOn(fs, 'mkdir');
     const writeFileSpy = jest.spyOn(fs, 'writeFile');
@@ -72,10 +81,7 @@ describe('writeJsonToPath', () => {
 
     expect(mkdirSpy).toHaveBeenCalledTimes(1);
     expect(mkdirSpy).toHaveBeenCalledWith(
-      path.join(
-        getRootStorageDirectory(),
-        'test/dir/that/does/not/already/exist',
-      ),
+      path.join(getRootStorageDirectory(), dirThatDoesNotExist),
       {
         recursive: true,
       },
@@ -144,8 +150,15 @@ describe('symlink', () => {
   test('should recursively create directories prior to symlinking', async () => {
     const jsonString = JSON.stringify({ over: 9000 }, null, 2);
 
+    const dirThatDoesNotExist = path.join(
+      'dir',
+      'that',
+      'does',
+      'not',
+      'exist',
+    );
     const sourcePath = 'test.json';
-    const destinationPath = 'dir/that/does/not/exist/symlink.json';
+    const destinationPath = path.join(dirThatDoesNotExist, 'symlink.json');
 
     const mkdirSpy = jest.spyOn(fs, 'mkdir');
     const symlinkSpy = jest.spyOn(fs, 'symlink');
@@ -159,7 +172,7 @@ describe('symlink', () => {
 
     expect(mkdirSpy).toHaveBeenCalledTimes(1);
     expect(mkdirSpy).toHaveBeenCalledWith(
-      path.join(getRootStorageDirectory(), '/dir/that/does/not/exist'),
+      path.join(getRootStorageDirectory(), dirThatDoesNotExist),
       { recursive: true },
     );
 
@@ -230,7 +243,7 @@ describe('walkDirectory', () => {
       await symlink({
         sourcePath: sourcePath.substring(getRootStorageDirectory().length + 1),
         destinationPath: path.join(
-          'index/entities/type/',
+          path.join('index', 'entities', 'type'),
           path.basename(sourcePath),
         ),
       });
