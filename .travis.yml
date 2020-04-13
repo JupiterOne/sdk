@@ -9,3 +9,17 @@ notifications:
     on_failure: always
 
 script: yarn test:ci
+
+deploy:
+  provider: npm
+  edge: true
+  email: npm@jupiterone.io
+  api_key:
+    secure: "OQjKNyx/mIFsur18ZYsi7Je7vRdSnjKu7UxQQvHqyllq0j9yoWGsODt6J0ZXY5+xHVPZAQ1ue2w2wO4EgGShFU1sfthPPEOcdK81T66JFoD8ax/e6Ut6oBVENjKvQRbRFd10t7De5O4eassVxCDgrRNepZ67se4X8cALy4DOkYHVCCmbJykoiHFxc1jY/NFMl2Q/saNWwZc6TmP2kx7NUqU7o9Lta9o2ZpqxT0l0ePAhtkdEleOHwZRbWZVq3AK7ZHETamxNVZddvcT3qRP2WdulDAB1lHufQPRsWpl3SSHEh6roZOJ94hLdvLZI5QDJ4edVJl4YggWPq4M2SyidAlrAPNC6wej9HCtjDqGMkECSZMt4Mqg3asi0w4Se0jLVBkFrGKlLcx+ihnfTfGHQVlIXxkW7Y5vrzS1Tl7VcQxSdRpNU5yc3wpDy5zAWh3h6qvAZvu4Wlv++rIW2ltI1Cxo3D8+XsVmV9NviL7mKgbDLH+3Wr9y9Z/muJfBS3mPf4G9btfGkHw2pNsnH4Na3f7H8qSD2YjYw8H7DGFEdVRAUHxfI4d8es3ll9cbR78IN2vzJ4u5EAxqlFtimFsKyIMe8YOX5c/lG8hYlGXtFPzpl38mV+/OXZF2ZyAG2W45gNFkFlEUo7DJFeAvIKUz2q1cShqELFNgiOs0WLcoc2uQ="
+  skip_cleanup: true
+  on:
+    tags: true
+    branch: master
+    repo: JupiterOne/integration-sdk
+    node: '12'
+
