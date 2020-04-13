@@ -179,6 +179,9 @@ export function executeStepDependencyGraph(
         step,
         graphObjectStore,
       );
+
+      context.logger.info(`Executing step "${step.name}"`);
+
       let status: IntegrationStepResultStatus;
 
       try {
@@ -215,7 +218,6 @@ function buildStepContext(
     ...context,
     logger: context.logger.child({
       step: step.id,
-      stepName: step.name,
     }),
     jobState: createStepJobState(step, graphObjectStore),
   };

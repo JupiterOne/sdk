@@ -1,4 +1,4 @@
-import noop from 'lodash/noop';
-
-export const debug = noop;
-export const info = noop;
+export const debug = jest.fn();
+export const info = jest.fn();
+export const warn = jest.fn();
+export const displayExecutionResults = jest.fn();

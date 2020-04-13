@@ -1,4 +1,3 @@
-import path from 'path';
 import {
   loadModuleContent,
   loadInstanceConfigFields,
@@ -7,6 +6,8 @@ import {
   loadGetStepStartStatesFunction,
   loadConfig,
 } from '../config';
+
+import { loadProjectStructure } from './loadProjectStructure';
 
 jest.mock('../log');
 
@@ -76,7 +77,7 @@ describe('TypeScript project', () => {
     test('loads function from "src/validateInvocation" ', async () => {
       const validateFunction = loadValidateInvocationFunction();
       expect(validateFunction).toEqual(expect.any(Function));
-      expect(() => (validateFunction as any)()).toThrow('Invalid config');
+      expect((validateFunction as any)()).toEqual('loaded');
     });
   });
 
@@ -127,9 +128,3 @@ describe('TypeScript project', () => {
     });
   });
 });
-
-function loadProjectStructure(fixtureName: string) {
-  jest
-    .spyOn(process, 'cwd')
-    .mockReturnValue(path.resolve(__dirname, '__fixtures__', fixtureName));
-}

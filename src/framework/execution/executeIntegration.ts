@@ -14,7 +14,7 @@ import {
   determinePartialDatasetsFromStepExecutionResults,
 } from './step';
 
-interface ExecuteIntegrationResult {
+export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
   metadata: {
     partialDatasets: PartialDatasets;
