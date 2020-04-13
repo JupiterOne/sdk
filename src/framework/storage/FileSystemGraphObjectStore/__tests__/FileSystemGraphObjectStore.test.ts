@@ -9,7 +9,10 @@ import {
   GRAPH_OBJECT_BUFFER_THRESHOLD,
 } from '../FileSystemGraphObjectStore';
 
-import { createIntegrationEntity } from '../../../data';
+import {
+  createIntegrationEntity,
+  createIntegrationRelationship,
+} from '../../../data';
 
 import { generateEntity, generateRelationship } from './util/graphObjects';
 
@@ -182,6 +185,47 @@ describe('addRelationships', () => {
       generateRelationship(),
     ]);
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('accepts Relationship from createIntegrationRelationship utility', async () => {
+    const { jobState } = setupLocalStepJobState();
+
+    const networkAssigns = {
+      _class: 'Network',
+      _type: 'azure_vpc',
+      public: false,
+      internal: true,
+    };
+
+    const networkSourceData = {
+      id: 'natural-identifier',
+      environment: 'production',
+      CIDR: '255.255.255.0',
+      name: 'My Network',
+      notInDataModel: 'Not In Data Model',
+    };
+
+    const entityA = createIntegrationEntity({
+      entityData: {
+        assign: networkAssigns,
+        source: networkSourceData,
+      },
+    });
+
+    const entityB = createIntegrationEntity({
+      entityData: {
+        assign: networkAssigns,
+        source: { ...networkSourceData, id: 'other-natural-identifier' },
+      },
+    });
+
+    const relationship = createIntegrationRelationship({
+      _class: 'has',
+      from: entityA,
+      to: entityB,
+    });
+
+    await jobState.addRelationships([relationship]);
   });
 });
 
