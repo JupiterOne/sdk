@@ -1,3 +1,5 @@
+import path from 'path';
+
 export type CollectionType = 'entities' | 'relationships';
 
 interface BuildObjectCollectionFilePathInput {
@@ -11,7 +13,7 @@ export function buildObjectCollectionFilePath({
   collectionType,
   filename,
 }: BuildObjectCollectionFilePathInput) {
-  return ['graph', storageDirectoryPath, collectionType, filename].join('/');
+  return path.join('graph', storageDirectoryPath, collectionType, filename);
 }
 
 interface BuildIndexFilePathInput extends BuildIndexDirectoryPathInput {
@@ -23,9 +25,7 @@ export function buildIndexFilePath({
   type,
   filename,
 }: BuildIndexFilePathInput) {
-  return [buildIndexDirectoryPath({ collectionType, type }), filename].join(
-    '/',
-  );
+  return path.join(buildIndexDirectoryPath({ collectionType, type }), filename);
 }
 
 interface BuildIndexDirectoryPathInput {
@@ -37,5 +37,5 @@ export function buildIndexDirectoryPath({
   collectionType,
   type,
 }: BuildIndexDirectoryPathInput) {
-  return ['index', collectionType, type].join('/');
+  return path.join('index', collectionType, type);
 }
