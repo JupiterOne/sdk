@@ -8,7 +8,7 @@ notifications:
     on_success: never
     on_failure: always
 
-script: yarn test:ci
+script: yarn build
 
 deploy:
   provider: npm
