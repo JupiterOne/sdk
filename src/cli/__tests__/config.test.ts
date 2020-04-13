@@ -76,7 +76,7 @@ describe('TypeScript project', () => {
     test('loads function from "src/validateInvocation" ', async () => {
       const validateFunction = loadValidateInvocationFunction();
       expect(validateFunction).toEqual(expect.any(Function));
-      expect(() => validateFunction()).toThrow('Invalid config');
+      expect(() => (validateFunction as any)()).toThrow('Invalid config');
     });
   });
 
@@ -85,7 +85,7 @@ describe('TypeScript project', () => {
       const getStepStartStates = loadGetStepStartStatesFunction();
       expect(getStepStartStates).toEqual(expect.any(Function));
 
-      expect(getStepStartStates()).toEqual({
+      expect((getStepStartStates as any)()).toEqual({
         'fetch-accounts': {
           disabled: false,
         },
