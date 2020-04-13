@@ -139,7 +139,7 @@ describe('addEntities', () => {
   });
 
   test('accepts GeneratedEntity type from createIntegrationEntity utility', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { store } = setupLocalStepJobState();
 
     const networkAssigns = {
       _class: 'Network',
@@ -163,7 +163,7 @@ describe('addEntities', () => {
       },
     });
 
-    await jobState.addEntities([entity]);
+    await store.addEntities('test', [entity]);
   });
 });
 
@@ -188,7 +188,7 @@ describe('addRelationships', () => {
   });
 
   test('accepts Relationship from createIntegrationRelationship utility', async () => {
-    const { jobState } = setupLocalStepJobState();
+    const { store } = setupLocalStepJobState();
 
     const networkAssigns = {
       _class: 'Network',
@@ -225,7 +225,7 @@ describe('addRelationships', () => {
       to: entityB,
     });
 
-    await jobState.addRelationships([relationship]);
+    await store.addRelationships('test', [relationship]);
   });
 });
 
