@@ -1,21 +1,16 @@
 import { Entity, Relationship } from '../../types';
 import { GraphObjectIteratee } from '../../execution/types';
 
-import {
-  walkDirectory,
-  WalkDirectoryIterateeInput,
-} from '../../../cacheDirectory';
+import { walkDirectory, WalkDirectoryIterateeInput } from '../../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
 
 interface IterateIndexInput<GraphObject> {
-  cacheDirectory?: string;
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
 }
 
 export async function iterateEntityTypeIndex({
-  cacheDirectory,
   type,
   iteratee,
 }: IterateIndexInput<Entity>) {
@@ -25,7 +20,6 @@ export async function iterateEntityTypeIndex({
   });
 
   await walkDirectory({
-    cacheDirectory,
     path,
     iteratee: async (input) => {
       const object = parseData(input);
@@ -39,7 +33,6 @@ export async function iterateEntityTypeIndex({
 }
 
 export async function iterateRelationshipTypeIndex({
-  cacheDirectory,
   type,
   iteratee,
 }: IterateIndexInput<Relationship>) {
@@ -49,7 +42,6 @@ export async function iterateRelationshipTypeIndex({
   });
 
   await walkDirectory({
-    cacheDirectory,
     path,
     iteratee: async (input) => {
       const object = parseData(input);

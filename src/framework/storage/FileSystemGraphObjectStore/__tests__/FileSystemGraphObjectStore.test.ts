@@ -1,8 +1,11 @@
+import path from 'path';
 import { promises as fs } from 'fs';
 
 import { vol } from 'memfs';
 import { v4 as uuid } from 'uuid';
 import times from 'lodash/times';
+
+import { getRootStorageDirectory } from '../../../../fileSystem';
 
 import {
   FileSystemGraphObjectStore,
@@ -26,48 +29,48 @@ afterEach(() => {
 
 describe('flushEntitiesToDisk', () => {
   test('should write entities to the graph directory and symlink files to the index directory', async () => {
-    const {
-      cacheDirectory,
-      storageDirectoryPath,
-      store,
-    } = setupFileSystemObjectStore();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const entityType = uuid();
     const entities = times(25, () => generateEntity({ _type: entityType }));
     await store.addEntities(storageDirectoryPath, entities);
 
     await store.flushEntitiesToDisk();
 
-    const entitiesDirectory = `${cacheDirectory}/graph/${storageDirectoryPath}/entities`;
+    const entitiesDirectory = path.join(
+      getRootStorageDirectory(),
+      'graph',
+      storageDirectoryPath,
+      'entities',
+    );
 
     const storageDirectoryPathDataFiles = await fs.readdir(entitiesDirectory);
     expect(storageDirectoryPathDataFiles).toHaveLength(1);
 
     const writtenStepData = await fs.readFile(
-      `${entitiesDirectory}/${storageDirectoryPathDataFiles[0]}`,
+      path.join(entitiesDirectory, storageDirectoryPathDataFiles[0]),
       'utf8',
     );
     expect(JSON.parse(writtenStepData)).toEqual({ entities });
 
-    const stats = await fs.lstat(
-      `${cacheDirectory}/index/entities/${entityType}/${storageDirectoryPathDataFiles[0]}`,
+    const expectedIndexFilePath = path.join(
+      getRootStorageDirectory(),
+      'index',
+      'entities',
+      entityType,
+      storageDirectoryPathDataFiles[0],
     );
+
+    const stats = await fs.lstat(expectedIndexFilePath);
     expect(stats.isSymbolicLink()).toEqual(true);
 
-    const symlinkedData = await fs.readFile(
-      `${cacheDirectory}/index/entities/${entityType}/${storageDirectoryPathDataFiles[0]}`,
-      'utf8',
-    );
+    const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenStepData);
   });
 });
 
 describe('flushRelationshipsToDisk', () => {
   test('should write relationships to the graph directory and symlink files to the index directory', async () => {
-    const {
-      cacheDirectory,
-      storageDirectoryPath,
-      store,
-    } = setupFileSystemObjectStore();
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const relationshipType = uuid();
     const relationships = times(25, () =>
       generateRelationship({ _type: relationshipType }),
@@ -76,7 +79,12 @@ describe('flushRelationshipsToDisk', () => {
 
     await store.flushRelationshipsToDisk();
 
-    const relationshipsDirectory = `${cacheDirectory}/graph/${storageDirectoryPath}/relationships`;
+    const relationshipsDirectory = path.join(
+      getRootStorageDirectory(),
+      'graph',
+      storageDirectoryPath,
+      'relationships',
+    );
 
     const storageDirectoryPathDataFiles = await fs.readdir(
       relationshipsDirectory,
@@ -89,15 +97,18 @@ describe('flushRelationshipsToDisk', () => {
     );
     expect(JSON.parse(writtenData)).toEqual({ relationships });
 
-    const stats = await fs.lstat(
-      `${cacheDirectory}/index/relationships/${relationshipType}/${storageDirectoryPathDataFiles[0]}`,
+    const expectedIndexFilePath = path.join(
+      getRootStorageDirectory(),
+      'index',
+      'relationships',
+      relationshipType,
+      storageDirectoryPathDataFiles[0],
     );
+
+    const stats = await fs.lstat(expectedIndexFilePath);
     expect(stats.isSymbolicLink()).toEqual(true);
 
-    const symlinkedData = await fs.readFile(
-      `${cacheDirectory}/index/relationships/${relationshipType}/${storageDirectoryPathDataFiles[0]}`,
-      'utf8',
-    );
+    const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenData);
   });
 });
@@ -295,12 +306,10 @@ describe('iterateRelationships', () => {
 
 function setupFileSystemObjectStore() {
   const storageDirectoryPath = uuid();
-  const cacheDirectory = '/' + uuid();
-  const store = new FileSystemGraphObjectStore({ cacheDirectory });
+  const store = new FileSystemGraphObjectStore();
 
   return {
     storageDirectoryPath,
-    cacheDirectory,
     store,
   };
 }

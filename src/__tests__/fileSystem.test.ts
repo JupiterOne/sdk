@@ -6,24 +6,28 @@ import { v4 as uuid } from 'uuid';
 import { vol } from 'memfs';
 
 import {
-  getDefaultCacheDirectory,
+  getRootStorageDirectory,
   writeJsonToPath,
   walkDirectory,
   symlink,
-} from '../cacheDirectory';
+} from '../fileSystem';
 
 jest.mock('fs'); // applies manual mock which uses memfs
+
+beforeEach(() => {
+  jest.spyOn(process, 'cwd').mockReturnValue('/');
+});
 
 afterEach(() => {
   vol.reset(); // clear out file system
 });
 
-describe('getDefaultCacheDirectory', () => {
+describe('getRootStorageDirectory', () => {
   test('should utilize the current directory for building the default cache directory', () => {
     const mockCwdResult = `/${uuid()}`;
     jest.spyOn(process, 'cwd').mockReturnValue(mockCwdResult);
 
-    expect(getDefaultCacheDirectory()).toEqual(
+    expect(getRootStorageDirectory()).toEqual(
       `${mockCwdResult}/.j1-integration`,
     );
   });
@@ -33,40 +37,45 @@ describe('writeJsonToPath', () => {
   test('should pretty write json to the specified file', async () => {
     const json = { test: '123' };
 
-    const directory = '/';
     const filename = `${uuid()}.json`;
 
     await writeJsonToPath({
-      cacheDirectory: directory,
       path: filename,
       data: json,
     });
 
-    const writtenData = await fs.readFile(`${directory}/${filename}`, 'utf8');
+    const writtenData = await fs.readFile(
+      path.join(getRootStorageDirectory(), filename),
+      'utf8',
+    );
     expect(writtenData).toEqual(JSON.stringify(json, null, 2));
   });
 
   test('should recursively create directories prior to writing', async () => {
     const json = { woah: 'json' };
 
-    const directory = '/';
     const filename = `test/dir/that/does/not/already/exist/${uuid()}.json`;
 
     const mkdirSpy = jest.spyOn(fs, 'mkdir');
     const writeFileSpy = jest.spyOn(fs, 'writeFile');
 
     await writeJsonToPath({
-      cacheDirectory: directory,
       path: filename,
       data: json,
     });
 
-    const writtenData = await fs.readFile(`${directory}/${filename}`, 'utf8');
+    const writtenData = await fs.readFile(
+      path.join(getRootStorageDirectory(), filename),
+      'utf8',
+    );
     expect(writtenData).toEqual(JSON.stringify(json, null, 2));
 
     expect(mkdirSpy).toHaveBeenCalledTimes(1);
     expect(mkdirSpy).toHaveBeenCalledWith(
-      '/test/dir/that/does/not/already/exist',
+      path.join(
+        getRootStorageDirectory(),
+        'test/dir/that/does/not/already/exist',
+      ),
       {
         recursive: true,
       },
@@ -91,7 +100,7 @@ describe('writeJsonToPath', () => {
       data: json,
     });
 
-    const expectedFilePath = `${getDefaultCacheDirectory()}/${filename}`;
+    const expectedFilePath = path.join(getRootStorageDirectory(), filename);
 
     const volData = vol.toJSON();
     expect(volData).toEqual({
@@ -107,20 +116,24 @@ describe('symlink', () => {
 
     const jsonString = JSON.stringify({ testing: 100000 }, null, 2);
 
-    await fs.writeFile(`/${sourcePath}`, jsonString);
+    const expectedSourcePath = path.join(getRootStorageDirectory(), sourcePath);
+    await fs.mkdir(getRootStorageDirectory(), { recursive: true });
+    await fs.writeFile(expectedSourcePath, jsonString);
 
     await symlink({
-      cacheDirectory: '/',
       sourcePath,
       destinationPath,
     });
 
     expect(vol.toJSON()).toEqual({
       // memfs only shows real files with toJSON
-      [`/${sourcePath}`]: jsonString,
+      [expectedSourcePath]: jsonString,
     });
 
-    const expectedDestination = `/${destinationPath}`;
+    const expectedDestination = path.join(
+      getRootStorageDirectory(),
+      destinationPath,
+    );
     const symlinkedData = await fs.readFile(expectedDestination, 'utf8');
     expect(symlinkedData).toEqual(jsonString);
 
@@ -140,15 +153,15 @@ describe('symlink', () => {
     await fs.writeFile(`/${sourcePath}`, jsonString);
 
     await symlink({
-      cacheDirectory: '/',
       sourcePath,
       destinationPath,
     });
 
     expect(mkdirSpy).toHaveBeenCalledTimes(1);
-    expect(mkdirSpy).toHaveBeenCalledWith('/dir/that/does/not/exist', {
-      recursive: true,
-    });
+    expect(mkdirSpy).toHaveBeenCalledWith(
+      path.join(getRootStorageDirectory(), '/dir/that/does/not/exist'),
+      { recursive: true },
+    );
 
     // same as one of the above tests,
     // wanted to ensure mkdir was called prior to symlink
@@ -171,7 +184,7 @@ describe('symlink', () => {
       destinationPath,
     });
 
-    const expectedFilePath = `${getDefaultCacheDirectory()}/${destinationPath}`;
+    const expectedFilePath = `${getRootStorageDirectory()}/${destinationPath}`;
 
     const stats = await fs.lstat(expectedFilePath);
     expect(stats.isSymbolicLink()).toEqual(true);
@@ -190,13 +203,10 @@ describe('walkDirectory', () => {
       '/.j1-integration/graph/step-2/entities/4.json': '4',
     });
 
-    const cacheDirectory = '/.j1-integration';
-
     const expectedData = ['summary', '1', '2', '3', '4'];
     const collectedData: string[] = [];
 
     await walkDirectory({
-      cacheDirectory,
       path: 'graph',
       iteratee: ({ data }) => {
         collectedData.push(data);
@@ -216,12 +226,13 @@ describe('walkDirectory', () => {
       '/.j1-integration/graph/step-2/entities/4.json': '4',
     });
 
-    const cacheDirectory = '/.j1-integration';
     await pMap(Object.keys(vol.toJSON()), async (sourcePath: string) => {
       await symlink({
-        cacheDirectory,
-        sourcePath: sourcePath.substring(cacheDirectory.length + 1),
-        destinationPath: `index/entities/type/${path.basename(sourcePath)}`,
+        sourcePath: sourcePath.substring(getRootStorageDirectory().length + 1),
+        destinationPath: path.join(
+          'index/entities/type/',
+          path.basename(sourcePath),
+        ),
       });
     });
 
@@ -229,7 +240,6 @@ describe('walkDirectory', () => {
     const collectedData: string[] = [];
 
     await walkDirectory({
-      cacheDirectory,
       path: 'index',
       iteratee: ({ data }) => {
         collectedData.push(data);
