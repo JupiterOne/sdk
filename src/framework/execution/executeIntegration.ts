@@ -14,6 +14,8 @@ import {
   determinePartialDatasetsFromStepExecutionResults,
 } from './step';
 
+import { removeStorageDirectory } from '../../fileSystem';
+
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
   metadata: {
@@ -49,6 +51,8 @@ async function executeIntegration(
   context: IntegrationExecutionContext,
   config: IntegrationInvocationConfig,
 ): Promise<ExecuteIntegrationResult> {
+  await removeStorageDirectory();
+
   await config.validateInvocation?.(context);
 
   const stepStartStates =

@@ -4,8 +4,11 @@
  * This module exports utilities for writing data
  * relative to the .j1-integration root storage directoryPath.
  */
-import { promises as fs } from 'fs';
+import * as nodeFs from 'fs';
+const fs = nodeFs.promises;
 import path from 'path';
+
+import rimraf from 'rimraf';
 
 export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
 
@@ -116,6 +119,27 @@ export async function walkDirectory({
   for (const file of files) {
     await handleFilePath(path.resolve(fullPath, file));
   }
+}
+
+/**
+ * Wipes the storage directory clean
+ */
+export async function removeStorageDirectory() {
+  const rootStorageDir = getRootStorageDirectory();
+  if (await isDirectoryPresent(rootStorageDir)) {
+    await removeDirectory(rootStorageDir);
+  }
+}
+
+function removeDirectory(directory: string) {
+  return new Promise((resolve, reject) =>
+    rimraf(directory, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    }),
+  );
 }
 
 async function isDirectoryPresent(fullPath: string) {

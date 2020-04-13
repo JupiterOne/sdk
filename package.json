@@ -35,6 +35,7 @@
     "lodash": "^4.17.15",
     "p-map": "^4.0.0",
     "p-queue": "^6.3.0",
+    "rimraf": "^3.0.2",
     "ts-node": "^8.8.2",
     "uuid": "^7.0.3"
   },
@@ -43,6 +44,7 @@
     "@types/jest": "^25.2.1",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.11.0",
+    "@types/rimraf": "^3.0.0",
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
