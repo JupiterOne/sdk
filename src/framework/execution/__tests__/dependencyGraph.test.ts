@@ -464,7 +464,7 @@ describe('executeStepDependencyGraph', () => {
     expect(spyB).toHaveBeenCalledBefore(spyC);
   });
 
-  test('should mark steps failed executionHandlers with status FAILURE a dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE', async () => {
+  test('logs error after step fails', async () => {
     const error = new Error('oopsie');
     let errorLogSpy;
 
