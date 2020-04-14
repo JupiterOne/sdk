@@ -10,5 +10,15 @@ export default function validateInvocation(
     'Validating integration config...',
   );
 
-  context.logger.info('Integration instance is valid!');
+  if (isConfigurationValid(context.instance.config)) {
+    context.logger.info('Integration instance is valid!');
+  } else {
+    throw new Error('Failed to authenticate with provided credentials');
+  }
+}
+
+function isConfigurationValid(config: any) {
+  // add your own validation logic to ensure you
+  // can hit the provider's apis.
+  return config.clientId && config.clientSecret;
 }

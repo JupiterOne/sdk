@@ -20,9 +20,8 @@ have `yarn` installed, you can install dependencies by running `yarn`.
 #### Loading credentials
 
 Create a `.env` file at the root of this project and add environment variables
-to match what is in `src/instanceConfigFields.json`. The `.env` file is is
-ignored by git, so you won't have to worry about accidentally pushing
-credentials.
+to match what is in `src/instanceConfigFields.json`. The `.env` file is ignored
+by git, so you won't have to worry about accidentally pushing credentials.
 
 Given this example configuration:
 
@@ -70,7 +69,7 @@ src/
     // add additional steps here
 ```
 
-Each of the files listed above contribute creating an
+Each of the files listed above contribute to creating an
 [integration configuration](https://github.com/JupiterOne/integration-sdk/blob/master/docs/development.md#the-integration-framework).
 
 Additional files can be placed under `src` and referenced from each of the
@@ -78,7 +77,7 @@ integration files.
 
 The template project hosted
 [here](https://github.com/JupiterOne/integration-sdk/tree/master/template)
-provides an simple example of how an integration can be setup.
+provides a simple example of how an integration can be setup.
 
 ## Development Docs
 

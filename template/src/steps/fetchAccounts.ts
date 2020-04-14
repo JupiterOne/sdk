@@ -7,7 +7,7 @@ import {
 const step: IntegrationStep = {
   id: 'fetch-accounts',
   name: 'Fetch accounts',
-  types: ['my-integration-account'],
+  types: ['my_integration_account'],
   async executionHandler({
     logger,
     jobState,
