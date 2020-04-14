@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.2.0 - 2020-04-14
+
 ### Added
 
 - Executing an integration will now perform removal of `.j1-integration` prior
@@ -21,7 +23,7 @@ and this project adheres to
 - `ts-node` is no longer an explicit dependency of the project. Detection of
   TypeScript files is now performed prior to registering `ts-node`.
 
-## 0.1.0 - 2020-04-14
+## 0.1.0 - 2020-04-13
 
 ### Added
 
