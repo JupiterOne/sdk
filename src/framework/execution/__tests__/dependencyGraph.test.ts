@@ -464,6 +464,45 @@ describe('executeStepDependencyGraph', () => {
     expect(spyB).toHaveBeenCalledBefore(spyC);
   });
 
+  test('should mark steps failed executionHandlers with status FAILURE a dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE', async () => {
+    const error = new Error('oopsie');
+    let errorLogSpy;
+
+    /**
+     * Graph:
+     * a - b - c
+     *
+     * In this situation, 'a' is the leaf node
+     * 'b' depends on 'a',
+     * 'c' depends on 'b'
+     */
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: [],
+        executionHandler: ({ logger }) => {
+          errorLogSpy = jest.spyOn(logger, 'error');
+          throw error;
+        },
+      },
+    ];
+
+    const graph = buildStepDependencyGraph(steps);
+
+    await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
+
+    expect(errorLogSpy).toHaveBeenCalledTimes(1);
+    expect(errorLogSpy).toHaveBeenCalledWith(
+      error,
+      'Error occurred while executing step',
+    );
+  });
+
   test('steps with dependencies resulting in PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE assume the same status', async () => {
     const spyA = jest.fn().mockRejectedValue(new Error('oops'));
     const spyB = jest.fn();

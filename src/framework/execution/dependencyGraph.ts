@@ -186,6 +186,7 @@ export function executeStepDependencyGraph(
 
       try {
         await step.executionHandler(context);
+        context.logger.info('Step has completed successfully.');
 
         if (stepHasDependencyFailure(step)) {
           status =
@@ -194,6 +195,7 @@ export function executeStepDependencyGraph(
           status = IntegrationStepResultStatus.SUCCESS;
         }
       } catch (err) {
+        context.logger.error(err, 'Error occurred while executing step');
         status = IntegrationStepResultStatus.FAILURE;
       }
 
