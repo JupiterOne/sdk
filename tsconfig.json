@@ -9,5 +9,5 @@
     "pretty": true,
     "esModuleInterop": true
   },
-  "exclude": ["dist"]
+  "exclude": ["dist", "template"]
 }
