@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.2.1 - 2020-04-14
+
+### Changed
+
+- Change `publishConfig` to make package public.
+
 ## 0.2.0 - 2020-04-14
 
 ### Added
