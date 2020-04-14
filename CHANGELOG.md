@@ -14,6 +14,7 @@ and this project adheres to
   to collecting data.
 - Environment variable config loader now utilizes `dotenv` to automatically read
   `.env` file for variables.
+- Logging for step completion and failures.
 
 ### Changed
 

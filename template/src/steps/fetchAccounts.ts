@@ -12,26 +12,21 @@ const step: IntegrationStep = {
     logger,
     jobState,
   }: IntegrationStepExecutionContext) {
-    try {
-      await jobState.addEntities([
-        createIntegrationEntity({
-          entityData: {
-            source: {
-              id: 'integration-account-a',
-              name: 'My Account',
-            },
-            assign: {
-              _key: 'account:integration-account-a',
-              _type: 'my-integration-account',
-              _class: 'Account',
-            },
+    await jobState.addEntities([
+      createIntegrationEntity({
+        entityData: {
+          source: {
+            id: 'integration-account-a',
+            name: 'My Account',
           },
-        }),
-      ]);
-    } catch (err) {
-      logger.error(err, 'Unexpected error occurred');
-      throw err;
-    }
+          assign: {
+            _key: 'account:integration-account-a',
+            _type: 'my-integration-account',
+            _class: 'Account',
+          },
+        },
+      }),
+    ]);
   },
 };
 

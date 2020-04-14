@@ -195,7 +195,7 @@ export function executeStepDependencyGraph(
           status = IntegrationStepResultStatus.SUCCESS;
         }
       } catch (err) {
-        context.logger.error(err, 'Error occurred while executing step');
+        context.logger.error(err, 'Step failed to complete due to error.');
         status = IntegrationStepResultStatus.FAILURE;
       }
 
