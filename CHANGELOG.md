@@ -8,14 +8,17 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Changed
+### Added
 
-- `ts-node` is no longer an explicit dependency of the project. Detection of
-  TypeScript files is now performed prior to registering `ts-node`.
 - Executing an integration will now perform removal of `.j1-integration` prior
   to collecting data.
 - Environment variable config loader now utilizes `dotenv` to automatically read
   `.env` file for variables.
+
+### Changed
+
+- `ts-node` is no longer an explicit dependency of the project. Detection of
+  TypeScript files is now performed prior to registering `ts-node`.
 
 ## 0.1.0 - 2020-04-14
 
