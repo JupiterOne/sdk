@@ -1,9 +1,20 @@
+import { promises as fs } from 'fs';
+import { vol } from 'memfs';
+
 import {
   IntegrationExecutionContext,
   IntegrationStepResultStatus,
 } from '../types';
 import { executeIntegrationLocally } from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
+
+import { getRootStorageDirectory } from '../../../fileSystem';
+
+jest.mock('fs');
+
+afterEach(() => {
+  vol.reset();
+});
 
 test('executes validator function if provided in config', async () => {
   const validate = jest.fn();
@@ -134,4 +145,40 @@ test('includes types for partially successful steps steps in partial datasets', 
       },
     },
   });
+});
+
+test('clears out the storage directory prior to performing collection', async () => {
+  const previousContentFilePath = `${getRootStorageDirectory()}/graph/my-test/someFile.json`;
+  vol.fromJSON({
+    [previousContentFilePath]: '{ "entities": [] }',
+  });
+
+  await executeIntegrationLocally({
+    integrationSteps: [
+      {
+        id: 'my-step',
+        name: 'My awesome step',
+        types: ['test'],
+        async executionHandler({ jobState }) {
+          await jobState.addEntities([
+            {
+              _key: 'test',
+              _type: 'test',
+              _class: 'Test',
+            },
+          ]);
+        },
+      },
+    ],
+  });
+
+  expect(vol.toJSON()).not.toHaveProperty(previousContentFilePath);
+
+  // should still have written data to disk
+  const files = await fs.readdir(getRootStorageDirectory());
+  expect(files).toHaveLength(2);
+  expect(files).toEqual(expect.arrayContaining(['graph', 'index']));
+
+  // files should not exist any more
+  await expect(fs.readFile(previousContentFilePath)).rejects.toThrow(/ENOENT/);
 });

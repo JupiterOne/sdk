@@ -10,6 +10,7 @@ import {
   writeJsonToPath,
   walkDirectory,
   symlink,
+  removeStorageDirectory,
 } from '../fileSystem';
 
 jest.mock('fs'); // applies manual mock which uses memfs
@@ -261,5 +262,20 @@ describe('walkDirectory', () => {
 
     expect(collectedData).toHaveLength(expectedData.length);
     expect(collectedData).toEqual(expect.arrayContaining(expectedData));
+  });
+});
+
+describe('clearStorageDirectory', () => {
+  test('removes the storage directory', async () => {
+    vol.fromJSON({
+      '/.j1-integration/graph/step-1/entities/1.json': '1',
+      '/.j1-integration/graph/step-1/entities/2.json': '2',
+      '/.j1-integration/graph/step-1/entities/3.json': '3',
+      '/.j1-integration/graph/step-2/entities/4.json': '4',
+    });
+
+    await removeStorageDirectory();
+
+    expect(vol.toJSON()).toEqual({});
   });
 });
