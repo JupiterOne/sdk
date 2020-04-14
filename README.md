@@ -19,3 +19,6 @@ yarn add @jupiterone/integration-sdk
 
 Please reference the [development documentation](docs/development.md) for
 details about how to develop integrations with this SDK.
+
+An example template project can be found
+[here](https://github.com/JupiterOne/integration-sdk/tree/master/template).
