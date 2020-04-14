@@ -281,7 +281,7 @@ a flattened object that can be used for building entities.
 #### Graph data generation and validation
 
 To assist with constructing data that is compliant with JupiterOne's model, the
-integration SDK will exposes utility functions (`createIntegrationEntity` and
+integration SDK exposes utility functions (`createIntegrationEntity` and
 `createIntegrationRelationship`) for validating entities and relationships based
 on their assigned `_class`.
 
@@ -339,7 +339,7 @@ store the `source` under a `_rawData` attribute on the entity.
 Schema validation will be then performed to ensure that entity fits the schema
 of the `_class` it was assigned.
 
-Some fields on the `source` object will used as default values for entity
+Some fields on the `source` object are used as default values for entity
 properties.
 
 A `providerId` or `id` property on the `source` object will be used as the
@@ -467,8 +467,8 @@ relationships.
 The `Internet` and `Everyone` global entities are exposed by the
 `@jupiterone/data-model` and can be used here.
 
-The relationship direction can be can be specified using the
-`relationshipDirection` option.
+The relationship direction can be specified using the `relationshipDirection`
+option.
 
 `skipTargetCreation` can be set to `false` to have JupiterOne skip the creation
 of the target entity if it does not exist.
