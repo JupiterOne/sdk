@@ -11,12 +11,13 @@ afterEach(() => {
   Object.keys(require.cache).forEach((modulePath) => {
     delete require.cache[modulePath];
   });
+
+  delete process.env.MY_CONFIG;
 });
 
 describe('collect', () => {
   beforeEach(() => {
     loadProjectStructure('typeScriptProject');
-    process.env.MY_CONFIG = 'false';
   });
 
   test('loads the integration, executes it, and logs the result', async () => {

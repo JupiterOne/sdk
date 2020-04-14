@@ -1,5 +1,11 @@
+import path from 'path';
+
+import { vol } from 'memfs';
+
 import { loadConfigFromEnvironmentVariables } from '../config';
 import { IntegrationInstanceConfigFieldMap } from '../types/config';
+
+jest.mock('fs');
 
 beforeEach(() => {
   process.env.STRING_VARIABLE = 'string';
@@ -9,6 +15,8 @@ beforeEach(() => {
 afterEach(() => {
   delete process.env.STRING_VARIABLE;
   delete process.env.BOOLEAN_VARIABLE;
+
+  vol.reset();
 });
 
 test('loads config fields from environment variables', () => {
@@ -56,4 +64,21 @@ test('throws error if expected environment boolean field does not match "true" o
   ).toThrow(
     'Expected boolean value for field "booleanVariable" but received "mochi".',
   );
+});
+
+test('loads environment variables from .env', () => {
+  vol.fromJSON({
+    [path.join(process.cwd(), '.env')]: 'MY_ENV_VAR=mochi',
+  });
+
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+    myEnvVar: {
+      type: 'string',
+    },
+  };
+
+  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
+  expect(config).toEqual({
+    myEnvVar: 'mochi',
+  });
 });

@@ -1,4 +1,6 @@
+import dotenv from 'dotenv';
 import snakeCase from 'lodash/snakeCase';
+
 import {
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
@@ -15,6 +17,9 @@ import {
 export function loadConfigFromEnvironmentVariables(
   configMap: IntegrationInstanceConfigFieldMap,
 ): Record<string, string | boolean> {
+  // pull in environment variables from .env file if available
+  dotenv.config();
+
   return Object.entries(configMap)
     .map(([field, config]): [string, string | boolean] => {
       const environmentVariableName = snakeCase(field).toUpperCase();
