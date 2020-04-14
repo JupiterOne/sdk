@@ -499,7 +499,7 @@ describe('executeStepDependencyGraph', () => {
     expect(errorLogSpy).toHaveBeenCalledTimes(1);
     expect(errorLogSpy).toHaveBeenCalledWith(
       error,
-      'Error occurred while executing step',
+      'Step failed to complete due to error.',
     );
   });
 
