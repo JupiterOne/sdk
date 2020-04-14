@@ -62,9 +62,6 @@
     "typescript": "^3.8.3",
     "wait-for-expect": "^3.0.2"
   },
-  "peerDependencies": {
-    "ts-node": "^8.8.2"
-  },
   "jest": {
     "setupFilesAfterEnv": [
       "./testSetup.ts"
