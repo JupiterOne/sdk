@@ -32,10 +32,10 @@
     "chalk": "^4.0.0",
     "commander": "^5.0.0",
     "dependency-graph": "^0.9.0",
+    "globby": "^11.0.0",
     "lodash": "^4.17.15",
     "p-map": "^4.0.0",
     "p-queue": "^6.3.0",
-    "ts-node": "^8.8.2",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
@@ -57,8 +57,12 @@
     "memfs": "^3.1.2",
     "prettier": "^2.0.2",
     "ts-jest": "^25.3.0",
+    "ts-node": "^8.8.2",
     "typescript": "^3.8.3",
     "wait-for-expect": "^3.0.2"
+  },
+  "peerDependencies": {
+    "ts-node": "^8.8.2"
   },
   "jest": {
     "setupFilesAfterEnv": [

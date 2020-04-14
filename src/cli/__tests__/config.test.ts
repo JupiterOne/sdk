@@ -12,10 +12,7 @@ import { loadProjectStructure } from './loadProjectStructure';
 jest.mock('../log');
 
 afterEach(() => {
-  // clear require cache
-  Object.keys(require.cache).forEach((modulePath) => {
-    delete require.cache[modulePath];
-  });
+  jest.resetModules();
 });
 
 describe('loadModuleContent', () => {
@@ -126,5 +123,65 @@ describe('TypeScript project', () => {
         ],
       });
     });
+  });
+});
+
+describe('JavaScript projects', () => {
+  beforeEach(() => {
+    loadProjectStructure('javaScriptProject');
+  });
+
+  test('loads steps, getStepStartStates, validateFunction, and instanceConfigFields', async () => {
+    const config = await loadConfig();
+
+    expect(config).toEqual({
+      instanceConfigFields: {
+        myConfig: {
+          mask: true,
+          type: 'boolean',
+        },
+      },
+      getStepStartStates: expect.any(Function),
+      validateInvocation: expect.any(Function),
+      integrationSteps: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          types: ['my_account'],
+          executionHandler: expect.any(Function),
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          types: ['my_user'],
+          executionHandler: expect.any(Function),
+        },
+      ],
+    });
+  });
+});
+
+describe('ts-node loading', () => {
+  let tsNodeRequired;
+
+  beforeEach(() => {
+    tsNodeRequired = false;
+
+    jest.doMock('ts-node/register/transpile-only', () => {
+      tsNodeRequired = true;
+      return {};
+    });
+  });
+
+  test('loads ts-node for typescript projects', async () => {
+    loadProjectStructure('typeScriptProject');
+    await loadConfig();
+    expect(tsNodeRequired).toEqual(true);
+  });
+
+  test('does not load ts-node for javascript projects', async () => {
+    loadProjectStructure('javaScriptProject');
+    await loadConfig();
+    expect(tsNodeRequired).toEqual(false);
   });
 });
