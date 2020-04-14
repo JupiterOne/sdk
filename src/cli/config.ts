@@ -1,19 +1,16 @@
-/**
- * Load ts-node register for picking up typescript files
- */
-require('ts-node/register/transpile-only');
-
 import path from 'path';
 import { promises as fs } from 'fs';
+
+import globby from 'globby';
 
 import * as log from './log';
 
 import {
-  // IntegrationInvocationConfig,
+  IntegrationInvocationConfig,
   IntegrationInstanceConfigFieldMap,
   InvocationValidationFunction,
   GetStepStartStatesFunction,
-  // IntegrationStep,
+  IntegrationStep,
 } from '../framework/execution';
 
 /**
@@ -25,8 +22,13 @@ import {
  * ./src/getStepStartStates
  * ./src/validateInvocation
  */
-export async function loadConfig(): Promise<any> {
+export async function loadConfig(): Promise<IntegrationInvocationConfig> {
   log.debug('Loading integration configuration...\n');
+
+  if (await isTypescriptPresent()) {
+    log.debug('TypeScript files detected. Registering ts-node.');
+    registerTypescript();
+  }
 
   const config = {
     instanceConfigFields: loadInstanceConfigFields(),
@@ -68,7 +70,7 @@ export function loadGetStepStartStatesFunction() {
   );
 }
 
-export async function loadIntegrationSteps() {
+export async function loadIntegrationSteps(): Promise<IntegrationStep[]> {
   let files: string[] = [];
 
   const stepsDir = path.join(process.cwd(), 'src', 'steps');
@@ -95,4 +97,22 @@ export function loadModuleContent<T>(relativePath: string): T | undefined {
   }
 
   return integrationModule?.default ?? integrationModule;
+}
+
+async function isTypescriptPresent() {
+  const paths = await globby(path.join('src', '**', '*.ts'));
+  return paths.length > 0;
+}
+
+/**
+ * Load ts-node register for picking up typescript files
+ */
+function registerTypescript() {
+  try {
+    require('ts-node/register/transpile-only');
+  } catch (err) {
+    log.warn(
+      'Looks like you are developing with TypeScript. Please make sure you have both typescript and ts-node installed. To allow the SDK to work with your code.',
+    );
+  }
 }
