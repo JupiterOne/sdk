@@ -100,7 +100,7 @@ export function loadModuleContent<T>(relativePath: string): T | undefined {
 }
 
 async function isTypescriptPresent() {
-  const paths = await globby('src/**/*.ts');
+  const paths = await globby(path.join('src', '**', '*.ts'));
   return paths.length > 0;
 }
 
