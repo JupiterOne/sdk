@@ -273,21 +273,345 @@ collection](# Data collection) section below.
 
 ### Additional utilities
 
-#### Graph model validation
+#### Data conversion
 
-To assist with keeping data consistent with our graph data model, the
-integration SDK will expose utility functions (`createIntegrationEntity` and
+A `convertProperties` function is exposed by the sdk to reformat an object into
+a flattened object that can be used for building entities.
+
+#### Graph data generation and validation
+
+To assist with constructing data that is compliant with JupiterOne's model, the
+integration SDK will exposes utility functions (`createIntegrationEntity` and
 `createIntegrationRelationship`) for validating entities and relationships based
 on their assigned `_class`.
 
 These functions will automatically validate that an entity contains required
 fields.
 
+##### `createIntegrationEntity`
+
+`createIntegrationEntity` accepts an object containing `entityData`, which
+accepts a `source` object (from the provider), an `assign` object that contains
+core entity properties, and an optional `tagProperties` array for mapping source
+properties to tags.
+
+Snippet of input type used by the `createIntegrationEntity` function:
+
+```typescript
+export type IntegrationEntityBuilderInput = {
+  /**
+   * Data used to generate an `Entity`.
+   */
+  entityData: IntegrationEntityData;
+};
+
+/**
+ * Data used to generate an `Entity`.
+ */
+export type IntegrationEntityData = {
+  /**
+   * Data from a provider API that will be selectively transferred to an
+   * `Entity`.
+   *
+   * The common properties defined by data model schemas, selected by the
+   * `assign._class`, will be found and transferred to the generated entity.
+   */
+  source: ProviderSourceData; // accepts pretty much any object
+
+  /**
+   * Literal property assignments. These values will override anything
+   * transferred from the `source` data.
+   */
+  assign: LiteralAssignments; // core entity properties like _class, _type, _key
+
+  /**
+   * The names of properties that will be assigned directly to the entity from
+   * tags with matching names. See `assignTags`.
+   */
+  tagProperties?: string[];
+};
+```
+
+The function will collect properties from the `source` object that match the
+`_class` defined in our data model, apply the `assign` object values, and also
+store the `source` under a `_rawData` attribute on the entity.
+
+Schema validation will be then performed to ensure that entity fits the schema
+of the `_class` it was assigned.
+
+Some fields on the `source` object will used as default values for entity
+properties.
+
+A `providerId` or `id` property on the `source` object will be used as the
+`_key` property if the `_key` is not provided on the `assign` object. Also, the
+`tags` property from the `source` object will be normalized and added to the
+generated entity as properties prefixed with `tag.`.
+
+Here's an example of how the `createIntegrationEntity` function can be used to
+convert Azure SQLDatabases into a JupiterOne entity.
+
+```typescript
+export function createDatabaseEntity(
+  webLinker: AzureWebLinker,
+  data: MySQLDatabase | SQLDatabase,
+  _type: string,
+) {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        ...convertProperties(data),
+        _type,
+        _class: AZURE_DATABASE_ENTITY_CLASS,
+        displayName: data.name || data.id || 'unnamed',
+        classification: null,
+        encrypted: null,
+      },
+    },
+  });
+}
+```
+
+##### `createIntegrationRelationship`
+
+`createIntegrationRelationship` can be used to help build relationships between
+entities.
+
+There are two types of relationships that can be built: Direct relationships and
+Mapped relationships.
+
+Direct relationships are explicit edges constructed between two entities from
+the same integration.
+
+Mapped relationships are edges that are built from a source entity to a target
+entity that may be managed by a different integration or may not be known by any
+integration. Mapped relationships also allow for more generalized relationships
+to be created from a source entity to multiple target entities based on a set of
+filters.
+
+A common use case for mapped relationships is for building edges between a
+security group that allows access to the public internet (a global entity not
+managed by an integration). This can help determine which servers or workloads
+have access to the open internet and can be used to assist with locking down
+security groups for services that do not require internet access.
+
+Another use case is for mapping `User` entities created by an integration to
+their `Person` entity based off of their name or email. That relationship can
+then be used to help determine what services a person in an organization may
+have access to.
+
+The function accepts multiple different options:
+
+- `DirectRelationshipOptions`
+- `DirectRelationshipLiteralOptions`
+- `MappedRelationshipOptions`
+- `MappedRelationshipLiteralOptions`
+
+If needed, additional properties can be added to relationships created via the
+`properties` field that exists on all options.
+
+###### `DirectRelationshipOptions`
+
+If you have access to the two entities, you can simply provide them as inputs to
+the function via the `from` and `to` options.
+
+```typescript
+// input type
+type DirectRelationshipOptions = {
+  _class: string;
+  from: Entity;
+  to: Entity;
+  properties?: AdditionalRelationshipProperties;
+};
+
+// usage
+createIntegrationRelationship({
+  _class: 'has',
+  source: entityA,
+  target: entityB,
+});
+```
+
+###### `DirectRelationshipLiteralOptions`
+
+If you know the `_type` and `_key` of the two entities you want to relate, you
+can provide them via the `fromType`, `fromKey`, `toType`, and `toKey`
+properties.
+
+```typescript
+// input type
+type DirectRelationshipLiteralOptions = {
+  _class: string;
+  fromType: string;
+  fromKey: string;
+  toType: string;
+  toKey: string;
+  properties?: AdditionalRelationshipProperties;
+};
+
+// usage
+createIntegrationRelationship({
+  _class: 'HAS',
+  fromKey: 'a',
+  fromType: 'a_entity',
+  toKey: 'b',
+  toType: 'b_entity',
+});
+```
+
+###### `MappedRelationshipOptions`
+
+Mapped relationships accept a `source` and `target` entity for constructing
+relationships.
+
+The `Internet` and `Everyone` global entities are exposed by the
+`@jupiterone/data-model` and can be used here.
+
+The relationship direction can be can be specified using the
+`relationshipDirection` option.
+
+`skipTargetCreation` can be set to `false` to have JupiterOne skip the creation
+of the target entity if it does not exist.
+
+Additional options are defined below.
+
+```typescript
+// input type
+type MappedRelationshipOptions = {
+  _class: string;
+  source: Entity;
+  target: TargetEntity;
+  properties?: AdditionalRelationshipProperties;
+
+  /**
+   * Defaults to `RelationshipDirection.FORWARD`, assuming the common case of
+   * source -> target.
+   */
+  relationshipDirection?: RelationshipDirection;
+
+  /**
+   * Identifies properties in the `targetEntity` that are used to locate the
+   * entities to connect to the `sourceEntityKey`.
+   *
+   * Defaults to `[["_type", "_key"]]`, allowing for the simple case of mapping
+   * to a known type and key.
+   */
+  targetFilterKeys?: TargetFilterKey[];
+
+  /**
+   * Defaults to `undefined`, leaving it up to the default established in the
+   * mapper.
+   */
+  skipTargetCreation?: boolean;
+};
+
+// usage
+createIntegrationRelationship({
+  _class: 'allows',
+  source: securityGroupEntity,
+  target: DataModel.Internet,
+  relationshipDirection: RelationshipDirection.FORWARD
+}),
+```
+
+###### `MappedRelationshipLiteralOptions`
+
+For additional control, mapped relationships can be created by providing fine
+details on how mappings should be generated. This is useful for cases where more
+generalized relationships need to be created between a source entity and one or
+more target entities that match a set of properties.
+
+````typescript
+// input type
+type MappedRelationshipLiteralOptions = {
+  _class: string;
+  _mapping: RelationshipMapping;
+  properties?: AdditionalRelationshipProperties;
+};
+
+export interface RelationshipMapping {
+  /**
+   * The relationship direction, `source - FORWARD -> target` or
+   * `source <- REVERSE - target`.
+   */
+  relationshipDirection: RelationshipDirection;
+
+  /**
+   * The `_key` value of the entity managed by the integration, to which
+   * relationships will be created.
+   *
+   * "Source" implies that the graph vertex will have an outgoing edge. However,
+   * that is not necessarily the case. See `relationshipDirection`.
+   */
+  sourceEntityKey: string;
+
+  /**
+   * Identifies properties in the `targetEntity` that are used to locate the
+   * entities to connect to the `sourceEntityKey`. For example, if you know that
+   * you want to build a relationship to user entities with a known email, this
+   * can be expressed by:
+   *
+   * ```js
+   * {
+   *   targetFilterKeys: [['_class', 'email']],
+   *   targetEntity: {
+   *     _class: 'User',
+   *     email: 'person@example.com',
+   *     firstName: 'Person',
+   *     lastName: 'Example'
+   *   }
+   * }
+   */
+  targetFilterKeys: TargetFilterKey[];
+
+  /**
+   * Properties of the target entity known to the integration building the
+   * relationship.
+   *
+   * The property values of the `targetFilterKeys` are used to find the target
+   * entities. When the mapper manages the target entity (it created the entity,
+   * no other integration owns it), it will update the entity to store these
+   * properties. This allows a number of integrations to contribute data to
+   * "fill out" knowledge of the entity.
+   */
+  targetEntity: TargetEntityProperties;
+
+  /**
+   * By default, an entity will be created by the mapper when no matching
+   * entities are found.
+   *
+   * When a relationship is not meaningful unless target entities already exist,
+   * `skipTargetCreation: true` will inform the mapper that the entity should
+   * not be created.
+   */
+  skipTargetCreation?: boolean;
+}
+
+// usage:
+//
+// This will create a relationship(s) from the
+// source entity with _key = 'a'
+// and target entities that match the class 'User'
+// and have the email set to 'email@example.com'
+createIntegrationRelationship({
+  _class: 'HAS',
+  _mapping: {
+    relationshipDirection: RelationshipDirection.REVERSE,
+    sourceEntityKey: 'a',
+    targetEntity: {
+      _class: 'User',
+      email: 'email@example.com',
+    },
+    targetFilterKeys: [['_class', 'email']],
+  },
+});
+````
+
 #### Raw data collection
 
 In addition to performing validation, the `createIntegrationEntity` and
 `createIntegrationRelationship` will also automatically encode and store the
-original provider data under a `__rawData` field. For now, this will always
+original provider data under a `_rawData` field. For now, this will always
 assume that data coming in was stored as `json`, but support for other data
 types will come later.
 
