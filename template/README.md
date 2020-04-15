@@ -79,8 +79,23 @@ The template project hosted
 [here](https://github.com/JupiterOne/integration-sdk/tree/master/template)
 provides a simple example of how an integration can be setup.
 
-## Development Docs
+## Documentation
+
+### Development
 
 Please reference the `@jupiterone/integration-sdk`
 [development documentation](https://github.com/JupiterOne/integration-sdk/blob/master/docs/development.md)
-for more information on how to build integrations.
+for more information on how to use the SDK.
+
+See [docs/development.md](docs/development.md) for details about how to get
+started with developing this integration.
+
+### Provider resource coverage
+
+More information about the resources covered by this integration can be found at
+[docs/data-model.md](docs/data-model.md).
+
+### Changelog
+
+The history of this integration's development can be viewed at
+[CHANGELOG.md](CHANGELOG.md).
