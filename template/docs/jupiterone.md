@@ -1,4 +1,12 @@
-# Data Model
+# Integration with JupiterOne
+
+## Setup
+
+In this section, please provide details about how to set up the integration with
+JupiterOne. This may require provisioning some resources on the provider's side
+(perhaps a role, app, or api key) and passing information over to JupiterOne.
+
+## Data Model
 
 Provide an overview here of the resources collected from the integration. Please
 provide a mapping of how the resources collected map to the JupiterOne Data
@@ -10,7 +18,7 @@ you add support for new entities and relationships, please update the tables and
 document the addition in the [CHANGELOG.md](../CHANGELOG.md) file at the root of
 the project.
 
-## Entities
+### Entities
 
 Provide a table that maps concepts from the provider to the `_type` and `_class`
 generated.
@@ -38,7 +46,7 @@ generated.
 | Cosmos DB         | `azure_cosmosdb_account`      | `Account`                       |
 |                   | `azure_cosmosdb_sql_database` | `Database`, `DataStore`         |
 
-## Relationships
+### Relationships
 
 The following relationships are created/mapped:
 

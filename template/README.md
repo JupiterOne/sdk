@@ -90,10 +90,11 @@ for more information on how to use the SDK.
 See [docs/development.md](docs/development.md) for details about how to get
 started with developing this integration.
 
-### Provider resource coverage
+### Integration usage and resource coverage
 
-More information about the resources covered by this integration can be found at
-[docs/data-model.md](docs/data-model.md).
+More information about the resources covered by this integration and how to
+setup the integration in JupiterOne can be found in
+[docs/jupiterone.md](docs/jupiterone.md).
 
 ### Changelog
 
