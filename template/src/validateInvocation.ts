@@ -1,6 +1,6 @@
 import { IntegrationExecutionContext } from '@jupiterone/integration-sdk';
 
-export default function validateInvocation(
+export default async function validateInvocation(
   context: IntegrationExecutionContext,
 ) {
   context.logger.info(
@@ -10,14 +10,14 @@ export default function validateInvocation(
     'Validating integration config...',
   );
 
-  if (isConfigurationValid(context.instance.config)) {
+  if (await isConfigurationValid(context.instance.config)) {
     context.logger.info('Integration instance is valid!');
   } else {
     throw new Error('Failed to authenticate with provided credentials');
   }
 }
 
-function isConfigurationValid(config: any) {
+async function isConfigurationValid(config: any) {
   // add your own validation logic to ensure you
   // can hit the provider's apis.
   return config.clientId && config.clientSecret;
