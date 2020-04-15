@@ -15,21 +15,14 @@ import {
 
 jest.mock('fs'); // applies manual mock which uses memfs
 
-beforeEach(() => {
-  jest.spyOn(process, 'cwd').mockReturnValue('/');
-});
-
 afterEach(() => {
   vol.reset(); // clear out file system
 });
 
 describe('getRootStorageDirectory', () => {
   test('should utilize the current directory for building the default cache directory', () => {
-    const mockCwdResult = `/${uuid()}`;
-    jest.spyOn(process, 'cwd').mockReturnValue(mockCwdResult);
-
     expect(getRootStorageDirectory()).toEqual(
-      `${mockCwdResult}/.j1-integration`,
+      path.join(process.cwd(), '.j1-integration'),
     );
   });
 });
@@ -46,7 +39,7 @@ describe('writeJsonToPath', () => {
     });
 
     const writtenData = await fs.readFile(
-      path.join(getRootStorageDirectory(), filename),
+      path.resolve(getRootStorageDirectory(), filename),
       'utf8',
     );
     expect(writtenData).toEqual(JSON.stringify(json, null, 2));
@@ -97,7 +90,7 @@ describe('writeJsonToPath', () => {
     expect(mkdirOrder).toBeLessThan(writeFileOrder);
   });
 
-  test('should default to fetching default cache directory if option is not supplied', async () => {
+  test('should write data to root storage directory', async () => {
     const json = { tiger: 'king' };
 
     const filename = `${uuid()}.json`;
@@ -111,7 +104,7 @@ describe('writeJsonToPath', () => {
 
     const volData = vol.toJSON();
     expect(volData).toEqual({
-      [expectedFilePath]: JSON.stringify(json, null, 2),
+      [toUnixPath(expectedFilePath)]: JSON.stringify(json, null, 2),
     });
   });
 });
@@ -123,7 +116,10 @@ describe('symlink', () => {
 
     const jsonString = JSON.stringify({ testing: 100000 }, null, 2);
 
-    const expectedSourcePath = path.join(getRootStorageDirectory(), sourcePath);
+    const expectedSourcePath = path.resolve(
+      getRootStorageDirectory(),
+      sourcePath,
+    );
     await fs.mkdir(getRootStorageDirectory(), { recursive: true });
     await fs.writeFile(expectedSourcePath, jsonString);
 
@@ -134,10 +130,10 @@ describe('symlink', () => {
 
     expect(vol.toJSON()).toEqual({
       // memfs only shows real files with toJSON
-      [expectedSourcePath]: jsonString,
+      [toUnixPath(expectedSourcePath)]: jsonString,
     });
 
-    const expectedDestination = path.join(
+    const expectedDestination = path.resolve(
       getRootStorageDirectory(),
       destinationPath,
     );
@@ -164,7 +160,11 @@ describe('symlink', () => {
     const mkdirSpy = jest.spyOn(fs, 'mkdir');
     const symlinkSpy = jest.spyOn(fs, 'symlink');
 
-    await fs.writeFile(`/${sourcePath}`, jsonString);
+    vol.mkdirSync(getRootStorageDirectory(), { recursive: true });
+    await fs.writeFile(
+      path.resolve(getRootStorageDirectory(), sourcePath),
+      jsonString,
+    );
 
     await symlink({
       sourcePath,
@@ -186,19 +186,34 @@ describe('symlink', () => {
     expect(mkdirOrder).toBeLessThan(symlinkOrder);
   });
 
-  test('should default to fetching default cache directory if option is not supplied', async () => {
+  test('should create symlinks relative to root storage directory', async () => {
     const sourcePath = 'test.json';
-    const destinationPath = 'dir/that/does/not/exist/symlink.json';
+    const destinationPath = path.join(
+      'dir',
+      'that',
+      'does',
+      'not',
+      'exist',
+      'symlink.json',
+    );
 
     const jsonString = JSON.stringify({ mochi: 'soba' }, null, 2);
-    await fs.writeFile(`/${sourcePath}`, jsonString);
+
+    vol.mkdirSync(getRootStorageDirectory(), { recursive: true });
+    await fs.writeFile(
+      path.resolve(getRootStorageDirectory(), sourcePath),
+      jsonString,
+    );
 
     await symlink({
       sourcePath,
       destinationPath,
     });
 
-    const expectedFilePath = `${getRootStorageDirectory()}/${destinationPath}`;
+    const expectedFilePath = path.resolve(
+      getRootStorageDirectory(),
+      destinationPath,
+    );
 
     const stats = await fs.lstat(expectedFilePath);
     expect(stats.isSymbolicLink()).toEqual(true);
@@ -208,13 +223,14 @@ describe('symlink', () => {
 describe('walkDirectory', () => {
   test('should iteratively read files from the specified directory', async () => {
     // populate vol with test files
+    const basePath = path.resolve(process.cwd(), '.j1-integration');
     vol.fromJSON({
-      '/.j1-integration/index/entities/cat/1.json': 'meow',
-      '/.j1-integration/graph/summary.json': 'summary',
-      '/.j1-integration/graph/step-1/entities/1.json': '1',
-      '/.j1-integration/graph/step-1/entities/2.json': '2',
-      '/.j1-integration/graph/step-1/entities/3.json': '3',
-      '/.j1-integration/graph/step-2/entities/4.json': '4',
+      [path.join(basePath, 'index', 'entities', 'cat', '1.json')]: '1',
+      [path.join(basePath, 'graph', 'summary.json')]: 'summary',
+      [path.join(basePath, 'graph', 'step-1', 'entities', '1.json')]: '1',
+      [path.join(basePath, 'graph', 'step-1', 'entities', '2.json')]: '2',
+      [path.join(basePath, 'graph', 'step-1', 'entities', '3.json')]: '3',
+      [path.join(basePath, 'graph', 'step-2', 'entities', '4.json')]: '4',
     });
 
     const expectedData = ['summary', '1', '2', '3', '4'];
@@ -233,16 +249,17 @@ describe('walkDirectory', () => {
 
   test('should be able to walk and resolve symlinked files', async () => {
     // populate vol with test files
+    const basePath = path.resolve(getRootStorageDirectory(), 'graph');
     vol.fromJSON({
-      '/.j1-integration/graph/step-1/entities/1.json': '1',
-      '/.j1-integration/graph/step-1/entities/2.json': '2',
-      '/.j1-integration/graph/step-1/entities/3.json': '3',
-      '/.j1-integration/graph/step-2/entities/4.json': '4',
+      [path.join(basePath, 'step-1', 'entities', '1.json')]: '1',
+      [path.join(basePath, 'step-1', 'entities', '2.json')]: '2',
+      [path.join(basePath, 'step-1', 'entities', '3.json')]: '3',
+      [path.join(basePath, 'step-2', 'entities', '4.json')]: '4',
     });
 
-    await pMap(Object.keys(vol.toJSON()), async (sourcePath: string) => {
-      await symlink({
-        sourcePath: sourcePath.substring(getRootStorageDirectory().length + 1),
+    await pMap(Object.keys(vol.toJSON()), (sourcePath: string) => {
+      return symlink({
+        sourcePath: path.relative(getRootStorageDirectory(), sourcePath),
         destinationPath: path.join(
           path.join('index', 'entities', 'type'),
           path.basename(sourcePath),
@@ -267,15 +284,27 @@ describe('walkDirectory', () => {
 
 describe('clearStorageDirectory', () => {
   test('removes the storage directory', async () => {
+    const basePath = path.resolve(getRootStorageDirectory(), 'graph');
     vol.fromJSON({
-      '/.j1-integration/graph/step-1/entities/1.json': '1',
-      '/.j1-integration/graph/step-1/entities/2.json': '2',
-      '/.j1-integration/graph/step-1/entities/3.json': '3',
-      '/.j1-integration/graph/step-2/entities/4.json': '4',
+      [path.join(basePath, 'step-1', 'entities', '1.json')]: '1',
+      [path.join(basePath, 'step-1', 'entities', '2.json')]: '2',
+      [path.join(basePath, 'step-1', 'entities', '3.json')]: '3',
+      [path.join(basePath, 'step-2', 'entities', '4.json')]: '4',
     });
 
     await removeStorageDirectory();
 
-    expect(vol.toJSON()).toEqual({});
+    expect(vol.toJSON()).toEqual({
+      [toUnixPath(process.cwd())]: null,
+    });
   });
 });
+
+/**
+ * Utility for testing against the memfs vol.toJSON() result
+ * on windows.
+ */
+function toUnixPath(path: string) {
+  const driveStrippedPath = path.replace(/^([A-Z]|[a-z]):\\/, '/');
+  return driveStrippedPath.replace(/\\/g, '/');
+}
