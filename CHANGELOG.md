@@ -8,9 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.2.2 - 2020-04-15
+
 ### Changed
 
-- Fix windows compatability issues
+- Fix windows compatibility issues
 
 ## 0.2.1 - 2020-04-14
 
