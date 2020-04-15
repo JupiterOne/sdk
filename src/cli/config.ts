@@ -100,7 +100,14 @@ export function loadModuleContent<T>(relativePath: string): T | undefined {
 }
 
 async function isTypescriptPresent() {
-  const paths = await globby(path.join('src', '**', '*.ts'));
+  // NOTE: this does not use path.join because globby
+  // (which uses fast-glob, which uses micromatch)
+  // requires that forward slashes are used.
+  //
+  // Refs:
+  // - https://github.com/mrmlnc/fast-glob#pattern-syntax
+  // - https://github.com/micromatch/micromatch#backslashes
+  const paths = await globby('src/**/*.ts');
   return paths.length > 0;
 }
 

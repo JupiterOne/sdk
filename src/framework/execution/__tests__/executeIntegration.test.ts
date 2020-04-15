@@ -1,3 +1,4 @@
+import path from 'path';
 import { promises as fs } from 'fs';
 import { vol } from 'memfs';
 
@@ -148,7 +149,13 @@ test('includes types for partially successful steps steps in partial datasets', 
 });
 
 test('clears out the storage directory prior to performing collection', async () => {
-  const previousContentFilePath = `${getRootStorageDirectory()}/graph/my-test/someFile.json`;
+  const previousContentFilePath = path.resolve(
+    getRootStorageDirectory(),
+    'graph',
+    'my-test',
+    'someFile.json',
+  );
+
   vol.fromJSON({
     [previousContentFilePath]: '{ "entities": [] }',
   });
@@ -172,7 +179,8 @@ test('clears out the storage directory prior to performing collection', async ()
     ],
   });
 
-  expect(vol.toJSON()).not.toHaveProperty(previousContentFilePath);
+  // file should no longer exist
+  await expect(fs.readFile(previousContentFilePath)).rejects.toThrow(/ENOENT/);
 
   // should still have written data to disk
   const files = await fs.readdir(getRootStorageDirectory());
