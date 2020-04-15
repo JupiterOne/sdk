@@ -150,6 +150,7 @@ describe('addEntities', () => {
   });
 
   test('accepts GeneratedEntity type from createIntegrationEntity utility', async () => {
+    expect.assertions(0);
     const { store } = setupFileSystemObjectStore();
 
     const networkAssigns = {
@@ -199,6 +200,7 @@ describe('addRelationships', () => {
   });
 
   test('accepts Relationship from createIntegrationRelationship utility', async () => {
+    expect.assertions(0);
     const { store } = setupFileSystemObjectStore();
 
     const networkAssigns = {
