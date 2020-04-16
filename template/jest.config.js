@@ -1,4 +1,4 @@
-module.exports = () => ({
+module.exports = {
   clearMocks: true,
   preset: 'ts-jest',
   testMatch: ['**/__tests__/**/*test.(js|ts)'],
@@ -8,4 +8,4 @@ module.exports = () => ({
       isolatedModules: true,
     },
   },
-});
+};
