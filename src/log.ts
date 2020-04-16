@@ -3,7 +3,7 @@ import {
   ExecuteIntegrationResult,
   IntegrationStepResult,
   IntegrationStepResultStatus,
-} from '../framework/execution';
+} from './framework/execution';
 
 export function debug(msg: string) {
   console.log(`${chalk.gray(msg)}`);

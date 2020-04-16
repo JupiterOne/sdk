@@ -1,10 +1,10 @@
 import { createCli } from '../index';
-import { loadProjectStructure } from './loadProjectStructure';
-import * as log from '../log';
+import { loadProjectStructure } from '../../__tests__/loadProjectStructure';
+import * as log from '../../log';
 
 import { IntegrationStepResultStatus } from '../../framework/execution';
 
-jest.mock('../log');
+jest.mock('../../log');
 
 afterEach(() => {
   // clear require cache

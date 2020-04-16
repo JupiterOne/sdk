@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 
 import globby from 'globby';
 
-import * as log from './log';
+import * as log from '../log';
 
 import {
   IntegrationInvocationConfig,
