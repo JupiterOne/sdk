@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Exposed `createMockExecutionContext` function from
+  `@jupiterone/integration-sdk/testing` to assist with unit testing the
+  `validateInvocation` and `getStepStartState` functions.
+
 ## 0.2.2 - 2020-04-15
 
 ### Changed
