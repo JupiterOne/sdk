@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.4.0 - 2020-04-17
+
 ### Added
 
 - Added `engines` entry in package.json to denote package is intended to be used
