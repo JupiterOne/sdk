@@ -80,7 +80,7 @@ describe('relationships', () => {
     },
   ];
 
-  test('creates a job state object that can collect and query entities', async () => {
+  test('creates a job state object that can collect and query relationships', async () => {
     expect.hasAssertions();
     const jobState = createMockJobState();
     await jobState.addRelationships(inputRelationships);
