@@ -112,8 +112,8 @@ helpful for setting up tests for steps that rely on data from another step. The
 the `collectedEntities` and `collectedRelationships` arrays.
 
 Input data is omitted from the `collected*` properties because step tests should
-only have to focus on asserting the generation of new data from based on the old
-state.
+only have to focus on asserting the generation of new data from based on the
+previous set of data.
 
 For example:
 
