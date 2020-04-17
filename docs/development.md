@@ -615,6 +615,11 @@ original provider data under a `_rawData` field. For now, this will always
 assume that data coming in was stored as `json`, but support for other data
 types will come later.
 
+#### Testing
+
+Please see [testing.md](./testing.md) for more information about testing
+utilities exposed by this project.
+
 ### Auto-magic behind the framework
 
 #### Event reporting
