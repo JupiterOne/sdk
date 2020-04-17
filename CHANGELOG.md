@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Added `engines` entry in package.json to denote package is intended to be used
+  with active Node.js LTS versions (`v10.x` and `v12.x`).
+
 ## 0.3.1 - 2020-04-17
 
 ### Changed
