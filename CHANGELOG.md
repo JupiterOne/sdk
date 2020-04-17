@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.3.1 - 2020-04-17
+
+### Changed
+
+- Expose `testing` utils via the package.json `files` field.
+
+## 0.3.0 - 2020-04-17
+
 ### Added
 
 - Exposed `createMockExecutionContext` function from

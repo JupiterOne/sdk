@@ -15,7 +15,9 @@
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "testing.js",
+    "testing.d.ts"
   ],
   "scripts": {
     "lint": "eslint . --cache --fix --ext .ts,.tsx",
