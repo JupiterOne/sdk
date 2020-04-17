@@ -9,7 +9,11 @@ import {
 } from '../context';
 
 /**
- * Ensure that createMockExecutionContext provides the same options as
+ * Ensure that both createMockExecutionContext and
+ * createMockStepExecutionContext functions return
+ * an integration logger and instance.
+ *
+ * Also ensure that they can accept the `instanceConfig` option.
  */
 [createMockExecutionContext, createMockStepExecutionContext].forEach(
   (createContext) => {

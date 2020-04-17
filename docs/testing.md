@@ -106,10 +106,10 @@ test('should generate the expected entities and relationships', () => {
 ```
 
 This function accepts the same options as `createMockExecutionContext` but also
-allows for `entities` and `relationships` to also be input passed in. This is
-helpful for setting up tests for steps that rely on data from another step. The
-`entities` and `relationships` passed in via the options are _not_ included in
-the `collectedEntities` and `collectedRelationships` arrays.
+allows passing `entities` and `relationships`. This is helpful for setting up
+tests for steps that rely on data from another step. The `entities` and
+`relationships` passed in via the options are _not_ included in the
+`collectedEntities` and `collectedRelationships` arrays.
 
 Input data is omitted from the `collected*` properties because step tests should
 only have to focus on asserting the generation of new data from based on the
@@ -123,10 +123,10 @@ import { createMockStepExecutionContext } from '@jupiterone/integration-sdk/test
 
 test('should generate the expected entities and relationships', () => {
   const previousStepEntities = [entityA];
-  const previousStepRelationships = [entityB, entityC];
+  const previousStepRelationships = [relationshipA, relationshipB];
 
   const expectedGeneratedEntities = [expectedEntityA];
-  const expectedGeneratedRelationships = [relationshipA];
+  const expectedGeneratedRelationships = [expectedRelationshipA];
 
   const context = createMockStepExecutionContext({
     entities: previousStepEntities,
@@ -135,9 +135,9 @@ test('should generate the expected entities and relationships', () => {
 
   await step.executionHandler(context);
 
-  expect(context.jobState.collectedEntities).toEqual(expectedEntities);
+  expect(context.jobState.collectedEntities).toEqual(expectedGeneratedEntities);
   expect(context.jobState.collectedRelationships).toEqual(
-    expectedRelationships,
+    expectedGeneratedRelationships,
   );
 });
 ```
