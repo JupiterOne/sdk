@@ -73,3 +73,71 @@ test('disables "fetch-accounts" step if "skipAccounts" is set to true on the ins
   });
 });
 ```
+
+#### `createMockStepExecutionContext`
+
+To assist with unit testing steps, we expose a utility for creating a mocked
+version of the step execution context.
+
+This version of the context object stores the entities and relationships
+collected via the `jobState` in memory.
+
+For convenience, the `jobState` created by the mocked context exposes a slightly
+different interface than the regular `jobState` object and allows for data
+collected via the `addEntities` and `addRelationships` functions to be accessed
+via `collectedEntities` and `collectedRelationships` properties.
+
+Example usage in a test:
+
+```typescript
+import step from './my-step';
+import { createMockStepExecutionContext } from '@jupiterone/integration-sdk/testing';
+
+test('should generate the expected entities and relationships', () => {
+  const entities = [expectedEntityA];
+  const relationships = [expectedRelationshipA, expectedRelationshipB];
+  const context = createMockStepExecutionContext();
+
+  await step.executionHandler(context);
+
+  expect(context.jobState.collectedEntities).toEqual(entities);
+  expect(context.jobState.collectedRelationships).toEqual(relationships);
+});
+```
+
+This function accepts the same options as `createMockExecutionContext` but also
+allows for `entities` and `relationships` to also be input passed in. This is
+helpful for setting up tests for steps that rely on data from another step. The
+`entities` and `relationships` passed in via the options are _not_ included in
+the `collectedEntities` and `collectedRelationships` arrays.
+
+Input data is omitted from the `collected*` properties because step tests should
+only have to focus on asserting the generation of new data from based on the old
+state.
+
+For example:
+
+```typescript
+import step from './my-step';
+import { createMockStepExecutionContext } from '@jupiterone/integration-sdk/testing';
+
+test('should generate the expected entities and relationships', () => {
+  const previousStepEntities = [entityA];
+  const previousStepRelationships = [entityB, entityC];
+
+  const expectedGeneratedEntities = [expectedEntityA];
+  const expectedGeneratedRelationships = [relationshipA];
+
+  const context = createMockStepExecutionContext({
+    entities: previousStepEntities,
+    relationships: previousStepRelationships,
+  });
+
+  await step.executionHandler(context);
+
+  expect(context.jobState.collectedEntities).toEqual(expectedEntities);
+  expect(context.jobState.collectedRelationships).toEqual(
+    expectedRelationships,
+  );
+});
+```
