@@ -7,9 +7,9 @@ import {
   loadConfig,
 } from '../config';
 
-import { loadProjectStructure } from './loadProjectStructure';
+import { loadProjectStructure } from '../../__tests__/loadProjectStructure';
 
-jest.mock('../log');
+jest.mock('../../log');
 
 afterEach(() => {
   jest.resetModules();

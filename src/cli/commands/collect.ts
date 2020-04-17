@@ -1,9 +1,9 @@
 import { createCommand } from 'commander';
 
-import * as log from '../log';
-import { loadConfig } from '../config';
+import * as log from '../../log';
 
-import { executeIntegrationLocally } from '../../framework/execution';
+import { executeIntegrationLocally } from '../../framework';
+import { loadConfig } from '../../framework/config';
 
 export function collect() {
   return createCommand('collect')
