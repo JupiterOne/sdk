@@ -1,8 +1,17 @@
-import { IntegrationInstance, IntegrationExecutionContext } from '../framework';
+import {
+  IntegrationInstance,
+  IntegrationExecutionContext,
+  IntegrationStepExecutionContext,
+} from '../framework';
 
 import { LOCAL_INTEGRATION_INSTANCE } from '../framework/execution/instance';
 
 import { createMockIntegrationLogger } from './logger';
+import {
+  MockJobState,
+  createMockJobState,
+  CreateMockJobStateOptions,
+} from './jobState';
 
 interface CreateMockExecutionContextOptions {
   instanceConfig?: IntegrationInstance['config'];
@@ -19,5 +28,22 @@ export function createMockExecutionContext({
   return {
     logger,
     instance,
+  };
+}
+
+type CreateMockStepExecutionContextOptions = CreateMockExecutionContextOptions &
+  CreateMockJobStateOptions;
+
+interface MockIntegrationStepExecutionContext
+  extends IntegrationStepExecutionContext {
+  jobState: MockJobState;
+}
+
+export function createMockStepExecutionContext(
+  options: CreateMockStepExecutionContextOptions = {},
+): MockIntegrationStepExecutionContext {
+  return {
+    ...createMockExecutionContext(options),
+    jobState: createMockJobState(options),
   };
 }

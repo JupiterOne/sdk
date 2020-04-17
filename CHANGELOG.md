@@ -12,6 +12,8 @@ and this project adheres to
 
 - Added `engines` entry in package.json to denote package is intended to be used
   with active Node.js LTS versions (`v10.x` and `v12.x`).
+- Exposed `createMockStepExecutionContext` function from
+  `@jupiterone/integration-sdk/testing` to assist with unit testing steps.
 
 ## 0.3.1 - 2020-04-17
 
