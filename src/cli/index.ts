@@ -1,7 +1,7 @@
 import { createCommand } from 'commander';
 
-import { collect } from './commands';
+import { collect, visualize } from './commands';
 
 export function createCli() {
-  return createCommand().addCommand(collect());
+  return createCommand().addCommand(collect()).addCommand(visualize());
 }

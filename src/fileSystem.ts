@@ -39,6 +39,11 @@ export async function writeJsonToPath({
   await fs.writeFile(fullPath, JSON.stringify(data, null, 2), 'utf8');
 }
 
+export async function readJsonFile<T>(path: string) {
+  const entityJson = await fs.readFile(path, 'utf8');
+  return JSON.parse(entityJson) as T;
+}
+
 interface SymlinkInput {
   sourcePath: string;
   destinationPath: string;
