@@ -1,5 +1,8 @@
 import { VizNode, VizEdge, VizOptions } from './types/viz';
 
+/**
+ * Creates the html for the viz template
+ */
 export function generateVizTemplate(
   nodeDataSets: VizNode[],
   edgeDataSets: VizEdge[],

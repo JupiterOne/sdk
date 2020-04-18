@@ -1,4 +1,4 @@
-interface IntegrationError {
+export interface IntegrationError {
   code: string;
 }
 
