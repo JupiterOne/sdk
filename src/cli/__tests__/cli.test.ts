@@ -64,7 +64,7 @@ describe('visualize', () => {
     const content = await fs.readFile(htmlFileLocation, 'utf8');
 
     expect(log.info).toHaveBeenCalledWith(
-      `Visualize Integration SDK graph here: ${htmlFileLocation}`,
+      `Visualize graph here: ${htmlFileLocation}`,
     );
     expect(content).toMatchSnapshot();
   });
@@ -83,7 +83,7 @@ describe('collect/visualize integration', () => {
     const content = await fs.readFile(htmlFileLocation, 'utf8');
 
     expect(log.info).toHaveBeenCalledWith(
-      `Visualize Integration SDK graph here: ${htmlFileLocation}`,
+      `Visualize graph here: ${htmlFileLocation}`,
     );
     expect(content).toMatchSnapshot();
   });

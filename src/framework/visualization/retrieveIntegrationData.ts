@@ -2,7 +2,7 @@ import globby from 'globby';
 import upath from 'upath';
 
 import { Relationship, Entity } from '../types';
-import { readJsonFile } from '../../fileSystem';
+import { readJsonFromPath } from '../../fileSystem';
 import { IntegrationData } from './types/IntegrationData';
 import { IntegrationMissingCollectJSON } from './error';
 
@@ -27,12 +27,12 @@ export async function retrieveIntegrationData(
   const relationships: Relationship[] = [];
 
   for (const path of entityPaths) {
-    const parsedEntities = await readJsonFile<{ entities: Entity[] }>(path);
+    const parsedEntities = await readJsonFromPath<{ entities: Entity[] }>(path);
     entities.push(...parsedEntities.entities);
   }
 
   for (const path of relationshipPaths) {
-    const parsedRelationships = await readJsonFile<{
+    const parsedRelationships = await readJsonFromPath<{
       relationships: Relationship[];
     }>(path);
     relationships.push(...parsedRelationships.relationships);

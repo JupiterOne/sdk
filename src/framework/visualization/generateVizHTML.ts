@@ -3,7 +3,7 @@ import { VizNode, VizEdge, VizOptions } from './types/viz';
 /**
  * Creates the html for the viz template
  */
-export function generateVizTemplate(
+export function generateVizHTML(
   nodeDataSets: VizNode[],
   edgeDataSets: VizEdge[],
   options: VizOptions = { edges: { arrows: { to: { enabled: true } } } },

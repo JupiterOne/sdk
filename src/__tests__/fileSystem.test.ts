@@ -12,7 +12,7 @@ import {
   symlink,
   removeStorageDirectory,
   writeFileToPath,
-  readJsonFile,
+  readJsonFromPath,
 } from '../fileSystem';
 
 jest.mock('fs'); // applies manual mock which uses memfs
@@ -113,14 +113,14 @@ describe('writeFileToPath', () => {
   });
 });
 
-describe('readJsonFile', () => {
+describe('readJsonFromPath', () => {
   it('should read json file into object', async () => {
     const json = { key: 'value' };
     vol.fromJSON({
       'file.json': JSON.stringify(json),
     });
 
-    const content = await readJsonFile('file.json');
+    const content = await readJsonFromPath('file.json');
 
     expect(content).toEqual(json);
   });

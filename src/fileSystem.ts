@@ -54,7 +54,7 @@ export async function writeFileToPath({
   await fs.writeFile(fullPath, content, 'utf8');
 }
 
-export async function readJsonFile<T>(path: string) {
+export async function readJsonFromPath<T>(path: string) {
   const entityJson = await fs.readFile(path, 'utf8');
   return JSON.parse(entityJson) as T;
 }

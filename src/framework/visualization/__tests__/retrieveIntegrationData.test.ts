@@ -3,7 +3,7 @@ import globby from 'globby';
 
 import { retrieveIntegrationData } from '../retrieveIntegrationData';
 import { IntegrationMissingCollectJSON } from '../error';
-import { readJsonFile } from '../../../fileSystem';
+import { readJsonFromPath } from '../../../fileSystem';
 import { IntegrationData } from '../types/IntegrationData';
 import { createIntegrationRelationship } from '../../data';
 
@@ -11,7 +11,7 @@ jest.mock('globby');
 jest.mock('../../../fileSystem');
 
 const mockedGlobby = mocked(globby);
-const mockedReadJson = mocked(readJsonFile);
+const mockedReadJson = mocked(readJsonFromPath);
 
 const integrationPath = '/j1-integration';
 const integrationData: IntegrationData = {

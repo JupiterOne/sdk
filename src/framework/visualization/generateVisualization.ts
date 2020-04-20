@@ -1,6 +1,6 @@
 import path from 'path';
 import { getRootStorageDirectory, writeFileToPath } from '../../fileSystem';
-import { generateVizTemplate } from './generateVizTemplate';
+import { generateVizHTML } from './generateVizHTML';
 import { retrieveIntegrationData } from './retrieveIntegrationData';
 
 /**
@@ -27,7 +27,7 @@ export async function generateVisualization(): Promise<string> {
 
   await writeFileToPath({
     path: htmlFile,
-    content: generateVizTemplate(nodeDataSets, edgeDataSets),
+    content: generateVizHTML(nodeDataSets, edgeDataSets),
   });
 
   return path.join(getRootStorageDirectory(), htmlFile);

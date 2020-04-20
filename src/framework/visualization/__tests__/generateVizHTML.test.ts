@@ -1,4 +1,4 @@
-import { generateVizTemplate } from '../generateVizTemplate';
+import { generateVizHTML } from '../generateVizHTML';
 import { VizNode, VizEdge } from '../types/viz';
 
 const nodeDataSets: VizNode[] = [
@@ -14,7 +14,7 @@ const edgeDataSet: VizEdge[] = [
 ];
 
 test('renders html with default config', () => {
-  const html = generateVizTemplate(nodeDataSets, edgeDataSet);
+  const html = generateVizHTML(nodeDataSets, edgeDataSet);
 
   expect(html).toContain(
     'var options = {"edges":{"arrows":{"to":{"enabled":true}}}}',
@@ -23,7 +23,7 @@ test('renders html with default config', () => {
 });
 
 test('renders custom config when passed in', () => {
-  const html = generateVizTemplate(nodeDataSets, edgeDataSet, {});
+  const html = generateVizHTML(nodeDataSets, edgeDataSet, {});
 
   expect(html).toContain('var options = {}');
   expect(html).toMatchSnapshot();

@@ -3,7 +3,7 @@ import { mocked } from 'ts-jest/utils';
 import globby from 'globby';
 import { IntegrationData } from '../types/IntegrationData';
 import {
-  readJsonFile,
+  readJsonFromPath,
   getRootStorageDirectory,
   writeFileToPath,
 } from '../../../fileSystem';
@@ -14,7 +14,7 @@ jest.mock('../../../fileSystem');
 jest.mock('fs');
 
 const mockedGlobby = mocked(globby);
-const mockedReadJson = mocked(readJsonFile);
+const mockedReadJson = mocked(readJsonFromPath);
 const mockedGetRootStorageDirectory = mocked(getRootStorageDirectory);
 
 const integrationPath = '/j1-integration';

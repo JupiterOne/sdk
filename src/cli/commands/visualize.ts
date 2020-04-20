@@ -9,6 +9,6 @@ export function visualize() {
     .description('Visualizes the collected data as a graph')
     .action(async () => {
       const graph = await generateVisualization();
-      log.info(`Visualize Integration SDK graph here: ${graph}`);
+      log.info(`Visualize graph here: ${graph}`);
     });
 }
