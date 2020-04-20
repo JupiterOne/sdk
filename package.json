@@ -46,6 +46,7 @@
     "p-map": "^4.0.0",
     "p-queue": "^6.3.0",
     "rimraf": "^3.0.2",
+    "upath": "^1.2.0",
     "uuid": "^7.0.3"
   },
   "devDependencies": {

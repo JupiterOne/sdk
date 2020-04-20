@@ -1,5 +1,5 @@
-import path from 'path';
 import globby from 'globby';
+import upath from 'upath';
 
 import { Relationship, Entity } from '../types';
 import { readJsonFile } from '../../fileSystem';
@@ -13,8 +13,8 @@ export async function retrieveIntegrationData(
   integrationPath: string,
 ): Promise<IntegrationData> {
   const [entityPaths, relationshipPaths] = await Promise.all([
-    globby([path.posix.join(integrationPath, 'index', 'entities')]),
-    globby([path.posix.join(integrationPath, 'index', 'relationships')]),
+    globby([upath.toUnix(`${integrationPath}/index/entities/**/*.json`)]),
+    globby([upath.toUnix(`${integrationPath}/index/relationships/**/*.json`)]),
   ]);
 
   if (entityPaths.length === 0 && relationshipPaths.length === 0) {
