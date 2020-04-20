@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `setupRecording` is now exposed by the `testing` lib to assist with storing
+  requests and responses made to a provider.
+
 ### Changed
 
 - `createMockExecutionContext` and `createMockStepExecutionContext` will now
