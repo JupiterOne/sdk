@@ -144,3 +144,62 @@ test('should generate the expected entities and relationships', () => {
   );
 });
 ```
+
+#### `setupRecording`
+
+We highly recommend using [Polly.js](https://netflix.github.io/pollyjs/#/) to
+record real responses from a provider for use in tests.
+
+To make using Polly.js easier, we expose a `setupRecording` function that
+handles most of the setup for you.
+
+The function accepts a `directory` parameter that will be used to determine
+where to place a `__recordings__` directory on disk to house recorded data. A
+`name` parameter must be provided and will be used as part of the directory name
+for the recordings.
+
+You can optionally provide `redactedRequestHeaders` and
+`redactedResponseHeaders` options for redacting headers prior to writing the
+data to disk.
+
+For full control over all aspects of an entry's request and response, you can
+provide a `mutateEntry` function to make tweaks. This can be helpful for
+situations where sensitive data is stored in the response or request's body and
+needs to be hidden.
+
+Example usage in test:
+
+```typescript
+import step from './my-step';
+import provider from './myProvider';
+import { Recording, setupRecording } from '@jupiterone/integration-sdk/testing';
+
+let recording: Recording;
+
+afterEach(async () => {
+  await recording.stop();
+});
+
+test('should generate the expected entities and relationships', () => {
+  recording = setupRecording({
+    name: 'my awesome recording',
+    directory: __dirname,
+    redactedRequestHeaders: ['api-secret-key'],
+  });
+
+  const resources = [];
+  await provider.iterateThings((e) => {
+    resources.push(e);
+  });
+
+  expect(resources).toEqual([
+    {
+      id: expect.any(String),
+      name: 'development',
+      tags: expect.objectContaining({
+        someTag: 'value',
+      }),
+    },
+  ]);
+});
+```
