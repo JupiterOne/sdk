@@ -19,7 +19,7 @@ export async function retrieveIntegrationData(
 
   if (entityPaths.length === 0 && relationshipPaths.length === 0) {
     throw new IntegrationMissingCollectJSON(
-      'Unable to find any entities or relationships, have you run the "j1-integration collect"',
+      'Unable to find any entities or relationships, have you run the "j1-integration collect" command',
     );
   }
 

@@ -1,7 +1,5 @@
 import path from 'path';
-import * as nodeFs from 'fs';
-const fs = nodeFs.promises;
-import { getRootStorageDirectory } from '../../fileSystem';
+import { getRootStorageDirectory, writeFileToPath } from '../../fileSystem';
 import { generateVizTemplate } from './generateVizTemplate';
 import { retrieveIntegrationData } from './retrieveIntegrationData';
 
@@ -25,13 +23,12 @@ export async function generateVisualization(): Promise<string> {
     label: relationship.displayName.toString(),
   }));
 
-  const htmlPath = path.join(integrationPath, 'index.html');
+  const htmlFile = 'index.html';
 
-  await fs.writeFile(
-    htmlPath,
-    generateVizTemplate(nodeDataSets, edgeDataSets),
-    'utf8',
-  );
+  await writeFileToPath({
+    path: htmlFile,
+    content: generateVizTemplate(nodeDataSets, edgeDataSets),
+  });
 
-  return htmlPath;
+  return path.join(getRootStorageDirectory(), htmlFile);
 }

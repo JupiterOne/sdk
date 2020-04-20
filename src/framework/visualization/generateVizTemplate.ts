@@ -21,7 +21,6 @@ export function generateVizTemplate(
         <script type="text/javascript">
             var nodes = new vis.DataSet(${JSON.stringify(nodeDataSets)});
             var edges = new vis.DataSet(${JSON.stringify(edgeDataSets)});
-          
             // create a network
             var container = document.getElementById("integration-graph");
             var data = {

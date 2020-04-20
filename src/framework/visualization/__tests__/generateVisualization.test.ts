@@ -2,9 +2,12 @@ import { generateVisualization } from '../generateVisualization';
 import { mocked } from 'ts-jest/utils';
 import globby from 'globby';
 import { IntegrationData } from '../types/IntegrationData';
-import { readJsonFile, getRootStorageDirectory } from '../../../fileSystem';
+import {
+  readJsonFile,
+  getRootStorageDirectory,
+  writeFileToPath,
+} from '../../../fileSystem';
 import path from 'path';
-import { vol } from 'memfs';
 
 jest.mock('globby');
 jest.mock('../../../fileSystem');
@@ -30,7 +33,6 @@ const integrationData: IntegrationData = {
 
 beforeEach(() => {
   mockedGetRootStorageDirectory.mockReturnValue(integrationPath);
-  vol.mkdirSync(integrationPath, { recursive: true });
 });
 
 test('returns html path when writing the file is successful', async () => {
@@ -43,8 +45,9 @@ test('returns html path when writing the file is successful', async () => {
 
   const htmlPath = await generateVisualization();
 
-  expect(vol.toJSON()).toEqual({
-    [htmlPath.replace(/\\/g, '/')]: expect.any(String),
-  });
   expect(htmlPath).toBe(path.join(integrationPath, 'index.html'));
+  expect(writeFileToPath).toBeCalledWith({
+    path: 'index.html',
+    content: expect.any(String),
+  });
 });
