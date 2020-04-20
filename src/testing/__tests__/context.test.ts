@@ -4,6 +4,11 @@ import { Entity, Relationship, IntegrationStep } from '../../framework';
 import { LOCAL_INTEGRATION_INSTANCE } from '../../framework/execution/instance';
 
 import {
+  loadProjectStructure,
+  restoreProjectStructure,
+} from '../../__tests__/loadProjectStructure';
+
+import {
   createMockExecutionContext,
   createMockStepExecutionContext,
 } from '../context';
@@ -18,6 +23,12 @@ import {
 [createMockExecutionContext, createMockStepExecutionContext].forEach(
   (createContext) => {
     describe(createContext.name, () => {
+      afterEach(() => {
+        delete process.env.MY_BOOLEAN_CONFIG;
+        delete process.env.MY_STRING_CONFIG;
+        restoreProjectStructure();
+      });
+
       test('generates an execution context with a fake logger', () => {
         const { logger } = createContext();
 
@@ -39,6 +50,18 @@ import {
         const config = { test: true };
         const { instance } = createContext({ instanceConfig: config });
         expect(instance).toEqual({ ...LOCAL_INTEGRATION_INSTANCE, config });
+      });
+
+      test('loads instance config values if .env is present', () => {
+        loadProjectStructure('typeScriptProject');
+
+        const { instance } = createContext();
+        expect(instance).toEqual({
+          ...LOCAL_INTEGRATION_INSTANCE,
+          config: {
+            myConfig: false,
+          },
+        });
       });
     });
   },
