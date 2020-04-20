@@ -4,6 +4,8 @@ import {
   IntegrationStepExecutionContext,
 } from '../framework';
 
+import { loadInstanceConfigFields } from '../framework/config';
+import { loadConfigFromEnvironmentVariables } from '../framework/execution/config';
 import { LOCAL_INTEGRATION_INSTANCE } from '../framework/execution/instance';
 
 import { createMockIntegrationLogger } from './logger';
@@ -21,9 +23,30 @@ export function createMockExecutionContext({
   instanceConfig,
 }: CreateMockExecutionContextOptions = {}): IntegrationExecutionContext {
   const logger = createMockIntegrationLogger();
+
   // copy local instance properties so that tests cannot
   // mutate the original object and cause unpredicable behavior
-  const instance = { ...LOCAL_INTEGRATION_INSTANCE, config: instanceConfig };
+  const instance = {
+    ...LOCAL_INTEGRATION_INSTANCE,
+  };
+
+  if (instanceConfig) {
+    instance.config = instanceConfig;
+  } else {
+    const configFields = loadInstanceConfigFields();
+    if (configFields) {
+      try {
+        instance.config = loadConfigFromEnvironmentVariables(configFields);
+      } catch (err) {
+        // failed to load configuration, not end of the world
+        // because this is only used in testing
+        //
+        // this would generally only happen when a developer does not
+        // have an .env file configured or when an integration's test suite
+        // runs in CI
+      }
+    }
+  }
 
   return {
     logger,

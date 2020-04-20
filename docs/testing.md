@@ -13,7 +13,10 @@ For simple unit testing of the `getStepStartStates` and the `validateInvocation`
 functions, we expose a utility for creating a mock execution context.
 
 This function accepts options to populate the integration instance's `config`
-field to help with testing different code paths.
+field to help with testing different code paths via the `instanceConfig` option.
+If the `instanceConfig` option is not set, the SDK will read the
+`src/instanceConfigFields.json` and load in values from environment variables
+and the project's `.env` file if present.
 
 Usage:
 
