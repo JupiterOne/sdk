@@ -58,22 +58,29 @@ Strive to isolate unit tests according to:
 1. Producing entities with the right relationships based on a known set of
    source data (do not test properties)
 
-Use [Polly.js](https://netflix.github.io/pollyjs) for testing the client code.
-This allows the client to make real connections in tests, which Polly will
-record for playback when the unit tests run again. Additional tests can be
-written with Polly mock responses in scenarios that cannot be easily reproduced
-through real requests (such as intermittant failures we see in production).
+It is recommended that development starts by working out connectivity with the
+data source, driving the development of a client that encapsulates
+authentication, data fetching, and error handling. Test the client in a way that
+allows it to make actual connections and record the responses. This provides a
+record of how the data source APIs respond and what the integration is coded to
+expect.
 
-At a minimum, document how to manually create the source data that tests depend
-on so that can be reproduced by other devs in the future. Look for a Terraform
-provider, or consider writing scripts. It will save time on having people figure
-out how to get the content re-created to match the tests and make new
-recordings.
-
-The Polly recordings contain real responses that can be **copied into converter
+These recordings contain real responses that can be **copied into converter
 tests**. This allows for manipulating the input data in converter tests to cover
 various data scenarios, sometimes to include sample data that customers may
 provide which we cannot easily re-produce otherwise.
+
+This approach will require an account and assets created in the data source.
+Look for a Terraform provider, or consider writing scripts. At a minimum,
+document how to manually create the source data that tests depend on so that
+data can be reproduced in the future, saving time on figuring out how to get
+content re-created to support existing tests as well as new ones.
+
+Use [Polly.js](https://netflix.github.io/pollyjs) for testing the client code
+when you're connecting to an HTTP-based data source. Polly records and plays
+back the responses when the unit tests run again. Additional tests can be
+written with Polly mock responses in scenarios that cannot be easily reproduced
+through real requests (such as intermittant failures we see in production).
 
 Steps are unit tested by controlling the source data and where necessary, the
 entities and relationships produced by the steps a step depends on. It is not
