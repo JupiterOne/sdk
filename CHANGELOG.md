@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.5.0 - 2020-04-20
+
 ### Added
 
 - `setupRecording` is now exposed by the `testing` lib to assist with storing
