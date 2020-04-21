@@ -1,4 +1,5 @@
 import { Har } from 'har-format';
+import defaultsDeep from 'lodash/defaultsDeep';
 
 import { Polly, PollyConfig } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
@@ -76,8 +77,7 @@ export function setupRecording({
     }
   }
 
-  return new Polly(name, {
-    ...options,
+  const defaultOptions = {
     adapters: ['node-http'],
     persister: JupiterOneIntegationFSPersister,
     persisterOptions: {
@@ -89,5 +89,6 @@ export function setupRecording({
       headers: false,
       body: false,
     },
-  });
+  };
+  return new Polly(name, defaultsDeep(options, defaultOptions));
 }

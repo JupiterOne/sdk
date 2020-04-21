@@ -300,6 +300,11 @@ test('should generate the expected entities and relationships', () => {
     redactedRequestHeaders: ['api-secret-key'],
     options: {
       recordFailedRequests: true,
+      matchRequestsBy: {
+        url: {
+          query: false,
+        },
+      },
     },
   });
 

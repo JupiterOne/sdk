@@ -181,6 +181,28 @@ test('allows for entries to be mutated via mutateEntry function', async () => {
   expect(har.log.entries[0].request.headers).toEqual([]);
 });
 
+test('allows for overriding matchRequestBy options with deepDefault', async () => {
+  recording = setupRecording({
+    name: 'test',
+    directory: __dirname,
+    options: {
+      matchRequestsBy: {
+        order: false,
+        url: {
+          query: false,
+        },
+      },
+    },
+  });
+
+  await fetch(`http://localhost:${server.port}/query?q=1`);
+  await fetch(`http://localhost:${server.port}/query?q=2`);
+  await recording.stop();
+
+  const har = await getRecording();
+  expect(har.log.entries).toHaveLength(1);
+});
+
 async function startServer(statusCode?: number) {
   statusCode = statusCode ? statusCode : 200;
   const server = http.createServer((req, res) => {
