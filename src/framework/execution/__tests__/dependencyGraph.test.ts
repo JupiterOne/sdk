@@ -29,7 +29,9 @@ import { Entity, Relationship } from '../../types';
 
 jest.mock('fs');
 
-afterEach(() => vol.reset());
+afterEach(() => {
+  vol.reset();
+});
 
 const executionContext: IntegrationExecutionContext = {
   logger: createIntegrationLogger({
@@ -158,6 +160,65 @@ describe('executeStepDependencyGraph', () => {
     ].forEach((fn) => {
       expect(jobState[fn]).toEqual(expect.any(Function));
     });
+  });
+
+  test.only("waits for all of a steps's dependencies to complete prior to executing", async () => {
+    let resolveA;
+    const spyA = jest.fn(() => {
+      return new Promise((resolve) => {
+        resolveA = resolve;
+      });
+    });
+
+    let resolveB;
+    const spyB = jest.fn(() => {
+      return new Promise((resolve) => {
+        resolveB = resolve;
+      });
+    });
+
+    const spyC = jest.fn();
+
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: ['my_type_a'],
+        executionHandler: spyA,
+      },
+      {
+        id: 'b',
+        name: 'b',
+        types: ['my_type_b'],
+        executionHandler: spyB,
+      },
+      {
+        id: 'c',
+        name: 'c',
+        types: ['my_type_c'],
+        dependsOn: ['a', 'b'],
+        executionHandler: spyC,
+      },
+    ];
+
+    const graph = buildStepDependencyGraph(steps);
+    const executionPromise = executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
+
+    await waitForExpect(() => {
+      expect(spyA).toHaveBeenCalledTimes(1);
+      expect(spyB).toHaveBeenCalledTimes(1);
+    });
+
+    resolveA();
+
+    // spyB never resolved, so spyC should never be called
+    await expect(
+      waitForExpect(() => expect(spyC).toHaveBeenCalledTimes(1), 1000),
+    ).rejects.toThrow();
   });
 
   test("writes data to the correct graph directory path using each step's id", async () => {
