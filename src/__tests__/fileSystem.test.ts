@@ -15,6 +15,8 @@ import {
   readJsonFromPath,
 } from '../fileSystem';
 
+import { toUnixPath } from './toUnixPath';
+
 jest.mock('fs'); // applies manual mock which uses memfs
 
 afterEach(() => {
@@ -316,12 +318,3 @@ describe('clearStorageDirectory', () => {
     });
   });
 });
-
-/**
- * Utility for testing against the memfs vol.toJSON() result
- * on windows.
- */
-function toUnixPath(path: string) {
-  const driveStrippedPath = path.replace(/^([A-Z]|[a-z]):\\/, '/');
-  return driveStrippedPath.replace(/\\/g, '/');
-}

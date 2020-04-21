@@ -1,8 +1,7 @@
 # Integration development
 
-This project exposes both a module exposing a framework for constructing
-integrations and also a CLI to assist with collecting and publishing data with
-JupiterOne.
+This project exposes both a framework for constructing integrations and a CLI
+to assist with collecting and publishing data with JupiterOne.
 
 For the purpose of synchronizing data, developers only need to collect the "new
 state of the world" from a provider and have the data sent to JupiterOne. Data

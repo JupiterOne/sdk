@@ -44,7 +44,6 @@ export async function loadConfig(): Promise<IntegrationInvocationConfig> {
  * Loads instanceConfigFields from ./src/instanceConfigFields
  */
 export function loadInstanceConfigFields() {
-  log.debug('Loading instanceConfigFields...');
   return loadModuleContent<IntegrationInstanceConfigFieldMap>(
     path.join('src', 'instanceConfigFields'),
   );
@@ -54,7 +53,6 @@ export function loadInstanceConfigFields() {
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
 export function loadValidateInvocationFunction() {
-  log.debug('Loading validateInvocation function...');
   return loadModuleContent<InvocationValidationFunction>(
     path.join('src', 'validateInvocation'),
   );
@@ -64,7 +62,6 @@ export function loadValidateInvocationFunction() {
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
 export function loadGetStepStartStatesFunction() {
-  log.debug('Loading getStepStartStates function...');
   return loadModuleContent<GetStepStartStatesFunction>(
     path.join('src', 'getStepStartStates'),
   );

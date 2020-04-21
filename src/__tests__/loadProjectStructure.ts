@@ -5,3 +5,10 @@ export function loadProjectStructure(fixtureName: string) {
     .spyOn(process, 'cwd')
     .mockReturnValue(path.resolve(__dirname, '__fixtures__', fixtureName));
 }
+
+export function restoreProjectStructure() {
+  const maybeCwdMock = process.cwd;
+  if (jest.isMockFunction(maybeCwdMock)) {
+    maybeCwdMock.mockReset();
+  }
+}

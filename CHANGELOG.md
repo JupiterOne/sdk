@@ -8,6 +8,29 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.6.0 - 2020-04-21
+
+### Changed
+
+- If unable to create a config from environment variables,
+  `createMockExecutionContext` and `createMockStepExecutionContext` will now
+  generate a mock configuration for testing.
+
+## 0.5.0 - 2020-04-20
+
+### Added
+
+- `setupRecording` is now exposed by the `testing` lib to assist with storing
+  requests and responses made to a provider.
+
+### Changed
+
+- `createMockExecutionContext` and `createMockStepExecutionContext` will now
+  attempt utilize the fields specified in `src/instanceConfigField.json` to
+  populate the instance `config` when testing.
+- Messages about loading in individual parts of the config are no longer shown
+  when running `j1-integration collect`.
+
 ## 0.4.0 - 2020-04-17
 
 ### Added
