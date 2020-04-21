@@ -18,8 +18,8 @@ If the `instanceConfig` option is not set, the SDK will read the
 `src/instanceConfigFields.json` and load in values from environment variables
 and the project's `.env` file if present.
 
-If unable to create load a config from environment variables, the function will
-create a configuration with mock values based the types specified in
+If unable to load a config from environment variables, the function will create
+a configuration with mock values based the types specified in
 `src/instanceConfigFields.json`.
 
 Example `instanceConfigFields.json` file:
