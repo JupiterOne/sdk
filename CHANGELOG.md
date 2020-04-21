@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- If unable to create a config from environment variables,
+  `createMockExecutionContext` and `createMockStepExecutionContext` will now
+  generate a mock configuration for testing.
+
 ## 0.5.0 - 2020-04-20
 
 ### Added
