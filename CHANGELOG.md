@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.6.0 - 2020-04-21
+
 ### Changed
 
 - If unable to create a config from environment variables,
