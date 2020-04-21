@@ -163,13 +163,13 @@ describe('executeStepDependencyGraph', () => {
   test("waits for all of a steps's dependencies to complete prior to executing", async () => {
     let resolveA;
     const spyA = jest.fn(() => {
-      return new Promise((resolve) => {
+      return new Promise<void>((resolve) => {
         resolveA = resolve;
       });
     });
 
     const spyB = jest.fn(() => {
-      return new Promise((resolve) => {
+      return new Promise<void>(() => {
         // never resolve
       });
     });
@@ -199,7 +199,7 @@ describe('executeStepDependencyGraph', () => {
     ];
 
     const graph = buildStepDependencyGraph(steps);
-    const executionPromise = executeStepDependencyGraph(
+    executeStepDependencyGraph(
       executionContext,
       graph,
       getDefaultStepStartStates(steps),
