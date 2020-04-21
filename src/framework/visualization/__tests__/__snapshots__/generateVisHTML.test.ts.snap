@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`collect/visualize integration creates graph based on integration data 1`] = `
+exports[`renders custom config when passed in 1`] = `
 "<!DOCTYPE html>
     <html lang=\\"en\\">
     <head>
@@ -12,8 +12,35 @@ exports[`collect/visualize integration creates graph based on integration data 1
       <div id=\\"integration-graph\\" style=\\"height:100vh;width:100%\\"></div>
       <script type=\\"text/javascript\\" src=\\"https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js\\"></script>
       <script type=\\"text/javascript\\">
-        var nodes = new vis.DataSet([{\\"id\\":\\"account:1234\\",\\"label\\":\\"Account 1234\\"},{\\"id\\":\\"user:12345\\",\\"label\\":\\"User 12345\\"}]);
-        var edges = new vis.DataSet([{\\"from\\":\\"account:1234\\",\\"to\\":\\"user:12345\\",\\"label\\":\\"HAS\\"}]);
+        var nodes = new vis.DataSet([{\\"id\\":\\"1\\",\\"label\\":\\"Node 1\\"},{\\"id\\":\\"2\\",\\"label\\":\\"Node 2\\"},{\\"id\\":\\"3\\",\\"label\\":\\"Node 3\\"}]);
+        var edges = new vis.DataSet([{\\"from\\":\\"1\\",\\"to\\":\\"2\\"},{\\"from\\":\\"2\\",\\"to\\":\\"3\\"},{\\"from\\":\\"3\\",\\"to\\":\\"1\\"}]);
+        // create a network
+        var container = document.getElementById(\\"integration-graph\\");
+        var data = {
+          nodes: nodes,
+          edges: edges
+        };
+        var options = {};
+        var network = new vis.Network(container, data, options);
+      </script>
+    </body>
+    </html>"
+`;
+
+exports[`renders html with default config 1`] = `
+"<!DOCTYPE html>
+    <html lang=\\"en\\">
+    <head>
+        <meta charset=\\"UTF-8\\">
+        <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1.0\\">
+        <title>Integration SDK Graph</title>
+    </head>
+    <body style=\\"height:100vh;width:100%\\">
+      <div id=\\"integration-graph\\" style=\\"height:100vh;width:100%\\"></div>
+      <script type=\\"text/javascript\\" src=\\"https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js\\"></script>
+      <script type=\\"text/javascript\\">
+        var nodes = new vis.DataSet([{\\"id\\":\\"1\\",\\"label\\":\\"Node 1\\"},{\\"id\\":\\"2\\",\\"label\\":\\"Node 2\\"},{\\"id\\":\\"3\\",\\"label\\":\\"Node 3\\"}]);
+        var edges = new vis.DataSet([{\\"from\\":\\"1\\",\\"to\\":\\"2\\"},{\\"from\\":\\"2\\",\\"to\\":\\"3\\"},{\\"from\\":\\"3\\",\\"to\\":\\"1\\"}]);
         // create a network
         var container = document.getElementById(\\"integration-graph\\");
         var data = {
@@ -27,7 +54,7 @@ exports[`collect/visualize integration creates graph based on integration data 1
     </html>"
 `;
 
-exports[`visualize writes graph to html file 1`] = `
+exports[`renders nothing to display message when there is nothing to display 1`] = `
 "<!DOCTYPE html>
     <html lang=\\"en\\">
     <head>
@@ -36,20 +63,7 @@ exports[`visualize writes graph to html file 1`] = `
         <title>Integration SDK Graph</title>
     </head>
     <body style=\\"height:100vh;width:100%\\">
-      <div id=\\"integration-graph\\" style=\\"height:100vh;width:100%\\"></div>
-      <script type=\\"text/javascript\\" src=\\"https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js\\"></script>
-      <script type=\\"text/javascript\\">
-        var nodes = new vis.DataSet([{\\"id\\":\\"entity:1\\",\\"label\\":\\"Entity Name\\"},{\\"id\\":\\"entity:2\\",\\"label\\":\\"Entity Name\\"}]);
-        var edges = new vis.DataSet([{\\"from\\":\\"entity:1\\",\\"to\\":\\"entity:2\\",\\"label\\":\\"HAS\\"}]);
-        // create a network
-        var container = document.getElementById(\\"integration-graph\\");
-        var data = {
-          nodes: nodes,
-          edges: edges
-        };
-        var options = {\\"edges\\":{\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}}};
-        var network = new vis.Network(container, data, options);
-      </script>
+      <h1 style=\\"text-align: center;\\">There was no data found to visualize.</h1>
     </body>
     </html>"
 `;

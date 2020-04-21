@@ -610,6 +610,13 @@
   resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-7.0.2.tgz#d680a9c596ef84abf5c4c07a32ffd66d582526f8"
   integrity sha512-8Ly3zIPTnT0/8RCU6Kg/G3uTICf9sRwYOpUzSIM3503tLIKcnJPRuinHhXngJUy2MntrEf6dlpOHXJju90Qh5w==
 
+"@types/vis@^4.21.19":
+  version "4.21.19"
+  resolved "https://registry.yarnpkg.com/@types/vis/-/vis-4.21.19.tgz#e1ad964deed4d1a5499312410e2ce19693378a78"
+  integrity sha512-SzD6R7pg3TcpzIj+F++ez83WuWhOZ+D05LCbjCaVR41NbMpS6xAdc8lActRK3Cwd9cv5LmoCeN5SAsvXIeAseg==
+  dependencies:
+    moment ">=2.13.0"
+
 "@types/yargs-parser@*":
   version "15.0.0"
   resolved "https://registry.yarnpkg.com/@types/yargs-parser/-/yargs-parser-15.0.0.tgz#cb3f9f741869e20cce330ffbeb9271590483882d"
@@ -3311,7 +3318,7 @@ mkdirp@~0.5.1:
   dependencies:
     minimist "^1.2.5"
 
-moment@^2.10.6:
+moment@>=2.13.0, moment@^2.10.6:
   version "2.24.0"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.24.0.tgz#0d055d53f5052aa653c9f6eb68bb5d12bf5c2b5b"
   integrity sha512-bV7f+6l2QigeBBZSM/6yTNq4P2fNpSWj/0e7jQcy87A8e7o2nAfP/34/2ky5Vw4B9S446EtIhodAzkFCcR4dQg==

@@ -1,41 +1,39 @@
-import globby from 'globby';
-import upath from 'upath';
-
-import { Relationship, Entity } from '../types';
+import { Entity, ExplicitRelationship } from '../types';
 import { readJsonFromPath } from '../../fileSystem';
 import { IntegrationData } from './types/IntegrationData';
-import { IntegrationMissingCollectJSON } from './error';
 
 /**
- * Retrieve integration data from the JSON files from the cache directory
+ * Retrieve integration data from the JSON files from the specified path, defaults to .j1-integration/graph
  */
 export async function retrieveIntegrationData(
-  integrationPath: string,
+  entitiesAndRelationshipPaths: string[],
 ): Promise<IntegrationData> {
-  const [entityPaths, relationshipPaths] = await Promise.all([
-    globby([upath.toUnix(`${integrationPath}/index/entities/**/*.json`)]),
-    globby([upath.toUnix(`${integrationPath}/index/relationships/**/*.json`)]),
-  ]);
-
-  if (entityPaths.length === 0 && relationshipPaths.length === 0) {
-    throw new IntegrationMissingCollectJSON(
-      'Unable to find any entities or relationships, have you run the "j1-integration collect" command',
-    );
-  }
-
   const entities: Entity[] = [];
-  const relationships: Relationship[] = [];
+  const relationships: ExplicitRelationship[] = [];
 
-  for (const path of entityPaths) {
-    const parsedEntities = await readJsonFromPath<{ entities: Entity[] }>(path);
-    entities.push(...parsedEntities.entities);
-  }
+  const entitiesAndRelationships = await Promise.all(
+    entitiesAndRelationshipPaths.map(
+      async (path): Promise<any> => {
+        return await readJsonFromPath<any>(path);
+      },
+    ),
+  );
 
-  for (const path of relationshipPaths) {
-    const parsedRelationships = await readJsonFromPath<{
-      relationships: Relationship[];
-    }>(path);
-    relationships.push(...parsedRelationships.relationships);
+  for (const item of entitiesAndRelationships) {
+    if (typeof item === 'object') {
+      if (item.entities && Array.isArray(item.entities)) {
+        entities.push(...item.entities);
+      }
+
+      if (item.relationships && Array.isArray(item.relationships)) {
+        relationships.push(
+          ...item.relationships.filter(
+            (relationship) =>
+              typeof relationship === 'object' && !relationship._mapping,
+          ),
+        );
+      }
+    }
   }
 
   return {

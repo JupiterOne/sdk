@@ -1,34 +1,49 @@
 import path from 'path';
-import { getRootStorageDirectory, writeFileToPath } from '../../fileSystem';
-import { generateVizHTML } from './generateVizHTML';
+import { writeFileToPath } from '../../fileSystem';
+import { generateVisHTML } from './generateVisHTML';
 import { retrieveIntegrationData } from './retrieveIntegrationData';
+import { Edge } from 'vis';
+import globby from 'globby';
+import upath from 'upath';
+
+import * as log from '../../log';
 
 /**
  * Generates visualization of Vertices and Edges using https://visjs.github.io/vis-network/docs/network/
  */
-export async function generateVisualization(): Promise<string> {
-  const integrationPath = getRootStorageDirectory();
+export async function generateVisualization(integrationPath): Promise<string> {
+  const resolvedIntegrationPath = path.resolve(process.cwd(), integrationPath);
+
+  const entitiesAndRelationshipPaths = await globby([
+    upath.toUnix(`${resolvedIntegrationPath}/**/*.json`),
+  ]);
+
+  if (entitiesAndRelationshipPaths.length === 0) {
+    log.warn(`Unable to find any files under path: ${resolvedIntegrationPath}`);
+  }
 
   const { entities, relationships } = await retrieveIntegrationData(
-    integrationPath,
+    entitiesAndRelationshipPaths,
   );
 
   const nodeDataSets = entities.map((entity) => ({
     id: entity._key,
-    label: entity.name.toString(),
+    label: entity.displayName,
   }));
-  const edgeDataSets = relationships.map((relationship) => ({
-    from: relationship._fromEntityKey.toString(),
-    to: relationship._toEntityKey.toString(),
-    label: relationship.displayName.toString(),
-  }));
+  const edgeDataSets = relationships.map(
+    (relationship): Edge => ({
+      from: relationship._fromEntityKey,
+      to: relationship._toEntityKey,
+      label: relationship.displayName,
+    }),
+  );
 
-  const htmlFile = 'index.html';
+  const htmlFileLocation = path.join(resolvedIntegrationPath, 'index.html');
 
   await writeFileToPath({
-    path: htmlFile,
-    content: generateVizHTML(nodeDataSets, edgeDataSets),
+    path: htmlFileLocation,
+    content: generateVisHTML(nodeDataSets, edgeDataSets),
   });
 
-  return path.join(getRootStorageDirectory(), htmlFile);
+  return htmlFileLocation;
 }

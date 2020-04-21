@@ -27,13 +27,14 @@
     "format": "prettier --write '**/*.{ts,js,json,css,md,yml}'",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:ci": "yarn lint && yarn type-check && yarn test",
+    "test:ci": "yarn lint && yarn type-check && yarn test -- --ci",
     "prebuild": "yarn test:ci",
     "build": "tsc -p tsconfig.dist.json --declaration",
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.2.0",
+    "@types/vis": "^4.21.19",
     "async-sema": "^3.1.0",
     "bunyan": "^1.8.12",
     "bunyan-format": "^0.2.1",

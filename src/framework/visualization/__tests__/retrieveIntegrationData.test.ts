@@ -1,16 +1,13 @@
 import { mocked } from 'ts-jest/utils';
-import globby from 'globby';
 
 import { retrieveIntegrationData } from '../retrieveIntegrationData';
-import { IntegrationMissingCollectJSON } from '../error';
 import { readJsonFromPath } from '../../../fileSystem';
-import { IntegrationData } from '../types/IntegrationData';
+import { IntegrationData } from '../types';
 import { createIntegrationRelationship } from '../../data';
+import { ExplicitRelationship } from '../../types';
 
-jest.mock('globby');
 jest.mock('../../../fileSystem');
 
-const mockedGlobby = mocked(globby);
 const mockedReadJson = mocked(readJsonFromPath);
 
 const integrationPath = '/j1-integration';
@@ -26,7 +23,7 @@ const integrationData: IntegrationData = {
       fromType: 'entity',
       toKey: 'entity:2',
       toType: 'entity',
-    }),
+    }) as ExplicitRelationship,
   ],
 };
 
@@ -34,23 +31,40 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-test('missing integration collect data throws missing json error', async () => {
-  mockedGlobby.mockResolvedValue([]);
-
-  await expect(retrieveIntegrationData(integrationPath)).rejects.toBeInstanceOf(
-    IntegrationMissingCollectJSON,
-  );
+test('no files found returns empty result set', async () => {
+  const result = await retrieveIntegrationData([]);
+  expect(result.entities).toEqual([]);
+  expect(result.relationships).toEqual([]);
 });
 
 test('returns the json objects read from the files', async () => {
   mockedReadJson
     .mockResolvedValueOnce({ entities: integrationData.entities })
     .mockResolvedValueOnce({ relationships: integrationData.relationships });
-  mockedGlobby
-    .mockResolvedValueOnce([`${integrationPath}/index/entities/123.json`])
-    .mockResolvedValueOnce([`${integrationPath}/index/relationships/abc.json`]);
 
-  const result = await retrieveIntegrationData(integrationPath);
+  const result = await retrieveIntegrationData([
+    `${integrationPath}/graph/entity/entities/123.json`,
+    `${integrationPath}/graph/entity/relationships/abc.json`,
+  ]);
+
+  expect(result).toEqual(integrationData);
+});
+
+test('excludes mapped relationships', async () => {
+  const mappedRelationship = {
+    _mapping: 'user_is_user',
+    id: '123456',
+  };
+  mockedReadJson
+    .mockResolvedValueOnce({ entities: integrationData.entities })
+    .mockResolvedValueOnce({
+      relationships: [...integrationData.relationships, mappedRelationship],
+    });
+
+  const result = await retrieveIntegrationData([
+    `${integrationPath}/graph/entity/entities/123.json`,
+    `${integrationPath}/graph/entity/relationships/abc.json`,
+  ]);
 
   expect(result).toEqual(integrationData);
 });

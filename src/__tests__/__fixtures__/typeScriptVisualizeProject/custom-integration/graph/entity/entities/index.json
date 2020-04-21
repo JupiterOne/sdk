@@ -5,14 +5,14 @@
         "_class": "entity",
         "_key": "entity:1",
         "_type": "entity",
-        "name": "Entity Name"
+        "displayName": "Entity Name"
       },
       {
         "id": "2",
         "_class": "entity",
         "_key": "entity:2",
         "_type": "entity",
-        "name": "Entity Name"
+        "displayName": "Entity Name"
       }
     ]
 }

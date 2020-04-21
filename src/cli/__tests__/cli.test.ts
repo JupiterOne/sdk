@@ -4,7 +4,6 @@ import { loadProjectStructure } from '../../__tests__/loadProjectStructure';
 import * as log from '../../log';
 
 import { IntegrationStepResultStatus } from '../../framework/execution';
-import { getRootStorageDirectory } from '../../fileSystem';
 import * as nodeFs from 'fs';
 const fs = nodeFs.promises;
 
@@ -53,14 +52,24 @@ describe('collect', () => {
 });
 
 describe('visualize', () => {
+  let htmlFileLocation;
   beforeEach(() => {
     loadProjectStructure('typeScriptVisualizeProject');
+    htmlFileLocation = path.join(
+      path.resolve(process.cwd(), 'custom-integration'),
+      'index.html',
+    );
   });
 
   test('writes graph to html file', async () => {
-    await createCli().parseAsync(['node', 'j1-integration', 'visualize']);
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'visualize',
+      '--data-dir',
+      'custom-integration',
+    ]);
 
-    const htmlFileLocation = path.join(getRootStorageDirectory(), 'index.html');
     const content = await fs.readFile(htmlFileLocation, 'utf8');
 
     expect(log.info).toHaveBeenCalledWith(
@@ -71,15 +80,20 @@ describe('visualize', () => {
 });
 
 describe('collect/visualize integration', () => {
+  let htmlFileLocation;
   beforeEach(() => {
     loadProjectStructure('typeScriptIntegrationProject');
+
+    htmlFileLocation = path.join(
+      path.resolve(process.cwd(), '.j1-integration/graph'),
+      'index.html',
+    );
   });
 
   test('creates graph based on integration data', async () => {
     await createCli().parseAsync(['node', 'j1-integration', 'collect']);
     await createCli().parseAsync(['node', 'j1-integration', 'visualize']);
 
-    const htmlFileLocation = path.join(getRootStorageDirectory(), 'index.html');
     const content = await fs.readFile(htmlFileLocation, 'utf8');
 
     expect(log.info).toHaveBeenCalledWith(
