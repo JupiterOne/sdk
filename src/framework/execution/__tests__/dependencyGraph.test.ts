@@ -160,6 +160,64 @@ describe('executeStepDependencyGraph', () => {
     });
   });
 
+  test("waits for all of a steps's dependencies to complete prior to executing", async () => {
+    let resolveA;
+    const spyA = jest.fn(() => {
+      return new Promise<void>((resolve) => {
+        resolveA = resolve;
+      });
+    });
+
+    const spyB = jest.fn(() => {
+      return new Promise<void>(() => {
+        // never resolve
+      });
+    });
+
+    const spyC = jest.fn();
+
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: ['my_type_a'],
+        executionHandler: spyA,
+      },
+      {
+        id: 'b',
+        name: 'b',
+        types: ['my_type_b'],
+        executionHandler: spyB,
+      },
+      {
+        id: 'c',
+        name: 'c',
+        types: ['my_type_c'],
+        dependsOn: ['a', 'b'],
+        executionHandler: spyC,
+      },
+    ];
+
+    const graph = buildStepDependencyGraph(steps);
+    executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
+
+    await waitForExpect(() => {
+      expect(spyA).toHaveBeenCalledTimes(1);
+      expect(spyB).toHaveBeenCalledTimes(1);
+    });
+
+    resolveA();
+
+    // spyB never resolved, so spyC should never be called
+    await expect(
+      waitForExpect(() => expect(spyC).toHaveBeenCalledTimes(1), 1000),
+    ).rejects.toThrow();
+  });
+
   test("writes data to the correct graph directory path using each step's id", async () => {
     const workingDirectory = `/test`;
     jest.spyOn(process, 'cwd').mockReturnValue(workingDirectory);
