@@ -16,15 +16,12 @@ jest.mock('fs');
 let recording: Recording;
 let server;
 
-beforeAll(async () => {
+beforeEach(async () => {
   server = await startServer();
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await server.close();
-});
-
-afterEach(() => {
   recording.stop();
   vol.reset();
 });
@@ -78,9 +75,6 @@ test('accepts recordFailedRequests PollyConfig option', async () => {
       toUnixPath(path.resolve(__dirname, '__recordings__', name)),
     ),
   ).toEqual(true);
-
-  server.close();
-  server = await startServer();
 });
 
 test('redacts cookies from responses', async () => {
