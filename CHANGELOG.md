@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.6.1 - 2020-04-21
+
 ### Fixed
 
 - Fixed issue with dependency graph failing to wait for step dependencies to
