@@ -55,8 +55,9 @@ describe('visualize', () => {
   let htmlFileLocation;
   beforeEach(() => {
     loadProjectStructure('typeScriptVisualizeProject');
-    htmlFileLocation = path.join(
-      path.resolve(process.cwd(), 'custom-integration'),
+    htmlFileLocation = path.resolve(
+      process.cwd(),
+      'custom-integration',
       'index.html',
     );
   });
@@ -88,8 +89,9 @@ describe('collect/visualize integration', () => {
   beforeEach(() => {
     loadProjectStructure('typeScriptIntegrationProject');
 
-    htmlFileLocation = path.join(
-      path.resolve(process.cwd(), '.j1-integration/graph'),
+    htmlFileLocation = path.resolve(
+      process.cwd(),
+      '.j1-integration/graph',
       'index.html',
     );
   });

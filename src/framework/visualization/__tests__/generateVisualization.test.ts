@@ -21,8 +21,9 @@ const mockedReadJson = mocked(readJsonFromPath);
 const mockedGetRootStorageDirectory = mocked(getRootStorageDirectory);
 
 const integrationPath = '.j1-integration/graph';
-const indexHtmlPath = path.join(
-  path.resolve(process.cwd(), integrationPath),
+const indexHtmlPath = path.resolve(
+  process.cwd(),
+  integrationPath,
   'index.html',
 );
 const integrationData: IntegrationData = {
