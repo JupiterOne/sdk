@@ -2,6 +2,8 @@ import {
   IntegrationInstance,
   IntegrationExecutionContext,
   IntegrationStepExecutionContext,
+  IntegrationInstanceConfigField,
+  IntegrationInstanceConfigFieldMap,
 } from '../framework';
 
 import { loadInstanceConfigFields } from '../framework/config';
@@ -41,9 +43,12 @@ export function createMockExecutionContext({
         // failed to load configuration, not end of the world
         // because this is only used in testing
         //
+        // For convenience, we will generate a config for the developer
+        //
         // this would generally only happen when a developer does not
         // have an .env file configured or when an integration's test suite
         // runs in CI
+        instance.config = generateInstanceConfig(configFields);
       }
     }
   }
@@ -69,4 +74,28 @@ export function createMockStepExecutionContext(
     ...createMockExecutionContext(options),
     jobState: createMockJobState(options),
   };
+}
+
+function generateInstanceConfig(
+  configFields: IntegrationInstanceConfigFieldMap,
+): IntegrationInstance['config'] {
+  return Object.entries(configFields).reduce(
+    (acc: IntegrationInstance['config'], [field, config]) => {
+      acc[field] = getInstanceConfigValueFromType(config);
+      return acc;
+    },
+    {},
+  );
+}
+
+function getInstanceConfigValueFromType(
+  config: IntegrationInstanceConfigField,
+) {
+  switch (config.type) {
+    case 'boolean':
+      return true;
+    case 'string':
+    default:
+      return 'STRING_VALUE';
+  }
 }

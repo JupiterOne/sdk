@@ -101,24 +101,50 @@ If the `instanceConfig` option is not set, the SDK will read the
 `src/instanceConfigFields.json` and load in values from environment variables
 and the project's `.env` file if present.
 
+If unable to load a config from environment variables, the function will create
+a configuration with mock values based the types specified in
+`src/instanceConfigFields.json`.
+
+Example `instanceConfigFields.json` file:
+
+```json
+{
+  "apiKey": {
+    "type": "string"
+  }
+}
+```
+
 Usage:
 
 ```typescript
 // creates a simple execution context with a mocked
-// logger and instance without a configuration
-const simpleContext = createMockExecutionContext();
+// logger and an instance with mocked values
+const contextWithGeneratedConfig = createMockExecutionContext();
 /**
  * Returns:
  *
  * {
  *   logger: <mockLogger>,
- *   instance: <local integration instance>
+ *   instance: {...<local integration instance>, config: { apiKey: 'STRING_VALUE' } }
+ * }
+ */
+
+// constructs instance config using environment variables
+process.env.API_KEY = 'my-api-key';
+const contextWithConfigBuiltFromEnv = createMockExecutionContext();
+/**
+ * Returns:
+ *
+ * {
+ *   logger: <mockLogger>,
+ *   instance: {...<local integration instance>, config: { apiKey: 'my-api-key' } }
  * }
  */
 
 // creates an execution context with a mocked
 // logger and instance populated with the input config
-const contextWithInstanceConfig = createMockExecutionContext({
+const contextWithProvidedInstanceConfig = createMockExecutionContext({
   instanceConfig: {
     apiKey: 'test',
   },
