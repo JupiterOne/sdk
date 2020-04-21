@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "scripts": {
     "start": "j1-integration collect",
+    "visual": "j1-integration visualize",
     "lint": "eslint . --cache --fix --ext .ts,.tsx",
     "format": "prettier --write '**/*.{ts,js,json,css,md,yml}'",
     "type-check": "tsc --noEmit",
