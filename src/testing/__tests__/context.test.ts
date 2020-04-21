@@ -63,6 +63,20 @@ import {
           },
         });
       });
+
+      test('generates instance config with fake values if unable to populate config with env values', () => {
+        loadProjectStructure('instanceConfigWithoutEnv');
+
+        const { instance } = createContext();
+        expect(instance).toEqual({
+          ...LOCAL_INTEGRATION_INSTANCE,
+          config: {
+            myBooleanConfig: true,
+            myStringConfig: 'STRING_VALUE',
+            myTypelessConfig: 'STRING_VALUE',
+          },
+        });
+      });
     });
   },
 );
