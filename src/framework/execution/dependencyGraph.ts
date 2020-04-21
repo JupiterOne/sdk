@@ -66,13 +66,14 @@ export function executeStepDependencyGraph(
   // cloned graph is mutated because it is slightly easier to
   // remove nodes from the graph to find new leaf nodes
   // instead of tracking state ourselves
-  const stepResultsMap = buildStepResultsMap(inputGraph);
   const workingGraph = inputGraph.clone();
 
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
 
   const graphObjectStore = new FileSystemGraphObjectStore();
+
+  const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
 
   function isStepEnabled(step: IntegrationStep) {
     return stepStartStates[step.id].disabled === false;
@@ -124,6 +125,21 @@ export function executeStepDependencyGraph(
     workingGraph.removeNode(step.id);
   }
 
+  /**
+   * This function checks if a step's dependencies are complete
+   */
+  function stepDependenciesAreComplete(step: IntegrationStep) {
+    const executingDependencies = inputGraph
+      .dependenciesOf(step.id)
+      .map((id) => stepResultsMap.get(id))
+      .filter(
+        ({ status }) =>
+          status === IntegrationStepResultStatus.PENDING_EVALUATION,
+      );
+
+    return executingDependencies.length === 0;
+  }
+
   return new Promise((resolve, reject) => {
     /**
      * If an unexpected error occurs during the execution of a step,
@@ -158,7 +174,7 @@ export function executeStepDependencyGraph(
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
          */
-        if (isStepEnabled(step)) {
+        if (isStepEnabled(step) && stepDependenciesAreComplete(step)) {
           removeStepFromWorkingGraph(step);
           promiseQueue.add(() =>
             executeStep(step).catch(handleUnexpectedError),
@@ -225,18 +241,30 @@ function buildStepContext(
   };
 }
 
-function buildStepResultsMap(dependencyGraph: DepGraph<IntegrationStep>) {
+function buildStepResultsMap(
+  dependencyGraph: DepGraph<IntegrationStep>,
+  stepStartStates: IntegrationStepStartStates,
+) {
   const stepResultMapEntries = dependencyGraph
     .overallOrder()
     .map(
       (stepId): IntegrationStepResult => {
         const step = dependencyGraph.getNodeData(stepId);
+
+        const hasDisabledDependencies =
+          dependencyGraph
+            .dependenciesOf(step.id)
+            .filter((id) => stepStartStates[id].disabled).length > 0;
+
         return {
           id: step.id,
           name: step.name,
           types: step.types,
           dependsOn: step.dependsOn,
-          status: IntegrationStepResultStatus.DISABLED,
+          status:
+            stepStartStates[step.id].disabled || hasDisabledDependencies
+              ? IntegrationStepResultStatus.DISABLED
+              : IntegrationStepResultStatus.PENDING_EVALUATION,
         };
       },
     )

@@ -25,6 +25,7 @@ export enum IntegrationStepResultStatus {
   FAILURE = 'failure',
   PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE = 'partial_success_due_to_dependency_failure',
   DISABLED = 'disabled',
+  PENDING_EVALUATION = 'pending_evaluation',
 }
 
 export type IntegrationStep = IntegrationStepMetadata & {

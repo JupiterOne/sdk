@@ -29,9 +29,7 @@ import { Entity, Relationship } from '../../types';
 
 jest.mock('fs');
 
-afterEach(() => {
-  vol.reset();
-});
+afterEach(() => vol.reset());
 
 const executionContext: IntegrationExecutionContext = {
   logger: createIntegrationLogger({
@@ -162,7 +160,7 @@ describe('executeStepDependencyGraph', () => {
     });
   });
 
-  test.only("waits for all of a steps's dependencies to complete prior to executing", async () => {
+  test("waits for all of a steps's dependencies to complete prior to executing", async () => {
     let resolveA;
     const spyA = jest.fn(() => {
       return new Promise((resolve) => {
@@ -170,10 +168,9 @@ describe('executeStepDependencyGraph', () => {
       });
     });
 
-    let resolveB;
     const spyB = jest.fn(() => {
       return new Promise((resolve) => {
-        resolveB = resolve;
+        // never resolve
       });
     });
 
