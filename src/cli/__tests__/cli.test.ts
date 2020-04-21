@@ -46,4 +46,70 @@ describe('collect', () => {
       },
     });
   });
+
+  test('will only run the steps provided if the -s / --steps option is passed in', async () => {
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'collect',
+      '--step',
+      'fetch-users',
+    ]);
+
+    expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+    expect(log.displayExecutionResults).toHaveBeenCalledWith({
+      integrationStepResults: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          types: ['my_account'],
+          status: IntegrationStepResultStatus.DISABLED,
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          types: ['my_user'],
+          status: IntegrationStepResultStatus.SUCCESS,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: [],
+        },
+      },
+    });
+  });
+
+  test('will allow filtering to multiple steps if the -s or --steps option has multiple comma separated values', async () => {
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'collect',
+      '--step',
+      'fetch-users,fetch-accounts',
+    ]);
+
+    expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+    expect(log.displayExecutionResults).toHaveBeenCalledWith({
+      integrationStepResults: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          types: ['my_account'],
+          status: IntegrationStepResultStatus.SUCCESS,
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          types: ['my_user'],
+          status: IntegrationStepResultStatus.SUCCESS,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: [],
+        },
+      },
+    });
+  });
 });

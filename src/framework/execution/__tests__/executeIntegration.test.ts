@@ -148,6 +148,56 @@ test('includes types for partially successful steps steps in partial datasets', 
   });
 });
 
+test('does not include partial data sets for disabled steps', async () => {
+  const validate = jest.fn();
+
+  const result = await executeIntegrationLocally({
+    validateInvocation: validate,
+    getStepStartStates: () => ({
+      'my-step-b': { disabled: true },
+      'my-step-a': { disabled: false },
+    }),
+    integrationSteps: [
+      {
+        id: 'my-step-a',
+        name: 'My awesome step',
+        types: ['test_a'],
+        executionHandler: jest
+          .fn()
+          .mockRejectedValue(new Error('something broke')),
+      },
+      {
+        id: 'my-step-b',
+        name: 'My awesome step',
+        types: ['test_b'],
+        executionHandler: jest.fn(),
+      },
+    ],
+  });
+
+  expect(result).toEqual({
+    integrationStepResults: [
+      {
+        id: 'my-step-a',
+        name: 'My awesome step',
+        types: ['test_a'],
+        status: IntegrationStepResultStatus.FAILURE,
+      },
+      {
+        id: 'my-step-b',
+        name: 'My awesome step',
+        types: ['test_b'],
+        status: IntegrationStepResultStatus.DISABLED,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: ['test_a'],
+      },
+    },
+  });
+});
+
 test('clears out the storage directory prior to performing collection', async () => {
   const previousContentFilePath = path.resolve(
     getRootStorageDirectory(),
