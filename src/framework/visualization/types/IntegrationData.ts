@@ -1,4 +1,4 @@
-import { Entity, Relationship, ExplicitRelationship } from '../../types';
+import { Entity, ExplicitRelationship } from '../../types';
 
 export interface IntegrationData {
   entities: Entity[];

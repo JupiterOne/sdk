@@ -72,10 +72,14 @@ describe('visualize', () => {
 
     const content = await fs.readFile(htmlFileLocation, 'utf8');
 
+    const nodesRegex = /var nodes = new vis.DataSet\(\[{.*},{.*}\]\);/g;
+    const edgesRegex = /var edges = new vis.DataSet\(\[{.*}\]\);/g;
+
     expect(log.info).toHaveBeenCalledWith(
       `Visualize graph here: ${htmlFileLocation}`,
     );
-    expect(content).toMatchSnapshot();
+    expect(content).toEqual(expect.stringMatching(nodesRegex));
+    expect(content).toEqual(expect.stringMatching(edgesRegex));
   });
 });
 
@@ -96,9 +100,13 @@ describe('collect/visualize integration', () => {
 
     const content = await fs.readFile(htmlFileLocation, 'utf8');
 
+    const nodesRegex = /var nodes = new vis.DataSet\(\[{.*},{.*}\]\);/g;
+    const edgesRegex = /var edges = new vis.DataSet\(\[{.*}\]\);/g;
+
     expect(log.info).toHaveBeenCalledWith(
       `Visualize graph here: ${htmlFileLocation}`,
     );
-    expect(content).toMatchSnapshot();
+    expect(content).toEqual(expect.stringMatching(nodesRegex));
+    expect(content).toEqual(expect.stringMatching(edgesRegex));
   });
 });
