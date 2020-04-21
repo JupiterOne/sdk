@@ -276,6 +276,10 @@ provide a `mutateEntry` function to make tweaks. This can be helpful for
 situations where sensitive data is stored in the response or request's body and
 needs to be hidden.
 
+Because `setupRecording` inherits from `setupPolly`, developers can use the
+`options` parameter to pass in any configuration parameters available in
+[`PollyConfig`](https://github.com/Netflix/pollyjs/blob/master/docs/configuration.md).
+
 Example usage in test:
 
 ```typescript
@@ -294,6 +298,9 @@ test('should generate the expected entities and relationships', () => {
     name: 'my awesome recording',
     directory: __dirname,
     redactedRequestHeaders: ['api-secret-key'],
+    options: {
+      recordFailedRequests: true,
+    },
   });
 
   const resources = [];
