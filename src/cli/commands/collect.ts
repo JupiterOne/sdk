@@ -46,12 +46,12 @@ export function collect() {
       }
       stepsToRun.push(...dependentSteps);
 
-      const originalGetStepStartStates =
-        config.getStepStartStates ?? (() => ({}));
+      const originalGetStepStartStates = config.getStepStartStates;
 
       config.getStepStartStates = stepsToRun.length
         ? (ctx) => {
-            const originalEnabledRecord = originalGetStepStartStates(ctx);
+            const originalEnabledRecord =
+              originalGetStepStartStates?.(ctx) ?? {};
             const enabledRecord: IntegrationStepStartStates = {};
             for (const stepId of allStepIds) {
               const originalValue = originalEnabledRecord[stepId] ?? {};
