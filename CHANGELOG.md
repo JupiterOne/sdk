@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.8.1 2020-04-22
+
+### Fixed
+
+- Adopted fix from `0.7.2` that did not get included in `0.8.0` release.
+
 ## 0.8.0 2020-04-22
 
 ### Added
@@ -15,6 +21,11 @@ and this project adheres to
 - Adding the `j1-integration visualize` command that uses `vis-network` to
   visualize entities and their relationships generated through the
   `j1-integration collect` command.
+
+## 0.7.2 - 2020-04-22
+
+- Fixed issue with step states being set to an empty object if
+  `getStepStartState` function was not provided.
 
 ## 0.7.0 - 2020-04-22
 
