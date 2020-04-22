@@ -8,10 +8,7 @@ and this project adheres to
 
 ## [Unreleased]
 
-### Fixed
-
-- Fixed issue with dependency graph failing to wait for step dependencies to
-  complete prior to performing more work
+## 0.7.0 - 2020-04-22
 
 ### Added
 
@@ -21,6 +18,13 @@ and this project adheres to
   step or comma separated steps or multiple values. E.G. `--step fetch-account`,
   `--step fetch-account,fetch-users`, or
   `--step fetch-account --step fetch-users`.
+
+## 0.6.1 - 2020-04-21
+
+### Fixed
+
+- Fixed issue with dependency graph failing to wait for step dependencies to
+  complete prior to performing more work
 
 ## 0.6.0 - 2020-04-21
 
