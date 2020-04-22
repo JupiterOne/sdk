@@ -137,6 +137,50 @@ describe('collect', () => {
       });
     });
 
+    test('will allow filtering to multiple steps if the -s or --steps option is provided multiple times', async () => {
+      await createCli().parseAsync([
+        'node',
+        'j1-integration',
+        'collect',
+        '--step',
+        'fetch-users',
+        '--step',
+        'fetch-accounts',
+      ]);
+
+      // fetch-users and fetch-accounts have no dependents and should be the only
+      // ones enabled.
+      expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+      expect(log.displayExecutionResults).toHaveBeenCalledWith({
+        integrationStepResults: [
+          {
+            id: 'fetch-accounts',
+            name: 'Fetch Accounts',
+            types: ['my_account'],
+            status: IntegrationStepResultStatus.SUCCESS,
+          },
+          {
+            id: 'fetch-groups',
+            dependsOn: ['fetch-accounts'],
+            name: 'Fetch Groups',
+            types: ['my_groups'],
+            status: IntegrationStepResultStatus.DISABLED,
+          },
+          {
+            id: 'fetch-users',
+            name: 'Fetch Users',
+            types: ['my_user'],
+            status: IntegrationStepResultStatus.SUCCESS,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: [],
+          },
+        },
+      });
+    });
+
     test('will run dependent steps of steps passed in', async () => {
       await createCli().parseAsync([
         'node',

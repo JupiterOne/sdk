@@ -9,20 +9,32 @@ import {
 } from '../../framework';
 import { loadConfig } from '../../framework/config';
 
+// coercion function to collect multiple values for a flag
+const collecter = (value: string, arr: string[]) => {
+  arr.push(...value.split(','));
+  return arr;
+};
+
 export function collect() {
   return createCommand('collect')
     .description(
       'Executes the integration and stores the collected data to disk',
     )
-    .option('-s, --step <steps>', 'step(s) to run, comma separated if multiple')
+    .option(
+      '-s, --step <steps>',
+      'step(s) to run, comma separated if multiple',
+      collecter,
+      [],
+    )
     .action(async (options) => {
       const config = await loadConfig();
 
       const allStepIds = config.integrationSteps.map((step) => step.id);
-      const stepsToRun: string[] = (options.step
-        ? [...options.step.split(',')]
-        : []
-      ).filter((step) => step !== undefined && step !== null);
+
+      const stepsToRun: string[] = (options.step ? options.step : []).filter(
+        (step: string | undefined | null) =>
+          step !== undefined && step !== null,
+      );
       // build out the dependecy graph so we can
       // enable the dependencies of the steps
       // we want to run.
