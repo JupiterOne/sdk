@@ -8,12 +8,15 @@ and this project adheres to
 
 ## [Unreleased]
 
-## 0.6.1 - 2020-04-21
-
 ### Fixed
 
 - Fixed issue with dependency graph failing to wait for step dependencies to
   complete prior to performing more work
+
+### Added
+
+- `setupRecording` takes an optional parameter `options` which allows developers
+  to pass in parameters found in polly's `PollyConfig` interface.
 
 ## 0.6.0 - 2020-04-21
 
