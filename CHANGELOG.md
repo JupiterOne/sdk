@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Added
+
+- Adding the `j1-integration visualize` command that uses `vis-network` to
+  visualize entities and their relationships generated through the
+  `j1-integration collect` command.
+
 ## 0.6.0 - 2020-04-21
 
 ### Changed
