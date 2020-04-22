@@ -8,7 +8,7 @@ and this project adheres to
 
 ## [Unreleased]
 
-## [Unreleased]
+## 0.8.0 2020-04-22
 
 ### Added
 
@@ -33,7 +33,6 @@ and this project adheres to
 
 - Fixed issue with dependency graph failing to wait for step dependencies to
   complete prior to performing more work
-
 
 ## 0.6.0 - 2020-04-21
 
