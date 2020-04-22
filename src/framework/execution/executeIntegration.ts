@@ -14,7 +14,7 @@ import {
   determinePartialDatasetsFromStepExecutionResults,
 } from './step';
 
-import { removeStorageDirectory } from '../../fileSystem';
+import { removeStorageDirectory, writeJsonToPath } from '../../fileSystem';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -75,6 +75,11 @@ async function executeIntegration(
       partialDatasets,
     },
   };
+
+  await writeJsonToPath({
+    path: 'summary.json',
+    data: summary,
+  });
 
   return summary;
 }

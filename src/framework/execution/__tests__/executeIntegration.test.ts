@@ -237,8 +237,10 @@ test('clears out the storage directory prior to performing collection', async ()
 
   // should still have written data to disk
   const files = await fs.readdir(getRootStorageDirectory());
-  expect(files).toHaveLength(2);
-  expect(files).toEqual(expect.arrayContaining(['graph', 'index']));
+  expect(files).toHaveLength(3);
+  expect(files).toEqual(
+    expect.arrayContaining(['graph', 'index', 'summary.json']),
+  );
 
   // files should not exist any more
   await expect(fs.readFile(previousContentFilePath)).rejects.toThrow(/ENOENT/);
