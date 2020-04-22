@@ -2,6 +2,7 @@ import { createCommand } from 'commander';
 
 import * as log from '../../log';
 
+import { buildStepDependencyGraph } from '../../framework/execution/dependencyGraph';
 import {
   executeIntegrationLocally,
   IntegrationStepStartStates,
@@ -16,11 +17,22 @@ export function collect() {
     .option('-s, --step <steps>', 'step(s) to run, comma separated if multiple')
     .action(async (options) => {
       const config = await loadConfig();
+
       const allStepIds = config.integrationSteps.map((step) => step.id);
-      const stepsToRun = (options.step
+      const stepsToRun: string[] = (options.step
         ? [...options.step.split(',')]
         : []
       ).filter((step) => step !== undefined && step !== null);
+      // build out the dependecy graph so we can
+      // enable the dependencies of the steps
+      // we want to run.
+      const depGraph = buildStepDependencyGraph(config.integrationSteps);
+      const dependentSteps: string[] = [];
+      for (const step of stepsToRun) {
+        const dependencies = depGraph.dependenciesOf(step);
+        dependentSteps.push(...dependencies);
+      }
+      stepsToRun.push(...dependentSteps);
 
       const originalGetStepStartStates =
         config.getStepStartStates ?? (() => ({}));
