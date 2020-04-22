@@ -69,10 +69,12 @@ async function executeIntegration(
     integrationStepResults,
   );
 
-  return {
+  const summary = {
     integrationStepResults,
     metadata: {
       partialDatasets,
     },
   };
+
+  return summary;
 }

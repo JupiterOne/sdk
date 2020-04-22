@@ -6,10 +6,13 @@ import {
   IntegrationExecutionContext,
   IntegrationStepResultStatus,
 } from '../types';
-import { executeIntegrationLocally } from '../executeIntegration';
+import {
+  ExecuteIntegrationResult,
+  executeIntegrationLocally,
+} from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 
-import { getRootStorageDirectory } from '../../../fileSystem';
+import { getRootStorageDirectory, readJsonFromPath } from '../../../fileSystem';
 
 jest.mock('fs');
 
@@ -239,4 +242,55 @@ test('clears out the storage directory prior to performing collection', async ()
 
   // files should not exist any more
   await expect(fs.readFile(previousContentFilePath)).rejects.toThrow(/ENOENT/);
+});
+
+test('writes results to summary.json in storage directory', async () => {
+  const result = await executeIntegrationLocally({
+    integrationSteps: [
+      {
+        id: 'my-step',
+        name: 'My awesome step',
+        types: ['test'],
+        executionHandler: jest.fn(),
+      },
+      {
+        id: 'my-step-2',
+        name: 'My awesome second step',
+        types: ['test_2'],
+        executionHandler: jest
+          .fn()
+          .mockRejectedValue(new Error('something went wrong')),
+      },
+    ],
+  });
+
+  const expectedResults = {
+    integrationStepResults: [
+      {
+        id: 'my-step',
+        name: 'My awesome step',
+        types: ['test'],
+        status: IntegrationStepResultStatus.SUCCESS,
+      },
+      {
+        id: 'my-step-2',
+        name: 'My awesome second step',
+        types: ['test_2'],
+        status: IntegrationStepResultStatus.FAILURE,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: ['test_2'],
+      },
+    },
+  };
+
+  expect(result).toEqual(expectedResults);
+
+  const writtenSummary = await readJsonFromPath<ExecuteIntegrationResult>(
+    path.resolve(getRootStorageDirectory(), 'summary.json'),
+  );
+
+  expect(writtenSummary).toEqual(expectedResults);
 });
