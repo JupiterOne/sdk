@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- A `summary.json` file containing information about steps results and partial
+  datasets is now written to the `.j1-integration` directory.
+
 ## 0.8.1 2020-04-22
 
 ### Fixed
