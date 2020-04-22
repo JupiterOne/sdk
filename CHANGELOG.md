@@ -16,6 +16,25 @@ and this project adheres to
   visualize entities and their relationships generated through the
   `j1-integration collect` command.
 
+## 0.7.0 - 2020-04-22
+
+### Added
+
+- `setupRecording` takes an optional parameter `options` which allows developers
+  to pass in parameters found in polly's `PollyConfig` interface.
+- Added `--step / -s` to `collect` command for the CLI, takes either a single
+  step or comma separated steps or multiple values. E.G. `--step fetch-account`,
+  `--step fetch-account,fetch-users`, or
+  `--step fetch-account --step fetch-users`.
+
+## 0.6.1 - 2020-04-21
+
+### Fixed
+
+- Fixed issue with dependency graph failing to wait for step dependencies to
+  complete prior to performing more work
+
+
 ## 0.6.0 - 2020-04-21
 
 ### Changed

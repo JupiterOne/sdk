@@ -16,15 +16,12 @@ jest.mock('fs');
 let recording: Recording;
 let server;
 
-beforeAll(async () => {
+beforeEach(async () => {
   server = await startServer();
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await server.close();
-});
-
-afterEach(() => {
   recording.stop();
   vol.reset();
 });
@@ -34,6 +31,35 @@ test('create files relative to the recording directory based on the input name',
   recording = setupRecording({
     name,
     directory: __dirname,
+  });
+
+  await fetch(`http://localhost:${server.port}`);
+
+  await recording.stop();
+
+  expect(Object.keys(vol.toJSON())).toHaveLength(1);
+
+  const [recordingPath] = Object.keys(vol.toJSON());
+
+  expect(
+    recordingPath.startsWith(
+      toUnixPath(path.resolve(__dirname, '__recordings__', name)),
+    ),
+  ).toEqual(true);
+});
+
+test('accepts recordFailedRequests PollyConfig option', async () => {
+  // start new server which responds with statusCode=404
+  server.close();
+  server = await startServer(404);
+
+  const name = 'test-record-failed-requests';
+  recording = setupRecording({
+    name,
+    directory: __dirname,
+    options: {
+      recordFailedRequests: true,
+    },
   });
 
   await fetch(`http://localhost:${server.port}`);
@@ -155,9 +181,32 @@ test('allows for entries to be mutated via mutateEntry function', async () => {
   expect(har.log.entries[0].request.headers).toEqual([]);
 });
 
-async function startServer() {
+test('allows for overriding matchRequestBy options with deepDefault', async () => {
+  recording = setupRecording({
+    name: 'test',
+    directory: __dirname,
+    options: {
+      matchRequestsBy: {
+        order: false,
+        url: {
+          query: false,
+        },
+      },
+    },
+  });
+
+  await fetch(`http://localhost:${server.port}/query?q=1`);
+  await fetch(`http://localhost:${server.port}/query?q=2`);
+  await recording.stop();
+
+  const har = await getRecording();
+  expect(har.log.entries).toHaveLength(1);
+});
+
+async function startServer(statusCode?: number) {
+  statusCode = statusCode ? statusCode : 200;
   const server = http.createServer((req, res) => {
-    res.writeHead(200, {
+    res.writeHead(statusCode, {
       'content-type': 'application/json',
       'set-cookie': 'cookies=taste-good',
       'my-secret-header': 'super secret',

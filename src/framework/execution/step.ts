@@ -42,7 +42,11 @@ export function determinePartialDatasetsFromStepExecutionResults(
 ): PartialDatasets {
   return stepResults.reduce(
     (partialDatasets: PartialDatasets, stepResult: IntegrationStepResult) => {
-      if (stepResult.status !== IntegrationStepResultStatus.SUCCESS) {
+      if (
+        stepResult.status === IntegrationStepResultStatus.FAILURE ||
+        stepResult.status ===
+          IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
+      ) {
         partialDatasets.types = uniq(
           partialDatasets.types.concat(stepResult.types),
         );

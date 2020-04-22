@@ -1,6 +1,7 @@
 import { Har } from 'har-format';
+import defaultsDeep from 'lodash/defaultsDeep';
 
-import { Polly } from '@pollyjs/core';
+import { Polly, PollyConfig } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import FSPersister from '@pollyjs/persister-fs';
 
@@ -15,6 +16,7 @@ interface SetupRecordingInput {
   redactedRequestHeaders?: string[];
   redactedResponseHeaders?: string[];
   mutateEntry?: (entry: any) => void;
+  options?: PollyConfig;
 }
 
 /**
@@ -29,6 +31,7 @@ export function setupRecording({
   redactedRequestHeaders = [],
   redactedResponseHeaders = [],
   mutateEntry,
+  options,
 }: SetupRecordingInput): Polly {
   const redactedRequestHeadersSet = new Set<string>(
     redactedRequestHeaders.map((h) => h.toLowerCase()),
@@ -74,7 +77,7 @@ export function setupRecording({
     }
   }
 
-  return new Polly(name, {
+  const defaultOptions = {
     adapters: ['node-http'],
     persister: JupiterOneIntegationFSPersister,
     persisterOptions: {
@@ -86,5 +89,6 @@ export function setupRecording({
       headers: false,
       body: false,
     },
-  });
+  };
+  return new Polly(name, defaultsDeep(options, defaultOptions));
 }
