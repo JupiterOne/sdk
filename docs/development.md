@@ -10,37 +10,9 @@ that was sent up will be diffed against JupiterOne's understanding of the
 
 ## The integration framework
 
-This SDK exposes an opinionated interface for developing integrations with
-either JavaScript or TypeScript.
-
-It is expected that an integration exposes an `.js` or `.ts` file that contains
-an object that defines required configuration fields needed to run the
-integration, a function for performing config field validation, a function for
-determining which steps of an integration should be ignored and a list of steps
-that define how an integration should collect data. It is expected that the
-integration configuration file exposes an `invocationConfig` from the module.
-
-This could be done a variety of ways:
-
-With JavaScript:
-
-```js
-exports.invocationConfig = config;
-
-// or
-
-module.exports = {
-  invocationConfig: config,
-};
-```
-
-With TypeScript:
-
-```
-export const invocationConfig = config;
-```
-
-Here is an example of an integration configuration:
+This SDK supports building JupiterOne integrations using either JavaScript or
+TypeScript. The execution process expects the integration to produce an object
+conforming to the `IntegrationInvocationConfig` interface:
 
 ```typescript
 export const invocationConfig: IntegrationInvocationConfig = {
@@ -131,6 +103,15 @@ export const invocationConfig: IntegrationInvocationConfig = {
   ],
 };
 ```
+
+This includes required configuration fields needed to run the integration, a
+function for performing config field validation, a function for determining
+which steps of an integration to ignore, and a list of steps that define how an
+integration should collect data.
+
+The SDK execution process will construct this object based on an opinionated
+directory layout. Use the provided
+[Integration Template](/template/README.md#project-structure) to get started.
 
 ### `IntegrationInvocationConfig` fields
 
