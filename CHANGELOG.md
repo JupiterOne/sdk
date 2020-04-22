@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Added
+
+- Adding the `j1-integration visualize` command that uses `vis-network` to
+  visualize entities and their relationships generated through the
+  `j1-integration collect` command.
+
 ## 0.7.0 - 2020-04-22
 
 ### Added
@@ -25,6 +33,7 @@ and this project adheres to
 
 - Fixed issue with dependency graph failing to wait for step dependencies to
   complete prior to performing more work
+
 
 ## 0.6.0 - 2020-04-21
 

@@ -11,6 +11,8 @@ import {
   walkDirectory,
   symlink,
   removeStorageDirectory,
+  writeFileToPath,
+  readJsonFromPath,
 } from '../fileSystem';
 
 import { toUnixPath } from './toUnixPath';
@@ -46,7 +48,9 @@ describe('writeJsonToPath', () => {
     );
     expect(writtenData).toEqual(JSON.stringify(json, null, 2));
   });
+});
 
+describe('writeFileToPath', () => {
   test('should recursively create directories prior to writing', async () => {
     const json = { woah: 'json' };
 
@@ -64,9 +68,9 @@ describe('writeJsonToPath', () => {
     const mkdirSpy = jest.spyOn(fs, 'mkdir');
     const writeFileSpy = jest.spyOn(fs, 'writeFile');
 
-    await writeJsonToPath({
+    await writeFileToPath({
       path: filename,
-      data: json,
+      content: JSON.stringify(json, null, 2),
     });
 
     const writtenData = await fs.readFile(
@@ -97,9 +101,9 @@ describe('writeJsonToPath', () => {
 
     const filename = `${uuid()}.json`;
 
-    await writeJsonToPath({
+    await writeFileToPath({
       path: filename,
-      data: json,
+      content: JSON.stringify(json, null, 2),
     });
 
     const expectedFilePath = path.join(getRootStorageDirectory(), filename);
@@ -108,6 +112,19 @@ describe('writeJsonToPath', () => {
     expect(volData).toEqual({
       [toUnixPath(expectedFilePath)]: JSON.stringify(json, null, 2),
     });
+  });
+});
+
+describe('readJsonFromPath', () => {
+  it('should read json file into object', async () => {
+    const json = { key: 'value' };
+    vol.fromJSON({
+      'file.json': JSON.stringify(json),
+    });
+
+    const content = await readJsonFromPath('file.json');
+
+    expect(content).toEqual(json);
   });
 });
 

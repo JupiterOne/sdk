@@ -1,8 +1,11 @@
+import path from 'path';
 import { createCli } from '../index';
 import { loadProjectStructure } from '../../__tests__/loadProjectStructure';
 import * as log from '../../log';
 
 import { IntegrationStepResultStatus } from '../../framework/execution';
+import * as nodeFs from 'fs';
+const fs = nodeFs.promises;
 
 jest.mock('../../log');
 
@@ -221,5 +224,67 @@ describe('collect', () => {
         },
       });
     });
+  });
+});
+
+describe('visualize', () => {
+  let htmlFileLocation;
+  beforeEach(() => {
+    loadProjectStructure('typeScriptVisualizeProject');
+    htmlFileLocation = path.resolve(
+      process.cwd(),
+      'custom-integration',
+      'index.html',
+    );
+  });
+
+  test('writes graph to html file', async () => {
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'visualize',
+      '--data-dir',
+      'custom-integration',
+    ]);
+
+    const content = await fs.readFile(htmlFileLocation, 'utf8');
+
+    const nodesRegex = /var nodes = new vis.DataSet\(\[{.*},{.*}\]\);/g;
+    const edgesRegex = /var edges = new vis.DataSet\(\[{.*}\]\);/g;
+
+    expect(log.info).toHaveBeenCalledWith(
+      `Visualize graph here: ${htmlFileLocation}`,
+    );
+    expect(content).toEqual(expect.stringMatching(nodesRegex));
+    expect(content).toEqual(expect.stringMatching(edgesRegex));
+  });
+});
+
+describe('collect/visualize integration', () => {
+  let htmlFileLocation;
+  beforeEach(() => {
+    loadProjectStructure('typeScriptIntegrationProject');
+
+    htmlFileLocation = path.resolve(
+      process.cwd(),
+      '.j1-integration/graph',
+      'index.html',
+    );
+  });
+
+  test('creates graph based on integration data', async () => {
+    await createCli().parseAsync(['node', 'j1-integration', 'collect']);
+    await createCli().parseAsync(['node', 'j1-integration', 'visualize']);
+
+    const content = await fs.readFile(htmlFileLocation, 'utf8');
+
+    const nodesRegex = /var nodes = new vis.DataSet\(\[{.*},{.*}\]\);/g;
+    const edgesRegex = /var edges = new vis.DataSet\(\[{.*}\]\);/g;
+
+    expect(log.info).toHaveBeenCalledWith(
+      `Visualize graph here: ${htmlFileLocation}`,
+    );
+    expect(content).toEqual(expect.stringMatching(nodesRegex));
+    expect(content).toEqual(expect.stringMatching(edgesRegex));
   });
 });

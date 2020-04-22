@@ -27,7 +27,7 @@
     "format": "prettier --write '**/*.{ts,js,json,css,md,yml}'",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:ci": "yarn lint && yarn type-check && yarn test",
+    "test:ci": "yarn lint && yarn type-check && yarn test --ci",
     "prebuild": "yarn test:ci",
     "build": "tsc -p tsconfig.dist.json --declaration",
     "prepublishOnly": "yarn build"
@@ -49,6 +49,7 @@
     "p-map": "^4.0.0",
     "p-queue": "^6.3.0",
     "rimraf": "^3.0.2",
+    "upath": "^1.2.0",
     "uuid": "^7.0.3"
   },
   "devDependencies": {
@@ -60,6 +61,7 @@
     "@types/pollyjs__persister": "^2.0.1",
     "@types/rimraf": "^3.0.0",
     "@types/uuid": "^7.0.2",
+    "@types/vis": "^4.21.19",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
@@ -67,7 +69,7 @@
     "eslint-plugin-jest": "^23.8.2",
     "eslint-plugin-prettier": "^3.1.2",
     "get-port": "^5.1.1",
-    "husky": "^4.2.3",
+    "husky": "^4.2.5",
     "jest": "^25.2.6",
     "jest-extended": "^0.11.5",
     "lint-staged": "^10.1.1",
@@ -130,7 +132,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "yarn build"
     }
   },
   "lint-staged": {

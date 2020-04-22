@@ -32,11 +32,31 @@ export async function writeJsonToPath({
   path: relativePath,
   data,
 }: WriteDataToPathInput) {
+  await writeFileToPath({
+    path: relativePath,
+    content: JSON.stringify(data, null, 2),
+  });
+}
+
+interface WriteContentToPathInput {
+  path: string;
+  content: string;
+}
+
+export async function writeFileToPath({
+  path: relativePath,
+  content,
+}: WriteContentToPathInput) {
   const directory = getRootStorageDirectory();
   const fullPath = path.resolve(directory, relativePath);
 
   await ensurePathCanBeWrittenTo(fullPath);
-  await fs.writeFile(fullPath, JSON.stringify(data, null, 2), 'utf8');
+  await fs.writeFile(fullPath, content, 'utf8');
+}
+
+export async function readJsonFromPath<T>(path: string) {
+  const entityJson = await fs.readFile(path, 'utf8');
+  return JSON.parse(entityJson) as T;
 }
 
 interface SymlinkInput {
