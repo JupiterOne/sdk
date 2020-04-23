@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/framework/index.js",
   "types": "dist/framework/index.d.ts",
@@ -33,7 +33,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@jupiterone/data-model": "^0.2.0",
+    "@jupiterone/data-model": "^0.2.3",
     "@pollyjs/adapter-node-http": "^4.0.4",
     "@pollyjs/core": "^4.0.4",
     "@pollyjs/persister-fs": "^4.0.4",

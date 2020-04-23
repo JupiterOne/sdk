@@ -16,6 +16,7 @@ const networkResourceEntity = {
   _class: ['Network'],
   _type: 'azure_vpc',
   _rawData: [{ name: 'default', rawData: networkSourceData }],
+  id: 'natural-identifier',
   name: 'My Network',
   displayName: 'My Network',
   environment: 'production',
