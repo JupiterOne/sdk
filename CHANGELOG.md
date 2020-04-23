@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.9.0 2020-04-23
+
 ### Added
 
 - A `summary.json` file containing information about steps results and partial
