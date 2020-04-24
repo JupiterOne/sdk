@@ -103,6 +103,32 @@ test('redacts cookies from responses', async () => {
   );
 });
 
+test('always redacts headers that are well known sensitive headers', async () => {
+  recording = setupRecording({
+    name: 'test',
+    directory: __dirname,
+  });
+
+  await fetch(`http://localhost:${server.port}`, {
+    headers: {
+      authorization: 'Bearer MyToken',
+    },
+  });
+
+  await recording.stop();
+
+  const har = await getRecording();
+
+  expect(har.log.entries[0].request.headers).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        name: 'authorization',
+        value: '[REDACTED]',
+      }),
+    ]),
+  );
+});
+
 test('redacts headers based on input', async () => {
   recording = setupRecording({
     name: 'test',

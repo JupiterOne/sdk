@@ -20,6 +20,8 @@ interface SetupRecordingInput {
   options?: PollyConfig;
 }
 
+const SENSITIVE_HEADER_NAMES = ['authorization'].map((i) => i.toLowerCase());
+
 /**
  * @description Sets up a recording of all http requests and
  * writes the data to disk when it is stopped.
@@ -55,9 +57,10 @@ export function setupRecording({
   mutateRequest,
   options,
 }: SetupRecordingInput): Polly {
-  const redactedRequestHeadersSet = new Set<string>(
-    redactedRequestHeaders.map((h) => h.toLowerCase()),
-  );
+  const redactedRequestHeadersSet = new Set<string>([
+    ...redactedRequestHeaders.map((h) => h.toLowerCase()),
+    ...SENSITIVE_HEADER_NAMES,
+  ]);
 
   const redactedResponseHeadersSet = new Set<string>([
     ...redactedResponseHeaders.map((h) => h.toLowerCase()),
