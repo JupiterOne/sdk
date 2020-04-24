@@ -12,6 +12,7 @@ and this project adheres to
 
 - Added `mutateRequest` function to recording to allow mutating the
   `PollyRequest` object pre-flight.
+- Auto redact `authorization` header for request entries.
 
 ### Fixed
 
