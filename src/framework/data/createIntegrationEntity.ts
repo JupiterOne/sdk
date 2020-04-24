@@ -202,7 +202,8 @@ function whitelistedProviderData(
   const whitelistedProviderData: ProviderSourceData = {};
   const schemaProperties = schemaWhitelistedPropertyNames(_class);
   for (const e of Object.entries(source)) {
-    if (schemaProperties.includes(e[0])) {
+    const hasValue = e[1] !== null && e[1] !== undefined;
+    if (hasValue && schemaProperties.includes(e[0])) {
       whitelistedProviderData[e[0]] = e[1];
     }
   }
