@@ -12,6 +12,13 @@ and this project adheres to
 
 ### Fixed
 
+## 0.11.1 2020-04-24
+
+### Fixed
+
+- createIntegrationEntity failing on properties with null values that exist in
+  the data-model schema
+
 ## 0.11.0 2020-04-24
 
 ### Added
