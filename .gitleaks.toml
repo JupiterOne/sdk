@@ -1,0 +1,4 @@
+[whitelist]
+  files = [
+    "(.*?)(jpg|gif|doc|pdf|bin|lock)$"
+  ]
