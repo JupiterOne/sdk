@@ -10,12 +10,22 @@ and this project adheres to
 
 ### Added
 
+### Fixed
+
+## 0.11.0 2020-04-24
+
+### Added
+
 - Added `mutateRequest` function to recording to allow mutating the
   `PollyRequest` object pre-flight.
 - Auto redact `authorization` header for request entries.
 - Added gitleaks to template actions.
 
 ### Fixed
+
+## 0.10.0 2020-04-23
+
+- updated data model to latest
 
 ## 0.9.0 2020-04-23
 
