@@ -36,7 +36,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
 
     if (!config.clientId || !config.clientSecret) {
       throw new IntegrationInstanceConfigError(
-        "Config requires a clientId and clientSecret to be provided",
+        'Config requires a clientId and clientSecret to be provided',
       );
     }
 
@@ -45,8 +45,8 @@ export const invocationConfig: IntegrationInvocationConfig = {
 
   getStepStartStates(
     executionContext: IntegrationExecutionContext,
-  ) IntegrationStepStartStates {
-    const { config } = executionContext.instance
+  ): IntegrationStepStartStates {
+    const { config } = executionContext.instance;
 
     const notDisabled = { disabled: false };
     const shouldIngestGroups = config.ingestGroups;
@@ -55,7 +55,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
       'fetch-accounts': notDisabled,
       'fetch-users': notDisabled,
       'fetch-groups': { disabled: !config.ingestGroups },
-    }
+    };
   },
 
   integrationSteps: [
@@ -63,7 +63,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
       id: 'step-fetch-accounts',
       name: 'Fetch Accounts',
       types: ['my_integration_account'],
-      async executionHandler (
+      async executionHandler(
         executionContext: IntegrationStepExecutionContext,
       ) {
         return fetchAccounts(executionContext);
@@ -73,7 +73,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
       id: 'step-fetch-users',
       name: 'Fetch Users',
       types: ['my_integration_user'],
-      async executionHandler (
+      async executionHandler(
         executionContext: IntegrationStepExecutionContext,
       ) {
         return fetchUsers(executionContext);
@@ -83,9 +83,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
       id: 'step-fetch-groups',
       name: 'Fetch Groups',
       types: ['my_integration_group'],
-      executionHandler (
-        executionContext: IntegrationStepExecutionContext,
-      ) {
+      executionHandler(executionContext: IntegrationStepExecutionContext) {
         return fetchGroups(executionContext);
       },
     },
@@ -94,7 +92,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
       name: 'Build relationships',
       types: ['my_integration_user_to_group_relationship'],
       dependsOn: ['step-fetch-users', 'step-fetch-groups'],
-      async executionHandler (
+      async executionHandler(
         executionContext: IntegrationStepExecutionContext,
       ) {
         return fetchAccounts(executionContext);
