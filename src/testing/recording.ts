@@ -16,14 +16,35 @@ interface SetupRecordingInput {
   redactedRequestHeaders?: string[];
   redactedResponseHeaders?: string[];
   mutateEntry?: (entry: any) => void;
+  mutateRequest?: (request: any) => void;
   options?: PollyConfig;
 }
 
 /**
- * Sets up a recording of all http requests and
+ * @description Sets up a recording of all http requests and
  * writes the data to disk when it is stopped.
- *
  * This leverages Polly.js to do all the heavy lifting.
+ * @param input.mutateRequest - allows mutating the `PollyRequest` object
+ * pre flight, this affects how the request is sent out and also how it
+ * is stored.  This is currently the only known way to get compressed (gzip, broli, etc.)
+ * requests to persist their body to the har file.
+ * See: https://github.com/Netflix/pollyjs/blob/master/packages/%40pollyjs/core/src/-private/request.js#L30
+ * @example
+ * ```typescript
+ * let recording;
+ * beforeEach(() => {
+ *   recording = setupRecording({
+ *     directory: __dirname,
+ *     name: 'my recording',
+ *     mutateEntry: (entry) => entry.response.content.text = '',
+ *     mutateRequest: (request) => request.body = '';
+ *  });
+ * });
+ * test('does some stuff', async () => {
+ *   // make some requests
+ * });
+ * afterEach(async () => await recording.stop());
+ * ```
  */
 export function setupRecording({
   directory,
@@ -31,6 +52,7 @@ export function setupRecording({
   redactedRequestHeaders = [],
   redactedResponseHeaders = [],
   mutateEntry,
+  mutateRequest,
   options,
 }: SetupRecordingInput): Polly {
   const redactedRequestHeadersSet = new Set<string>(
@@ -77,8 +99,19 @@ export function setupRecording({
     }
   }
 
+  class JupiterOneIntegrationAdapter extends NodeHttpAdapter {
+    static get id() {
+      return 'JupiterOneIntegrationAdapter';
+    }
+    onRequest(pollyRequest: any) {
+      mutateRequest?.(pollyRequest);
+      return super.onRequest(pollyRequest);
+    }
+  }
+  Polly.register(JupiterOneIntegrationAdapter);
+
   const defaultOptions = {
-    adapters: ['node-http'],
+    adapters: [JupiterOneIntegrationAdapter.id],
     persister: JupiterOneIntegationFSPersister,
     persisterOptions: {
       JupiterOneIntegationFSPersister: {

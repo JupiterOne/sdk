@@ -203,6 +203,45 @@ test('allows for overriding matchRequestBy options with deepDefault', async () =
   expect(har.log.entries).toHaveLength(1);
 });
 
+test('allows mutating a request preflight changing what is stored in the har file.', async () => {
+  const header = 'test-header';
+  const headerVal = 'oh hai';
+  recording = setupRecording({
+    name: 'test',
+    directory: __dirname,
+    options: {
+      matchRequestsBy: {
+        order: false,
+        url: {
+          query: false,
+        },
+      },
+    },
+    mutateRequest: (request) => {
+      const [incomingHeaderVal] = request.getHeader(header);
+      // un gzip the body so polly can save it.
+      if (incomingHeaderVal === headerVal) {
+        request.body = 'mutated';
+      }
+    },
+  });
+
+  await fetch(`http://localhost:${server.port}`, {
+    method: 'post',
+    body: 'not mutated',
+    headers: {
+      [header]: headerVal,
+    },
+  });
+  await recording.stop();
+
+  const har = await getRecording();
+  expect(har.log.entries).toHaveLength(1);
+  expect(
+    har.log.entries.some((e: any) => e.request.postData.text === 'mutated'),
+  ).toEqual(true);
+});
+
 async function startServer(statusCode?: number) {
   statusCode = statusCode ? statusCode : 200;
   const server = http.createServer((req, res) => {
