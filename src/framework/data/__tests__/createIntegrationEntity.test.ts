@@ -240,4 +240,31 @@ describe('createIntegrationEntity', () => {
       })._rawData,
     ).toEqual([]);
   });
+
+  test.each([null, undefined])(
+    'allow entities with %s properties to be created',
+    (value) => {
+      const entity = createIntegrationEntity({
+        entityData: {
+          assign: networkAssigns,
+          source: {
+            ...networkSourceData,
+            status: value,
+            createdOn: value,
+          },
+        },
+      });
+
+      const { rawData } = entity._rawData[0];
+
+      expect(rawData).toHaveProperty('status');
+      expect(rawData).toHaveProperty('createdOn');
+      expect(rawData).toEqual(
+        expect.objectContaining({
+          createdOn: value,
+          status: value,
+        }),
+      );
+    },
+  );
 });
