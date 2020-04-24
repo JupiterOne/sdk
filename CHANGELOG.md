@@ -8,6 +8,13 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Added `mutateRequest` function to recording to allow mutating the
+  `PollyRequest` object pre-flight.
+
+### Fixed
+
 ## 0.9.0 2020-04-23
 
 ### Added
