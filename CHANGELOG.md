@@ -12,7 +12,7 @@ and this project adheres to
 
 ### Fixed
 
-## 0.11.1 2020-04-24
+## 0.11.2 2020-04-24
 
 ### Fixed
 
