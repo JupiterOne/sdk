@@ -67,7 +67,6 @@
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-jest": "^23.8.2",
-    "eslint-plugin-prettier": "^3.1.2",
     "get-port": "^5.1.1",
     "husky": "^4.2.5",
     "jest": "^25.2.6",
@@ -105,7 +104,7 @@
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
       "plugin:jest/recommended",
-      "plugin:prettier/recommended"
+      "prettier"
     ],
     "env": {
       "node": true,
