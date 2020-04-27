@@ -4,6 +4,7 @@ import {
   IntegrationStepResult,
   IntegrationStepResultStatus,
 } from './framework/execution';
+import { SynchronizationJob } from './framework/synchronization';
 
 export function debug(msg: string) {
   console.log(`${chalk.gray(msg)}`);
@@ -50,4 +51,11 @@ function getStepStatusText(status: IntegrationStepResultStatus) {
     case IntegrationStepResultStatus.DISABLED:
       return chalk.gray(status);
   }
+}
+
+export function displaySynchronizationResults(job: SynchronizationJob) {
+  info('\nSynchronization results:\n');
+  info(`Synchronization job status: ${chalk.cyan(job.status)}`);
+  info(`Entities uploaded: ${chalk.cyan(job.numEntitiesUploaded)}`);
+  info(`Relationships uploaded: ${chalk.cyan(job.numRelationshipsUploaded)}`);
 }
