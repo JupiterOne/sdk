@@ -1,4 +1,7 @@
 import path from 'path';
+import chunk from 'lodash/chunk';
+import pMap from 'p-map';
+
 import { ApiClient } from '../api';
 
 import { SynchronizationJob } from './types';
@@ -17,8 +20,12 @@ import {
   unexpectedSynchronizationError,
   integrationInstanceNotFoundError,
 } from './error';
+import { Entity, Relationship } from '../types';
 
 export * from './types';
+
+const UPLOAD_BATCH_SIZE = 250;
+const UPLOAD_CONCURRENCY = 2;
 
 interface SynchronizeInput {
   logger: IntegrationLogger;
@@ -139,39 +146,19 @@ async function getPartialDatasets() {
 /**
  * Uploads data collected by the integration into the
  */
-export async function uploadCollectedData({
-  apiClient,
-  job,
-  logger,
-}: SynchronizationJobContext) {
+export async function uploadCollectedData(context: SynchronizationJobContext) {
   await walkDirectory({
     path: 'graph',
-    async iteratee({ filePath, data }) {
-      logger.info(
-        {
-          file: path.relative(getRootStorageDirectory(), filePath),
-        },
-        'Uploading...',
-      );
-
+    async iteratee({ data }) {
       const parsedData = JSON.parse(data);
 
       try {
-        if (Array.isArray(parsedData.entities) && parsedData.entities.length) {
-          await apiClient.post(
-            `/persister/synchronization/jobs/${job.id}/entities`,
-            { entities: parsedData.entities },
-          );
+        if (Array.isArray(parsedData.entities)) {
+          await uploadData(context, 'entities', parsedData.entities);
         }
 
-        if (
-          Array.isArray(parsedData.relationships) &&
-          parsedData.relationships.length
-        ) {
-          await apiClient.post(
-            `/persister/synchronization/jobs/${job.id}/relationships`,
-            { relationships: parsedData.relationships },
-          );
+        if (Array.isArray(parsedData.relationships)) {
+          await uploadData(context, 'relationships', parsedData.relationships);
         }
       } catch (err) {
         if (err.response) {
@@ -183,4 +170,29 @@ export async function uploadCollectedData({
       }
     },
   });
+}
+
+interface UploadDataLookup {
+  entities: Entity;
+  relationships: Relationship;
+}
+
+async function uploadData<T extends UploadDataLookup, K extends keyof T>(
+  { job, apiClient }: SynchronizationJobContext,
+  type: K,
+  data: T[K][],
+) {
+  const batches = chunk(data, UPLOAD_BATCH_SIZE);
+  await pMap(
+    batches,
+    async (batch: T[K][]) => {
+      if (batch.length) {
+        await apiClient.post(
+          `/persister/synchronization/jobs/${job.id}/${type}`,
+          { [type]: data },
+        );
+      }
+    },
+    { concurrency: UPLOAD_CONCURRENCY },
+  );
 }
