@@ -28,9 +28,7 @@ describe('getApiBaseUrl', () => {
   });
 
   test('defaults to returning the production base url', () => {
-    expect(getApiBaseUrl({ dev: false })).toEqual(
-      'https://api.us.jupiterone.io',
-    );
+    expect(getApiBaseUrl()).toEqual('https://api.us.jupiterone.io');
   });
 });
 

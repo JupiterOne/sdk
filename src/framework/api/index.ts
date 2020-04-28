@@ -22,7 +22,7 @@ interface CreateApiClientFromApiKeyInput {
 }
 
 /**
- * Creates an account using an API key
+ * Creates an API client using an API key
  */
 export function createApiClientWithApiKey({
   apiBaseUrl,
