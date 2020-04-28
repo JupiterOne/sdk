@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "A JupiterOne Integration",
   "license": "MPL-2.0",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "start": "j1-integration collect",
     "graph": "j1-integration visualize",
