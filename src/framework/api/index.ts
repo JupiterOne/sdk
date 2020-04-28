@@ -1,6 +1,7 @@
 import Alpha from '@lifeomic/alpha';
 import { AxiosInstance } from 'axios';
-import decodeJwt from 'jwt-decode';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
 import { malformedApiKeyError, apiKeyRequiredError } from './error';
 
@@ -42,7 +43,7 @@ export function createApiClientWithApiKey({
 function extractAccountFromApiKey(apiKey: string): string {
   let token: ApiKeyToken;
   try {
-    token = decodeJwt(apiKey);
+    token = jwt.decode(apiKey);
   } catch (err) {
     throw malformedApiKeyError();
   }
@@ -98,6 +99,8 @@ export function getApiBaseUrl({ dev }: GetApiBaseUrlInput = { dev: false }) {
 }
 
 export function getApiKeyFromEnvironment(): string {
+  dotenv.config();
+
   const apiKey = process.env.JUPITERONE_API_KEY;
 
   if (!apiKey) {

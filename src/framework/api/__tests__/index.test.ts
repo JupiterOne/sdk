@@ -1,6 +1,6 @@
 import { mocked } from 'ts-jest/utils';
 import Alpha from '@lifeomic/alpha';
-import decodeJwt from 'jwt-decode';
+import jwt from 'jsonwebtoken';
 
 import {
   getApiBaseUrl,
@@ -9,10 +9,10 @@ import {
 } from '../index';
 
 jest.mock('@lifeomic/alpha');
-jest.mock('jwt-decode');
+jest.mock('jsonwebtoken');
 
 const AlphaMock = mocked(Alpha);
-const decodeJwtMock = mocked(decodeJwt);
+const decodeJwtMock = mocked(jwt.decode);
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {

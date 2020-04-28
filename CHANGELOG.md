@@ -10,6 +10,9 @@ and this project adheres to
 
 ### Added
 
+- Added `sync` command to cli for synchronizing collected data with the
+  JupiterOne graph.
+
 ### Fixed
 
 ## 0.11.4 2020-04-24
