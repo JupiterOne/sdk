@@ -12,7 +12,7 @@ const bunyanFormat = require('bunyan-format');
 
 interface CreateIntegrationLoggerInput {
   name: string;
-  invocationConfig: IntegrationInvocationConfig;
+  invocationConfig?: IntegrationInvocationConfig;
   pretty?: boolean;
   serializers?: Logger.Serializers;
 }
@@ -42,7 +42,7 @@ export function createIntegrationLogger({
   const logger = Logger.createLogger(loggerConfig);
 
   const serializeInstanceConfig = createInstanceConfigSerializer(
-    invocationConfig.instanceConfigFields,
+    invocationConfig?.instanceConfigFields,
   );
 
   logger.addSerializers({
