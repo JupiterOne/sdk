@@ -1,20 +1,19 @@
+import { removeStorageDirectory, writeJsonToPath } from '../../fileSystem';
+import { createIntegrationInstanceForLocalExecution } from './instance';
+import { createIntegrationLogger } from './logger';
 import {
-  IntegrationInvocationConfig,
+  determinePartialDatasetsFromStepExecutionResults,
+  executeSteps,
+  getDefaultStepStartStates,
+} from './step';
+import {
   IntegrationExecutionContext,
+  IntegrationInstance,
+  IntegrationInvocationConfig,
+  IntegrationLogger,
   IntegrationStepResult,
   PartialDatasets,
 } from './types';
-
-import { createIntegrationLogger } from './logger';
-import { createIntegrationInstanceForLocalExecution } from './instance';
-
-import {
-  executeSteps,
-  getDefaultStepStartStates,
-  determinePartialDatasetsFromStepExecutionResults,
-} from './step';
-
-import { removeStorageDirectory, writeJsonToPath } from '../../fileSystem';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -24,23 +23,36 @@ export interface ExecuteIntegrationResult {
 }
 
 /**
- * Starts local execution of an integration
+ * Starts execution of an integration instance generated from local environment
+ * variables.
  */
 export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
-  const logger = createIntegrationLogger({
-    name: 'Local',
-    invocationConfig: config,
-    pretty: true,
-  });
+  return executeIntegrationInstance(
+    createIntegrationLogger({
+      name: 'Local',
+      invocationConfig: config,
+      pretty: true,
+    }),
+    createIntegrationInstanceForLocalExecution(config),
+    config,
+  );
+}
 
-  const instance = createIntegrationInstanceForLocalExecution(config);
-
-  const context: IntegrationExecutionContext = {
-    instance,
-    logger,
-  };
-
-  return executeIntegration(context, config);
+/**
+ * Starts execution of an integration instance.
+ */
+export async function executeIntegrationInstance(
+  logger: IntegrationLogger,
+  instance: IntegrationInstance,
+  config: IntegrationInvocationConfig,
+): Promise<ExecuteIntegrationResult> {
+  return executeIntegration(
+    {
+      instance,
+      logger,
+    },
+    config,
+  );
 }
 
 /**
