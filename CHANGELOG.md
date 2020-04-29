@@ -8,6 +8,13 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.15.0 2020-04-29
+
+### Added
+
+- Allow storage directory to be specified via
+  `JUPITERONE_INTEGRATION_STORAGE_DIRECTORY`
+
 ## 0.14.1 2020-04-29
 
 ### Changed
