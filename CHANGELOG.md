@@ -12,6 +12,9 @@ and this project adheres to
 
 - Added `sync` command to cli for synchronizing collected data with the
   JupiterOne graph.
+- Exporting `loadConfig()`, `executeIntegrationInstance()`, and
+  `createIntegrationLogger()` to allow for setup and execution with alternative,
+  non-generated local configuration.
 
 ### Fixed
 
