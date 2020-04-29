@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Added `run` command to cli for performing both data collection and
+  synchronization.
+
 ## 0.13.0 2020-04-29
 
 ### Added
