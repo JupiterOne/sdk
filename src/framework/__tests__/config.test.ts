@@ -36,9 +36,11 @@ describe('loadConfig', () => {
   test('allows for a project directory to be used for loading configs', async () => {
     const typescriptProjectPath = getProjectDirectoryPath('typeScriptProject');
 
-    expect(process.cwd()).not.toEqual(typescriptProjectPath);
+    expect(path.resolve(process.cwd(), 'src')).not.toEqual(
+      typescriptProjectPath,
+    );
 
-    const config = await loadConfig(typescriptProjectPath);
+    const config = await loadConfig(path.resolve(typescriptProjectPath, 'src'));
 
     expect(config).toEqual({
       instanceConfigFields: {
