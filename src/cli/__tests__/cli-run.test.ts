@@ -12,6 +12,7 @@ import {
 } from './util/synchronization';
 
 import { SynchronizationJobStatus } from '../../framework/synchronization';
+import { IntegrationStepResultStatus } from '../../framework';
 
 import * as log from '../../log';
 
@@ -25,7 +26,7 @@ let polly: Polly;
 beforeEach(() => {
   process.env.JUPITERONE_API_KEY = jwt.sign({ account: 'mochi' }, 'test');
 
-  polly = new Polly('sync-cli', {
+  polly = new Polly('run-cli', {
     adapters: ['node-http'],
     persister: 'fs',
     logging: false,
@@ -34,7 +35,7 @@ beforeEach(() => {
     },
   });
 
-  loadProjectStructure('synchronization');
+  loadProjectStructure('typeScriptIntegrationProject');
 
   jest.spyOn(process, 'exit').mockImplementation((code: number) => {
     throw new Error(`Process exited with code ${code}`);
@@ -43,11 +44,10 @@ beforeEach(() => {
 
 afterEach(async () => {
   delete process.env.JUPITERONE_API_KEY;
-  delete process.env.JUPITERONE_DEV;
   await polly.disconnect();
 });
 
-test('uploads data to the synchronization api and displays the results', async () => {
+test('executes integration and performs upload', async () => {
   const job = generateSynchronizationJob();
 
   setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
@@ -55,62 +55,43 @@ test('uploads data to the synchronization api and displays the results', async (
   await createCli().parseAsync([
     'node',
     'j1-integration',
-    'sync',
+    'run',
     '--integrationInstanceId',
     'test',
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-  expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
-    ...job,
-    status: SynchronizationJobStatus.FINALIZE_PENDING,
-    // We arrive at these numbers because of what
-    // was written to disk in the 'synchronization' project fixture
-    numEntitiesUploaded: 6,
-    numRelationshipsUploaded: 3,
+
+  expect(log.displayExecutionResults).toHaveBeenCalledWith({
+    integrationStepResults: [
+      {
+        id: 'fetch-accounts',
+        name: 'Fetch Accounts',
+        types: ['my_account'],
+        status: IntegrationStepResultStatus.SUCCESS,
+      },
+      {
+        id: 'fetch-users',
+        name: 'Fetch Users',
+        types: ['my_user'],
+        status: IntegrationStepResultStatus.SUCCESS,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: [],
+      },
+    },
   });
-});
-
-test('hits dev urls if JUPITERONE_DEV environment variable is set', async () => {
-  process.env.JUPITERONE_DEV = 'true';
-
-  const job = generateSynchronizationJob();
-
-  setupSynchronizerApi({
-    polly,
-    job,
-    baseUrl: 'https://api.dev.jupiterone.io',
-  });
-
-  await createCli().parseAsync([
-    'node',
-    'j1-integration',
-    'sync',
-    '--integrationInstanceId',
-    'test',
-  ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
   expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
     ...job,
     status: SynchronizationJobStatus.FINALIZE_PENDING,
-    // We arrive at these numbers because of what
-    // was written to disk in the 'synchronization' project fixture
-    numEntitiesUploaded: 6,
-    numRelationshipsUploaded: 3,
+    // These are the expected number of entities and relationships
+    // collected when executing the
+    // 'typeScriptIntegrationProject' fixture
+    numEntitiesUploaded: 2,
+    numRelationshipsUploaded: 1,
   });
-});
-
-test('throws if JUPITERONE_API_KEY is not set', async () => {
-  delete process.env.JUPITERONE_API_KEY;
-
-  await expect(
-    createCli().parseAsync([
-      'node',
-      'j1-integration',
-      'sync',
-      '--integrationInstanceId',
-      'test',
-    ]),
-  ).rejects.toThrow('JUPITERONE_API_KEY environment variable must be set');
 });
