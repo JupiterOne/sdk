@@ -23,20 +23,18 @@ import {
  * ./src/validateInvocation
  */
 export async function loadConfig(
-  projectDirectory: string = process.cwd(),
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ): Promise<IntegrationInvocationConfig> {
-  log.debug('Loading integration configuration...\n');
-
-  if (await isTypescriptPresent(projectDirectory)) {
+  if (await isTypescriptPresent(projectSourceDirectory)) {
     log.debug('TypeScript files detected. Registering ts-node.');
     registerTypescript();
   }
 
   const config = {
-    instanceConfigFields: loadInstanceConfigFields(projectDirectory),
-    validateInvocation: loadValidateInvocationFunction(projectDirectory),
-    getStepStartStates: loadGetStepStartStatesFunction(projectDirectory),
-    integrationSteps: await loadIntegrationSteps(projectDirectory),
+    instanceConfigFields: loadInstanceConfigFields(projectSourceDirectory),
+    validateInvocation: loadValidateInvocationFunction(projectSourceDirectory),
+    getStepStartStates: loadGetStepStartStatesFunction(projectSourceDirectory),
+    integrationSteps: await loadIntegrationSteps(projectSourceDirectory),
   };
 
   return config;
@@ -46,10 +44,10 @@ export async function loadConfig(
  * Loads instanceConfigFields from ./src/instanceConfigFields
  */
 export function loadInstanceConfigFields(
-  projectDirectory: string = process.cwd(),
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ) {
   return loadModuleContent<IntegrationInstanceConfigFieldMap>(
-    path.resolve(projectDirectory, 'src', 'instanceConfigFields'),
+    path.resolve(projectSourceDirectory, 'instanceConfigFields'),
   );
 }
 
@@ -57,10 +55,10 @@ export function loadInstanceConfigFields(
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
 export function loadValidateInvocationFunction(
-  projectDirectory: string = process.cwd(),
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ) {
   return loadModuleContent<InvocationValidationFunction>(
-    path.resolve(projectDirectory, 'src', 'validateInvocation'),
+    path.resolve(projectSourceDirectory, 'validateInvocation'),
   );
 }
 
@@ -68,19 +66,19 @@ export function loadValidateInvocationFunction(
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
 export function loadGetStepStartStatesFunction(
-  projectDirectory: string = process.cwd(),
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ) {
   return loadModuleContent<GetStepStartStatesFunction>(
-    path.resolve(projectDirectory, 'src', 'getStepStartStates'),
+    path.resolve(projectSourceDirectory, 'getStepStartStates'),
   );
 }
 
 export async function loadIntegrationSteps(
-  projectDirectory: string = process.cwd(),
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ): Promise<IntegrationStep[]> {
   let files: string[] = [];
 
-  const stepsDir = path.resolve(projectDirectory, 'src', 'steps');
+  const stepsDir = path.resolve(projectSourceDirectory, 'steps');
 
   try {
     files = await fs.readdir(stepsDir);
@@ -106,7 +104,9 @@ export function loadModuleContent<T>(modulePath: string): T | undefined {
   return integrationModule?.default ?? integrationModule;
 }
 
-async function isTypescriptPresent(projectDirectory: string = process.cwd()) {
+async function isTypescriptPresent(
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
+) {
   // NOTE: this does not use path.join because globby
   // (which uses fast-glob, which uses micromatch)
   // requires that forward slashes are used.
@@ -114,8 +114,8 @@ async function isTypescriptPresent(projectDirectory: string = process.cwd()) {
   // Refs:
   // - https://github.com/mrmlnc/fast-glob#pattern-syntax
   // - https://github.com/micromatch/micromatch#backslashes
-  const paths = await globby('src/**/*.ts', {
-    cwd: projectDirectory,
+  const paths = await globby('**/*.ts', {
+    cwd: projectSourceDirectory,
   });
   return paths.length > 0;
 }

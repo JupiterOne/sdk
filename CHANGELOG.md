@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Stop assuming that project files will be in `src` directory in `loadConfig` to
+  allow for easier usage against bundled integrations.
+
 ## 0.14.0 2020-04-29
 
 ### Added
