@@ -12,6 +12,7 @@ and this project adheres to
 
 - Added `run` command to cli for performing both data collection and
   synchronization.
+- Expose `createApiClient` and synchronization functions
 
 ## 0.13.0 2020-04-29
 

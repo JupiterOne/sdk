@@ -6,3 +6,7 @@ export * from './visualization';
 export * from './types';
 
 export { loadConfig } from './config';
+
+export { createApiClient } from './api';
+
+export * from './synchronization';
