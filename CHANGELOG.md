@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.14.1 2020-04-29
+
 ### Changed
 
 - Stop assuming that project files will be in `src` directory in `loadConfig` to
