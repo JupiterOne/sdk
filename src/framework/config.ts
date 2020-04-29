@@ -22,19 +22,21 @@ import {
  * ./src/getStepStartStates
  * ./src/validateInvocation
  */
-export async function loadConfig(): Promise<IntegrationInvocationConfig> {
+export async function loadConfig(
+  projectDirectory: string = process.cwd(),
+): Promise<IntegrationInvocationConfig> {
   log.debug('Loading integration configuration...\n');
 
-  if (await isTypescriptPresent()) {
+  if (await isTypescriptPresent(projectDirectory)) {
     log.debug('TypeScript files detected. Registering ts-node.');
     registerTypescript();
   }
 
   const config = {
-    instanceConfigFields: loadInstanceConfigFields(),
-    validateInvocation: loadValidateInvocationFunction(),
-    getStepStartStates: loadGetStepStartStatesFunction(),
-    integrationSteps: await loadIntegrationSteps(),
+    instanceConfigFields: loadInstanceConfigFields(projectDirectory),
+    validateInvocation: loadValidateInvocationFunction(projectDirectory),
+    getStepStartStates: loadGetStepStartStatesFunction(projectDirectory),
+    integrationSteps: await loadIntegrationSteps(projectDirectory),
   };
 
   return config;
@@ -43,34 +45,42 @@ export async function loadConfig(): Promise<IntegrationInvocationConfig> {
 /**
  * Loads instanceConfigFields from ./src/instanceConfigFields
  */
-export function loadInstanceConfigFields() {
+export function loadInstanceConfigFields(
+  projectDirectory: string = process.cwd(),
+) {
   return loadModuleContent<IntegrationInstanceConfigFieldMap>(
-    path.join('src', 'instanceConfigFields'),
+    path.resolve(projectDirectory, 'src', 'instanceConfigFields'),
   );
 }
 
 /**
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
-export function loadValidateInvocationFunction() {
+export function loadValidateInvocationFunction(
+  projectDirectory: string = process.cwd(),
+) {
   return loadModuleContent<InvocationValidationFunction>(
-    path.join('src', 'validateInvocation'),
+    path.resolve(projectDirectory, 'src', 'validateInvocation'),
   );
 }
 
 /**
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
-export function loadGetStepStartStatesFunction() {
+export function loadGetStepStartStatesFunction(
+  projectDirectory: string = process.cwd(),
+) {
   return loadModuleContent<GetStepStartStatesFunction>(
-    path.join('src', 'getStepStartStates'),
+    path.resolve(projectDirectory, 'src', 'getStepStartStates'),
   );
 }
 
-export async function loadIntegrationSteps(): Promise<IntegrationStep[]> {
+export async function loadIntegrationSteps(
+  projectDirectory: string = process.cwd(),
+): Promise<IntegrationStep[]> {
   let files: string[] = [];
 
-  const stepsDir = path.join(process.cwd(), 'src', 'steps');
+  const stepsDir = path.resolve(projectDirectory, 'src', 'steps');
 
   try {
     files = await fs.readdir(stepsDir);
@@ -80,15 +90,15 @@ export async function loadIntegrationSteps(): Promise<IntegrationStep[]> {
   }
 
   return files.map((file) => {
-    return loadModuleContent(path.join(stepsDir, file));
+    return loadModuleContent(path.resolve(stepsDir, file));
   });
 }
 
-export function loadModuleContent<T>(relativePath: string): T | undefined {
+export function loadModuleContent<T>(modulePath: string): T | undefined {
   let integrationModule: any;
 
   try {
-    integrationModule = require(path.resolve(process.cwd(), relativePath));
+    integrationModule = require(modulePath);
   } catch (err) {
     // module not found
   }
@@ -96,7 +106,7 @@ export function loadModuleContent<T>(relativePath: string): T | undefined {
   return integrationModule?.default ?? integrationModule;
 }
 
-async function isTypescriptPresent() {
+async function isTypescriptPresent(projectDirectory: string = process.cwd()) {
   // NOTE: this does not use path.join because globby
   // (which uses fast-glob, which uses micromatch)
   // requires that forward slashes are used.
@@ -104,7 +114,9 @@ async function isTypescriptPresent() {
   // Refs:
   // - https://github.com/mrmlnc/fast-glob#pattern-syntax
   // - https://github.com/micromatch/micromatch#backslashes
-  const paths = await globby('src/**/*.ts');
+  const paths = await globby('src/**/*.ts', {
+    cwd: projectDirectory,
+  });
   return paths.length > 0;
 }
 

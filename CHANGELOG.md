@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Allow `loadConfig` to accept a path to a directory containing the project
+  files to load.
+
 ## 0.12.0 2020-04-29
 
 ### Added

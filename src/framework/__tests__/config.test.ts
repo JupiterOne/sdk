@@ -1,3 +1,4 @@
+import path from 'path';
 import {
   loadModuleContent,
   loadInstanceConfigFields,
@@ -7,20 +8,62 @@ import {
   loadConfig,
 } from '../config';
 
-import { loadProjectStructure } from '../../__tests__/loadProjectStructure';
+import {
+  loadProjectStructure,
+  getProjectDirectoryPath,
+  restoreProjectStructure,
+} from '../../__tests__/loadProjectStructure';
 
 jest.mock('../../log');
 
 afterEach(() => {
   jest.resetModules();
+  restoreProjectStructure();
 });
 
 describe('loadModuleContent', () => {
   test('loads any module and retrieves the default export', () => {
     loadProjectStructure('typeScriptProject');
-    expect(loadModuleContent('./src/validateInvocation')).toEqual(
-      expect.any(Function),
-    );
+    expect(
+      loadModuleContent(
+        path.resolve(process.cwd(), 'src', 'validateInvocation'),
+      ),
+    ).toEqual(expect.any(Function));
+  });
+});
+
+describe('loadConfig', () => {
+  test('allows for a project directory to be used for loading configs', async () => {
+    const typescriptProjectPath = getProjectDirectoryPath('typeScriptProject');
+
+    expect(process.cwd()).not.toEqual(typescriptProjectPath);
+
+    const config = await loadConfig(typescriptProjectPath);
+
+    expect(config).toEqual({
+      instanceConfigFields: {
+        myConfig: {
+          mask: true,
+          type: 'boolean',
+        },
+      },
+      getStepStartStates: expect.any(Function),
+      validateInvocation: expect.any(Function),
+      integrationSteps: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          types: ['my_account'],
+          executionHandler: expect.any(Function),
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          types: ['my_user'],
+          executionHandler: expect.any(Function),
+        },
+      ],
+    });
   });
 });
 
