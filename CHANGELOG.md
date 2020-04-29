@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.12.0 2020-04-29
+
 ### Added
 
 - Added `sync` command to cli for synchronizing collected data with the
@@ -16,14 +18,18 @@ and this project adheres to
   `createIntegrationLogger()` to allow for setup and execution with alternative,
   non-generated local configuration.
 
-### Fixed
-
 ## 0.11.4 2020-04-24
 
 ### Fixed
 
 - createIntegrationEntity failing on properties with null values that exist in
   the data-model schema
+
+## 0.11.5 2020-04-26
+
+### Added
+
+- Updated `@jupiterone/data-model@0.3.1`
 
 ## 0.11.0 2020-04-24
 
