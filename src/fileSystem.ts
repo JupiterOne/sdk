@@ -13,7 +13,10 @@ import rimraf from 'rimraf';
 export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
 
 export function getRootStorageDirectory() {
-  return path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME);
+  return (
+    process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY ||
+    path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME)
+  );
 }
 
 interface WriteDataToPathInput {
