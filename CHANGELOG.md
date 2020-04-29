@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.14.0 2020-04-29
+
 ### Added
 
 - Added `run` command to cli for performing both data collection and
