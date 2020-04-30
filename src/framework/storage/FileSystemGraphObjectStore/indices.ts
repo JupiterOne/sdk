@@ -4,6 +4,7 @@ import { GraphObjectIteratee } from '../../execution/types';
 import { walkDirectory, WalkDirectoryIterateeInput } from '../../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
+import { IntegrationError } from '../../../errors';
 
 interface IterateIndexInput<GraphObject> {
   type: string;
@@ -58,7 +59,10 @@ function parseData({ filePath, data }: WalkDirectoryIterateeInput): object {
   try {
     return JSON.parse(data);
   } catch (err) {
-    throw new Error(`Failed to parse JSON in '${filePath}'`);
+    throw new IntegrationError({
+      code: 'INVALID_DATA_JSON',
+      message: `Failed to parse JSON in '${filePath}'`,
+    });
   }
 }
 

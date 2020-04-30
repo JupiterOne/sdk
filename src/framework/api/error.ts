@@ -3,7 +3,7 @@ import { IntegrationError } from '../../errors';
 export class IntegrationMalformedApiKeyError extends IntegrationError {
   constructor(message: string) {
     super({
-      code: 'MalformedApiKeyError',
+      code: 'MALFORMED_API_KEY_ERROR',
       message,
     });
   }
@@ -12,7 +12,7 @@ export class IntegrationMalformedApiKeyError extends IntegrationError {
 export class IntegrationApiKeyRequiredError extends IntegrationError {
   constructor(message: string) {
     super({
-      code: 'JupiterOneApiKeyEnvironmentVariableNotSet',
+      code: 'JUPITER_ONE_API_KEY_ENVIRONMENT_VARIABLE_NOT_SET',
       message,
     });
   }

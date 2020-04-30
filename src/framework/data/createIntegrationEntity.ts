@@ -10,6 +10,7 @@ import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 import { getTime } from './converters';
 
 import { validateRawData } from './validation';
+import { IntegrationError } from '../../errors';
 
 /**
  * Properties required to build a valid `Entity`.
@@ -188,9 +189,10 @@ function generateEntity({
 function generateEntityKey(data: any): string {
   const id = data.providerId || data.id;
   if (!id) {
-    throw new Error(
-      'Entity key generation requires one of data.{providerId,id}',
-    );
+    throw new IntegrationError({
+      code: 'INVALID_INPUT_TO_GENERATE_ENTITY_KEY',
+      message: 'Entity key generation requires one of data.{providerId,id}'
+    });
   }
   return id;
 }
@@ -223,9 +225,10 @@ function schemaWhitelistedPropertyNames(_class: string[]): string[] {
     for (const c of _class) {
       const schema = getSchema(c);
       if (!schema) {
-        throw new Error(
-          `Class '${c}' does not yet have a schema supported by the SDK!`,
-        );
+        throw new IntegrationError({
+          code: 'NO_SCHEMA_FOR_CLASS',
+          message: `Class '${c}' does not yet have a schema supported by the SDK!`
+        });
       }
       properties.push(...schemaPropertyNames(schema));
     }
@@ -249,7 +252,10 @@ function schemaPropertyNames(schema: IntegrationEntitySchema): string[] {
     if (refSchema) {
       names.push(...schemaPropertyNames(refSchema));
     } else {
-      throw new Error(`Schema $ref '${schema.$ref}' cannot be resolved!`);
+      throw new IntegrationError({
+        code: 'CANNOT_RESOLVE_SCHEMA_REF',
+        message: `Schema $ref '${schema.$ref}' cannot be resolved!`,
+      });
     }
   }
   return names;

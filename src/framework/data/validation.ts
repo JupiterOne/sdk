@@ -1,4 +1,5 @@
 import { RawDataTracking } from '../types';
+import { IntegrationError } from '../../errors';
 
 /**
  * Validates collection of raw data, throwing an error when invalid.
@@ -11,7 +12,10 @@ export function validateRawData(trackingEntity: RawDataTracking): void {
     const names = new Set<string>();
     for (const data of trackingEntity._rawData) {
       if (names.has(data.name)) {
-        throw new Error(`Duplicate raw data name '${data.name}'!`);
+        throw new IntegrationError({
+          code: 'DUPLICATE_RAW_DATA_NAME',
+          message: `Duplicate raw data name '${data.name}'!`,
+        });
       } else {
         names.add(data.name);
       }

@@ -5,7 +5,7 @@ import { SynchronizatoinApiErrorResponse } from './types';
 export class IntegrationMalformedApiKeyError extends IntegrationError {
   constructor(message: string) {
     super({
-      code: 'MalformedApiKeyError',
+      code: 'MALFORMED_API_KEY_ERROR',
       message,
     });
   }
@@ -14,7 +14,7 @@ export class IntegrationMalformedApiKeyError extends IntegrationError {
 export class IntegrationInstanceNotFound extends IntegrationError {
   constructor(message: string) {
     super({
-      code: 'IntegrationInstanceNotFound',
+      code: 'INTEGRATION_INSTANCE_NOT_FOUND',
       message,
     });
   }
@@ -29,14 +29,14 @@ export function synchronizationApiError(
     const responseData: SynchronizatoinApiErrorResponse = err.response.data;
     const { code, message } = responseData!.error!;
     return new IntegrationError({
-      code: 'SyncronizationApiResponseError',
+      code: 'SYNCRONIZATION_API_RESPONSE_ERROR',
       message: `${errorMessage} (API response: code=${
         code || '<none>'
       }, message="${message || '<none>'}").`,
     });
   } else {
     return new IntegrationError({
-      code: 'UnexpectedSyncronizationError',
+      code: 'UNEXPECTED_SYNCRONIZATION_ERROR',
       message: errorMessage,
       cause: err,
     });
