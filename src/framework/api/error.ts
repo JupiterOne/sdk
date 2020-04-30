@@ -1,13 +1,21 @@
-import { IntegrationError } from '../execution/error';
+import { IntegrationError } from '../../errors';
 
-export class IntegrationMalformedApiKeyError extends Error
-  implements IntegrationError {
-  code = 'MalformedApiKeyError';
+export class IntegrationMalformedApiKeyError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'MalformedApiKeyError',
+      message,
+    });
+  }
 }
 
-export class IntegrationApiKeyRequiredError extends Error
-  implements IntegrationError {
-  code = 'JupiterOneApiKeyEnvironmentVariableNotSet';
+export class IntegrationApiKeyRequiredError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'JupiterOneApiKeyEnvironmentVariableNotSet',
+      message,
+    });
+  }
 }
 
 export function malformedApiKeyError() {

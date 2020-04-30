@@ -1,28 +1,46 @@
-export interface IntegrationError {
-  code: string;
+import { IntegrationError } from '../../errors';
+
+export class IntegrationLocalConfigFieldMissingError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'LocalConfigFieldMissing',
+      message,
+    });
+  }
 }
 
-export class IntegrationLocalConfigFieldMissingError extends Error
-  implements IntegrationError {
-  code = 'LocalConfigFieldMissing';
+export class IntegrationLocalConfigFieldTypeMismatch extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'LocalConfigFieldTypeMismatch',
+      message,
+    });
+  }
 }
 
-export class IntegrationLocalConfigFieldTypeMismatch extends Error
-  implements IntegrationError {
-  code = 'LocalConfigFieldTypeMismatch';
+export class IntegrationConfigValidationError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'LocalConfigFieldTypeMismatch',
+      message,
+    });
+  }
 }
 
-export class IntegrationConfigValidationError extends Error
-  implements IntegrationError {
-  code = 'LocalConfigFieldTypeMismatch';
+export class IntegrationStepStartStateUnknownStepIdsError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'UnknownStepIdSpecifiedInStartState',
+      message,
+    });
+  }
 }
 
-export class IntegrationStepStartStateUnknownStepIdsError extends Error
-  implements IntegrationError {
-  code = 'UnknownStepIdSpecifiedInStartState';
-}
-
-export class IntegrationUnaccountedStepStartStatesError extends Error
-  implements IntegrationError {
-  code = 'UnaccountedStepStartStates';
+export class IntegrationUnaccountedStepStartStatesError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'UnaccountedStepStartStates',
+      message,
+    });
+  }
 }

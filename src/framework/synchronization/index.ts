@@ -16,10 +16,7 @@ import {
   readJsonFromPath,
   walkDirectory,
 } from '../../fileSystem';
-import {
-  unexpectedSynchronizationError,
-  integrationInstanceNotFoundError,
-} from './error';
+import { synchronizationApiError } from './error';
 import { Entity, Relationship } from '../types';
 
 export * from './types';
@@ -74,18 +71,9 @@ export async function initiateSynchronization({
 
     job = response.data.job;
   } catch (err) {
-    logger.error(err, 'Error occurred while initiating synchronization job.');
-    if (err.response) {
-      const { status } = err.response;
-      const { code, message } = err.response.data.error;
-      if (status === 400 && code === 'SYNC_JOB_INVALID_INTEGRATION_INSTANCE') {
-        throw integrationInstanceNotFoundError(integrationInstanceId);
-      }
-
-      throw unexpectedSynchronizationError(code, message);
-    }
-
-    throw err;
+    const errorMessage = 'Error occurred while initiating synchronization job.';
+    logger.error(err, errorMessage);
+    throw synchronizationApiError(err, errorMessage);
   }
 
   return {
@@ -125,11 +113,9 @@ export async function finalizeSynchronization({
     );
     finalizedJob = response.data.job;
   } catch (err) {
-    logger.error(err, 'Error occurred while initiating synchronization job.');
-    if (err.response) {
-      const { code, message } = err.response.data.error;
-      throw unexpectedSynchronizationError(code, message);
-    }
+    const errorMessage = 'Error occurred while finalizing synchronization job.';
+    logger.error(err, errorMessage);
+    throw synchronizationApiError(err, errorMessage);
   }
 
   return finalizedJob;
@@ -147,6 +133,7 @@ async function getPartialDatasets() {
  * Uploads data collected by the integration into the
  */
 export async function uploadCollectedData(context: SynchronizationJobContext) {
+  const { logger } = context;
   await walkDirectory({
     path: 'graph',
     async iteratee({ data }) {
@@ -161,12 +148,9 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
           await uploadData(context, 'relationships', parsedData.relationships);
         }
       } catch (err) {
-        if (err.response) {
-          const { code, message } = err.response.data.error;
-          throw unexpectedSynchronizationError(code, message);
-        }
-
-        throw err;
+        const errorMessage = 'Error uploading collected data.';
+        logger.error(err, errorMessage);
+        throw synchronizationApiError(err, errorMessage);
       }
     },
   });

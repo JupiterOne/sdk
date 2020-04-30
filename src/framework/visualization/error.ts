@@ -1,6 +1,10 @@
-import { IntegrationError } from '../execution/error';
+import { IntegrationError } from '../../errors';
 
-export class IntegrationMissingCollectJSON extends Error
-  implements IntegrationError {
-  code = 'MissingCollectJSON';
+export class IntegrationMissingCollectJSON extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'MissingCollectJSON',
+      message,
+    });
+  }
 }

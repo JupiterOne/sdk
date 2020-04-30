@@ -103,12 +103,14 @@ export function executeStepDependencyGraph(
     return inputGraph
       .dependenciesOf(step.id)
       .map((id) => stepResultsMap.get(id))
-      .find(
-        (result) =>
-          result.status === IntegrationStepResultStatus.FAILURE ||
-          result.status ===
-            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
-      );
+      .find((result) => {
+        const status = result?.status;
+        return (
+          status === IntegrationStepResultStatus.FAILURE ||
+          status ===
+            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
+        );
+      });
   }
 
   /**
@@ -133,8 +135,8 @@ export function executeStepDependencyGraph(
       .dependenciesOf(step.id)
       .map((id) => stepResultsMap.get(id))
       .filter(
-        ({ status }) =>
-          status === IntegrationStepResultStatus.PENDING_EVALUATION,
+        (stepResult) =>
+          stepResult?.status === IntegrationStepResultStatus.PENDING_EVALUATION,
       );
 
     return executingDependencies.length === 0;

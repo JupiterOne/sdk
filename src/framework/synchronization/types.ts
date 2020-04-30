@@ -22,3 +22,10 @@ export interface SynchronizationJob {
   numRelationshipsUpdated: number;
   numRelationshipsDeleted: number;
 }
+
+export interface SynchronizatoinApiErrorResponse {
+  error?: {
+    code?: string;
+    message: string;
+  };
+}

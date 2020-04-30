@@ -269,9 +269,9 @@ test('allows mutating a request preflight changing what is stored in the har fil
 });
 
 async function startServer(statusCode?: number) {
-  statusCode = statusCode ? statusCode : 200;
+  const recordingStatusCode = statusCode ?? 200;
   const server = http.createServer((req, res) => {
-    res.writeHead(statusCode, {
+    res.writeHead(recordingStatusCode, {
       'content-type': 'application/json',
       'set-cookie': 'cookies=taste-good',
       'my-secret-header': 'super secret',

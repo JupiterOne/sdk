@@ -76,7 +76,7 @@ export function loadGetStepStartStatesFunction(
 export async function loadIntegrationSteps(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ): Promise<IntegrationStep[]> {
-  let files: string[] = [];
+  let files: string[];
 
   const stepsDir = path.resolve(projectSourceDirectory, 'steps');
 
@@ -84,12 +84,20 @@ export async function loadIntegrationSteps(
     files = await fs.readdir(stepsDir);
   } catch (err) {
     console.error(err);
-    // failed to read directory
+    return [];
   }
 
-  return files.map((file) => {
-    return loadModuleContent(path.resolve(stepsDir, file));
-  });
+  const steps: IntegrationStep[] = [];
+  for (const file of files) {
+    const step = loadModuleContent<IntegrationStep>(
+      path.resolve(stepsDir, file),
+    );
+    if (step !== undefined) {
+      steps.push(step);
+    }
+  }
+
+  return steps;
 }
 
 export function loadModuleContent<T>(modulePath: string): T | undefined {
@@ -99,6 +107,7 @@ export function loadModuleContent<T>(modulePath: string): T | undefined {
     integrationModule = require(modulePath);
   } catch (err) {
     // module not found
+    return undefined;
   }
 
   return integrationModule?.default ?? integrationModule;
