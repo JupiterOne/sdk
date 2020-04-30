@@ -145,8 +145,8 @@ describe('executeStepDependencyGraph', () => {
 
     expect(executionHandlerSpy).toHaveBeenCalledTimes(1);
 
-    expect(logger).toBeInstanceOf(jest.requireActual('bunyan'));
-    expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
+    expect(logger!).toBeInstanceOf(jest.requireActual('bunyan'));
+    expect(instance!).toEqual(LOCAL_INTEGRATION_INSTANCE);
 
     // ensure job state has expected functions
     [
@@ -291,15 +291,15 @@ describe('executeStepDependencyGraph', () => {
     const stepToDataMap = {
       [steps[0].id]: {
         type: 'entities',
-        data: [entityA],
+        data: [entityA!],
       },
       [steps[1].id]: {
         type: 'entities',
-        data: [entityB],
+        data: [entityB!],
       },
       [steps[2].id]: {
         type: 'relationships',
-        data: [relationship],
+        data: [relationship!],
       },
     };
 
@@ -389,7 +389,7 @@ describe('executeStepDependencyGraph', () => {
     // ensure spyB has not been called yet
     expect(spyB).toHaveBeenCalledTimes(0);
 
-    resolveSpyA();
+    resolveSpyA!();
 
     // expect spyB to eventually be called
     await waitForExpect(() => {

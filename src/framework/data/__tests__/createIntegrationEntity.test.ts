@@ -255,7 +255,7 @@ describe('createIntegrationEntity', () => {
         },
       });
 
-      const { rawData } = entity._rawData[0];
+      const { rawData } = entity._rawData![0];
 
       expect(rawData).toHaveProperty('status');
       expect(rawData).toHaveProperty('createdOn');

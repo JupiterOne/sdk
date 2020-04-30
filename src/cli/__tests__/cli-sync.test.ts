@@ -36,7 +36,7 @@ beforeEach(() => {
 
   loadProjectStructure('synchronization');
 
-  jest.spyOn(process, 'exit').mockImplementation((code: number) => {
+  jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
     throw new Error(`Process exited with code ${code}`);
   });
 });
