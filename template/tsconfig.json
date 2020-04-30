@@ -7,7 +7,12 @@
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "pretty": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "allowJs": false,
   },
   "exclude": ["dist"]
 }
