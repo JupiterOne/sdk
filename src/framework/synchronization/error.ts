@@ -1,30 +1,44 @@
-import { IntegrationError } from '../execution/error';
+import { IntegrationError } from '../../errors';
+import { AxiosError } from 'axios';
+import { SynchronizatoinApiErrorResponse } from './types';
 
-export class IntegrationMalformedApiKeyError extends Error
-  implements IntegrationError {
-  code = 'MalformedApiKeyError';
+export class IntegrationMalformedApiKeyError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'MalformedApiKeyError',
+      message,
+    });
+  }
 }
 
-export class IntegrationInstanceNotFound extends Error
-  implements IntegrationError {
-  code = 'IntegrationInstanceNotFound';
+export class IntegrationInstanceNotFound extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'IntegrationInstanceNotFound',
+      message,
+    });
+  }
 }
 
-export class IntegrationUnexpectedSynchronizationError extends Error
-  implements IntegrationError {
-  code = 'UnexpectedSynchronizationError';
-}
-
-export function unexpectedSynchronizationError(code: string, message: string) {
-  return new IntegrationUnexpectedSynchronizationError(
-    `Unexpected error occurred (code=${code} message="${message}").`,
-  );
-}
-
-export function integrationInstanceNotFoundError(
-  integrationInstanceId: string,
+export function synchronizationApiError(
+  err: AxiosError<SynchronizatoinApiErrorResponse>,
+  errorMessage: string,
 ) {
-  return new IntegrationInstanceNotFound(
-    `Integration instance was not found (id=${integrationInstanceId}).`,
-  );
+  if (err.response?.data?.error) {
+    // Looks like Axios error response with data
+    const responseData: SynchronizatoinApiErrorResponse = err.response.data;
+    const { code, message } = responseData!.error!;
+    return new IntegrationError({
+      code: 'SyncronizationApiResponseError',
+      message: `${errorMessage} (API response: code=${
+        code || '<none>'
+      }, message="${message || '<none>'}").`,
+    });
+  } else {
+    return new IntegrationError({
+      code: 'UnexpectedSyncronizationError',
+      message: errorMessage,
+      cause: err,
+    });
+  }
 }
