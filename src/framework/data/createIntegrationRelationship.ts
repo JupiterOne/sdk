@@ -8,6 +8,7 @@ import {
   TargetFilterKey,
   MappedRelationship,
 } from '../types';
+import { IntegrationError } from '../../errors';
 
 type DirectRelationshipOptions = {
   _class: string;
@@ -174,9 +175,10 @@ function key(
     return properties._key;
   } else {
     if (!toKey) {
-      throw new Error(
-        'Without _key provided in properties, _key generation requires mapping.targetEntity._key!',
-      );
+      throw new IntegrationError({
+        code: 'MISSING_RELATIONSHIP_TO_KEY',
+        message: 'Without _key provided in properties, _key generation requires mapping.targetEntity._key!'
+      });
     }
 
     return generateRelationshipKey(_class, fromKey, toKey);
@@ -193,9 +195,10 @@ function type(
     return properties._type;
   } else {
     if (!toType) {
-      throw new Error(
-        'Without _type provided in properties, _type generation requires mapping.targetEntity._type!',
-      );
+      throw new IntegrationError({
+        code: 'MISSING_RELATIONSHIP_TO_TYPE',
+        message: 'Without _type provided in properties, _type generation requires mapping.targetEntity._type!',
+      });
     }
 
     return generateRelationshipType(_class, fromType, toType);
@@ -215,9 +218,10 @@ export function generateRelationshipType(
   to: { _type: string } | string,
 ): string {
   if (!from || !to) {
-    throw new Error(
-      '"from" and "to" must be provided to generate a relationship _type!',
-    );
+    throw new IntegrationError({
+      code: 'GENERATE_RELATIONSHIP_TYPE_MISSING_RELATIONSIHP_FROM_OR_TO',
+      message: '"from" and "to" must be provided to generate a relationship _type!',
+    });
   }
 
   const fromValue = typeof from === 'string' ? from : from._type;
@@ -252,9 +256,10 @@ export function generateRelationshipKey(
   to: { _key: string } | string,
 ): string {
   if (!from || !to) {
-    throw new Error(
-      '"from" and "to" must be provided to generate a relationship _key!',
-    );
+    throw new IntegrationError({
+      code: 'GENERATE_RELATIONSHIP_KEY_MISSING_RELATIONSHIP_FROM_OR_TO',
+      message: '"from" and "to" must be provided to generate a relationship _type!',
+    });
   }
 
   const fromValue = typeof from === 'string' ? from : from._key;
