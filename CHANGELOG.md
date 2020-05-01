@@ -14,6 +14,10 @@ and this project adheres to
   error. This can be used by non-local execution environments that load
   configuration from somewhere special.
 
+### Fixed
+
+- Template missing necessary publish build.
+
 ## 0.16.0 2020-04-30
 
 ### Added
