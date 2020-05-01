@@ -45,6 +45,7 @@
     "commander": "^5.0.0",
     "dependency-graph": "^0.9.0",
     "dotenv": "^8.2.0",
+    "dotenv-expand": "^5.1.0",
     "globby": "^11.0.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
