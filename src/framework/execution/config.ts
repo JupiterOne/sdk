@@ -11,6 +11,8 @@ import {
   IntegrationLocalConfigFieldTypeMismatch,
 } from './error';
 
+const dotenvExpand = require('dotenv-expand');
+
 /**
  * Reads integration configuration from environment variables
  */
@@ -18,7 +20,7 @@ export function loadConfigFromEnvironmentVariables(
   configMap: IntegrationInstanceConfigFieldMap,
 ): Record<string, string | boolean> {
   // pull in environment variables from .env file if available
-  dotenv.config();
+  dotenvExpand(dotenv.config());
 
   return Object.entries(configMap)
     .map(([field, config]): [string, string | boolean] => {

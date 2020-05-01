@@ -7,6 +7,8 @@ import { malformedApiKeyError, apiKeyRequiredError } from './error';
 
 export type ApiClient = AxiosInstance;
 
+const dotenvExpand = require('dotenv-expand');
+
 interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
@@ -99,7 +101,7 @@ export function getApiBaseUrl({ dev }: GetApiBaseUrlInput = { dev: false }) {
 }
 
 export function getApiKeyFromEnvironment(): string {
-  dotenv.config();
+  dotenvExpand(dotenv.config());
 
   const apiKey = process.env.JUPITERONE_API_KEY;
 

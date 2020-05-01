@@ -8,6 +8,16 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.16.0 2020-04-30
+
+### Added
+
+- Added support for `yarn autobuild` command to make it easier to build and link
+  `@lifeomic/integration-sdk` into other projects.
+- Add `dotenv-expand` which allows expansion of `${...}` variables in `.env`
+  file.
+- Add **Integration SDK Development** section to `README.md`
+
 ## 0.15.0 2020-04-29
 
 ### Added
