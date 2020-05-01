@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.17.0 2020-05-01
+
 ### Added
 
 - `IntegrationConfigLoadError`, to be thrown when there is a configuration load
