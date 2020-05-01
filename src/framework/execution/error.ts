@@ -17,11 +17,19 @@ export class IntegrationLocalConfigFieldTypeMismatch extends IntegrationError {
     });
   }
 }
+export class IntegrationConfigLoadError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'CONFIG_LOAD_ERROR',
+      message,
+    });
+  }
+}
 
 export class IntegrationConfigValidationError extends IntegrationError {
   constructor(message: string) {
     super({
-      code: 'LOCAL_CONFIG_FIELD_TYPE_MISMATCH',
+      code: 'CONFIG_FIELD_TYPE_MISMATCH',
       message,
     });
   }
