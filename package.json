@@ -2,13 +2,13 @@
   "name": "@jupiterone/integration-sdk",
   "version": "0.15.0",
   "description": "The SDK for developing JupiterOne integrations",
-  "main": "dist/framework/index.js",
-  "types": "dist/framework/index.d.ts",
+  "main": "src/framework/index.js",
+  "types": "src/framework/index.d.ts",
   "repository": "git@github.com:JupiterOne/integration-sdk.git",
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "engines": {
-    "node": "10.x || 12.x"
+    "node": "10.x || 12.x || 14.x"
   },
   "publishConfig": {
     "access": "public"
@@ -16,21 +16,16 @@
   "bin": {
     "j1-integration": "./bin/j1-integration"
   },
-  "files": [
-    "dist",
-    "bin",
-    "testing.js",
-    "testing.d.ts"
-  ],
   "scripts": {
     "lint": "eslint . --cache --fix --ext .ts,.tsx",
     "format": "prettier --write '**/*.{ts,js,json,css,md,yml}'",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:ci": "yarn lint && yarn type-check && yarn test --ci",
-    "prebuild": "yarn test:ci",
-    "build": "tsc -p tsconfig.dist.json --declaration",
-    "prepublishOnly": "yarn build"
+    "compile": "tsc -p tsconfig.dist.json --declaration",
+    "prebuild": "rm -rf dist",
+    "build": "yarn compile && cp -R bin README.md LICENSE yarn.lock package.json ./dist",
+    "autobuild": "yarn build && (cd ./dist && yarn install --production && (yarn unlink || true) && yarn link) && yarn nodemon --exec 'yarn compile' --watch src -e ts --delay 3"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.3.1",
@@ -78,6 +73,7 @@
     "lint-staged": "^10.2.1",
     "memfs": "^3.1.2",
     "node-fetch": "^2.6.0",
+    "nodemon": "^2.0.3",
     "prettier": "^2.0.5",
     "ts-jest": "^25.4.0",
     "ts-node": "^8.9.1",

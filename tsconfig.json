@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "rootDir": ".",
+    "baseUrl": ".",
     "outDir": "dist",
     "target": "es2018",
     "lib": ["es2018", "DOM"],
@@ -14,5 +16,8 @@
     "strictFunctionTypes": true,
     "allowJs": false
   },
-  "exclude": ["testing.d.ts", "dist", "template"]
+  "include": [
+    "src",
+    "testing.ts"
+  ]
 }
