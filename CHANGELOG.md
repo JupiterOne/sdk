@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Fixed
+
+- Template missing necessary publish build.
+
 ## 0.16.0 2020-04-30
 
 ### Added
