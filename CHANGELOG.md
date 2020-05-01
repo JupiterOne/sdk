@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `IntegrationConfigLoadError`, to be thrown when there is a configuration load
+  error. This can be used by non-local execution environments that load
+  configuration from somewhere special.
+
 ## 0.16.0 2020-04-30
 
 ### Added
