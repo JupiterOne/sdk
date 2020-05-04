@@ -13,7 +13,8 @@ import {
   uploadCollectedData,
   finalizeSynchronization,
 } from '../../framework/synchronization';
-import { executeIntegrationLocally } from '../../framework/execution';
+import { executeIntegrationInstance } from '../../framework/execution';
+import { createIntegrationInstanceForLocalExecution } from '../../framework/execution/instance';
 
 export function run() {
   return createCommand('run')
@@ -48,11 +49,16 @@ export function run() {
         integrationInstanceId,
       });
 
-      const executionResults = await executeIntegrationLocally(
+      logger.registerSynchronizationJobContext(synchronizationContext);
+
+      const executionResults = await executeIntegrationInstance(
+        logger,
+        createIntegrationInstanceForLocalExecution(invocationConfig),
         invocationConfig,
       );
 
       log.displayExecutionResults(executionResults);
+
       await uploadCollectedData(synchronizationContext);
 
       const synchronizationResult = await finalizeSynchronization({

@@ -198,13 +198,13 @@ export function executeStepDependencyGraph(
         graphObjectStore,
       );
 
-      context.logger.info(`Executing step "${step.name}"`);
+      context.logger.stepStart(step);
 
       let status: IntegrationStepResultStatus;
 
       try {
         await step.executionHandler(context);
-        context.logger.info('Step has completed successfully.');
+        context.logger.stepSuccess(step);
 
         if (stepHasDependencyFailure(step)) {
           status =
@@ -213,7 +213,7 @@ export function executeStepDependencyGraph(
           status = IntegrationStepResultStatus.SUCCESS;
         }
       } catch (err) {
-        context.logger.error(err, 'Step failed to complete due to error.');
+        context.logger.stepFailure(step, err);
         status = IntegrationStepResultStatus.FAILURE;
       }
 

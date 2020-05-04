@@ -46,13 +46,17 @@ export async function executeIntegrationInstance(
   instance: IntegrationInstance,
   config: IntegrationInvocationConfig,
 ): Promise<ExecuteIntegrationResult> {
-  return executeIntegration(
+  const result = await executeIntegration(
     {
       instance,
       logger,
     },
     config,
   );
+
+  await logger.flush();
+
+  return result;
 }
 
 /**

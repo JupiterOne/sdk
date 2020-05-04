@@ -46,7 +46,7 @@ export async function synchronizeCollectedData(
   });
 }
 
-interface SynchronizationJobContext {
+export interface SynchronizationJobContext {
   apiClient: ApiClient;
   job: SynchronizationJob;
   logger: IntegrationLogger;

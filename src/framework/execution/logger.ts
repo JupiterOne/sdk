@@ -1,11 +1,15 @@
 import Logger from 'bunyan';
+import PromiseQueue from 'p-queue';
 
 import {
   IntegrationLogger,
+  IntegrationStep,
   IntegrationInstance,
   IntegrationInvocationConfig,
   IntegrationInstanceConfigFieldMap,
 } from './types';
+
+import { SynchronizationJobContext } from '../synchronization';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -60,7 +64,17 @@ export function createIntegrationLogger({
     logger.addSerializers(serializers);
   }
 
-  return instrumentVerboseTrace(logger);
+  // NOTE: concurrency is set to one to allow for logs to be published in
+  // the order that they are added to the queue.
+  //
+  // Optimizations can come later once the synchronization api supports
+  // accepting a timestamp.
+  const eventPublishingQueue = new PromiseQueue({ concurrency: 1 });
+
+  return instrumentEventLogging(
+    instrumentVerboseTrace(logger),
+    eventPublishingQueue,
+  );
 }
 
 function createInstanceConfigSerializer(
@@ -119,4 +133,85 @@ function instrumentVerboseTrace(logger: Logger): Logger {
   });
 
   return logger;
+}
+
+function instrumentEventLogging(
+  logger: Logger,
+  eventPublishingQueue: PromiseQueue,
+  inputSynchronizationJobContext?: SynchronizationJobContext,
+): IntegrationLogger {
+  const child = logger.child;
+
+  let synchronizationJobContext:
+    | SynchronizationJobContext
+    | undefined = inputSynchronizationJobContext;
+
+  const publishEvent = (name: string, description: string) => {
+    if (synchronizationJobContext) {
+      const { job, apiClient } = synchronizationJobContext;
+
+      const event = { name, description };
+
+      eventPublishingQueue.add(async () => {
+        try {
+          await apiClient.post(
+            `/persister/synchronization/jobs/${job.id}/events`,
+            {
+              events: [event],
+            },
+          );
+        } catch (err) {
+          // It's not the end of the world if we fail to publish
+          // an event
+          logger.error(
+            {
+              err,
+              event,
+            },
+            'Failed to publish integration event.',
+          );
+        }
+      });
+    }
+  };
+
+  return Object.assign(logger, {
+    flush: async () => {
+      await eventPublishingQueue.onIdle();
+    },
+
+    registerSynchronizationJobContext: (context: SynchronizationJobContext) => {
+      synchronizationJobContext = context;
+    },
+
+    stepStart: (step: IntegrationStep) => {
+      const name = 'step-start';
+      const description = `Starting step "${step.name}"...`;
+      logger.info({ step: step.id }, description);
+
+      publishEvent(name, description);
+    },
+    stepSuccess: (step: IntegrationStep) => {
+      const name = 'step-end';
+      const description = `Completed step "${step.name}".`;
+      logger.info({ step: step.id }, description);
+
+      publishEvent(name, description);
+    },
+    stepFailure: (step: IntegrationStep, err: Error) => {
+      const name = 'step-failure';
+      const description = `Step "${step.name}" failed to complete due to error.`;
+      logger.error({ err, step: step.id }, description);
+
+      publishEvent(name, description);
+    },
+    child: (options: object = {}, simple?: boolean) => {
+      const c = child.apply(logger, [options, simple]);
+      return instrumentEventLogging(
+        c,
+        eventPublishingQueue,
+        synchronizationJobContext,
+      );
+    },
+  });
 }

@@ -27,6 +27,13 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     });
 
   polly.server
+    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/events`)
+    .intercept((req, res) => {
+      allowCrossOrigin(req, res);
+      return res.status(200).json({});
+    });
+
+  polly.server
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/relationships`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
