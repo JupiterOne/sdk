@@ -5,7 +5,7 @@ import { IntegrationDuplicateKeyError } from './error';
 import { Entity, Relationship } from '../types';
 
 export class DuplicateKeyTracker {
-  keySet = new Set<string>();
+  private readonly keySet = new Set<string>();
 
   registerKey(key: string) {
     if (this.keySet.has(key)) {
