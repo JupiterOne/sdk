@@ -112,6 +112,26 @@ describe('createMockStepExecutionContext', () => {
     expect(jobState.collectedRelationships).toEqual(relationships);
   });
 
+  test('throws error if duplicate key is added', () => {
+    const entities: Entity[] = [
+      {
+        _key: 'test',
+        _type: 'test_entity',
+        _class: 'Resource',
+      },
+      {
+        _key: 'test',
+        _type: 'test_entity',
+        _class: 'Resource',
+      },
+    ];
+    const { jobState } = createMockStepExecutionContext();
+
+    expect(jobState.addEntities(entities)).rejects.toThrow(
+      /Duplicate _key detected \(_key=test\)/,
+    );
+  });
+
   test('fits into the integration step interface', async () => {
     expect.assertions(0);
 

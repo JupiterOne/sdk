@@ -321,6 +321,77 @@ describe('executeIntegrationInstance', () => {
 
     expect(writtenSummary).toEqual(expectedResults);
   });
+
+  test('throws error if duplicate key is found within same step', async () => {
+    invocationConfig = {
+      ...invocationConfig,
+      integrationSteps: [
+        {
+          id: 'a',
+          name: 'a',
+          types: [],
+          async executionHandler({ jobState }) {
+            await jobState.addEntities([
+              {
+                _key: 'key_a',
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+              },
+              {
+                _key: 'key_a',
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+              },
+            ]);
+          },
+        },
+      ],
+    };
+
+    await expect(execute()).rejects.toThrow(
+      /Duplicate _key detected \(_key=key_a\)/,
+    );
+  });
+
+  test('throws error if duplicate key is found across steps', async () => {
+    invocationConfig = {
+      ...invocationConfig,
+      integrationSteps: [
+        {
+          id: 'a',
+          name: 'a',
+          types: [],
+          async executionHandler({ jobState }) {
+            await jobState.addEntities([
+              {
+                _key: 'key_a',
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+              },
+            ]);
+          },
+        },
+        {
+          id: 'b',
+          name: 'b',
+          types: [],
+          async executionHandler({ jobState }) {
+            await jobState.addEntities([
+              {
+                _key: 'key_a',
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+              },
+            ]);
+          },
+        },
+      ],
+    };
+
+    await expect(execute()).rejects.toThrow(
+      /Duplicate _key detected \(_key=key_a\)/,
+    );
+  });
 });
 
 describe('executeIntegrationLocally', () => {
