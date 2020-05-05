@@ -12,6 +12,7 @@ import {
   createMockExecutionContext,
   createMockStepExecutionContext,
 } from '../context';
+import { noopAsync } from '../logger';
 
 /**
  * Ensure that both createMockExecutionContext and
@@ -33,12 +34,13 @@ import {
         const { logger } = createContext();
 
         Object.keys(logger).forEach((key) => {
-          if (key !== 'child') {
+          if (key !== 'child' && key !== 'flush') {
             expect(logger[key]).toEqual(noop);
           }
         });
 
         expect(logger.child({})).toEqual(logger);
+        expect(logger.flush).toEqual(noopAsync);
       });
 
       test('generates an execution context with the integration instance used for local development', () => {

@@ -556,8 +556,8 @@ describe('executeStepDependencyGraph', () => {
 
     expect(errorLogSpy).toHaveBeenCalledTimes(1);
     expect(errorLogSpy).toHaveBeenCalledWith(
-      error,
-      'Step failed to complete due to error.',
+      { step: 'a', err: error },
+      'Step "a" failed to complete due to error.',
     );
   });
 

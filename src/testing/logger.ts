@@ -1,5 +1,6 @@
 import { IntegrationLogger } from '../framework';
 import noop from 'lodash/noop';
+export const noopAsync = () => Promise.resolve();
 
 export function createMockIntegrationLogger(): IntegrationLogger {
   const logger: IntegrationLogger = {
@@ -9,6 +10,11 @@ export function createMockIntegrationLogger(): IntegrationLogger {
     warn: noop,
     error: noop,
     fatal: noop,
+    registerSynchronizationJobContext: noop,
+    stepStart: noop,
+    stepSuccess: noop,
+    stepFailure: noop,
+    flush: noopAsync,
     child() {
       return this;
     },
