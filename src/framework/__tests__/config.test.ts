@@ -17,7 +17,6 @@ import {
 jest.mock('../../log');
 
 afterEach(() => {
-  jest.resetModules();
   restoreProjectStructure();
 });
 
