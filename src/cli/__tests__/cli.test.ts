@@ -10,11 +10,6 @@ const fs = nodeFs.promises;
 jest.mock('../../log');
 
 afterEach(() => {
-  // clear require cache
-  Object.keys(require.cache).forEach((modulePath) => {
-    delete require.cache[modulePath];
-  });
-
   delete process.env.MY_CONFIG;
 });
 
