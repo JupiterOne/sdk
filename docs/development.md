@@ -126,6 +126,47 @@ ensuring the integration has received a valid set of `instanceConfigFields`. It
 is common practice to execute a test API call to ensure everything has been
 configured properly.
 
+It is assumed that the integration's configuration is valid if the validation
+function executes without error. If an error is thrown, a message will be
+published to the integration's event log stating that validation has failed.
+
+It is recommended that integration developers throw an
+`IntegrationValidationError` with details about why validation has failed in the
+error's message. This allows for the error's message to be included in the logs.
+
+Example:
+
+```typescript
+import { IntegrationValidationError } from '@jupiterone/integration-sdk';
+
+function validateInvocation(context: IntegrationExecutionContext) {
+  const { config } = context.instance;
+
+  if (!config.clientId || !config.clientSecret) {
+    throw new IntegrationValidationError(
+      'Config requires a clientId and clientSecret to be provided',
+    );
+  }
+
+  return validate(config);
+}
+```
+
+Using the abover examplle, the following message will be logged if the config's
+`clientId` or `clientSecret` is not set:
+
+`Error occurred while validating integration configuration. (errorCode=CONFIG_VALIDATION_ERROR, errorId=<generated error id>, reason=Config requires a clientId and clientSecret to be provided)`;
+
+Optionally, users can pass in a more specific error code to display when
+throwing the error.
+
+```typescript
+throw new IntegrationValidationError(
+  'Config requires a clientId and clientSecret to be provided',
+  'INVALID_CONFIGURATION',
+);
+```
+
 #### `getStepStartStates`
 
 The `getStepStartStates` is an optional function that can be provided for

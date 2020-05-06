@@ -12,6 +12,9 @@ and this project adheres to
 
 - Automatic event logging around steps (start, end, and failure).
 - An `errorCode` and `errorId` is now displayed in step failure events and logs.
+- Event logging around errors thrown in `validateInvocation` function.
+- Error messages can now be exposed to end users if the error's `expose` option
+  is set.
 
 ### Changed
 
