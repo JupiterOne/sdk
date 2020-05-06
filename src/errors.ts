@@ -1,6 +1,7 @@
 export interface IntegrationErrorOptions {
   message: string;
   code: string;
+  fatal?: boolean;
   cause?: Error;
 }
 
@@ -15,9 +16,15 @@ export class IntegrationError extends Error {
    */
   readonly code: string | undefined;
 
+  /**
+   * An optional flag used to mark the error as fatal.
+   */
+  readonly fatal: boolean | undefined;
+
   constructor(options: IntegrationErrorOptions) {
     super(options.message);
     this.code = options.code;
+    this.fatal = options.fatal;
     this._cause = options.cause;
   }
 

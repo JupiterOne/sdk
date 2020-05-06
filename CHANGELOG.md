@@ -12,6 +12,12 @@ and this project adheres to
 
 - Automatic event logging around steps (start, end, and failure).
 
+### Changed
+
+- Duplicate `_key` values are now detected and integration execution will now
+  stop. Duplicate `_key` tracking is also performed when using mock step
+  context.
+
 ## 0.17.0 2020-05-01
 
 ### Added

@@ -2,7 +2,7 @@ import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
 import { FileSystemGraphObjectStore } from '../storage';
-import { createStepJobState } from './jobState';
+import { DuplicateKeyTracker, createStepJobState } from './jobState';
 
 import {
   IntegrationStep,
@@ -74,6 +74,7 @@ export function executeStepDependencyGraph(
   const graphObjectStore = new FileSystemGraphObjectStore();
 
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
+  const duplicateKeyTracker = new DuplicateKeyTracker();
 
   function isStepEnabled(step: IntegrationStep) {
     return stepStartStates[step.id].disabled === false;
@@ -148,7 +149,7 @@ export function executeStepDependencyGraph(
      * this function catch that, pause the queue so that
      * additional work is not executed and reject the promise.
      */
-    function handleUnexpectedError(err) {
+    function handleUnexpectedError(err: Error) {
       promiseQueue.pause();
       reject(err);
     }
@@ -195,6 +196,7 @@ export function executeStepDependencyGraph(
       const context = buildStepContext(
         executionContext,
         step,
+        duplicateKeyTracker,
         graphObjectStore,
       );
 
@@ -214,6 +216,12 @@ export function executeStepDependencyGraph(
         }
       } catch (err) {
         context.logger.stepFailure(step, err);
+
+        if (err.fatal) {
+          // rethrow the error to stop dependency graph execution
+          throw err;
+        }
+
         status = IntegrationStepResultStatus.FAILURE;
       }
 
@@ -232,6 +240,7 @@ export function executeStepDependencyGraph(
 function buildStepContext(
   context: IntegrationExecutionContext,
   step: IntegrationStep,
+  duplicateKeyTracker: DuplicateKeyTracker,
   graphObjectStore: FileSystemGraphObjectStore,
 ): IntegrationStepExecutionContext {
   return {
@@ -239,7 +248,7 @@ function buildStepContext(
     logger: context.logger.child({
       step: step.id,
     }),
-    jobState: createStepJobState(step, graphObjectStore),
+    jobState: createStepJobState(step, duplicateKeyTracker, graphObjectStore),
   };
 }
 

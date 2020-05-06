@@ -52,3 +52,13 @@ export class IntegrationUnaccountedStepStartStatesError extends IntegrationError
     });
   }
 }
+
+export class IntegrationDuplicateKeyError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'DUPLICATE_KEY_DETECTED',
+      fatal: true,
+      message,
+    });
+  }
+}

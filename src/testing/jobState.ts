@@ -1,4 +1,5 @@
 import { JobState, Entity, Relationship } from '../framework';
+import { DuplicateKeyTracker } from '../framework/execution/jobState';
 
 export interface CreateMockJobStateOptions {
   entities?: Entity[];
@@ -29,6 +30,8 @@ export function createMockJobState({
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
 
+  const duplicateKeyTracker = new DuplicateKeyTracker();
+
   return {
     get collectedEntities() {
       return collectedEntities;
@@ -39,10 +42,14 @@ export function createMockJobState({
     },
 
     addEntities: async (newEntities) => {
+      newEntities.forEach((e) => duplicateKeyTracker.registerKey(e._key));
       collectedEntities = collectedEntities.concat(newEntities);
     },
 
     addRelationships: async (newRelationships) => {
+      newRelationships.forEach((r) =>
+        duplicateKeyTracker.registerKey(r._key as string),
+      );
       collectedRelationships = collectedRelationships.concat(newRelationships);
     },
 
