@@ -11,6 +11,7 @@ interface ChildLogFunction {
 
 type StepLogFunction = (step: IntegrationStep) => void;
 type StepLogFunctionWithError = (step: IntegrationStep, err: Error) => void;
+type ValidationLogFunction = (err: Error) => void;
 
 interface BaseLogger {
   // traditional functions for regular logging
@@ -32,6 +33,7 @@ export interface IntegrationLogger extends BaseLogger {
   stepStart: StepLogFunction;
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
+  validationFailure: ValidationLogFunction;
 
   // flushes the queue of work to ensure that
   // all events have been published

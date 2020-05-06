@@ -18,6 +18,7 @@ import {
   IntegrationStepResultStatus,
   InvocationValidationFunction,
 } from '../types';
+import { IntegrationValidationError } from '../error';
 
 jest.mock('fs');
 
@@ -59,6 +60,20 @@ describe('executeIntegrationInstance', () => {
     };
 
     expect(validate).toHaveBeenCalledWith(expectedContext);
+  });
+
+  test('logs validation error if validation fails', async () => {
+    const error = new IntegrationValidationError(
+      'Failed to auth with provider',
+    );
+    invocationConfig.validateInvocation = jest.fn().mockRejectedValue(error);
+
+    const validationFailureSpy = jest.spyOn(logger, 'validationFailure');
+
+    await expect(execute()).rejects.toThrow(/Failed to auth with provider/);
+
+    expect(validationFailureSpy).toHaveBeenCalledTimes(1);
+    expect(validationFailureSpy).toHaveBeenCalledWith(error);
   });
 
   test('returns integration step results and metadata about partial datasets', async () => {

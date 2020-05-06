@@ -62,3 +62,13 @@ export class IntegrationDuplicateKeyError extends IntegrationError {
     });
   }
 }
+
+export class IntegrationValidationError extends IntegrationError {
+  constructor(message: string, code?: string) {
+    super({
+      code: code ?? 'CONFIG_VALIDATION_ERROR',
+      expose: true,
+      message,
+    });
+  }
+}

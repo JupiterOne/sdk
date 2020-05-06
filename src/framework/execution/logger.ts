@@ -211,6 +211,16 @@ function instrumentEventLogging(
 
       publishEvent(name, description);
     },
+    validationFailure: (err: Error) => {
+      const name = 'validation-failure';
+      const { errorId, description } = createErrorEventDescription(
+        err,
+        `Error occurred while validating integration configuration.`,
+      );
+
+      logger.error({ errorId, err }, description);
+      publishEvent(name, description);
+    },
     child: (options: object = {}, simple?: boolean) => {
       const c = child.apply(logger, [options, simple]);
       return instrumentEventLogging(
@@ -222,12 +232,18 @@ function instrumentEventLogging(
   });
 }
 
-function createErrorEventDescription(err: Error, message: string) {
+export function createErrorEventDescription(err: Error, message: string) {
   const errorId = uuid();
   const errorCode = (err as any).code ?? UNEXPECTED_ERROR_CODE;
 
+  let errorDetails = `errorCode=${errorCode}, errorId=${errorId}`;
+
+  if ((err as any).expose) {
+    errorDetails += `, reason=${err.message}`;
+  }
+
   return {
     errorId,
-    description: `${message} (errorCode=${errorCode}, errorId=${errorId})`,
+    description: `${message} (${errorDetails})`,
   };
 }
