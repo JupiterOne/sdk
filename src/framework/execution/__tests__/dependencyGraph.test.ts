@@ -558,8 +558,10 @@ describe('executeStepDependencyGraph', () => {
     expect(errorLogSpy).toHaveBeenCalledTimes(1);
     expect(errorLogSpy).toHaveBeenCalledWith(
       { step: 'a', err: error, errorId: expect.any(String) },
-      expect.stringContaining(
-        `Step "a" failed to complete due to error. (errorCode=${error.code}`,
+      expect.stringMatching(
+        new RegExp(
+          `Step "a" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
+        ),
       ),
     );
   });

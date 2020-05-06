@@ -300,8 +300,10 @@ describe('step event publishing', () => {
       events: [
         {
           name: 'step-failure',
-          description: expect.stringContaining(
-            `Step "Mochi" failed to complete due to error. (errorCode=${error.code}`,
+          description: expect.stringMatching(
+            new RegExp(
+              `Step "Mochi" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
+            ),
           ),
         },
       ],
