@@ -1,3 +1,5 @@
+export const UNEXPECTED_ERROR_CODE = 'UNEXPECTED_ERROR';
+
 export interface IntegrationErrorOptions {
   message: string;
   code: string;

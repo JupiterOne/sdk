@@ -11,6 +11,7 @@ and this project adheres to
 ### Added
 
 - Automatic event logging around steps (start, end, and failure).
+- An `errorCode` and `errorId` is now displayed in step failure events and logs.
 
 ### Changed
 

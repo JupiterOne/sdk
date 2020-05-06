@@ -26,6 +26,7 @@ import {
 } from '../types';
 
 import { Entity, Relationship } from '../../types';
+import { IntegrationConfigValidationError } from '../error';
 
 jest.mock('fs');
 
@@ -523,7 +524,7 @@ describe('executeStepDependencyGraph', () => {
   });
 
   test('logs error after step fails', async () => {
-    const error = new Error('oopsie');
+    const error = new IntegrationConfigValidationError('oopsie');
     let errorLogSpy;
 
     /**
@@ -556,8 +557,12 @@ describe('executeStepDependencyGraph', () => {
 
     expect(errorLogSpy).toHaveBeenCalledTimes(1);
     expect(errorLogSpy).toHaveBeenCalledWith(
-      { step: 'a', err: error },
-      'Step "a" failed to complete due to error.',
+      { step: 'a', err: error, errorId: expect.any(String) },
+      expect.stringMatching(
+        new RegExp(
+          `Step "a" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
+        ),
+      ),
     );
   });
 
