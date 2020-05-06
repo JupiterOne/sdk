@@ -9,6 +9,7 @@ import {
   SynchronizationJob,
 } from '../../synchronization';
 import { createApiClient } from '../../api';
+import { IntegrationLocalConfigFieldMissingError } from '../error';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
 const name = 'integration-logger';
@@ -234,7 +235,7 @@ describe('step event publishing', () => {
       `Completed step "Mochi".`,
     );
 
-    const error = new Error('ripperoni');
+    const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -242,9 +243,12 @@ describe('step event publishing', () => {
       1,
       {
         err: error,
+        errorId: expect.any(String),
         step: step.id,
       },
-      `Step "Mochi" failed to complete due to error.`,
+      expect.stringContaining(
+        `Step "Mochi" failed to complete due to error. (errorCode=${error.code}`,
+      ),
     );
   });
 
@@ -275,7 +279,9 @@ describe('step event publishing', () => {
 
     logger.stepStart(step);
     logger.stepSuccess(step);
-    const error = new Error('ripperoni');
+
+    // just use some error that contains a code
+    const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
     await logger.flush();
@@ -294,7 +300,9 @@ describe('step event publishing', () => {
       events: [
         {
           name: 'step-failure',
-          description: 'Step "Mochi" failed to complete due to error.',
+          description: expect.stringContaining(
+            `Step "Mochi" failed to complete due to error. (errorCode=${error.code}`,
+          ),
         },
       ],
     });

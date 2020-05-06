@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import Logger from 'bunyan';
 import PromiseQueue from 'p-queue';
 
@@ -10,6 +11,7 @@ import {
 } from './types';
 
 import { SynchronizationJobContext } from '../synchronization';
+import { UNEXPECTED_ERROR_CODE } from '../../errors';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -200,8 +202,12 @@ function instrumentEventLogging(
     },
     stepFailure: (step: IntegrationStep, err: Error) => {
       const name = 'step-failure';
-      const description = `Step "${step.name}" failed to complete due to error.`;
-      logger.error({ err, step: step.id }, description);
+      const { errorId, description } = createErrorEventDescription(
+        err,
+        `Step "${step.name}" failed to complete due to error.`,
+      );
+
+      logger.error({ errorId, err, step: step.id }, description);
 
       publishEvent(name, description);
     },
@@ -214,4 +220,14 @@ function instrumentEventLogging(
       );
     },
   });
+}
+
+function createErrorEventDescription(err: Error, message: string) {
+  const errorId = uuid();
+  const errorCode = (err as any).code ?? UNEXPECTED_ERROR_CODE;
+
+  return {
+    errorId,
+    description: `${message} (errorCode=${errorCode}, errorId=${errorId})`,
+  };
 }
