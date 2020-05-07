@@ -1,4 +1,6 @@
 export const UNEXPECTED_ERROR_CODE = 'UNEXPECTED_ERROR';
+export const UNEXPECTED_ERROR_REASON =
+  'Unexpected error occurred executing integration! Please contact us in Slack or at https://support.jupiterone.io if the problem continues to occur';
 
 export interface IntegrationErrorOptions {
   message: string;
@@ -16,7 +18,7 @@ export class IntegrationError extends Error {
   /**
    * An optional code associated with error.
    */
-  readonly code: string | undefined;
+  readonly code: string;
 
   /**
    * An optional flag used to mark the error as fatal.

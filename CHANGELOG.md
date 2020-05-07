@@ -11,7 +11,9 @@ and this project adheres to
 ### Added
 
 - Automatic event logging around steps (start, end, and failure).
-- An `errorCode` and `errorId` is now displayed in step failure events and logs.
+- An `errorCode`, `errorId`, and `reason` is now displayed in step failure
+  events and logs.
+- Event logging around errors thrown in `validateInvocation` function.
 
 ### Changed
 

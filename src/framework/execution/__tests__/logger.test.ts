@@ -1,7 +1,10 @@
 import { Writable } from 'stream';
 import noop from 'lodash/noop';
 
-import { createIntegrationLogger } from '../logger';
+import {
+  createIntegrationLogger,
+  createErrorEventDescription,
+} from '../logger';
 import Logger from 'bunyan';
 import { IntegrationInvocationConfig, IntegrationStep } from '../types';
 import {
@@ -9,7 +12,14 @@ import {
   SynchronizationJob,
 } from '../../synchronization';
 import { createApiClient } from '../../api';
-import { IntegrationLocalConfigFieldMissingError } from '../error';
+import {
+  IntegrationLocalConfigFieldMissingError,
+  IntegrationValidationError,
+} from '../error';
+import {
+  UNEXPECTED_ERROR_CODE,
+  UNEXPECTED_ERROR_REASON,
+} from '../../../errors';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
 const name = 'integration-logger';
@@ -308,5 +318,79 @@ describe('step event publishing', () => {
         },
       ],
     });
+  });
+});
+
+describe('validation failure logging', () => {
+  test('publishes message to synchronizer and writes error log', async () => {
+    const logger = createIntegrationLogger({ name, invocationConfig });
+    const context: SynchronizationJobContext = {
+      logger,
+      job: { id: 'test-job-id' } as SynchronizationJob,
+      apiClient: createApiClient({
+        apiBaseUrl: 'https://api.us.jupiterone.io',
+        account: 'mocheronis',
+      }),
+    };
+
+    logger.registerSynchronizationJobContext(context);
+
+    const errorSpy = jest.spyOn(logger, 'error');
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation(noop as any);
+
+    const error = new IntegrationValidationError('Bad Mochi');
+    logger.validationFailure(error);
+    await logger.flush();
+
+    const expectedDescriptionRegex = new RegExp(
+      `Error occurred while validating integration configuration. \\(errorCode=${error.code}, errorId=(.*), reason=Bad Mochi\\)$`,
+    );
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      { errorId: expect.any(String), err: error },
+      expect.stringMatching(expectedDescriptionRegex),
+    );
+
+    const expectedEventsUrl =
+      '/persister/synchronization/jobs/test-job-id/events';
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
+      events: [
+        {
+          name: 'validation-failure',
+          description: expect.stringMatching(expectedDescriptionRegex),
+        },
+      ],
+    });
+  });
+});
+
+describe('createErrorEventDescription', () => {
+  test('supplies default reason if an error without a code is provided', () => {
+    const error = new Error('soba');
+
+    const { description, errorId } = createErrorEventDescription(
+      error,
+      'testing',
+    );
+    expect(description).toEqual(
+      `testing (errorCode=${UNEXPECTED_ERROR_CODE}, errorId=${errorId}, reason=${UNEXPECTED_ERROR_REASON})`,
+    );
+  });
+
+  test('displays code and message from error if error is an integration error', () => {
+    const error = new IntegrationValidationError('soba');
+
+    const { description, errorId } = createErrorEventDescription(
+      error,
+      'testing',
+    );
+    expect(description).toEqual(
+      `testing (errorCode=${error.code}, errorId=${errorId}, reason=soba)`,
+    );
   });
 });

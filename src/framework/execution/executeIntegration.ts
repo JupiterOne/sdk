@@ -79,7 +79,12 @@ async function executeIntegration(
 ): Promise<ExecuteIntegrationResult> {
   await removeStorageDirectory();
 
-  await config.validateInvocation?.(context);
+  try {
+    await config.validateInvocation?.(context);
+  } catch (err) {
+    context.logger.validationFailure(err);
+    throw err;
+  }
 
   const stepStartStates =
     config.getStepStartStates?.(context) ??
