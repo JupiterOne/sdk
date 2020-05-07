@@ -23,6 +23,7 @@ jest.mock('fs');
 
 afterEach(() => {
   vol.reset();
+  delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
 });
 
 describe('executeIntegrationInstance', () => {
@@ -392,6 +393,21 @@ describe('executeIntegrationInstance', () => {
       /Duplicate _key detected \(_key=key_a\)/,
     );
   });
+
+  test('allows graph object schema validation to be enabled via options', async () => {
+    expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+
+    await executeIntegrationInstance(logger, instance, invocationConfig, {
+      enableSchemaValidation: true,
+    });
+
+    expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
+  });
+
+  test('does not turn on schema validation if enableSchemaValidation is not set', async () => {
+    await executeIntegrationInstance(logger, instance, invocationConfig);
+    expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+  });
 });
 
 describe('executeIntegrationLocally', () => {
@@ -409,5 +425,18 @@ describe('executeIntegrationLocally', () => {
     };
 
     expect(validate).toHaveBeenCalledWith(expectedContext);
+  });
+
+  test('enables graph object schema validation', async () => {
+    const validate = jest.fn();
+
+    expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+
+    await executeIntegrationLocally({
+      validateInvocation: validate,
+      integrationSteps: [],
+    });
+
+    expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
   });
 });

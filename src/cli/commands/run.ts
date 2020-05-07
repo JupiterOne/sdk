@@ -55,6 +55,9 @@ export function run() {
         logger,
         createIntegrationInstanceForLocalExecution(invocationConfig),
         invocationConfig,
+        {
+          enableSchemaValidation: true,
+        },
       );
 
       log.displayExecutionResults(executionResults);

@@ -44,7 +44,26 @@ beforeEach(() => {
 
 afterEach(async () => {
   delete process.env.JUPITERONE_API_KEY;
+  delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
   await polly.disconnect();
+});
+
+test('enables graph object schema validation', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+  ]);
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
 });
 
 test('executes integration and performs upload', async () => {
