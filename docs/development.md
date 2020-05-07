@@ -40,7 +40,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
       );
     }
 
-    return validate(config);
+    await validate(config);
   },
 
   getStepStartStates(
@@ -148,7 +148,7 @@ function validateInvocation(context: IntegrationExecutionContext) {
     );
   }
 
-  return validate(config);
+  await validate(config);
 }
 ```
 
@@ -156,16 +156,6 @@ Using the above example, the following message will be logged if the config's
 `clientId` or `clientSecret` is not set:
 
 `Error occurred while validating integration configuration. (errorCode=CONFIG_VALIDATION_ERROR, errorId=<generated error id>, reason=Config requires a clientId and clientSecret to be provided)`;
-
-Optionally, users can pass in a more specific error code to display when
-throwing the error.
-
-```typescript
-throw new IntegrationValidationError(
-  'Config requires a clientId and clientSecret to be provided',
-  'INVALID_CONFIGURATION',
-);
-```
 
 #### `getStepStartStates`
 

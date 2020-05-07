@@ -16,7 +16,10 @@ import {
   IntegrationLocalConfigFieldMissingError,
   IntegrationValidationError,
 } from '../error';
-import { UNEXPECTED_ERROR_CODE } from '../../../errors';
+import {
+  UNEXPECTED_ERROR_CODE,
+  UNEXPECTED_ERROR_REASON,
+} from '../../../errors';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
 const name = 'integration-logger';
@@ -367,20 +370,7 @@ describe('validation failure logging', () => {
 });
 
 describe('createErrorEventDescription', () => {
-  test('adds error message to "reason" if expose option on error is set to true', () => {
-    const errorWithExposeTrue = new Error('soba');
-    (errorWithExposeTrue as any).expose = true;
-
-    const { description, errorId } = createErrorEventDescription(
-      errorWithExposeTrue,
-      'testing',
-    );
-    expect(description).toEqual(
-      `testing (errorCode=${UNEXPECTED_ERROR_CODE}, errorId=${errorId}, reason=soba)`,
-    );
-  });
-
-  test('does not add reason if expose is not set', () => {
+  test('supplies default reason if an error without a code is provided', () => {
     const error = new Error('soba');
 
     const { description, errorId } = createErrorEventDescription(
@@ -388,18 +378,19 @@ describe('createErrorEventDescription', () => {
       'testing',
     );
     expect(description).toEqual(
-      `testing (errorCode=${UNEXPECTED_ERROR_CODE}, errorId=${errorId})`,
+      `testing (errorCode=${UNEXPECTED_ERROR_CODE}, errorId=${errorId}, reason=${UNEXPECTED_ERROR_REASON})`,
     );
   });
 
-  test('displays code from error if set', () => {
-    const errorWithCode = new Error('soba');
-    (errorWithCode as any).code = 'SOBA';
+  test('displays code and message from error if error is an integration error', () => {
+    const error = new IntegrationValidationError('soba');
 
     const { description, errorId } = createErrorEventDescription(
-      errorWithCode,
+      error,
       'testing',
     );
-    expect(description).toEqual(`testing (errorCode=SOBA, errorId=${errorId})`);
+    expect(description).toEqual(
+      `testing (errorCode=${error.code}, errorId=${errorId}, reason=soba)`,
+    );
   });
 });

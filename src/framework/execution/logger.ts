@@ -11,7 +11,11 @@ import {
 } from './types';
 
 import { SynchronizationJobContext } from '../synchronization';
-import { UNEXPECTED_ERROR_CODE } from '../../errors';
+import {
+  IntegrationError,
+  UNEXPECTED_ERROR_CODE,
+  UNEXPECTED_ERROR_REASON,
+} from '../../errors';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -232,15 +236,24 @@ function instrumentEventLogging(
   });
 }
 
-export function createErrorEventDescription(err: Error, message: string) {
+export function createErrorEventDescription(
+  err: Error | IntegrationError,
+  message: string,
+) {
   const errorId = uuid();
-  const errorCode = (err as any).code ?? UNEXPECTED_ERROR_CODE;
 
-  let errorDetails = `errorCode=${errorCode}, errorId=${errorId}`;
+  let errorCode: string;
+  let errorReason: string;
 
-  if ((err as any).expose) {
-    errorDetails += `, reason=${err.message}`;
+  if (err instanceof IntegrationError) {
+    errorCode = err.code;
+    errorReason = err.message;
+  } else {
+    errorCode = UNEXPECTED_ERROR_CODE;
+    errorReason = UNEXPECTED_ERROR_REASON;
   }
+
+  const errorDetails = `errorCode=${errorCode}, errorId=${errorId}, reason=${errorReason}`;
 
   return {
     errorId,
