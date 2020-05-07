@@ -152,7 +152,7 @@ function validateInvocation(context: IntegrationExecutionContext) {
 }
 ```
 
-Using the abover examplle, the following message will be logged if the config's
+Using the above example, the following message will be logged if the config's
 `clientId` or `clientSecret` is not set:
 
 `Error occurred while validating integration configuration. (errorCode=CONFIG_VALIDATION_ERROR, errorId=<generated error id>, reason=Config requires a clientId and clientSecret to be provided)`;
