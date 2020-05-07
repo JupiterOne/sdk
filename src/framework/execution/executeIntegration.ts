@@ -22,6 +22,10 @@ export interface ExecuteIntegrationResult {
   };
 }
 
+interface ExecuteIntegrationOptions {
+  enableSchemaValidation?: boolean;
+}
+
 /**
  * Starts execution of an integration instance generated from local environment
  * variables.
@@ -35,6 +39,7 @@ export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
     }),
     createIntegrationInstanceForLocalExecution(config),
     config,
+    { enableSchemaValidation: true },
   );
 }
 
@@ -45,7 +50,12 @@ export async function executeIntegrationInstance(
   logger: IntegrationLogger,
   instance: IntegrationInstance,
   config: IntegrationInvocationConfig,
+  options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
+  if (options.enableSchemaValidation) {
+    process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
+  }
+
   const result = await executeIntegration(
     {
       instance,

@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import {
   createIntegrationEntity,
   IntegrationEntityData,
@@ -138,14 +139,14 @@ describe('createIntegrationEntity', () => {
   });
 
   test('does not assign displayName without name, tag.name', () => {
-    expect(() => {
-      createIntegrationEntity({
-        entityData: {
-          assign: networkAssigns,
-          source: { ...networkSourceData, name: undefined },
-        },
-      });
-    }).toThrowError(/name/);
+    const entity = createIntegrationEntity({
+      entityData: {
+        assign: networkAssigns,
+        source: { ...networkSourceData, name: undefined, tags: undefined },
+      },
+    });
+
+    expect(entity.displayName).toBeUndefined();
   });
 
   test('assigns displayName from name when not set by tag.name', () => {
@@ -267,4 +268,48 @@ describe('createIntegrationEntity', () => {
       );
     },
   );
+});
+
+describe('schema validation on', () => {
+  beforeEach(() => {
+    process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
+  });
+
+  afterEach(() => {
+    delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
+  });
+
+  test('throws if an a required property is not set', () => {
+    expect(() =>
+      createIntegrationEntity({
+        entityData: {
+          assign: networkAssigns,
+          source: {
+            ...networkSourceData,
+            name: undefined, // all entities require a name
+          },
+        },
+      }),
+    ).toThrow(/should have required property 'name'/);
+  });
+});
+
+describe('schema validation off', () => {
+  beforeEach(() => {
+    delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
+  });
+
+  test('does not throw if class is not in data model', () => {
+    expect(() =>
+      createIntegrationEntity({
+        entityData: {
+          assign: networkAssigns,
+          source: {
+            ...networkSourceData,
+            _class: uuid(),
+          },
+        },
+      }),
+    ).not.toThrow();
+  });
 });

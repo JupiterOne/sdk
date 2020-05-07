@@ -121,7 +121,10 @@ export function createIntegrationEntity(
   const generatedEntity = generateEntity(input.entityData);
 
   validateRawData(generatedEntity);
-  validateEntityWithSchema(generatedEntity);
+
+  if (process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION) {
+    validateEntityWithSchema(generatedEntity);
+  }
 
   return generatedEntity;
 }
@@ -191,7 +194,7 @@ function generateEntityKey(data: any): string {
   if (!id) {
     throw new IntegrationError({
       code: 'INVALID_INPUT_TO_GENERATE_ENTITY_KEY',
-      message: 'Entity key generation requires one of data.{providerId,id}'
+      message: 'Entity key generation requires one of data.{providerId,id}',
     });
   }
   return id;
@@ -227,7 +230,7 @@ function schemaWhitelistedPropertyNames(_class: string[]): string[] {
       if (!schema) {
         throw new IntegrationError({
           code: 'NO_SCHEMA_FOR_CLASS',
-          message: `Class '${c}' does not yet have a schema supported by the SDK!`
+          message: `Class '${c}' does not yet have a schema supported by the SDK!`,
         });
       }
       properties.push(...schemaPropertyNames(schema));
