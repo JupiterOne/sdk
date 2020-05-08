@@ -1,5 +1,6 @@
 import path from 'path';
 import times from 'lodash/times';
+import noop from 'lodash/noop';
 
 import {
   SynchronizationJob,
@@ -84,10 +85,23 @@ describe('uploadCollectedData', () => {
       },
     });
 
+    const loggerUploadStartSpy = jest
+      .spyOn(context.logger, 'synchronizationUploadStart')
+      .mockImplementation(noop);
+    const loggerUploadEndSpy = jest
+      .spyOn(context.logger, 'synchronizationUploadEnd')
+      .mockImplementation(noop);
+
     await uploadCollectedData({
       ...context,
       job,
     });
+
+    expect(loggerUploadStartSpy).toHaveBeenCalledTimes(1);
+    expect(loggerUploadStartSpy).toHaveBeenCalledWith(job);
+
+    expect(loggerUploadEndSpy).toHaveBeenCalledTimes(1);
+    expect(loggerUploadEndSpy).toHaveBeenCalledWith(job);
 
     expect(postSpy).toHaveBeenCalledTimes(4);
     expect(postSpy).toHaveBeenCalledWith(

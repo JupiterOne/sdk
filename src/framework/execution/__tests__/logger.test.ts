@@ -321,6 +321,47 @@ describe('step event publishing', () => {
   });
 });
 
+describe('sync upload logging', () => {
+  test('posts events to api client', async () => {
+    const logger = createIntegrationLogger({ name, invocationConfig });
+    const context: SynchronizationJobContext = {
+      logger,
+      job: { id: 'test-job-id' } as SynchronizationJob,
+      apiClient: createApiClient({
+        apiBaseUrl: 'https://api.us.jupiterone.io',
+        account: 'mocheronis',
+      }),
+    };
+
+    logger.registerSynchronizationJobContext(context);
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation(noop as any);
+
+    logger.synchronizationUploadStart(context.job);
+    logger.synchronizationUploadEnd(context.job);
+
+    await logger.flush();
+
+    const expectedEventsUrl =
+      '/persister/synchronization/jobs/test-job-id/events';
+
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
+      events: [
+        {
+          name: 'sync_upload_start',
+          description: 'Uploading collected data...',
+        },
+      ],
+    });
+    expect(postSpy).toHaveBeenNthCalledWith(2, expectedEventsUrl, {
+      events: [{ name: 'sync_upload_end', description: 'Upload complete.' }],
+    });
+  });
+});
+
 describe('validation failure logging', () => {
   test('publishes message to synchronizer and writes error log', async () => {
     const logger = createIntegrationLogger({ name, invocationConfig });

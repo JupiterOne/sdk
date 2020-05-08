@@ -10,7 +10,10 @@ import {
   IntegrationInstanceConfigFieldMap,
 } from './types';
 
-import { SynchronizationJobContext } from '../synchronization';
+import {
+  SynchronizationJob,
+  SynchronizationJobContext,
+} from '../synchronization';
 import {
   IntegrationError,
   UNEXPECTED_ERROR_CODE,
@@ -251,6 +254,30 @@ function instrumentEventLogging(
       );
 
       logger.error({ errorId, err, step: step.id }, description);
+
+      publishEvent(name, description);
+    },
+    synchronizationUploadStart: (job: SynchronizationJob) => {
+      const name = 'sync_upload_start';
+      const description = 'Uploading collected data...';
+      logger.info(
+        {
+          synchronizationJobId: job.id,
+        },
+        description,
+      );
+
+      publishEvent(name, description);
+    },
+    synchronizationUploadEnd: (job: SynchronizationJob) => {
+      const name = 'sync_upload_end';
+      const description = 'Upload complete.';
+      logger.info(
+        {
+          synchronizationJobId: job.id,
+        },
+        description,
+      );
 
       publishEvent(name, description);
     },
