@@ -78,8 +78,10 @@ export function createIntegrationLogger({
   const eventPublishingQueue = new PromiseQueue({ concurrency: 1 });
   const errorSet = new Set<Error>();
 
+  const verboseTraceLogger = instrumentVerboseTrace(logger);
+
   return instrumentEventLogging({
-    logger: instrumentVerboseTrace(logger),
+    logger: instrumentErrorTracking(verboseTraceLogger, errorSet),
     eventPublishingQueue,
     errorSet,
   });
@@ -137,6 +139,34 @@ function instrumentVerboseTrace(logger: Logger): Logger {
     child: (options: object = {}, simple?: boolean) => {
       const c = child.apply(logger, [options, simple]);
       return instrumentVerboseTrace(c);
+    },
+  });
+
+  return logger;
+}
+
+function instrumentErrorTracking(logger: Logger, errorSet: Set<Error>): Logger {
+  const error = logger.error;
+  const child = logger.child;
+
+  Object.assign(logger, {
+    error: (...params: any[]) => {
+      if (params.length === 0) {
+        return error.apply(logger);
+      }
+
+      if (params[0] instanceof Error) {
+        errorSet.add(params[0]);
+      } else if (params[0]?.err instanceof Error) {
+        errorSet.add(params[0].err);
+      }
+
+      error.apply(logger, [...params]);
+    },
+
+    child: (options: object = {}, simple?: boolean) => {
+      const c = child.apply(logger, [options, simple]);
+      return instrumentErrorTracking(c, errorSet);
     },
   });
 
@@ -220,8 +250,6 @@ function instrumentEventLogging(
         `Step "${step.name}" failed to complete due to error.`,
       );
 
-      errorSet.add(err);
-
       logger.error({ errorId, err, step: step.id }, description);
 
       publishEvent(name, description);
@@ -233,7 +261,6 @@ function instrumentEventLogging(
         `Error occurred while validating integration configuration.`,
       );
 
-      errorSet.add(err);
       logger.error({ errorId, err }, description);
       publishEvent(name, description);
     },
