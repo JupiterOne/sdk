@@ -81,8 +81,10 @@ export async function initiateSynchronization({
 
     job = response.data.job;
   } catch (err) {
-    const errorMessage = 'Error occurred while initiating synchronization job.';
-    throw synchronizationApiError(err, errorMessage);
+    throw synchronizationApiError(
+      err,
+      'Error occurred while initiating synchronization job',
+    );
   }
 
   return {
@@ -122,9 +124,10 @@ export async function finalizeSynchronization({
     );
     finalizedJob = response.data.job;
   } catch (err) {
-    const errorMessage = 'Error occurred while finalizing synchronization job.';
-    logger.error(err, errorMessage);
-    throw synchronizationApiError(err, errorMessage);
+    throw synchronizationApiError(
+      err,
+      'Error occurred while finalizing synchronization job.',
+    );
   }
 
   return finalizedJob;
@@ -142,7 +145,6 @@ async function getPartialDatasets() {
  * Uploads data collected by the integration into the
  */
 export async function uploadCollectedData(context: SynchronizationJobContext) {
-  const { logger } = context;
   await walkDirectory({
     path: 'graph',
     async iteratee({ data }) {
@@ -157,9 +159,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
           await uploadData(context, 'relationships', parsedData.relationships);
         }
       } catch (err) {
-        const errorMessage = 'Error uploading collected data.';
-        logger.error(err, errorMessage);
-        throw synchronizationApiError(err, errorMessage);
+        throw synchronizationApiError(err, 'Error uploading collected data');
       }
     },
   });
@@ -213,8 +213,10 @@ export async function abortSynchronization({
     );
     abortedJob = response.data.job;
   } catch (err) {
-    const errorMessage = 'Error occurred while aborting synchronization job.';
-    throw synchronizationApiError(err, errorMessage);
+    throw synchronizationApiError(
+      err,
+      'Error occurred while aborting synchronization job',
+    );
   }
 
   return abortedJob;
