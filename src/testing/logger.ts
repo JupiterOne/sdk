@@ -11,6 +11,7 @@ export function createMockIntegrationLogger(): IntegrationLogger {
     error: noop,
     fatal: noop,
     registerSynchronizationJobContext: noop,
+    isHandledError: () => false,
     stepStart: noop,
     stepSuccess: noop,
     stepFailure: noop,

@@ -38,12 +38,22 @@ export async function synchronizeCollectedData(
 ): Promise<SynchronizationJob> {
   const jobContext = await initiateSynchronization(input);
 
-  await uploadCollectedData(jobContext);
+  try {
+    await uploadCollectedData(jobContext);
 
-  return await finalizeSynchronization({
-    ...jobContext,
-    partialDatasets: await getPartialDatasets(),
-  });
+    return await finalizeSynchronization({
+      ...jobContext,
+      partialDatasets: await getPartialDatasets(),
+    });
+  } catch (err) {
+    jobContext.logger.error(
+      err,
+      'Error occured while synchronizing collected data',
+    );
+
+    await abortSynchronization({ ...jobContext, reason: err.message });
+    throw err;
+  }
 }
 
 export interface SynchronizationJobContext {
@@ -71,9 +81,10 @@ export async function initiateSynchronization({
 
     job = response.data.job;
   } catch (err) {
-    const errorMessage = 'Error occurred while initiating synchronization job.';
-    logger.error(err, errorMessage);
-    throw synchronizationApiError(err, errorMessage);
+    throw synchronizationApiError(
+      err,
+      'Error occurred while initiating synchronization job',
+    );
   }
 
   return {
@@ -113,9 +124,10 @@ export async function finalizeSynchronization({
     );
     finalizedJob = response.data.job;
   } catch (err) {
-    const errorMessage = 'Error occurred while finalizing synchronization job.';
-    logger.error(err, errorMessage);
-    throw synchronizationApiError(err, errorMessage);
+    throw synchronizationApiError(
+      err,
+      'Error occurred while finalizing synchronization job.',
+    );
   }
 
   return finalizedJob;
@@ -133,7 +145,6 @@ async function getPartialDatasets() {
  * Uploads data collected by the integration into the
  */
 export async function uploadCollectedData(context: SynchronizationJobContext) {
-  const { logger } = context;
   await walkDirectory({
     path: 'graph',
     async iteratee({ data }) {
@@ -148,9 +159,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
           await uploadData(context, 'relationships', parsedData.relationships);
         }
       } catch (err) {
-        const errorMessage = 'Error uploading collected data.';
-        logger.error(err, errorMessage);
-        throw synchronizationApiError(err, errorMessage);
+        throw synchronizationApiError(err, 'Error uploading collected data');
       }
     },
   });
@@ -179,4 +188,36 @@ async function uploadData<T extends UploadDataLookup, K extends keyof T>(
     },
     { concurrency: UPLOAD_CONCURRENCY },
   );
+}
+
+interface AbortSynchronizationInput extends SynchronizationJobContext {
+  reason?: string;
+}
+/**
+ * Aborts a synchronization job
+ */
+export async function abortSynchronization({
+  logger,
+  apiClient,
+  job,
+  reason,
+}: AbortSynchronizationInput) {
+  logger.info('Aborting synchronization job...');
+
+  let abortedJob: SynchronizationJob;
+
+  try {
+    const response = await apiClient.post(
+      `/persister/synchronization/jobs/${job.id}/abort`,
+      { reason },
+    );
+    abortedJob = response.data.job;
+  } catch (err) {
+    throw synchronizationApiError(
+      err,
+      'Error occurred while aborting synchronization job',
+    );
+  }
+
+  return abortedJob;
 }

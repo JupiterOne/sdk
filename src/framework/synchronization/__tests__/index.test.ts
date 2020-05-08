@@ -8,6 +8,7 @@ import {
   uploadCollectedData,
   finalizeSynchronization,
   synchronizeCollectedData,
+  abortSynchronization,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -158,6 +159,38 @@ describe('finalizeSynchronization', () => {
   });
 });
 
+describe('abortSynchronization', () => {
+  test('sends reason to payload', async () => {
+    loadProjectStructure('synchronization');
+
+    const job = generateSynchronizationJob();
+    const context = createTestContext();
+    const { apiClient } = context;
+
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const returnedJob = await abortSynchronization({
+      ...context,
+      job,
+      reason: 'test',
+    });
+
+    expect(returnedJob).toEqual(job);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/abort`,
+      {
+        reason: 'test',
+      },
+    );
+  });
+});
+
 describe('synchronizeCollectedData', () => {
   test('creates job, uploads collected data, and starts finalization', async () => {
     loadProjectStructure('synchronization');
@@ -219,6 +252,38 @@ describe('synchronizeCollectedData', () => {
       `/persister/synchronization/jobs/${job.id}/finalize`,
       {
         partialDatasets,
+      },
+    );
+  });
+
+  test('aborts synchronization job if failure occurs during upload', async () => {
+    loadProjectStructure('synchronization');
+
+    const context = createTestContext();
+    const job = generateSynchronizationJob();
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation((path: string): any => {
+        if (path === `/persister/synchronization/jobs/${job.id}/finalize`) {
+          throw new Error('Failed to finalize');
+        }
+
+        return {
+          data: {
+            job,
+          },
+        };
+      });
+
+    await expect(synchronizeCollectedData(context)).rejects.toThrow(
+      /while finalizing synchronization job/,
+    );
+
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/abort`,
+      {
+        reason: 'Error occurred while finalizing synchronization job.',
       },
     );
   });

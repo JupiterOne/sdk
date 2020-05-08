@@ -76,11 +76,15 @@ export function createIntegrationLogger({
   // Optimizations can come later once the synchronization api supports
   // accepting a timestamp.
   const eventPublishingQueue = new PromiseQueue({ concurrency: 1 });
+  const errorSet = new Set<Error>();
 
-  return instrumentEventLogging(
-    instrumentVerboseTrace(logger),
+  const verboseTraceLogger = instrumentVerboseTrace(logger);
+
+  return instrumentEventLogging({
+    logger: instrumentErrorTracking(verboseTraceLogger, errorSet),
     eventPublishingQueue,
-  );
+    errorSet,
+  });
 }
 
 function createInstanceConfigSerializer(
@@ -141,16 +145,49 @@ function instrumentVerboseTrace(logger: Logger): Logger {
   return logger;
 }
 
-function instrumentEventLogging(
-  logger: Logger,
-  eventPublishingQueue: PromiseQueue,
-  inputSynchronizationJobContext?: SynchronizationJobContext,
-): IntegrationLogger {
+function instrumentErrorTracking(logger: Logger, errorSet: Set<Error>): Logger {
+  const error = logger.error;
   const child = logger.child;
 
-  let synchronizationJobContext:
-    | SynchronizationJobContext
-    | undefined = inputSynchronizationJobContext;
+  Object.assign(logger, {
+    error: (...params: any[]) => {
+      if (params.length === 0) {
+        return error.apply(logger);
+      }
+
+      if (params[0] instanceof Error) {
+        errorSet.add(params[0]);
+      } else if (params[0]?.err instanceof Error) {
+        errorSet.add(params[0].err);
+      }
+
+      error.apply(logger, [...params]);
+    },
+
+    child: (options: object = {}, simple?: boolean) => {
+      const c = child.apply(logger, [options, simple]);
+      return instrumentErrorTracking(c, errorSet);
+    },
+  });
+
+  return logger;
+}
+
+interface InstrumentEventLoggingInput {
+  logger: Logger;
+  eventPublishingQueue: PromiseQueue;
+  errorSet: Set<Error>;
+  synchronizationJobContext?: SynchronizationJobContext;
+}
+
+function instrumentEventLogging(
+  input: InstrumentEventLoggingInput,
+): IntegrationLogger {
+  const { logger, eventPublishingQueue, errorSet } = input;
+  const child = logger.child;
+
+  let synchronizationJobContext: SynchronizationJobContext | undefined =
+    input.synchronizationJobContext;
 
   const publishEvent = (name: string, description: string) => {
     if (synchronizationJobContext) {
@@ -190,6 +227,8 @@ function instrumentEventLogging(
       synchronizationJobContext = context;
     },
 
+    isHandledError: (err: Error) => errorSet.has(err),
+
     stepStart: (step: IntegrationStep) => {
       const name = 'step-start';
       const description = `Starting step "${step.name}"...`;
@@ -226,12 +265,13 @@ function instrumentEventLogging(
       publishEvent(name, description);
     },
     child: (options: object = {}, simple?: boolean) => {
-      const c = child.apply(logger, [options, simple]);
-      return instrumentEventLogging(
-        c,
+      const childLogger = child.apply(logger, [options, simple]);
+      return instrumentEventLogging({
+        logger: childLogger,
         eventPublishingQueue,
+        errorSet,
         synchronizationJobContext,
-      );
+      });
     },
   });
 }

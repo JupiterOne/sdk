@@ -14,6 +14,7 @@ and this project adheres to
 - An `errorCode`, `errorId`, and `reason` is now displayed in step failure
   events and logs.
 - Event logging around errors thrown in `validateInvocation` function.
+- Abort synchronization job when `run` and `sync` command fails.
 
 ### Changed
 

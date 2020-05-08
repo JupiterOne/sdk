@@ -12,6 +12,7 @@ import {
   initiateSynchronization,
   uploadCollectedData,
   finalizeSynchronization,
+  abortSynchronization,
 } from '../../framework/synchronization';
 import { executeIntegrationInstance } from '../../framework/execution';
 import { createIntegrationInstanceForLocalExecution } from '../../framework/execution/instance';
@@ -51,24 +52,42 @@ export function run() {
 
       logger.registerSynchronizationJobContext(synchronizationContext);
 
-      const executionResults = await executeIntegrationInstance(
-        logger,
-        createIntegrationInstanceForLocalExecution(invocationConfig),
-        invocationConfig,
-        {
-          enableSchemaValidation: true,
-        },
-      );
+      try {
+        const executionResults = await executeIntegrationInstance(
+          logger,
+          createIntegrationInstanceForLocalExecution(invocationConfig),
+          invocationConfig,
+          {
+            enableSchemaValidation: true,
+          },
+        );
 
-      log.displayExecutionResults(executionResults);
+        log.displayExecutionResults(executionResults);
 
-      await uploadCollectedData(synchronizationContext);
+        await uploadCollectedData(synchronizationContext);
 
-      const synchronizationResult = await finalizeSynchronization({
-        ...synchronizationContext,
-        partialDatasets: executionResults.metadata.partialDatasets,
-      });
+        const synchronizationResult = await finalizeSynchronization({
+          ...synchronizationContext,
+          partialDatasets: executionResults.metadata.partialDatasets,
+        });
 
-      log.displaySynchronizationResults(synchronizationResult);
+        log.displaySynchronizationResults(synchronizationResult);
+      } catch (err) {
+        await logger.flush();
+
+        if (!logger.isHandledError(err)) {
+          logger.error(
+            err,
+            'Unexpected error occurred during integration run.',
+          );
+        }
+
+        const abortResult = await abortSynchronization({
+          ...synchronizationContext,
+          reason: err.message,
+        });
+
+        log.displaySynchronizationResults(abortResult);
+      }
     });
 }
