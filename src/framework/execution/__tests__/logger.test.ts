@@ -301,15 +301,15 @@ describe('step event publishing', () => {
 
     expect(postSpy).toHaveBeenCalledTimes(3);
     expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
-      events: [{ name: 'step-start', description: 'Starting step "Mochi"...' }],
+      events: [{ name: 'step_start', description: 'Starting step "Mochi"...' }],
     });
     expect(postSpy).toHaveBeenNthCalledWith(2, expectedEventsUrl, {
-      events: [{ name: 'step-end', description: 'Completed step "Mochi".' }],
+      events: [{ name: 'step_end', description: 'Completed step "Mochi".' }],
     });
     expect(postSpy).toHaveBeenNthCalledWith(3, expectedEventsUrl, {
       events: [
         {
-          name: 'step-failure',
+          name: 'step_failure',
           description: expect.stringMatching(
             new RegExp(
               `Step "Mochi" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
@@ -402,7 +402,7 @@ describe('validation failure logging', () => {
     expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
       events: [
         {
-          name: 'validation-failure',
+          name: 'validation_failure',
           description: expect.stringMatching(expectedDescriptionRegex),
         },
       ],

@@ -233,21 +233,21 @@ function instrumentEventLogging(
     isHandledError: (err: Error) => errorSet.has(err),
 
     stepStart: (step: IntegrationStep) => {
-      const name = 'step-start';
+      const name = 'step_start';
       const description = `Starting step "${step.name}"...`;
       logger.info({ step: step.id }, description);
 
       publishEvent(name, description);
     },
     stepSuccess: (step: IntegrationStep) => {
-      const name = 'step-end';
+      const name = 'step_end';
       const description = `Completed step "${step.name}".`;
       logger.info({ step: step.id }, description);
 
       publishEvent(name, description);
     },
     stepFailure: (step: IntegrationStep, err: Error) => {
-      const name = 'step-failure';
+      const name = 'step_failure';
       const { errorId, description } = createErrorEventDescription(
         err,
         `Step "${step.name}" failed to complete due to error.`,
@@ -282,7 +282,7 @@ function instrumentEventLogging(
       publishEvent(name, description);
     },
     validationFailure: (err: Error) => {
-      const name = 'validation-failure';
+      const name = 'validation_failure';
       const { errorId, description } = createErrorEventDescription(
         err,
         `Error occurred while validating integration configuration.`,
