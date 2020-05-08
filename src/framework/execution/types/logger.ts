@@ -12,6 +12,7 @@ interface ChildLogFunction {
 type StepLogFunction = (step: IntegrationStep) => void;
 type StepLogFunctionWithError = (step: IntegrationStep, err: Error) => void;
 type ValidationLogFunction = (err: Error) => void;
+type IsHandledErrorFunction = (err: Error) => boolean;
 
 interface BaseLogger {
   // traditional functions for regular logging
@@ -28,6 +29,8 @@ export interface IntegrationLogger extends BaseLogger {
   registerSynchronizationJobContext: (
     context: SynchronizationJobContext,
   ) => void;
+
+  isHandledError: IsHandledErrorFunction;
 
   // Special log functions used to publish events to j1
   stepStart: StepLogFunction;

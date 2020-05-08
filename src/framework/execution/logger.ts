@@ -76,11 +76,13 @@ export function createIntegrationLogger({
   // Optimizations can come later once the synchronization api supports
   // accepting a timestamp.
   const eventPublishingQueue = new PromiseQueue({ concurrency: 1 });
+  const errorSet = new Set<Error>();
 
-  return instrumentEventLogging(
-    instrumentVerboseTrace(logger),
+  return instrumentEventLogging({
+    logger: instrumentVerboseTrace(logger),
     eventPublishingQueue,
-  );
+    errorSet,
+  });
 }
 
 function createInstanceConfigSerializer(
@@ -141,16 +143,21 @@ function instrumentVerboseTrace(logger: Logger): Logger {
   return logger;
 }
 
+interface InstrumentEventLoggingInput {
+  logger: Logger;
+  eventPublishingQueue: PromiseQueue;
+  errorSet: Set<Error>;
+  synchronizationJobContext?: SynchronizationJobContext;
+}
+
 function instrumentEventLogging(
-  logger: Logger,
-  eventPublishingQueue: PromiseQueue,
-  inputSynchronizationJobContext?: SynchronizationJobContext,
+  input: InstrumentEventLoggingInput,
 ): IntegrationLogger {
+  const { logger, eventPublishingQueue, errorSet } = input;
   const child = logger.child;
 
-  let synchronizationJobContext:
-    | SynchronizationJobContext
-    | undefined = inputSynchronizationJobContext;
+  let synchronizationJobContext: SynchronizationJobContext | undefined =
+    input.synchronizationJobContext;
 
   const publishEvent = (name: string, description: string) => {
     if (synchronizationJobContext) {
@@ -190,6 +197,8 @@ function instrumentEventLogging(
       synchronizationJobContext = context;
     },
 
+    isHandledError: (err: Error) => errorSet.has(err),
+
     stepStart: (step: IntegrationStep) => {
       const name = 'step-start';
       const description = `Starting step "${step.name}"...`;
@@ -211,6 +220,8 @@ function instrumentEventLogging(
         `Step "${step.name}" failed to complete due to error.`,
       );
 
+      errorSet.add(err);
+
       logger.error({ errorId, err, step: step.id }, description);
 
       publishEvent(name, description);
@@ -222,16 +233,18 @@ function instrumentEventLogging(
         `Error occurred while validating integration configuration.`,
       );
 
+      errorSet.add(err);
       logger.error({ errorId, err }, description);
       publishEvent(name, description);
     },
     child: (options: object = {}, simple?: boolean) => {
-      const c = child.apply(logger, [options, simple]);
-      return instrumentEventLogging(
-        c,
+      const childLogger = child.apply(logger, [options, simple]);
+      return instrumentEventLogging({
+        logger: childLogger,
         eventPublishingQueue,
+        errorSet,
         synchronizationJobContext,
-      );
+      });
     },
   });
 }

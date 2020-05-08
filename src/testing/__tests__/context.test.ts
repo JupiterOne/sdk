@@ -34,7 +34,7 @@ import { noopAsync } from '../logger';
         const { logger } = createContext();
 
         Object.keys(logger).forEach((key) => {
-          if (key !== 'child' && key !== 'flush') {
+          if (key !== 'child' && key !== 'flush' && key !== 'isHandledError') {
             expect(logger[key]).toEqual(noop);
           }
         });

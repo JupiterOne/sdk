@@ -255,6 +255,38 @@ describe('synchronizeCollectedData', () => {
       },
     );
   });
+
+  test('aborts synchronization job if failure occurs during upload', async () => {
+    loadProjectStructure('synchronization');
+
+    const context = createTestContext();
+    const job = generateSynchronizationJob();
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation((path: string): any => {
+        if (path === `/persister/synchronization/jobs/${job.id}/finalize`) {
+          throw new Error('Failed to finalize');
+        }
+
+        return {
+          data: {
+            job,
+          },
+        };
+      });
+
+    await expect(synchronizeCollectedData(context)).rejects.toThrow(
+      /while finalizing synchronization job/,
+    );
+
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/abort`,
+      {
+        reason: 'Error occurred while finalizing synchronization job.',
+      },
+    );
+  });
 });
 
 function createTestContext() {

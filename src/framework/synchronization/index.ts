@@ -38,12 +38,22 @@ export async function synchronizeCollectedData(
 ): Promise<SynchronizationJob> {
   const jobContext = await initiateSynchronization(input);
 
-  await uploadCollectedData(jobContext);
+  try {
+    await uploadCollectedData(jobContext);
 
-  return await finalizeSynchronization({
-    ...jobContext,
-    partialDatasets: await getPartialDatasets(),
-  });
+    return await finalizeSynchronization({
+      ...jobContext,
+      partialDatasets: await getPartialDatasets(),
+    });
+  } catch (err) {
+    jobContext.logger.error(
+      err,
+      'Error occured while synchronizing collected data',
+    );
+
+    await abortSynchronization({ ...jobContext, reason: err.message });
+    throw err;
+  }
 }
 
 export interface SynchronizationJobContext {

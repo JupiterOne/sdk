@@ -75,6 +75,13 @@ export function run() {
       } catch (err) {
         await logger.flush();
 
+        if (!logger.isHandledError(err)) {
+          logger.error(
+            err,
+            'Unexpected error occurred during integration run.',
+          );
+        }
+
         const abortResult = await abortSynchronization({
           ...synchronizationContext,
           reason: err.message,
