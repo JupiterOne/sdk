@@ -114,3 +114,25 @@ test('executes integration and performs upload', async () => {
     numRelationshipsUploaded: 1,
   });
 });
+
+test('aborts synchronization job if an error occurs', async () => {
+  // validation failure will cause synchronization to stop
+  loadProjectStructure('validationFailure');
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+  ]);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
+    ...job,
+    status: SynchronizationJobStatus.ABORTED,
+  });
+});

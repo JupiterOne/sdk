@@ -8,6 +8,7 @@ import {
   uploadCollectedData,
   finalizeSynchronization,
   synchronizeCollectedData,
+  abortSynchronization,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -153,6 +154,38 @@ describe('finalizeSynchronization', () => {
       `/persister/synchronization/jobs/${job.id}/finalize`,
       {
         partialDatasets,
+      },
+    );
+  });
+});
+
+describe('abortSynchronization', () => {
+  test('sends reason to payload', async () => {
+    loadProjectStructure('synchronization');
+
+    const job = generateSynchronizationJob();
+    const context = createTestContext();
+    const { apiClient } = context;
+
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const returnedJob = await abortSynchronization({
+      ...context,
+      job,
+      reason: 'test',
+    });
+
+    expect(returnedJob).toEqual(job);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/abort`,
+      {
+        reason: 'test',
       },
     );
   });

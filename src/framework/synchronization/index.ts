@@ -72,7 +72,6 @@ export async function initiateSynchronization({
     job = response.data.job;
   } catch (err) {
     const errorMessage = 'Error occurred while initiating synchronization job.';
-    logger.error(err, errorMessage);
     throw synchronizationApiError(err, errorMessage);
   }
 
@@ -179,4 +178,34 @@ async function uploadData<T extends UploadDataLookup, K extends keyof T>(
     },
     { concurrency: UPLOAD_CONCURRENCY },
   );
+}
+
+interface AbortSynchronizationInput extends SynchronizationJobContext {
+  reason?: string;
+}
+/**
+ * Aborts a synchronization job
+ */
+export async function abortSynchronization({
+  logger,
+  apiClient,
+  job,
+  reason,
+}: AbortSynchronizationInput) {
+  logger.info('Aborting synchronization job...');
+
+  let abortedJob: SynchronizationJob;
+
+  try {
+    const response = await apiClient.post(
+      `/persister/synchronization/jobs/${job.id}/abort`,
+      { reason },
+    );
+    abortedJob = response.data.job;
+  } catch (err) {
+    const errorMessage = 'Error occurred while aborting synchronization job.';
+    throw synchronizationApiError(err, errorMessage);
+  }
+
+  return abortedJob;
 }

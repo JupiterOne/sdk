@@ -48,6 +48,14 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
       job.status = SynchronizationJobStatus.FINALIZE_PENDING;
       return res.status(200).json({ job });
     });
+
+  polly.server
+    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/abort`)
+    .intercept((req, res) => {
+      allowCrossOrigin(req, res);
+      job.status = SynchronizationJobStatus.ABORTED;
+      return res.status(200).json({ job });
+    });
 }
 
 function allowCrossOrigin(req, res) {
