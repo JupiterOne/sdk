@@ -83,11 +83,13 @@ export function createIntegrationLogger({
 
   const verboseTraceLogger = instrumentVerboseTrace(logger);
 
-  return instrumentEventLogging({
-    logger: instrumentErrorTracking(verboseTraceLogger, errorSet),
-    eventPublishingQueue,
-    errorSet,
-  });
+  return instrumentEventLogging(
+    instrumentErrorTracking(verboseTraceLogger, errorSet),
+    {
+      eventPublishingQueue,
+      errorSet,
+    },
+  );
 }
 
 function createInstanceConfigSerializer(
@@ -176,25 +178,22 @@ function instrumentErrorTracking(logger: Logger, errorSet: Set<Error>): Logger {
   return logger;
 }
 
-interface InstrumentEventLoggingInput {
-  logger: Logger;
+interface LogContext {
   eventPublishingQueue: PromiseQueue;
   errorSet: Set<Error>;
   synchronizationJobContext?: SynchronizationJobContext;
 }
 
 function instrumentEventLogging(
-  input: InstrumentEventLoggingInput,
+  logger: Logger,
+  context: LogContext,
 ): IntegrationLogger {
-  const { logger, eventPublishingQueue, errorSet } = input;
+  const { eventPublishingQueue, errorSet } = context;
   const child = logger.child;
 
-  let synchronizationJobContext: SynchronizationJobContext | undefined =
-    input.synchronizationJobContext;
-
   const publishEvent = (name: string, description: string) => {
-    if (synchronizationJobContext) {
-      const { job, apiClient } = synchronizationJobContext;
+    if (context.synchronizationJobContext) {
+      const { job, apiClient } = context.synchronizationJobContext;
 
       const event = { name, description };
 
@@ -226,8 +225,10 @@ function instrumentEventLogging(
       await eventPublishingQueue.onIdle();
     },
 
-    registerSynchronizationJobContext: (context: SynchronizationJobContext) => {
-      synchronizationJobContext = context;
+    registerSynchronizationJobContext: (
+      synchronizationJobContext: SynchronizationJobContext,
+    ) => {
+      context.synchronizationJobContext = synchronizationJobContext;
     },
 
     isHandledError: (err: Error) => errorSet.has(err),
@@ -259,7 +260,7 @@ function instrumentEventLogging(
     },
     synchronizationUploadStart: (job: SynchronizationJob) => {
       const name = 'sync_upload_start';
-      const description = 'Uploading collected data...';
+      const description = 'Uploading collected data for synchronization...';
       logger.info(
         {
           synchronizationJobId: job.id,
@@ -293,12 +294,7 @@ function instrumentEventLogging(
     },
     child: (options: object = {}, simple?: boolean) => {
       const childLogger = child.apply(logger, [options, simple]);
-      return instrumentEventLogging({
-        logger: childLogger,
-        eventPublishingQueue,
-        errorSet,
-        synchronizationJobContext,
-      });
+      return instrumentEventLogging(childLogger, context);
     },
   });
 }

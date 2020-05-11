@@ -352,7 +352,7 @@ describe('sync upload logging', () => {
       events: [
         {
           name: 'sync_upload_start',
-          description: 'Uploading collected data...',
+          description: 'Uploading collected data for synchronization...',
         },
       ],
     });

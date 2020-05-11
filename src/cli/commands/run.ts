@@ -40,12 +40,12 @@ export function run() {
       const logger = createIntegrationLogger({
         name: 'local',
         pretty: true,
-      }).child({ integrationInstanceId });
+      });
 
       const invocationConfig = await loadConfig();
 
       const synchronizationContext = await initiateSynchronization({
-        logger: logger.child({ integrationInstanceId }),
+        logger,
         apiClient,
         integrationInstanceId,
       });
