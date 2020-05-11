@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 
 import globby from 'globby';
 
+import { IntegrationError } from '../errors';
 import * as log from '../log';
 
 import {
@@ -13,14 +14,17 @@ import {
   IntegrationStep,
 } from '../framework/execution';
 
+export class IntegrationInvocationConfigNotFoundError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'INVOCATION_CONFIG_NOT_FOUND',
+      message,
+    });
+  }
+}
+
 /**
- * Supports a convention over configuration approach
- * to building integrations.
- *
- * ./src/instanceConfigFields
- * ./src/steps/*
- * ./src/getStepStartStates
- * ./src/validateInvocation
+ * Loads integration invocation configuration.
  */
 export async function loadConfig(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
@@ -30,14 +34,57 @@ export async function loadConfig(
     registerTypescript();
   }
 
-  const config = {
-    instanceConfigFields: loadInstanceConfigFields(projectSourceDirectory),
-    validateInvocation: loadValidateInvocationFunction(projectSourceDirectory),
-    getStepStartStates: loadGetStepStartStatesFunction(projectSourceDirectory),
-    integrationSteps: await loadIntegrationSteps(projectSourceDirectory),
-  };
+  let config = loadInvocationConfig(projectSourceDirectory);
+
+  if (!config) {
+    log.warn(
+      'WARNING: Automatically loading configurations from a directory structure is deprecated and will be removed in the 1.0.0 release.\n' +
+        'Please migrate your integration to export the integration configuration at "src/index".\n' +
+        'For more information, see https://github.com/JupiterOne/integration-sdk/issues/125',
+    );
+
+    config = {
+      instanceConfigFields: loadInstanceConfigFields(projectSourceDirectory),
+      validateInvocation: loadValidateInvocationFunction(
+        projectSourceDirectory,
+      ),
+      getStepStartStates: loadGetStepStartStatesFunction(
+        projectSourceDirectory,
+      ),
+      integrationSteps: await loadIntegrationSteps(projectSourceDirectory),
+    };
+  }
 
   return config;
+}
+
+/**
+ * Loads instanceConfigFields from ./src/instanceConfigFields
+ */
+export function loadInvocationConfig(
+  projectSourceDirectory: string = path.join(process.cwd(), 'src'),
+): IntegrationInvocationConfig | undefined {
+  let integrationModule: any;
+
+  try {
+    integrationModule = require(path.resolve(projectSourceDirectory, 'index'));
+  } catch (err) {
+    // module not found
+    //
+    // Once the deprecated integration config path is handled,
+    // this will throw an error
+    return undefined;
+  }
+
+  const invocationConfig = integrationModule?.invocationConfig;
+
+  if (!invocationConfig) {
+    throw new IntegrationInvocationConfigNotFoundError(
+      'Integration invocation configuration not found. Configuration should be exported as "invocationConfig" from "src/index".',
+    );
+  }
+
+  return invocationConfig;
 }
 
 /**

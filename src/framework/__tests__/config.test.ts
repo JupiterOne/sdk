@@ -14,6 +14,8 @@ import {
   restoreProjectStructure,
 } from '../../__tests__/loadProjectStructure';
 
+import * as log from '../../log';
+
 jest.mock('../../log');
 
 afterEach(() => {
@@ -65,6 +67,20 @@ describe('loadConfig', () => {
         },
       ],
     });
+  });
+
+  test('logs deprecation message for projects with directory structure', async () => {
+    const typescriptProjectPath = getProjectDirectoryPath('typeScriptProject');
+
+    await loadConfig(path.resolve(typescriptProjectPath, 'src'));
+
+    const warnSpy = jest.spyOn(log, 'warn');
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(
+        /Automatically loading configurations from a directory structure is deprecated/,
+      ),
+    );
   });
 });
 
@@ -202,6 +218,46 @@ describe('JavaScript projects', () => {
         },
       ],
     });
+  });
+});
+
+describe('loading config from src/index file', () => {
+  test('loads steps, getStepStartStates, validateFunction, and instanceConfigFields', async () => {
+    loadProjectStructure('indexFileEntrypoint');
+    const config = await loadConfig();
+
+    expect(config).toEqual({
+      instanceConfigFields: {
+        myConfig: {
+          mask: true,
+          type: 'boolean',
+        },
+      },
+      getStepStartStates: expect.any(Function),
+      validateInvocation: expect.any(Function),
+      integrationSteps: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          types: ['my_account'],
+          executionHandler: expect.any(Function),
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          types: ['my_user'],
+          executionHandler: expect.any(Function),
+        },
+      ],
+    });
+  });
+
+  test('throws error if configuration is not ', async () => {
+    loadProjectStructure('indexFileEntrypointFailure');
+
+    await expect(loadConfig()).rejects.toThrow(
+      /Configuration should be exported as "invocationConfig"/,
+    );
   });
 });
 
