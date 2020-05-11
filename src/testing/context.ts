@@ -25,11 +25,15 @@ export function createMockExecutionContext({
   instanceConfig,
 }: CreateMockExecutionContextOptions = {}): IntegrationExecutionContext {
   const logger = createMockIntegrationLogger();
+  const accountId =
+    process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID ||
+    LOCAL_INTEGRATION_INSTANCE.accountId;
 
   // copy local instance properties so that tests cannot
   // mutate the original object and cause unpredicable behavior
-  const instance = {
+  const instance: IntegrationInstance = {
     ...LOCAL_INTEGRATION_INSTANCE,
+    accountId,
   };
 
   if (instanceConfig) {

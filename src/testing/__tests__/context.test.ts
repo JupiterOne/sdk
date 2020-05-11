@@ -13,6 +13,7 @@ import {
   createMockStepExecutionContext,
 } from '../context';
 import { noopAsync } from '../logger';
+import { v4 as uuid } from 'uuid';
 
 /**
  * Ensure that both createMockExecutionContext and
@@ -27,6 +28,7 @@ import { noopAsync } from '../logger';
       afterEach(() => {
         delete process.env.MY_BOOLEAN_CONFIG;
         delete process.env.MY_STRING_CONFIG;
+        delete process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID;
         restoreProjectStructure();
       });
 
@@ -46,6 +48,15 @@ import { noopAsync } from '../logger';
       test('generates an execution context with the integration instance used for local development', () => {
         const { instance } = createContext();
         expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
+      });
+
+      test('generates an execution context with the integration instance used for local development with custom account id from environment variable', () => {
+        const accountId = (process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID = uuid());
+        const { instance } = createContext();
+        expect(instance).toEqual({
+          ...LOCAL_INTEGRATION_INSTANCE,
+          accountId,
+        });
       });
 
       test('accepts an instanceConfig for prepopulating configuration values', () => {
