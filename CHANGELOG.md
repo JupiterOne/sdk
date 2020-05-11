@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 0.18.0 2020-05-01
+
 ### Added
 
 - Automatic event logging around steps (start, end, and failure).
