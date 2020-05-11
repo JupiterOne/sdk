@@ -145,6 +145,8 @@ async function getPartialDatasets() {
  * Uploads data collected by the integration into the
  */
 export async function uploadCollectedData(context: SynchronizationJobContext) {
+  context.logger.synchronizationUploadStart(context.job);
+
   await walkDirectory({
     path: 'graph',
     async iteratee({ data }) {
@@ -163,6 +165,8 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
       }
     },
   });
+
+  context.logger.synchronizationUploadEnd(context.job);
 }
 
 interface UploadDataLookup {

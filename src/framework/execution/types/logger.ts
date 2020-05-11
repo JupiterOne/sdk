@@ -1,5 +1,8 @@
 import { IntegrationStep } from './step';
-import { SynchronizationJobContext } from '../../synchronization';
+import {
+  SynchronizationJobContext,
+  SynchronizationJob,
+} from '../../synchronization';
 
 interface LogFunction {
   (...args: any[]): boolean | void;
@@ -11,6 +14,7 @@ interface ChildLogFunction {
 
 type StepLogFunction = (step: IntegrationStep) => void;
 type StepLogFunctionWithError = (step: IntegrationStep, err: Error) => void;
+type SynchronizationLogFunction = (job: SynchronizationJob) => void;
 type ValidationLogFunction = (err: Error) => void;
 type IsHandledErrorFunction = (err: Error) => boolean;
 
@@ -36,6 +40,8 @@ export interface IntegrationLogger extends BaseLogger {
   stepStart: StepLogFunction;
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
+  synchronizationUploadStart: SynchronizationLogFunction;
+  synchronizationUploadEnd: SynchronizationLogFunction;
   validationFailure: ValidationLogFunction;
 
   // flushes the queue of work to ensure that

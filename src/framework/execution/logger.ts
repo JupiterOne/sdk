@@ -10,7 +10,10 @@ import {
   IntegrationInstanceConfigFieldMap,
 } from './types';
 
-import { SynchronizationJobContext } from '../synchronization';
+import {
+  SynchronizationJob,
+  SynchronizationJobContext,
+} from '../synchronization';
 import {
   IntegrationError,
   UNEXPECTED_ERROR_CODE,
@@ -80,11 +83,13 @@ export function createIntegrationLogger({
 
   const verboseTraceLogger = instrumentVerboseTrace(logger);
 
-  return instrumentEventLogging({
-    logger: instrumentErrorTracking(verboseTraceLogger, errorSet),
-    eventPublishingQueue,
-    errorSet,
-  });
+  return instrumentEventLogging(
+    instrumentErrorTracking(verboseTraceLogger, errorSet),
+    {
+      eventPublishingQueue,
+      errorSet,
+    },
+  );
 }
 
 function createInstanceConfigSerializer(
@@ -173,25 +178,22 @@ function instrumentErrorTracking(logger: Logger, errorSet: Set<Error>): Logger {
   return logger;
 }
 
-interface InstrumentEventLoggingInput {
-  logger: Logger;
+interface LogContext {
   eventPublishingQueue: PromiseQueue;
   errorSet: Set<Error>;
   synchronizationJobContext?: SynchronizationJobContext;
 }
 
 function instrumentEventLogging(
-  input: InstrumentEventLoggingInput,
+  logger: Logger,
+  context: LogContext,
 ): IntegrationLogger {
-  const { logger, eventPublishingQueue, errorSet } = input;
+  const { eventPublishingQueue, errorSet } = context;
   const child = logger.child;
 
-  let synchronizationJobContext: SynchronizationJobContext | undefined =
-    input.synchronizationJobContext;
-
   const publishEvent = (name: string, description: string) => {
-    if (synchronizationJobContext) {
-      const { job, apiClient } = synchronizationJobContext;
+    if (context.synchronizationJobContext) {
+      const { job, apiClient } = context.synchronizationJobContext;
 
       const event = { name, description };
 
@@ -223,28 +225,30 @@ function instrumentEventLogging(
       await eventPublishingQueue.onIdle();
     },
 
-    registerSynchronizationJobContext: (context: SynchronizationJobContext) => {
-      synchronizationJobContext = context;
+    registerSynchronizationJobContext: (
+      synchronizationJobContext: SynchronizationJobContext,
+    ) => {
+      context.synchronizationJobContext = synchronizationJobContext;
     },
 
     isHandledError: (err: Error) => errorSet.has(err),
 
     stepStart: (step: IntegrationStep) => {
-      const name = 'step-start';
+      const name = 'step_start';
       const description = `Starting step "${step.name}"...`;
       logger.info({ step: step.id }, description);
 
       publishEvent(name, description);
     },
     stepSuccess: (step: IntegrationStep) => {
-      const name = 'step-end';
+      const name = 'step_end';
       const description = `Completed step "${step.name}".`;
       logger.info({ step: step.id }, description);
 
       publishEvent(name, description);
     },
     stepFailure: (step: IntegrationStep, err: Error) => {
-      const name = 'step-failure';
+      const name = 'step_failure';
       const { errorId, description } = createErrorEventDescription(
         err,
         `Step "${step.name}" failed to complete due to error.`,
@@ -254,8 +258,32 @@ function instrumentEventLogging(
 
       publishEvent(name, description);
     },
+    synchronizationUploadStart: (job: SynchronizationJob) => {
+      const name = 'sync_upload_start';
+      const description = 'Uploading collected data for synchronization...';
+      logger.info(
+        {
+          synchronizationJobId: job.id,
+        },
+        description,
+      );
+
+      publishEvent(name, description);
+    },
+    synchronizationUploadEnd: (job: SynchronizationJob) => {
+      const name = 'sync_upload_end';
+      const description = 'Upload complete.';
+      logger.info(
+        {
+          synchronizationJobId: job.id,
+        },
+        description,
+      );
+
+      publishEvent(name, description);
+    },
     validationFailure: (err: Error) => {
-      const name = 'validation-failure';
+      const name = 'validation_failure';
       const { errorId, description } = createErrorEventDescription(
         err,
         `Error occurred while validating integration configuration.`,
@@ -266,12 +294,7 @@ function instrumentEventLogging(
     },
     child: (options: object = {}, simple?: boolean) => {
       const childLogger = child.apply(logger, [options, simple]);
-      return instrumentEventLogging({
-        logger: childLogger,
-        eventPublishingQueue,
-        errorSet,
-        synchronizationJobContext,
-      });
+      return instrumentEventLogging(childLogger, context);
     },
   });
 }

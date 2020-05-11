@@ -301,15 +301,15 @@ describe('step event publishing', () => {
 
     expect(postSpy).toHaveBeenCalledTimes(3);
     expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
-      events: [{ name: 'step-start', description: 'Starting step "Mochi"...' }],
+      events: [{ name: 'step_start', description: 'Starting step "Mochi"...' }],
     });
     expect(postSpy).toHaveBeenNthCalledWith(2, expectedEventsUrl, {
-      events: [{ name: 'step-end', description: 'Completed step "Mochi".' }],
+      events: [{ name: 'step_end', description: 'Completed step "Mochi".' }],
     });
     expect(postSpy).toHaveBeenNthCalledWith(3, expectedEventsUrl, {
       events: [
         {
-          name: 'step-failure',
+          name: 'step_failure',
           description: expect.stringMatching(
             new RegExp(
               `Step "Mochi" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
@@ -317,6 +317,47 @@ describe('step event publishing', () => {
           ),
         },
       ],
+    });
+  });
+});
+
+describe('sync upload logging', () => {
+  test('posts events to api client', async () => {
+    const logger = createIntegrationLogger({ name, invocationConfig });
+    const context: SynchronizationJobContext = {
+      logger,
+      job: { id: 'test-job-id' } as SynchronizationJob,
+      apiClient: createApiClient({
+        apiBaseUrl: 'https://api.us.jupiterone.io',
+        account: 'mocheronis',
+      }),
+    };
+
+    logger.registerSynchronizationJobContext(context);
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation(noop as any);
+
+    logger.synchronizationUploadStart(context.job);
+    logger.synchronizationUploadEnd(context.job);
+
+    await logger.flush();
+
+    const expectedEventsUrl =
+      '/persister/synchronization/jobs/test-job-id/events';
+
+    expect(postSpy).toHaveBeenCalledTimes(2);
+    expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
+      events: [
+        {
+          name: 'sync_upload_start',
+          description: 'Uploading collected data for synchronization...',
+        },
+      ],
+    });
+    expect(postSpy).toHaveBeenNthCalledWith(2, expectedEventsUrl, {
+      events: [{ name: 'sync_upload_end', description: 'Upload complete.' }],
     });
   });
 });
@@ -361,7 +402,7 @@ describe('validation failure logging', () => {
     expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
       events: [
         {
-          name: 'validation-failure',
+          name: 'validation_failure',
           description: expect.stringMatching(expectedDescriptionRegex),
         },
       ],
