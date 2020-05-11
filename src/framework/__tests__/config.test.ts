@@ -252,7 +252,7 @@ describe('loading config from src/index file', () => {
     });
   });
 
-  test('throws error if configuration is not ', async () => {
+  test('throws error if module does expose configuration as "invocationConfig" export', async () => {
     loadProjectStructure('indexFileEntrypointFailure');
 
     await expect(loadConfig()).rejects.toThrow(
