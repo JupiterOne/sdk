@@ -108,6 +108,9 @@ export function setupRecording({
     }
     onRequest(pollyRequest: any) {
       mutateRequest?.(pollyRequest);
+      // types are not great on polly node http adapter
+      // eslint-disable-next-line
+      // @ts-ignore
       return super.onRequest(pollyRequest);
     }
   }
