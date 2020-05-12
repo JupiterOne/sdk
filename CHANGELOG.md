@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.0.0
+
 ### Added
 
 - Support loading invocation configuration from `src/index`.
@@ -15,6 +17,11 @@ and this project adheres to
 ### Deprecated
 
 - Deprecated convention style loading.
+
+### Changed
+
+- Bumped to `1.0.0` so that dependent projects can get regular semver rules and
+  cleaner updates.
 
 ## 0.18.0 2020-05-01
 

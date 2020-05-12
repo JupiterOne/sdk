@@ -38,7 +38,7 @@ export async function loadConfig(
 
   if (!config) {
     log.warn(
-      'WARNING: Automatically loading configurations from a directory structure is deprecated and will be removed in the 1.0.0 release.\n' +
+      'WARNING: Automatically loading configurations from a directory structure is deprecated and will be removed in a future release when the SDK is broken up into multiple packages.\n' +
         'Please migrate your integration to export the integration configuration at "src/index".\n' +
         'For more information, see https://github.com/JupiterOne/integration-sdk/issues/125',
     );
