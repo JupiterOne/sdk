@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Support loading invocation configuration from `src/index`.
+
+### Deprecated
+
+- Deprecated convention style loading.
+
 ## 0.18.0 2020-05-01
 
 ### Added

@@ -1,9 +1,0 @@
-{
-  "clientId": {
-    "type": "string"
-  },
-  "clientSecret": {
-    "type": "string",
-    "mask": true
-  }
-}
