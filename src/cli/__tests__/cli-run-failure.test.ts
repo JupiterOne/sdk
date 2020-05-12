@@ -87,6 +87,9 @@ test('does not log errors that have been previously logged', async () => {
   const errorSpy = jest.spyOn(logger, 'error');
 
   jest.spyOn(logger, 'child').mockReturnValue(logger);
+  jest
+    .spyOn(logger, 'registerSynchronizationJobContext')
+    .mockReturnValue(logger);
 
   mocked(mockCreateIntegrationLogger).mockReturnValue(logger);
 

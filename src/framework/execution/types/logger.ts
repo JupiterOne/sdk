@@ -29,10 +29,15 @@ interface BaseLogger {
   child: ChildLogFunction;
 }
 
+export type LoggerSynchronizationJobContext = Pick<
+  SynchronizationJobContext,
+  'apiClient' | 'job'
+>;
+
 export interface IntegrationLogger extends BaseLogger {
   registerSynchronizationJobContext: (
-    context: SynchronizationJobContext,
-  ) => void;
+    context: LoggerSynchronizationJobContext,
+  ) => IntegrationLogger;
 
   isHandledError: IsHandledErrorFunction;
 

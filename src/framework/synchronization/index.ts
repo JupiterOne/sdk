@@ -90,9 +90,9 @@ export async function initiateSynchronization({
   return {
     apiClient,
     job,
-    logger: logger.child({
-      integrationInstanceId,
-      synchronizationJobId: job.id,
+    logger: logger.registerSynchronizationJobContext({
+      apiClient,
+      job,
     }),
   };
 }
@@ -111,7 +111,7 @@ export async function finalizeSynchronization({
   logger,
   partialDatasets,
 }: FinalizeSynchronizationInput): Promise<SynchronizationJob> {
-  logger.info('Finalizing synchronization');
+  logger.info('Finalizing synchronization...');
 
   let finalizedJob: SynchronizationJob;
 
@@ -129,6 +129,11 @@ export async function finalizeSynchronization({
       'Error occurred while finalizing synchronization job.',
     );
   }
+
+  logger.info(
+    { synchronizationJob: finalizedJob },
+    'Synchronization finalization result.',
+  );
 
   return finalizedJob;
 }

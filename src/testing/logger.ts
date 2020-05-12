@@ -10,7 +10,9 @@ export function createMockIntegrationLogger(): IntegrationLogger {
     warn: noop,
     error: noop,
     fatal: noop,
-    registerSynchronizationJobContext: noop,
+    registerSynchronizationJobContext() {
+      return this;
+    },
     isHandledError: () => false,
     stepStart: noop,
     stepSuccess: noop,

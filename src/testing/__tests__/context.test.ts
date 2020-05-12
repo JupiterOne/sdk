@@ -1,6 +1,11 @@
 import noop from 'lodash/noop';
 
-import { Entity, Relationship, IntegrationStep } from '../../framework';
+import {
+  Entity,
+  Relationship,
+  IntegrationStep,
+  SynchronizationJobContext,
+} from '../../framework';
 import { LOCAL_INTEGRATION_INSTANCE } from '../../framework/execution/instance';
 
 import {
@@ -36,11 +41,21 @@ import { v4 as uuid } from 'uuid';
         const { logger } = createContext();
 
         Object.keys(logger).forEach((key) => {
-          if (key !== 'child' && key !== 'flush' && key !== 'isHandledError') {
+          if (
+            key !== 'child' &&
+            key !== 'registerSynchronizationJobContext' &&
+            key !== 'flush' &&
+            key !== 'isHandledError'
+          ) {
             expect(logger[key]).toEqual(noop);
           }
         });
 
+        expect(
+          logger.registerSynchronizationJobContext(
+            {} as SynchronizationJobContext,
+          ),
+        ).toEqual(logger);
         expect(logger.child({})).toEqual(logger);
         expect(logger.flush).toEqual(noopAsync);
       });
