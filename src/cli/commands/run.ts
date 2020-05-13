@@ -37,7 +37,7 @@ export function run() {
 
       const { integrationInstanceId } = options;
 
-      const logger = createIntegrationLogger({
+      let logger = createIntegrationLogger({
         name: 'local',
         pretty: true,
       });
@@ -50,7 +50,7 @@ export function run() {
         integrationInstanceId,
       });
 
-      logger.registerSynchronizationJobContext(synchronizationContext);
+      logger = synchronizationContext.logger;
 
       try {
         const executionResults = await executeIntegrationInstance(

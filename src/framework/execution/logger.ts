@@ -8,12 +8,10 @@ import {
   IntegrationInstance,
   IntegrationInvocationConfig,
   IntegrationInstanceConfigFieldMap,
+  LoggerSynchronizationJobContext,
 } from './types';
 
-import {
-  SynchronizationJob,
-  SynchronizationJobContext,
-} from '../synchronization';
+import { SynchronizationJob } from '../synchronization';
 import {
   IntegrationError,
   UNEXPECTED_ERROR_CODE,
@@ -181,7 +179,7 @@ function instrumentErrorTracking(logger: Logger, errorSet: Set<Error>): Logger {
 interface LogContext {
   eventPublishingQueue: PromiseQueue;
   errorSet: Set<Error>;
-  synchronizationJobContext?: SynchronizationJobContext;
+  synchronizationJobContext?: LoggerSynchronizationJobContext;
 }
 
 function instrumentEventLogging(
@@ -220,15 +218,27 @@ function instrumentEventLogging(
     }
   };
 
+  const createChildLogger = (options: object = {}, simple?: boolean) => {
+    const childLogger = child.apply(logger, [options, simple]);
+    return instrumentEventLogging(childLogger, context);
+  };
+
   return Object.assign(logger, {
     flush: async () => {
       await eventPublishingQueue.onIdle();
     },
 
     registerSynchronizationJobContext: (
-      synchronizationJobContext: SynchronizationJobContext,
+      synchronizationJobContext: LoggerSynchronizationJobContext,
     ) => {
       context.synchronizationJobContext = synchronizationJobContext;
+      const { job } = synchronizationJobContext;
+
+      return createChildLogger({
+        synchronizationJobId: job.id,
+        integrationJobId: job.integrationJobId,
+        integrationInstanceId: job.integrationInstanceId,
+      });
     },
 
     isHandledError: (err: Error) => errorSet.has(err),
@@ -292,10 +302,7 @@ function instrumentEventLogging(
       logger.error({ errorId, err }, description);
       publishEvent(name, description);
     },
-    child: (options: object = {}, simple?: boolean) => {
-      const childLogger = child.apply(logger, [options, simple]);
-      return instrumentEventLogging(childLogger, context);
-    },
+    child: createChildLogger,
   });
 }
 

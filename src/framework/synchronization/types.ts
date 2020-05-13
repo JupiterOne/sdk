@@ -11,6 +11,8 @@ export enum SynchronizationJobStatus {
 
 export interface SynchronizationJob {
   id: string;
+  integrationJobId: string;
+  integrationInstanceId: string;
   status: SynchronizationJobStatus;
   startTimestamp: number;
   numEntitiesUploaded: number;

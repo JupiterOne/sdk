@@ -8,6 +8,17 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Added additional logging to `finalizeSynchronization` and
+  `executeIntegrationInstance`.
+
+### Changed
+
+- `registerSynchronizationJobContext` now returns a child logger.
+- `initiateSynchronization` registers the synchronization job with the `logger`
+  and returns a child logger with more information.
+
 ## 1.0.0
 
 ### Added

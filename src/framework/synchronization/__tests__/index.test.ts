@@ -3,7 +3,6 @@ import times from 'lodash/times';
 import noop from 'lodash/noop';
 
 import {
-  SynchronizationJob,
   SynchronizationJobStatus,
   initiateSynchronization,
   uploadCollectedData,
@@ -20,6 +19,7 @@ import {
   loadProjectStructure,
   restoreProjectStructure,
 } from '../../../__tests__/loadProjectStructure';
+import { generateSynchronizationJob } from '../../../__tests__/generateSynchronizationJob';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../../../fileSystem';
 
@@ -48,6 +48,35 @@ describe('initiateSynchronization', () => {
       source: 'integration-managed',
       integrationInstanceId: context.integrationInstanceId,
     });
+  });
+
+  test('registers synchronization job and apiClient with logger', async () => {
+    const job = generateSynchronizationJob();
+
+    const context = createTestContext();
+
+    const { apiClient, logger } = context;
+    jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+    const registerSynchronizationJobContextSpy = jest.spyOn(
+      logger,
+      'registerSynchronizationJobContext',
+    );
+
+    const synchronizationContext = await initiateSynchronization(context);
+
+    expect(registerSynchronizationJobContextSpy).toHaveBeenCalledTimes(1);
+    expect(registerSynchronizationJobContextSpy).toHaveBeenCalledWith({
+      apiClient,
+      job,
+    });
+
+    expect(registerSynchronizationJobContextSpy).toHaveReturnedWith(
+      synchronizationContext.logger,
+    );
   });
 
   test('throws error if integration instance cannot be found', async () => {
@@ -314,20 +343,4 @@ function createTestContext() {
   });
 
   return { apiClient, logger, integrationInstanceId: 'test-instance' };
-}
-
-function generateSynchronizationJob(): SynchronizationJob {
-  return {
-    id: 'test',
-    status: SynchronizationJobStatus.AWAITING_UPLOADS,
-    startTimestamp: Date.now(),
-    numEntitiesUploaded: 0,
-    numEntitiesCreated: 0,
-    numEntitiesUpdated: 0,
-    numEntitiesDeleted: 0,
-    numRelationshipsUploaded: 0,
-    numRelationshipsCreated: 0,
-    numRelationshipsUpdated: 0,
-    numRelationshipsDeleted: 0,
-  };
 }

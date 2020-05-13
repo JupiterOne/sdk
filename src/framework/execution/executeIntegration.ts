@@ -112,5 +112,10 @@ async function executeIntegration(
     data: summary,
   });
 
+  context.logger.info(
+    { collectionResult: summary },
+    'Integration data collection has completed.',
+  );
+
   return summary;
 }
