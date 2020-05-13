@@ -8,6 +8,21 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Documentation on `IntegrationError` to clarify that it is not meant to be used
+  directly outside the SDK.
+- New errors that integrations should throw to communicate provider API errors
+  during `validateInvocation` or any step. These will terminate the step, but
+  provide more details to users to help them resolve some kinds of provider API
+  errors.
+
+### Changed
+
+- Removed an unused error `IntegrationConfigValidationError`.
+- Renamed `IntegrationLocalConfigFieldTypeMismatch` to
+  `IntegrationLocalConfigFieldTypeMismatchError`, to match other error names.
+
 ## 1.1.0 - 2020-05-13
 
 ### Added
