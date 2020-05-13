@@ -15,7 +15,7 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .post(`${baseUrl}/persister/synchronization/jobs`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
-      return res.status(200).json({ job });
+      res.status(200).json({ job });
     });
 
   polly.server
@@ -23,14 +23,14 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
       job.numEntitiesUploaded += JSON.parse(req.body).entities.length;
-      return res.status(200).json({ job });
+      res.status(200).json({ job });
     });
 
   polly.server
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/events`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
-      return res.status(200).json({});
+      res.status(200).json({});
     });
 
   polly.server
@@ -38,7 +38,7 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
       job.numRelationshipsUploaded += JSON.parse(req.body).relationships.length;
-      return res.status(200).json({ job });
+      res.status(200).json({ job });
     });
 
   polly.server
@@ -46,7 +46,7 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
       job.status = SynchronizationJobStatus.FINALIZE_PENDING;
-      return res.status(200).json({ job });
+      res.status(200).json({ job });
     });
 
   polly.server
@@ -54,7 +54,7 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
       job.status = SynchronizationJobStatus.ABORTED;
-      return res.status(200).json({ job });
+      res.status(200).json({ job });
     });
 }
 

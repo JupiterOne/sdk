@@ -33,6 +33,10 @@
     "@pollyjs/adapter-node-http": "^4.0.4",
     "@pollyjs/core": "^4.0.4",
     "@pollyjs/persister-fs": "^4.0.4",
+    "@types/bunyan": "^1.8.6",
+    "@types/pollyjs__adapter-node-http": "^2.0.0",
+    "@types/pollyjs__core": "^4.0.0",
+    "@types/pollyjs__persister": "^2.0.1",
     "async-sema": "^3.1.0",
     "bunyan": "^1.8.12",
     "bunyan-format": "^0.2.1",
@@ -51,12 +55,10 @@
     "uuid": "^7.0.3"
   },
   "devDependencies": {
-    "@types/bunyan": "^1.8.6",
     "@types/har-format": "^1.2.4",
     "@types/jest": "^25.2.1",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.13.4",
-    "@types/pollyjs__persister": "^2.0.1",
     "@types/rimraf": "^3.0.0",
     "@types/uuid": "^7.0.2",
     "@types/vis": "^4.21.19",
