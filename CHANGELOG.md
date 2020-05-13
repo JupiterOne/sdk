@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.1.0 - 2020-05-13
+
 ### Added
 
 - Added additional logging to `finalizeSynchronization` and
@@ -19,7 +21,12 @@ and this project adheres to
 - `initiateSynchronization` registers the synchronization job with the `logger`
   and returns a child logger with more information.
 
-## 1.0.0
+### Fixed
+
+- Added `bunyan` and `polly` types to `dependencies` so that TypeScript
+  consumers do not receive missing `d.ts` file type errors.
+
+## 1.0.0 - 2020-05-12
 
 ### Added
 
