@@ -179,7 +179,7 @@ interface UploadDataLookup {
   relationships: Relationship;
 }
 
-async function uploadData<T extends UploadDataLookup, K extends keyof T>(
+export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   { job, apiClient }: SynchronizationJobContext,
   type: K,
   data: T[K][],
