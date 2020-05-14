@@ -9,9 +9,7 @@ interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
   _class: string | string[];
 }
 
-interface EntityAdditionalProperties {
-  [key: string]: EntityPropertyValue;
-}
+type EntityAdditionalProperties = Record<string, EntityPropertyValue>;
 
 type EntityPropertyValue =
   | Array<string | number | boolean>

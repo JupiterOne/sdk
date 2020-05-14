@@ -23,23 +23,33 @@ export function createStepJobState(
   duplicateKeyTracker: DuplicateKeyTracker,
   graphObjectStore: FileSystemGraphObjectStore,
 ): JobState {
+  const addEntities = (entities: Entity[]) => {
+    entities.forEach((e) => {
+      duplicateKeyTracker.registerKey(e._key);
+    });
+
+    return graphObjectStore.addEntities(step.id, entities);
+  };
+
+  const addRelationships = (relationships: Relationship[]) => {
+    relationships.forEach((r) => {
+      // relationship types are not playing nicely
+      duplicateKeyTracker.registerKey(r._key as string);
+    });
+
+    return graphObjectStore.addRelationships(step.id, relationships);
+  };
+
   return {
-    addEntities: (entities: Entity[]) => {
-      entities.forEach((e) => {
-        duplicateKeyTracker.registerKey(e._key);
-      });
-
-      return graphObjectStore.addEntities(step.id, entities);
+    addEntity: (entity: Entity) => {
+      return addEntities([entity]);
     },
+    addEntities,
 
-    addRelationships: (relationships: Relationship[]) => {
-      relationships.forEach((r) => {
-        // relationship types are not playing nicely
-        duplicateKeyTracker.registerKey(r._key as string);
-      });
-
-      return graphObjectStore.addRelationships(step.id, relationships);
+    addRelationship: (relationship: Relationship) => {
+      return addRelationships([relationship]);
     },
+    addRelationships,
 
     iterateEntities: (filter, iteratee) =>
       graphObjectStore.iterateEntities(filter, iteratee),

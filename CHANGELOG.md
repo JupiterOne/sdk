@@ -16,6 +16,15 @@ and this project adheres to
   during `validateInvocation` or any step. These will terminate the step, but
   provide more details to users to help them resolve some kinds of provider API
   errors.
+- `JobState.addEntity` and `JobState.addRelationship` allow collecting one
+  entity/relationship at a time. This supports tight looping and encourages
+  quick processing of provider data to minimize memory requirements by
+  offloading converted data as soon as possible. This does not mean that
+  `addEntities/Relationships` should be avoided of course.
+- Documentation of `JobState` to help those of us with short memories and
+  on-hover documentation rendering in VSCode and other such modern editors. 🤠
+  This also allows for communicating to new developers who just jump into the
+  code.
 
 ### Changed
 
