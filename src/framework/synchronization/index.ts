@@ -191,7 +191,7 @@ async function uploadData<T extends UploadDataLookup, K extends keyof T>(
       if (batch.length) {
         await apiClient.post(
           `/persister/synchronization/jobs/${job.id}/${type}`,
-          { [type]: data },
+          { [type]: batch },
         );
       }
     },
