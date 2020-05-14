@@ -1,32 +1,27 @@
-import { v4 as uuid } from 'uuid';
-import times from 'lodash/times';
-import waitForExpect from 'wait-for-expect';
 import { promises as fs } from 'fs';
+import times from 'lodash/times';
 import { vol } from 'memfs';
+import { v4 as uuid } from 'uuid';
+import waitForExpect from 'wait-for-expect';
 
-import { createIntegrationLogger } from '../logger';
-
+import { IntegrationError } from '../../../../src/errors';
+import { Entity, Relationship } from '../../types';
 import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from '../dependencyGraph';
-
-import { getDefaultStepStartStates } from '../step';
-
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
-
+import { createIntegrationLogger } from '../logger';
+import { getDefaultStepStartStates } from '../step';
 import {
-  JobState,
-  IntegrationStep,
-  IntegrationInstance,
-  IntegrationStepResultStatus,
   IntegrationExecutionContext,
-  IntegrationStepExecutionContext,
+  IntegrationInstance,
   IntegrationLogger,
+  IntegrationStep,
+  IntegrationStepExecutionContext,
+  IntegrationStepResultStatus,
+  JobState,
 } from '../types';
-
-import { Entity, Relationship } from '../../types';
-import { IntegrationConfigValidationError } from '../error';
 
 jest.mock('fs');
 
@@ -524,7 +519,10 @@ describe('executeStepDependencyGraph', () => {
   });
 
   test('logs error after step fails', async () => {
-    const error = new IntegrationConfigValidationError('oopsie');
+    const error = new IntegrationError({
+      code: 'ABC-123',
+      message: 'oopsie',
+    });
     let errorLogSpy;
 
     /**
@@ -560,7 +558,7 @@ describe('executeStepDependencyGraph', () => {
       { step: 'a', err: error, errorId: expect.any(String) },
       expect.stringMatching(
         new RegExp(
-          `Step "a" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
+          `Step "a" failed to complete due to error. \\(errorCode=ABC-123, errorId=(.*)\\)$`,
         ),
       ),
     );
