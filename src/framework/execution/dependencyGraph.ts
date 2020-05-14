@@ -8,12 +8,12 @@ import {
   MemoryDataStore,
 } from './jobState';
 import {
+  IntegrationExecutionContext,
   IntegrationStep,
+  IntegrationStepExecutionContext,
   IntegrationStepResult,
   IntegrationStepResultStatus,
   IntegrationStepStartStates,
-  IntegrationExecutionContext,
-  IntegrationStepExecutionContext,
 } from './types';
 
 /**

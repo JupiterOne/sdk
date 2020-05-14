@@ -4,14 +4,16 @@ import {
   createIntegrationEntity,
 } from '@jupiterone/integration-sdk';
 
-const step: IntegrationStep = {
+import { IntegrationConfig } from '../types';
+
+const step: IntegrationStep<IntegrationConfig> = {
   id: 'fetch-accounts',
   name: 'Fetch accounts',
   types: ['my_integration_account'],
   async executionHandler({
     logger,
     jobState,
-  }: IntegrationStepExecutionContext) {
+  }: IntegrationStepExecutionContext<IntegrationConfig>) {
     await jobState.addEntities([
       createIntegrationEntity({
         entityData: {

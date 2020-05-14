@@ -86,9 +86,7 @@ export class IntegrationError extends Error {
   }
 
   /**
-   * For compatibility with bunyan err serializer.
-   *
-   * See https://github.com/trentm/node-bunyan/blob/master/lib/bunyan.js#L1125
+   * For compatibility with [bunyan err serializer](https://github.com/trentm/node-bunyan/blob/master/lib/bunyan.js#L1125).
    */
   cause() {
     return this._cause;

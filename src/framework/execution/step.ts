@@ -4,10 +4,9 @@ import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from './dependencyGraph';
-
 import {
-  IntegrationStep,
   IntegrationExecutionContext,
+  IntegrationStep,
   IntegrationStepResult,
   IntegrationStepResultStatus,
   IntegrationStepStartStates,

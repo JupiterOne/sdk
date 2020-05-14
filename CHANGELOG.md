@@ -21,6 +21,41 @@ and this project adheres to
 
 ### Added
 
+- `Entity` now includes a property `id?: string` to represent the
+  [`id` property supported by the data model](https://github.com/JupiterOne/data-model/blob/f07f085b39041e639f5dacd9b6140c6c3db0b5ad/src/schemas/Entity.json#L10).
+  This allows for easy reference to `Entity.id` in later steps that iterate
+  already-loaded entities and don't want to assume that the `_key` _is_ the
+  provider's identifier (often the `_key` needs additional data to make it
+  unique). Note that we plan to soon provide TS types for all the data model
+  types.
+
+### Changed
+
+- BREAKING! Historically, the `IntegrationInstance.config` was typed as `any`.
+  This provided no type safety. Now, integrations must declare an interface
+  represeting the structure of their `IntegrationInstance.config` and provide
+  this as a type parameter in code where there is a need to access the `config`
+  properties. The type parameter is not required (defaults to type `object`),
+  but there will be no access to properties (without an evil type cast to
+  `any`).
+
+  The following types now support a generic parameter for the `instance.config`
+  they or their properties reference:
+
+  - `IntegrationInstance`,
+  - `IntegrationInvocationConfig`,
+  - `IntegrationExecutionContext`,
+  - `IntegrationStepExecutionContext`
+  - `IntegrationStep`
+  - `GetStepStartStatesFunction`
+  - `StepExecutionHandlerFunction`
+  - `InvocationValidationFunction`
+  - `createMockExecutionContext`
+
+## 1.1.1 - 2020-05-14
+
+### Added
+
 - Documentation on `IntegrationError` to clarify that it is not meant to be used
   directly outside the SDK.
 - New errors that integrations should throw to communicate provider API errors

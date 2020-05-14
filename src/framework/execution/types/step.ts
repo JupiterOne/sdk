@@ -2,6 +2,7 @@ import {
   IntegrationExecutionContext,
   IntegrationStepExecutionContext,
 } from './context';
+import { IntegrationInstanceConfig } from './instance';
 
 export interface IntegrationStepStartState {
   /**
@@ -16,9 +17,15 @@ export type IntegrationStepStartStates = Record<
   IntegrationStepStartState
 >;
 
-export type GetStepStartStatesFunction = (
-  context: IntegrationExecutionContext,
+export type GetStepStartStatesFunction<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> = (
+  context: IntegrationExecutionContext<TConfig>,
 ) => IntegrationStepStartStates;
+
+export type StepExecutionHandlerFunction<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> = (context: IntegrationStepExecutionContext<TConfig>) => Promise<void> | void;
 
 export enum IntegrationStepResultStatus {
   SUCCESS = 'success',
@@ -28,13 +35,13 @@ export enum IntegrationStepResultStatus {
   PENDING_EVALUATION = 'pending_evaluation',
 }
 
-export type IntegrationStep = IntegrationStepMetadata & {
+export type IntegrationStep<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> = IntegrationStepMetadata & {
   /**
    * Function that runs to perform the stpe that
    */
-  executionHandler: (
-    context: IntegrationStepExecutionContext,
-  ) => Promise<void> | void;
+  executionHandler: StepExecutionHandlerFunction<TConfig>;
 };
 
 export type IntegrationStepResult = IntegrationStepMetadata & {

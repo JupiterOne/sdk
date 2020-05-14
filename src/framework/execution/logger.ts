@@ -1,22 +1,21 @@
-import { v4 as uuid } from 'uuid';
 import Logger from 'bunyan';
 import PromiseQueue from 'p-queue';
+import { v4 as uuid } from 'uuid';
 
-import {
-  IntegrationLogger,
-  IntegrationStep,
-  IntegrationInstance,
-  IntegrationInvocationConfig,
-  IntegrationInstanceConfigFieldMap,
-  LoggerSynchronizationJobContext,
-} from './types';
-
-import { SynchronizationJob } from '../synchronization';
 import {
   IntegrationError,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
 } from '../../errors';
+import { SynchronizationJob } from '../synchronization';
+import {
+  IntegrationInstance,
+  IntegrationInstanceConfigFieldMap,
+  IntegrationInvocationConfig,
+  IntegrationLogger,
+  IntegrationStep,
+  LoggerSynchronizationJobContext,
+} from './types';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');

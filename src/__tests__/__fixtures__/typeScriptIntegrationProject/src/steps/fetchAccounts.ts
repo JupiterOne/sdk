@@ -7,7 +7,9 @@ export default {
   id: 'fetch-accounts',
   name: 'Fetch Accounts',
   types: ['my_account'],
-  executionHandler: async ({ jobState }: IntegrationStepExecutionContext) => {
+  executionHandler: async ({
+    jobState,
+  }: IntegrationStepExecutionContext<{}>) => {
     await jobState.addEntities([
       createIntegrationEntity({
         entityData: {

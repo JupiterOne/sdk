@@ -8,7 +8,9 @@ export default {
   id: 'fetch-users',
   name: 'Fetch Users',
   types: ['my_user'],
-  executionHandler: async ({ jobState }: IntegrationStepExecutionContext) => {
+  executionHandler: async ({
+    jobState,
+  }: IntegrationStepExecutionContext<{}>) => {
     await jobState.addEntities([
       createIntegrationEntity({
         entityData: {

@@ -1,8 +1,14 @@
+export type IntegrationInstanceConfig = object;
+
 /**
  * A stored user configuration for executing the integration defined by
  * the associated `integrationDefinitionId`.
+ *
+ * @param TConfig the integration specific type of the `config` property
  */
-export interface IntegrationInstance {
+export interface IntegrationInstance<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> {
   /**
    * Unique identifier for the activated integration instance.
    */
@@ -38,5 +44,5 @@ export interface IntegrationInstance {
    * configuration upon invocation and provide useful configuration error
    * messages.
    */
-  config: any;
+  config: TConfig;
 }

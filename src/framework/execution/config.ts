@@ -6,6 +6,7 @@ import {
   IntegrationLocalConfigFieldTypeMismatchError,
 } from './error';
 import {
+  IntegrationInstanceConfig,
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
 } from './types';
@@ -15,9 +16,9 @@ const dotenvExpand = require('dotenv-expand');
 /**
  * Reads integration configuration from environment variables
  */
-export function loadConfigFromEnvironmentVariables(
-  configMap: IntegrationInstanceConfigFieldMap,
-): Record<string, string | boolean> {
+export function loadConfigFromEnvironmentVariables<
+  TConfig extends IntegrationInstanceConfig
+>(configMap: IntegrationInstanceConfigFieldMap): TConfig {
   // pull in environment variables from .env file if available
   dotenvExpand(dotenv.config());
 
@@ -41,7 +42,7 @@ export function loadConfigFromEnvironmentVariables(
     .reduce((acc: Record<string, string | boolean>, [field, value]) => {
       acc[field] = value;
       return acc;
-    }, {});
+    }, {}) as TConfig;
 }
 
 function convertEnvironmentVariableValueForField(

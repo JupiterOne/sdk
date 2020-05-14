@@ -1,12 +1,14 @@
-import { IntegrationStep, GetStepStartStatesFunction } from './step';
-
+import { IntegrationInstanceConfig } from './instance';
+import { GetStepStartStatesFunction, IntegrationStep } from './step';
 import { InvocationValidationFunction } from './validation';
 
-export interface IntegrationInvocationConfig {
+export interface IntegrationInvocationConfig<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> {
   instanceConfigFields?: IntegrationInstanceConfigFieldMap;
-  validateInvocation?: InvocationValidationFunction;
-  getStepStartStates?: GetStepStartStatesFunction;
-  integrationSteps: IntegrationStep[];
+  validateInvocation?: InvocationValidationFunction<TConfig>;
+  getStepStartStates?: GetStepStartStatesFunction<TConfig>;
+  integrationSteps: IntegrationStep<TConfig>[];
 }
 
 export interface IntegrationInstanceConfigField {

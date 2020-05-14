@@ -9,7 +9,14 @@ interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
   _class: string | string[];
 }
 
-type EntityAdditionalProperties = Record<string, EntityPropertyValue>;
+type EntityAdditionalProperties = Record<string, EntityPropertyValue> & {
+  /**
+   * The natural identifier of the entity as provided by the data source API.
+   * Many APIs answer resources that each have an `id` property that should be
+   * transferred to this entity property.
+   */
+  id?: string;
+};
 
 type EntityPropertyValue =
   | Array<string | number | boolean>

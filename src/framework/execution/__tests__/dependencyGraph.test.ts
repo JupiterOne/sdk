@@ -27,7 +27,7 @@ jest.mock('fs');
 
 afterEach(() => vol.reset());
 
-const executionContext: IntegrationExecutionContext = {
+const executionContext: IntegrationExecutionContext<{}> = {
   logger: createIntegrationLogger({
     name: 'step logger',
     invocationConfig: {
@@ -112,11 +112,11 @@ describe('buildStepDependencyGraph', () => {
 describe('executeStepDependencyGraph', () => {
   test('executionHandler should have access to "jobState", "logger", and "instance" objects', async () => {
     let jobState: JobState;
-    let instance: IntegrationInstance;
+    let instance: IntegrationInstance<{}>;
     let logger: IntegrationLogger;
 
     const executionHandlerSpy = jest.fn(
-      (context: IntegrationStepExecutionContext) => {
+      (context: IntegrationStepExecutionContext<{}>) => {
         jobState = context.jobState;
         instance = context.instance;
         logger = context.logger;

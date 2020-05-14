@@ -1,5 +1,5 @@
-import { IntegrationInstance, IntegrationInvocationConfig } from './types';
 import { loadConfigFromEnvironmentVariables } from './config';
+import { IntegrationInstance, IntegrationInvocationConfig } from './types';
 
 export const LOCAL_INTEGRATION_INSTANCE: IntegrationInstance = {
   id: 'local-integration-instance',
@@ -7,7 +7,7 @@ export const LOCAL_INTEGRATION_INSTANCE: IntegrationInstance = {
   name: 'Local Integration',
   integrationDefinitionId: 'local-integration-definition',
   description: 'A generated integration instance for local execution',
-  config: undefined,
+  config: {},
 } as const;
 
 export function createIntegrationInstanceForLocalExecution(
@@ -21,7 +21,7 @@ export function createIntegrationInstanceForLocalExecution(
     ...LOCAL_INTEGRATION_INSTANCE,
     config: config.instanceConfigFields
       ? loadConfigFromEnvironmentVariables(config.instanceConfigFields)
-      : undefined,
+      : {},
     accountId,
   };
 }

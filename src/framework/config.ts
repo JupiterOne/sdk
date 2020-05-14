@@ -1,18 +1,16 @@
-import path from 'path';
 import { promises as fs } from 'fs';
-
 import globby from 'globby';
+import path from 'path';
 
 import { IntegrationError } from '../errors';
-import * as log from '../log';
-
 import {
-  IntegrationInvocationConfig,
-  IntegrationInstanceConfigFieldMap,
-  InvocationValidationFunction,
   GetStepStartStatesFunction,
+  IntegrationInstanceConfigFieldMap,
+  IntegrationInvocationConfig,
   IntegrationStep,
+  InvocationValidationFunction,
 } from '../framework/execution';
+import * as log from '../log';
 
 export class IntegrationInvocationConfigNotFoundError extends IntegrationError {
   constructor(message: string) {
@@ -103,8 +101,8 @@ export function loadInstanceConfigFields(
  */
 export function loadValidateInvocationFunction(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
-) {
-  return loadModuleContent<InvocationValidationFunction>(
+): InvocationValidationFunction | undefined {
+  return loadModuleContent(
     path.resolve(projectSourceDirectory, 'validateInvocation'),
   );
 }
