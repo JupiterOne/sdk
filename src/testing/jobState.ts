@@ -1,4 +1,4 @@
-import { JobState, Entity, Relationship } from '../framework';
+import { Entity, JobState, Relationship } from '../framework';
 import { DuplicateKeyTracker } from '../framework/execution/jobState';
 
 export interface CreateMockJobStateOptions {
@@ -32,6 +32,18 @@ export function createMockJobState({
 
   const duplicateKeyTracker = new DuplicateKeyTracker();
 
+  const addEntities = async (newEntities) => {
+    newEntities.forEach((e) => duplicateKeyTracker.registerKey(e._key));
+    collectedEntities = collectedEntities.concat(newEntities);
+  };
+
+  const addRelationships = async (newRelationships) => {
+    newRelationships.forEach((r) =>
+      duplicateKeyTracker.registerKey(r._key as string),
+    );
+    collectedRelationships = collectedRelationships.concat(newRelationships);
+  };
+
   return {
     get collectedEntities() {
       return collectedEntities;
@@ -41,17 +53,15 @@ export function createMockJobState({
       return collectedRelationships;
     },
 
-    addEntities: async (newEntities) => {
-      newEntities.forEach((e) => duplicateKeyTracker.registerKey(e._key));
-      collectedEntities = collectedEntities.concat(newEntities);
+    addEntity: async (entity: Entity) => {
+      addEntities([entity]);
     },
+    addEntities,
 
-    addRelationships: async (newRelationships) => {
-      newRelationships.forEach((r) =>
-        duplicateKeyTracker.registerKey(r._key as string),
-      );
-      collectedRelationships = collectedRelationships.concat(newRelationships);
+    addRelationship: async (relationship: Relationship) => {
+      addEntities([relationship]);
     },
+    addRelationships,
 
     iterateEntities: async (filter, iteratee) => {
       const filteredEntities = [...inputEntities, ...collectedEntities].filter(

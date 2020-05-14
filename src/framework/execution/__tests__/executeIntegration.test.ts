@@ -254,13 +254,11 @@ describe('executeIntegrationInstance', () => {
           name: 'My awesome step',
           types: ['test'],
           async executionHandler({ jobState }) {
-            await jobState.addEntities([
-              {
-                _key: 'test',
-                _type: 'test',
-                _class: 'Test',
-              },
-            ]);
+            await jobState.addEntity({
+              _key: 'test',
+              _type: 'test',
+              _class: 'Test',
+            });
           },
         },
       ],
@@ -378,13 +376,11 @@ describe('executeIntegrationInstance', () => {
           name: 'a',
           types: [],
           async executionHandler({ jobState }) {
-            await jobState.addEntities([
-              {
-                _key: 'key_a',
-                _type: 'duplicate_entity',
-                _class: 'DuplicateEntity',
-              },
-            ]);
+            await jobState.addEntity({
+              _key: 'key_a',
+              _type: 'duplicate_entity',
+              _class: 'DuplicateEntity',
+            });
           },
         },
         {
@@ -392,13 +388,11 @@ describe('executeIntegrationInstance', () => {
           name: 'b',
           types: [],
           async executionHandler({ jobState }) {
-            await jobState.addEntities([
-              {
-                _key: 'key_a',
-                _type: 'duplicate_entity',
-                _class: 'DuplicateEntity',
-              },
-            ]);
+            await jobState.addEntity({
+              _key: 'key_a',
+              _type: 'duplicate_entity',
+              _class: 'DuplicateEntity',
+            });
           },
         },
       ],
