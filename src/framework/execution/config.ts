@@ -2,14 +2,13 @@ import dotenv from 'dotenv';
 import snakeCase from 'lodash/snakeCase';
 
 import {
+  IntegrationLocalConfigFieldMissingError,
+  IntegrationLocalConfigFieldTypeMismatchError,
+} from './error';
+import {
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
 } from './types';
-
-import {
-  IntegrationLocalConfigFieldMissingError,
-  IntegrationLocalConfigFieldTypeMismatch,
-} from './error';
 
 const dotenvExpand = require('dotenv-expand');
 
@@ -60,7 +59,9 @@ function convertEnvironmentVariableValueForField(
       } else if (rawString === 'false') {
         convertedValue = false;
       } else {
-        throw typeMismatchError(field, environmentVariableValue);
+        throw new IntegrationLocalConfigFieldTypeMismatchError(
+          `Expected boolean value for field "${field}" but received "${environmentVariableValue}".`,
+        );
       }
       break;
     }
@@ -77,11 +78,5 @@ function configFieldMissingError(
 ) {
   throw new IntegrationLocalConfigFieldMissingError(
     `Expected environment variable "${environmentVariableName}" for config field "${field}" to be set.`,
-  );
-}
-
-function typeMismatchError(field: string, value: string) {
-  throw new IntegrationLocalConfigFieldTypeMismatch(
-    `Expected boolean value for field "${field}" but received "${value}".`,
   );
 }
