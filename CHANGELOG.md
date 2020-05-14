@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## 1.1.1 - 2020-05-14
+
 ### Added
 
 - Documentation on `IntegrationError` to clarify that it is not meant to be used
@@ -31,6 +33,12 @@ and this project adheres to
 - Removed an unused error `IntegrationConfigValidationError`.
 - Renamed `IntegrationLocalConfigFieldTypeMismatch` to
   `IntegrationLocalConfigFieldTypeMismatchError`, to match other error names.
+
+### Fixed
+
+- When the job state exceeded the upload batch size, multiple uploads were
+  performed, but each upload included the entire dataset so that the
+  synchronizer complained about duplicate keys.
 
 ## 1.1.0 - 2020-05-13
 
