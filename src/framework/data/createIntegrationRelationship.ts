@@ -53,6 +53,7 @@ type MappedRelationshipOptions = {
 
 type MappedRelationshipLiteralOptions = {
   _class: string;
+  _key?: string;
   _mapping: RelationshipMapping;
   properties?: AdditionalRelationshipProperties;
 };
@@ -137,7 +138,7 @@ function createMappedRelationship(
       options.properties,
       options._class,
       mapping.sourceEntityKey,
-      mapping.targetEntity._key,
+      options._key || mapping.targetEntity._key,
     ),
     displayName: relationshipClass,
     ...options.properties,
@@ -177,7 +178,8 @@ function key(
     if (!toKey) {
       throw new IntegrationError({
         code: 'MISSING_RELATIONSHIP_TO_KEY',
-        message: 'Without _key provided in properties, _key generation requires mapping.targetEntity._key!'
+        message:
+          'Without _key provided in properties, _key generation requires mapping.targetEntity._key!',
       });
     }
 
@@ -197,7 +199,8 @@ function type(
     if (!toType) {
       throw new IntegrationError({
         code: 'MISSING_RELATIONSHIP_TO_TYPE',
-        message: 'Without _type provided in properties, _type generation requires mapping.targetEntity._type!',
+        message:
+          'Without _type provided in properties, _type generation requires mapping.targetEntity._type!',
       });
     }
 
@@ -220,7 +223,8 @@ export function generateRelationshipType(
   if (!from || !to) {
     throw new IntegrationError({
       code: 'GENERATE_RELATIONSHIP_TYPE_MISSING_RELATIONSIHP_FROM_OR_TO',
-      message: '"from" and "to" must be provided to generate a relationship _type!',
+      message:
+        '"from" and "to" must be provided to generate a relationship _type!',
     });
   }
 
@@ -258,7 +262,8 @@ export function generateRelationshipKey(
   if (!from || !to) {
     throw new IntegrationError({
       code: 'GENERATE_RELATIONSHIP_KEY_MISSING_RELATIONSHIP_FROM_OR_TO',
-      message: '"from" and "to" must be provided to generate a relationship _type!',
+      message:
+        '"from" and "to" must be provided to generate a relationship _type!',
     });
   }
 

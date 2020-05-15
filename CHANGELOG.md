@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Slight modifications to support mapped relationships
+
 ## 1.1.1 - 2020-05-14
 
 ### Added
