@@ -1,8 +1,7 @@
-import { JobState, IntegrationStep } from './types';
-
 import { FileSystemGraphObjectStore } from '../storage';
-import { IntegrationDuplicateKeyError } from './error';
 import { Entity, Relationship } from '../types';
+import { IntegrationDuplicateKeyError } from './error';
+import { IntegrationStep, JobState } from './types';
 
 export class DuplicateKeyTracker {
   private readonly keySet = new Set<string>();
@@ -18,11 +17,29 @@ export class DuplicateKeyTracker {
   }
 }
 
-export function createStepJobState(
-  step: IntegrationStep,
-  duplicateKeyTracker: DuplicateKeyTracker,
-  graphObjectStore: FileSystemGraphObjectStore,
-): JobState {
+export class MemoryDataStore {
+  private readonly data = new Map<string, unknown>();
+
+  set(key: string, data: unknown): void {
+    this.data[key] = data;
+  }
+
+  get(key: string): unknown {
+    return this.data[key];
+  }
+}
+
+export function createStepJobState({
+  step,
+  duplicateKeyTracker,
+  graphObjectStore,
+  dataStore,
+}: {
+  step: IntegrationStep;
+  duplicateKeyTracker: DuplicateKeyTracker;
+  graphObjectStore: FileSystemGraphObjectStore;
+  dataStore: MemoryDataStore;
+}): JobState {
   const addEntities = (entities: Entity[]) => {
     entities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key);
@@ -41,6 +58,14 @@ export function createStepJobState(
   };
 
   return {
+    setData: async <T>(key: string, data: T): Promise<void> => {
+      dataStore.set(key, data);
+    },
+
+    getData: async <T>(key: string): Promise<T> => {
+      return dataStore.get(key) as T;
+    },
+
     addEntity: (entity: Entity) => {
       return addEntities([entity]);
     },
