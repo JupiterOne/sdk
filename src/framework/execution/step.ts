@@ -47,7 +47,7 @@ export function determinePartialDatasetsFromStepExecutionResults(
           IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
       ) {
         partialDatasets.types = uniq(
-          partialDatasets.types.concat(stepResult.types),
+          partialDatasets.types.concat(stepResult.declaredTypes),
         );
       }
       return partialDatasets;

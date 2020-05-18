@@ -8,6 +8,16 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Detect and warn when undeclared `_type` values are found. Encountered types
+  are now displayed on the `IntegrationStepResult` object.
+
+### Changed
+
+- A step's `types` are now stored as `declaredTypes` on the
+  `IntegrationStepResult` object.
+
 ## 2.1.0 - 2020-05-20
 
 ### Added

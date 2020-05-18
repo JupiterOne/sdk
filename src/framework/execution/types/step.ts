@@ -44,8 +44,20 @@ export type IntegrationStep<
   executionHandler: StepExecutionHandlerFunction<TConfig>;
 };
 
-export type IntegrationStepResult = IntegrationStepMetadata & {
+export type IntegrationStepResult = Omit<IntegrationStepMetadata, 'types'> & {
   status: IntegrationStepResultStatus;
+
+  /**
+   * Entity or relatioship types that were declared
+   * when the step was configured.
+   */
+  declaredTypes: string[];
+
+  /**
+   * Entity or relationship types that were encountered during
+   * the step's execution.
+   */
+  encounteredTypes: string[];
 };
 
 interface IntegrationStepMetadata {

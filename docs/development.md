@@ -756,25 +756,29 @@ An example summary of the steps will like this:
   {
     "id": "step-fetch-accounts",
     "name": "Fetch Accounts",
-    "types": ["my_integration_account"],
+    "declaredTypes": ["my_integration_account"],
+    "encounteredTypes": ["my_integration_account"],
     "status": "success"
   },
   {
     "id": "step-fetch-users",
     "name": "Fetch Users",
-    "types": ["my_integration_user"],
+    "declaredTypes": ["my_integration_user"],
+    "encounteredTypes": [],
     "status": "failure"
   },
   {
     "id": "step-fetch-groups",
     "name": "Fetch Groups",
-    "types": ["my_integration_group"],
+    "declaredTypes": ["my_integration_group"],
+    "encounteredTypes": ["my_integration_group"],
     "status": "success"
   },
   {
     "id": "step-build-user-to-group-relationships",
     "name": "Fetch Accounts",
-    "types": ["my_integration_user_to_group_relationship"],
+    "declaredTypes": ["my_integration_user_to_group_relationship"],
+    "encounteredTypes": ["my_integration_user_to_group_relationship"],
     "dependsOn": ["step-fetch-users", "step-fetch-groups"],
     "status": "partial_success_from_dependency_failure"
   }
@@ -795,14 +799,14 @@ has happened.
 
 #### Letting the synchronizer know about partial datasets
 
-The framework's state machine will utilize the `types` and `dependsOn` fields
-for constructing a list of entity and relationship types that should be
-considered a partial dataset. The backend synchronization process that performs
-he diffing of the data will receive a list of types that have been affected by a
-failure to help determine how updates should be applied and what data is safe to
-delete. The information about partial datasets will be sent when starting the
-synchronization process to prevent data that should be retained in the graph
-from being removed.
+The framework's state machine will utilize `declaredTypes` and `dependsOn`
+fields from the step results for constructing a list of entity and relationship
+types that should be considered a partial dataset. The backend synchronization
+process that performs he diffing of the data will receive a list of types that
+have been affected by a failure to help determine how updates should be applied
+and what data is safe to delete. The information about partial datasets will be
+sent when starting the synchronization process to prevent data that should be
+retained in the graph from being removed.
 
 After the collection phase, the integration summary and partial datasets
 metadata will be written to disk in the `.j1-integration/summary.json` file.
@@ -815,25 +819,29 @@ Here is an example of what the summary file would look like.
     {
       "id": "step-fetch-accounts",
       "name": "Fetch Accounts",
-      "types": ["my_integration_account"],
+      "declaredTypes": ["my_integration_account"],
+      "encounteredTypes": ["my_integration_account"],
       "status": "success"
     },
     {
       "id": "step-fetch-users",
       "name": "Fetch Users",
-      "types": ["my_integration_user"],
+      "declaredTypes": ["my_integration_user"],
+      "encounteredTypes": [],
       "status": "failure"
     },
     {
       "id": "step-fetch-groups",
       "name": "Fetch Groups",
-      "types": ["my_integration_group"],
+      "declaredTypes": ["my_integration_group"],
+      "encounteredTypes": ["my_integration_group"],
       "status": "success"
     },
     {
       "id": "step-build-user-to-group-relationships",
       "name": "Fetch Accounts",
-      "types": ["my_integration_user_to_group_relationship"],
+      "declaredTypes": ["my_integration_user_to_group_relationship"],
+      "encounteredTypes": ["my_integration_user_to_group_relationship"],
       "dependsOn": ["step-fetch-users", "step-fetch-groups"],
       "status": "partial_success_from_dependency_failure"
     }
@@ -858,6 +866,19 @@ of `types` from steps that have returned with a `failure` or
 
 The `metadata` field will be sent to JupiterOne upon performing the
 `synchronization`.
+
+##### Detecting undeclared types
+
+In the examples from the previous sections, you may have noticed that
+`integrationStepResults` contains `declaredTypes` and `encounteredTypes`. The
+`declaredTypes` are the `types` provided to the `IntegrationStep` object. As an
+integration collects data, the `_type` values from both entities and
+relationships are added to the `encounteredTypes` field. These fields are diffed
+and a warning will be displayed if there are undeclared types detected.
+
+It is important that each integration step declares all possible `_type` values
+that it expects to encounter so that data is not unintentionally deleted when an
+unexpected failure occurs.
 
 ## The CLI
 

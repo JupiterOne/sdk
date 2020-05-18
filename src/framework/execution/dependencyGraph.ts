@@ -1,11 +1,13 @@
 import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
+import xor from 'lodash/xor';
 
 import { FileSystemGraphObjectStore } from '../storage';
 import {
   createStepJobState,
   DuplicateKeyTracker,
   MemoryDataStore,
+  TypeTracker,
 } from './jobState';
 import {
   IntegrationExecutionContext,
@@ -90,10 +92,15 @@ export function executeStepDependencyGraph(
   function updateStepResultStatus(
     step: IntegrationStep,
     status: IntegrationStepResultStatus,
+    typeTracker: TypeTracker,
   ) {
     const existingResult = stepResultsMap.get(step.id);
     if (existingResult) {
-      stepResultsMap.set(step.id, { ...existingResult, status });
+      stepResultsMap.set(step.id, {
+        ...existingResult,
+        status,
+        encounteredTypes: typeTracker.getEncounteredTypes(),
+      });
     }
   }
 
@@ -147,6 +154,30 @@ export function executeStepDependencyGraph(
     return executingDependencies.length === 0;
   }
 
+  /**
+   * Logs undeclaredTypes if any are found.
+   */
+  function maybeLogUndeclaredTypes(
+    context: IntegrationStepExecutionContext,
+    step: IntegrationStep,
+    typeTracker: TypeTracker,
+  ) {
+    const declaredTypes = step.types;
+    const encounteredTypes = typeTracker.getEncounteredTypes();
+    const diff = xor(declaredTypes, encounteredTypes);
+
+    const declaredTypesSet = new Set(declaredTypes);
+
+    if (diff.length) {
+      context.logger.warn(
+        {
+          undeclaredTypes: diff.filter((type) => !declaredTypesSet.has(type)),
+        },
+        'Undeclared types were detected.',
+      );
+    }
+  }
+
   return new Promise((resolve, reject) => {
     /**
      * If an unexpected error occurs during the execution of a step,
@@ -197,10 +228,13 @@ export function executeStepDependencyGraph(
      * determine a status code for the step's result.
      */
     async function executeStep(step: IntegrationStep) {
+      const typeTracker = new TypeTracker();
+
       const context = buildStepContext({
         context: executionContext,
         step,
         duplicateKeyTracker,
+        typeTracker,
         graphObjectStore,
         dataStore,
       });
@@ -218,6 +252,7 @@ export function executeStepDependencyGraph(
             IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
         } else {
           status = IntegrationStepResultStatus.SUCCESS;
+          maybeLogUndeclaredTypes(context, step, typeTracker);
         }
       } catch (err) {
         context.logger.stepFailure(step, err);
@@ -231,7 +266,7 @@ export function executeStepDependencyGraph(
       }
 
       await context.jobState.flush();
-      updateStepResultStatus(step, status);
+      updateStepResultStatus(step, status, typeTracker);
       enqueueLeafSteps();
     }
 
@@ -246,12 +281,14 @@ function buildStepContext({
   context,
   step,
   duplicateKeyTracker,
+  typeTracker,
   graphObjectStore,
   dataStore,
 }: {
   context: IntegrationExecutionContext;
   step: IntegrationStep;
   duplicateKeyTracker: DuplicateKeyTracker;
+  typeTracker: TypeTracker;
   graphObjectStore: FileSystemGraphObjectStore;
   dataStore: MemoryDataStore;
 }): IntegrationStepExecutionContext {
@@ -263,6 +300,7 @@ function buildStepContext({
     jobState: createStepJobState({
       step,
       duplicateKeyTracker,
+      typeTracker,
       graphObjectStore,
       dataStore,
     }),
@@ -287,8 +325,9 @@ function buildStepResultsMap(
         return {
           id: step.id,
           name: step.name,
-          types: step.types,
           dependsOn: step.dependsOn,
+          declaredTypes: step.types,
+          encounteredTypes: [],
           status:
             stepStartStates[step.id].disabled || hasDisabledDependencies
               ? IntegrationStepResultStatus.DISABLED

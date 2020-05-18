@@ -173,4 +173,27 @@ describe('createMockStepExecutionContext', () => {
     const context = createMockStepExecutionContext();
     await step.executionHandler(context);
   });
+
+  test('tracks encounteredTypes', () => {
+    const { jobState } = createMockStepExecutionContext();
+
+    jobState.addEntity({
+      _key: 'entity:0',
+      _type: 'test_entity',
+      _class: 'Resource',
+    });
+
+    jobState.addRelationship({
+      _key: 'relationship:0',
+      _type: 'test_relationship',
+      _class: 'Resource',
+      _fromEntityKey: 'a',
+      _toEntityKey: 'b',
+    });
+
+    expect(jobState.encounteredTypes).toEqual([
+      'test_entity',
+      'test_relationship',
+    ]);
+  });
 });

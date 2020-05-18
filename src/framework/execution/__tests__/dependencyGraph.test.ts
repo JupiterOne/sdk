@@ -214,6 +214,58 @@ describe('executeStepDependencyGraph', () => {
     ).rejects.toThrow();
   });
 
+  test('logs warning if encountered types do not match declared types', async () => {
+    const workingDirectory = `/test`;
+    jest.spyOn(process, 'cwd').mockReturnValue(workingDirectory);
+
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        types: ['my_type_a'],
+        executionHandler: async ({ jobState }) => {
+          await jobState.addEntities([
+            {
+              _key: 'my_keys_a',
+              _type: 'my_type_b',
+              _class: 'MyClassA',
+            },
+          ]);
+        },
+      },
+    ];
+
+    const warnSpy = jest.spyOn(executionContext.logger, 'warn');
+    jest
+      .spyOn(executionContext.logger, 'child')
+      .mockReturnValue(executionContext.logger);
+
+    const graph = buildStepDependencyGraph(steps);
+    const result = await executeStepDependencyGraph(
+      executionContext,
+      graph,
+      getDefaultStepStartStates(steps),
+    );
+
+    expect(result).toEqual([
+      {
+        id: 'a',
+        name: 'a',
+        declaredTypes: ['my_type_a'],
+        encounteredTypes: ['my_type_b'],
+        status: IntegrationStepResultStatus.SUCCESS,
+      },
+    ]);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      {
+        undeclaredTypes: ['my_type_b'],
+      },
+      'Undeclared types were detected.',
+    );
+  });
+
   test("writes data to the correct graph directory path using each step's id", async () => {
     const workingDirectory = `/test`;
     jest.spyOn(process, 'cwd').mockReturnValue(workingDirectory);
@@ -490,20 +542,23 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         status: IntegrationStepResultStatus.SUCCESS,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         dependsOn: ['a'],
         status: IntegrationStepResultStatus.FAILURE,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         dependsOn: ['b'],
         status:
           IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
@@ -611,13 +666,15 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         status: IntegrationStepResultStatus.FAILURE,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         dependsOn: ['a'],
         status:
           IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
@@ -625,7 +682,8 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'c',
         name: 'c',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         dependsOn: ['b'],
         status:
           IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
@@ -945,7 +1003,8 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        declaredTypes: [],
+        encounteredTypes: [],
         status: IntegrationStepResultStatus.DISABLED,
       },
     ]);
@@ -1020,33 +1079,38 @@ describe('executeStepDependencyGraph', () => {
         {
           id: 'a',
           name: 'a',
-          types: [],
+          declaredTypes: [],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.SUCCESS,
         },
         {
           id: 'b',
           name: 'b',
-          types: [],
+          declaredTypes: [],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.DISABLED,
         },
         {
           id: 'c',
           name: 'c',
-          types: [],
+          declaredTypes: [],
+          encounteredTypes: [],
           dependsOn: ['a'],
           status: IntegrationStepResultStatus.SUCCESS,
         },
         {
           id: 'd',
           name: 'd',
-          types: [],
+          declaredTypes: [],
+          encounteredTypes: [],
           dependsOn: ['b', 'c', 'e'],
           status: IntegrationStepResultStatus.DISABLED,
         },
         {
           id: 'e',
           name: 'e',
-          types: [],
+          declaredTypes: [],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.SUCCESS,
         },
       ]),
