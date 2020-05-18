@@ -1,29 +1,34 @@
 import {
-  IntegrationInstance,
   IntegrationExecutionContext,
-  IntegrationStepExecutionContext,
+  IntegrationInstance,
+  IntegrationInstanceConfig,
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
+  IntegrationStepExecutionContext,
 } from '../framework';
-
 import { loadInstanceConfigFields } from '../framework/config';
 import { loadConfigFromEnvironmentVariables } from '../framework/execution/config';
 import { LOCAL_INTEGRATION_INSTANCE } from '../framework/execution/instance';
-
-import { createMockIntegrationLogger } from './logger';
 import {
-  MockJobState,
   createMockJobState,
   CreateMockJobStateOptions,
+  MockJobState,
 } from './jobState';
+import { createMockIntegrationLogger } from './logger';
 
-interface CreateMockExecutionContextOptions {
-  instanceConfig?: IntegrationInstance['config'];
+interface CreateMockExecutionContextOptions<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> {
+  instanceConfig?: TConfig;
 }
 
-export function createMockExecutionContext({
+export function createMockExecutionContext<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+>({
   instanceConfig,
-}: CreateMockExecutionContextOptions = {}): IntegrationExecutionContext {
+}: CreateMockExecutionContextOptions<
+  TConfig
+> = {}): IntegrationExecutionContext<TConfig> {
   const logger = createMockIntegrationLogger();
   const accountId =
     process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID ||
@@ -31,10 +36,10 @@ export function createMockExecutionContext({
 
   // copy local instance properties so that tests cannot
   // mutate the original object and cause unpredicable behavior
-  const instance: IntegrationInstance = {
+  const instance = {
     ...LOCAL_INTEGRATION_INSTANCE,
     accountId,
-  };
+  } as IntegrationInstance<TConfig>;
 
   if (instanceConfig) {
     instance.config = instanceConfig;
@@ -52,7 +57,7 @@ export function createMockExecutionContext({
         // this would generally only happen when a developer does not
         // have an .env file configured or when an integration's test suite
         // runs in CI
-        instance.config = generateInstanceConfig(configFields);
+        instance.config = generateInstanceConfig<TConfig>(configFields);
       }
     }
   }
@@ -63,7 +68,9 @@ export function createMockExecutionContext({
   };
 }
 
-type CreateMockStepExecutionContextOptions = CreateMockExecutionContextOptions &
+type CreateMockStepExecutionContextOptions = CreateMockExecutionContextOptions<
+  IntegrationInstanceConfig
+> &
   CreateMockJobStateOptions;
 
 interface MockIntegrationStepExecutionContext
@@ -80,16 +87,16 @@ export function createMockStepExecutionContext(
   };
 }
 
-function generateInstanceConfig(
-  configFields: IntegrationInstanceConfigFieldMap,
-): IntegrationInstance['config'] {
+function generateInstanceConfig<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+>(configFields: IntegrationInstanceConfigFieldMap): TConfig {
   return Object.entries(configFields).reduce(
     (acc: IntegrationInstance['config'], [field, config]) => {
       acc[field] = getInstanceConfigValueFromType(config);
       return acc;
     },
     {},
-  );
+  ) as TConfig;
 }
 
 function getInstanceConfigValueFromType(

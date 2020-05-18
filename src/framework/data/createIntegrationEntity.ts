@@ -84,7 +84,9 @@ export type IntegrationEntityData = {
 
   /**
    * The names of properties that will be assigned directly to the entity from
-   * tags with matching names. See `assignTags`.
+   * tags with matching names.
+   *
+   * @see assignTags
    */
   tagProperties?: string[];
 };

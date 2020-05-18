@@ -1,8 +1,8 @@
 import { Har } from 'har-format';
 import defaultsDeep from 'lodash/defaultsDeep';
 
-import { Polly, PollyConfig } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
+import { Polly, PollyConfig } from '@pollyjs/core';
 import FSPersister from '@pollyjs/persister-fs';
 
 Polly.register(NodeHttpAdapter);
@@ -23,14 +23,15 @@ interface SetupRecordingInput {
 const SENSITIVE_HEADER_NAMES = ['authorization'].map((i) => i.toLowerCase());
 
 /**
- * @description Sets up a recording of all http requests and
- * writes the data to disk when it is stopped.
- * This leverages Polly.js to do all the heavy lifting.
- * @param input.mutateRequest - allows mutating the `PollyRequest` object
- * pre flight, this affects how the request is sent out and also how it
- * is stored.  This is currently the only known way to get compressed (gzip, broli, etc.)
- * requests to persist their body to the har file.
- * See: https://github.com/Netflix/pollyjs/blob/master/packages/%40pollyjs/core/src/-private/request.js#L30
+ * Sets up a recording of all http requests and writes the data to disk when it
+ * is stopped. This leverages Polly.js to do all the heavy lifting.
+ *
+ * @param input.mutateRequest allows [mutating the
+ * `PollyRequest`](https://github.com/Netflix/pollyjs/blob/master/packages/%40pollyjs/core/src/-private/request.js#L30)
+ * object pre flight, affecting how the request is sent out and how it is
+ * stored.  This is currently the only known way to get compressed (gzip, broli,
+ * etc.) requests to persist their body to the har file.
+ *
  * @example
  * ```typescript
  * let recording;

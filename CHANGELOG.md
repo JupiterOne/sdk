@@ -6,16 +6,63 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## 2.0.0 - 2020-05-18
 
 ### Added
 
 - `JobState.setData(key, data)` and `JobState.getData(key)` allow steps to
   communicate arbitrary data to dependent steps.
 
+- `Entity` now includes a property `id?: string` to represent the
+  [`id` property supported by the data model](https://github.com/JupiterOne/data-model/blob/f07f085b39041e639f5dacd9b6140c6c3db0b5ad/src/schemas/Entity.json#L10).
+  This allows for easy reference to `Entity.id` in later steps that iterate
+  already-loaded entities and don't want to assume that the `_key` _is_ the
+  provider's identifier (often the `_key` needs additional data to make it
+  unique). Note that we plan to soon provide TS types for all the data model
+  types.
+
+### Changed
+
+- BREAKING! Historically, the `IntegrationInstance.config` was typed as `any`.
+  This provided no type safety. Now, integrations must declare an interface
+  represeting the structure of their `IntegrationInstance.config` and provide
+  this as a type parameter in code where there is a need to access the `config`
+  properties. The type parameter is not required (defaults to type `object`),
+  but there will be no access to properties (without an evil type cast to
+  `any`).
+
+  The following types now support a generic parameter for the `instance.config`
+  they or their properties reference:
+
+  - `IntegrationInstance`,
+  - `IntegrationInvocationConfig`,
+  - `IntegrationExecutionContext`,
+  - `IntegrationStepExecutionContext`
+  - `IntegrationStep`
+  - `GetStepStartStatesFunction`
+  - `StepExecutionHandlerFunction`
+  - `InvocationValidationFunction`
+  - `createMockExecutionContext`
+
+## 1.1.4 - 2020-05-18
+
+### Fixed
+
+- `addRelationship` added to entities collection instead of relationships.
+
+## 1.1.3 - 2020-05-16
+
+### Changed
+
+- Upgraded to `@jupiterone/data-model@0.4.1`
+
 ## 1.1.2 - 2020-05-15
 
-- Slight modifications to support mapped relationships
+### Fixed
+
+- `createIntegrationRelationship` did not allow for providing the relationship
+  mapping `_key` property. This is necessary in the synchronizer to allow it to
+  track the mapping rule.
 
 ## 1.1.1 - 2020-05-14
 
