@@ -14,6 +14,33 @@ export type GraphObjectIteratee<T> = (obj: T) => void | Promise<void>;
  */
 export interface JobState {
   /**
+   * Store arbitrary data for use in dependent steps.
+   *
+   * Integrations often need a means of storing some information other than
+   * entities and relationships for use across steps. This simple mechanism
+   * makes no asumptions about the content of the data, and a single value can
+   * be stored per key, though the value can be as complex as necessary.
+   *
+   * This mechanism is not meant to replace storage and retrieval of
+   * entities/relationships across steps. That is, this mechanism is for smaller
+   * amounts of transient data.
+   */
+  setData: <T>(key: string, data: T) => Promise<void>;
+
+  /**
+   * Retrieve arbitrary data stored by parent steps.
+   *
+   * Keep in mind that steps are executed in an order that respects the step
+   * dependency graph. A step will only see the data stored in previous steps it
+   * depends on. Other steps outside the dependency ancestry may not have run
+   * and therefore data collected by those other steps should not be expected to
+   * exist.
+   *
+   * @see setData
+   */
+  getData: <T>(key: string) => Promise<T>;
+
+  /**
    * Adds an entity to the job's collection. `addEntities` can be used
    * to add a batch of entities to the collection.
    */

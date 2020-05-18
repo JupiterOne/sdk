@@ -2,6 +2,21 @@ import { Entity, Relationship } from '../../framework';
 
 import { MockJobState, createMockJobState } from '../jobState';
 
+describe('data', () => {
+  test('creates a job state object that can set and get data', async () => {
+    const jobState = createMockJobState();
+    await jobState.setData('my-key', 'whatever');
+    await expect(jobState.getData('my-key')).resolves.toEqual('whatever');
+  });
+
+  test('replaces existing data', async () => {
+    const jobState = createMockJobState();
+    await jobState.setData('my-key', 'whatever');
+    await jobState.setData('my-key', 'ohyeah');
+    await expect(jobState.getData('my-key')).resolves.toEqual('ohyeah');
+  });
+});
+
 describe('entities', () => {
   const inputEntities: Entity[] = [
     {

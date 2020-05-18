@@ -8,6 +8,13 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- `JobState.setData(key, data)` and `JobState.getData(key)` allow steps to
+  communicate arbitrary data to dependent steps.
+
+## 1.1.2 - 2020-05-15
+
 - Slight modifications to support mapped relationships
 
 ## 1.1.1 - 2020-05-14
