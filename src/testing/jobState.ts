@@ -59,7 +59,7 @@ export function createMockJobState({
     addEntities,
 
     addRelationship: async (relationship: Relationship) => {
-      addEntities([relationship]);
+      addRelationships([relationship]);
     },
     addRelationships,
 

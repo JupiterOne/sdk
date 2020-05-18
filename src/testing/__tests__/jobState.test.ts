@@ -90,6 +90,14 @@ describe('relationships', () => {
     expect(jobState.collectedRelationships).toEqual(inputRelationships);
   });
 
+  test('allows a single relationship to be added with "addRelationship"', async () => {
+    expect.hasAssertions();
+    const jobState = createMockJobState();
+    await jobState.addRelationship(inputRelationships[0]);
+    expect(jobState.collectedEntities.length).toEqual(0);
+    expect(jobState.collectedRelationships).toEqual([inputRelationships[0]]);
+  });
+
   test('does not include pre-existing relationships in collectedRelationships', async () => {
     expect.hasAssertions();
     const jobState = createMockJobState({ relationships: inputRelationships });
