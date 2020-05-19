@@ -8,12 +8,19 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
 - Export `SetupRecordingInput` from `@jupiterone/integration-sdk/testing` to
   allow integrations to provide something like
   `setupAzureRecording(input: SetupRecordingInput)`, which may then add common
   options and call `setupRecording`.
 - Export `RecordingEntry` from `@jupiterone/integration-sdk/testing` to allow
   typing in `mutateEntry(entry: RecordingEntry)`.
+
+### Fixed
+
+- `createIntegrationEntity` would transfer properties of type `object` and
+  `object[]`, which are never valid on an entity.
 
 ## 2.0.0 - 2020-05-18
 
