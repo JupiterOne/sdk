@@ -5,28 +5,32 @@ import {
   executeStepDependencyGraph,
 } from './dependencyGraph';
 import {
-  IntegrationExecutionContext,
-  IntegrationStep,
+  ExecutionContext,
   IntegrationStepResult,
-  IntegrationStepResultStatus,
-  IntegrationStepStartStates,
+  StepResultStatus,
+  StepStartStates,
   PartialDatasets,
+  Step,
+  StepExecutionContext,
 } from './types';
 
-export async function executeSteps(
-  context: IntegrationExecutionContext,
-  steps: IntegrationStep[],
-  stepStartStates: IntegrationStepStartStates,
+export async function executeSteps<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+>(
+  context: TExecutionContext,
+  steps: Step<TStepExecutionContext>[],
+  stepStartStates: StepStartStates,
 ): Promise<IntegrationStepResult[]> {
   const stepGraph = buildStepDependencyGraph(steps);
   return executeStepDependencyGraph(context, stepGraph, stepStartStates);
 }
 
-export function getDefaultStepStartStates(
-  steps: IntegrationStep[],
-): IntegrationStepStartStates {
+export function getDefaultStepStartStates<
+  TStepExecutionContext extends StepExecutionContext
+>(steps: Step<TStepExecutionContext>[]): StepStartStates {
   return steps.reduce(
-    (states: IntegrationStepStartStates, step: IntegrationStep) => {
+    (states: StepStartStates, step: Step<TStepExecutionContext>) => {
       states[step.id] = {
         disabled: false,
       };
@@ -42,9 +46,9 @@ export function determinePartialDatasetsFromStepExecutionResults(
   return stepResults.reduce(
     (partialDatasets: PartialDatasets, stepResult: IntegrationStepResult) => {
       if (
-        stepResult.status === IntegrationStepResultStatus.FAILURE ||
+        stepResult.status === StepResultStatus.FAILURE ||
         stepResult.status ===
-          IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
+          StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
       ) {
         partialDatasets.types = uniq(
           partialDatasets.types.concat(stepResult.declaredTypes),

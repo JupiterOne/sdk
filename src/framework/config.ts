@@ -4,11 +4,12 @@ import path from 'path';
 
 import { IntegrationError } from '../errors';
 import {
+  ExecutionContext,
   GetStepStartStatesFunction,
   IntegrationInstanceConfigFieldMap,
   IntegrationInvocationConfig,
   IntegrationStep,
-  InvocationValidationFunction,
+  IntegrationInvocationValidationFunction,
 } from '../framework/execution';
 import * as log from '../log';
 
@@ -101,7 +102,7 @@ export function loadInstanceConfigFields(
  */
 export function loadValidateInvocationFunction(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
-): InvocationValidationFunction | undefined {
+): IntegrationInvocationValidationFunction | undefined {
   return loadModuleContent(
     path.resolve(projectSourceDirectory, 'validateInvocation'),
   );
@@ -110,10 +111,10 @@ export function loadValidateInvocationFunction(
 /**
  * Loads getStepStartStates function from ./src/getStepStartStates.(t|j)s
  */
-export function loadGetStepStartStatesFunction(
+export function loadGetStepStartStatesFunction<T extends ExecutionContext>(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ) {
-  return loadModuleContent<GetStepStartStatesFunction>(
+  return loadModuleContent<GetStepStartStatesFunction<T>>(
     path.resolve(projectSourceDirectory, 'getStepStartStates'),
   );
 }

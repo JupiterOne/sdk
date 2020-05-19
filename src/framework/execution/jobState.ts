@@ -1,7 +1,7 @@
 import { FileSystemGraphObjectStore } from '../storage';
 import { Entity, Relationship } from '../types';
 import { IntegrationDuplicateKeyError } from './error';
-import { IntegrationStep, JobState } from './types';
+import { JobState } from './types';
 
 export class DuplicateKeyTracker {
   private readonly keySet = new Set<string>();
@@ -42,13 +42,13 @@ export class MemoryDataStore {
 }
 
 export function createStepJobState({
-  step,
+  stepId,
   duplicateKeyTracker,
   typeTracker,
   graphObjectStore,
   dataStore,
 }: {
-  step: IntegrationStep;
+  stepId: string;
   duplicateKeyTracker: DuplicateKeyTracker;
   typeTracker: TypeTracker;
   graphObjectStore: FileSystemGraphObjectStore;
@@ -60,7 +60,7 @@ export function createStepJobState({
       typeTracker.registerType(e._type);
     });
 
-    return graphObjectStore.addEntities(step.id, entities);
+    return graphObjectStore.addEntities(stepId, entities);
   };
 
   const addRelationships = (relationships: Relationship[]) => {
@@ -70,7 +70,7 @@ export function createStepJobState({
       typeTracker.registerType(r._type as string);
     });
 
-    return graphObjectStore.addRelationships(step.id, relationships);
+    return graphObjectStore.addRelationships(stepId, relationships);
   };
 
   return {

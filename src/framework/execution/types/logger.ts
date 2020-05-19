@@ -1,4 +1,4 @@
-import { IntegrationStep } from './step';
+import { StepMetadata } from './';
 import {
   SynchronizationJobContext,
   SynchronizationJob,
@@ -12,8 +12,8 @@ interface ChildLogFunction {
   (options: object): IntegrationLogger;
 }
 
-type StepLogFunction = (step: IntegrationStep) => void;
-type StepLogFunctionWithError = (step: IntegrationStep, err: Error) => void;
+type StepLogFunction = (step: StepMetadata) => void;
+type StepLogFunctionWithError = (step: StepMetadata, err: Error) => void;
 type SynchronizationLogFunction = (job: SynchronizationJob) => void;
 type ValidationLogFunction = (err: Error) => void;
 type IsHandledErrorFunction = (err: Error) => boolean;

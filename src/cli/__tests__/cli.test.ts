@@ -3,7 +3,7 @@ import { createCli } from '../index';
 import { loadProjectStructure } from '../../__tests__/loadProjectStructure';
 import * as log from '../../log';
 
-import { IntegrationStepResultStatus } from '../../framework/execution';
+import { StepResultStatus } from '../../framework/execution';
 import * as nodeFs from 'fs';
 const fs = nodeFs.promises;
 
@@ -29,7 +29,7 @@ describe('collect', () => {
           name: 'Fetch Accounts',
           declaredTypes: ['my_account'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
         {
           id: 'fetch-groups',
@@ -37,14 +37,14 @@ describe('collect', () => {
           name: 'Fetch Groups',
           declaredTypes: ['my_groups'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
         {
           id: 'fetch-users',
           name: 'Fetch Users',
           declaredTypes: ['my_user'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
       ],
       metadata: {
@@ -73,7 +73,7 @@ describe('collect', () => {
             name: 'Fetch Accounts',
             declaredTypes: ['my_account'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.DISABLED,
+            status: StepResultStatus.DISABLED,
           },
           {
             id: 'fetch-groups',
@@ -81,14 +81,14 @@ describe('collect', () => {
             name: 'Fetch Groups',
             declaredTypes: ['my_groups'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.DISABLED,
+            status: StepResultStatus.DISABLED,
           },
           {
             id: 'fetch-users',
             name: 'Fetch Users',
             declaredTypes: ['my_user'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
         ],
         metadata: {
@@ -118,7 +118,7 @@ describe('collect', () => {
             name: 'Fetch Accounts',
             declaredTypes: ['my_account'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
           {
             id: 'fetch-groups',
@@ -126,14 +126,14 @@ describe('collect', () => {
             name: 'Fetch Groups',
             declaredTypes: ['my_groups'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.DISABLED,
+            status: StepResultStatus.DISABLED,
           },
           {
             id: 'fetch-users',
             name: 'Fetch Users',
             declaredTypes: ['my_user'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
         ],
         metadata: {
@@ -165,7 +165,7 @@ describe('collect', () => {
             name: 'Fetch Accounts',
             declaredTypes: ['my_account'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
           {
             id: 'fetch-groups',
@@ -173,14 +173,14 @@ describe('collect', () => {
             name: 'Fetch Groups',
             declaredTypes: ['my_groups'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.DISABLED,
+            status: StepResultStatus.DISABLED,
           },
           {
             id: 'fetch-users',
             name: 'Fetch Users',
             declaredTypes: ['my_user'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
         ],
         metadata: {
@@ -209,7 +209,7 @@ describe('collect', () => {
             name: 'Fetch Accounts',
             declaredTypes: ['my_account'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
           {
             id: 'fetch-groups',
@@ -217,14 +217,14 @@ describe('collect', () => {
             name: 'Fetch Groups',
             declaredTypes: ['my_groups'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.SUCCESS,
+            status: StepResultStatus.SUCCESS,
           },
           {
             id: 'fetch-users',
             name: 'Fetch Users',
             declaredTypes: ['my_user'],
             encounteredTypes: [],
-            status: IntegrationStepResultStatus.DISABLED,
+            status: StepResultStatus.DISABLED,
           },
         ],
         metadata: {
