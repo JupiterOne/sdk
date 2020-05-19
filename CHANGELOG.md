@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- Export `SetupRecordingInput` from `@jupiterone/integration-sdk/testing` to
+  allow integrations to provide something like
+  `setupAzureRecording(input: SetupRecordingInput)`, which may then add common
+  options and call `setupRecording`.
+- Export `RecordingEntry` from `@jupiterone/integration-sdk/testing` to allow
+  typing in `mutateEntry(entry: RecordingEntry)`.
+
 ## 2.0.0 - 2020-05-18
 
 ### Added

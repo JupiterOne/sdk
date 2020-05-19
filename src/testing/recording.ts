@@ -1,4 +1,4 @@
-import { Har } from 'har-format';
+import { Har, Entry } from 'har-format';
 import defaultsDeep from 'lodash/defaultsDeep';
 
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
@@ -9,8 +9,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 export type Recording = Polly;
+export type RecordingEntry = Entry;
 
-interface SetupRecordingInput {
+export interface SetupRecordingInput {
   directory: string;
   name: string;
   redactedRequestHeaders?: string[];
@@ -26,6 +27,9 @@ const SENSITIVE_HEADER_NAMES = ['authorization'].map((i) => i.toLowerCase());
  * Sets up a recording of all http requests and writes the data to disk when it
  * is stopped. This leverages Polly.js to do all the heavy lifting.
  *
+ * @param input.mutateEntry allows mutating each `RecordingEntry` before being
+ * persisted.
+ *
  * @param input.mutateRequest allows [mutating the
  * `PollyRequest`](https://github.com/Netflix/pollyjs/blob/master/packages/%40pollyjs/core/src/-private/request.js#L30)
  * object pre flight, affecting how the request is sent out and how it is
@@ -39,7 +43,7 @@ const SENSITIVE_HEADER_NAMES = ['authorization'].map((i) => i.toLowerCase());
  *   recording = setupRecording({
  *     directory: __dirname,
  *     name: 'my recording',
- *     mutateEntry: (entry) => entry.response.content.text = '',
+ *     mutateEntry: (entry: RecordingEntry) => entry.response.content.text = '',
  *     mutateRequest: (request) => request.body = '';
  *  });
  * });

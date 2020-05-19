@@ -34,6 +34,7 @@
     "@pollyjs/core": "^4.0.4",
     "@pollyjs/persister-fs": "^4.0.4",
     "@types/bunyan": "^1.8.6",
+    "@types/har-format": "^1.2.4",
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister": "^2.0.1",
@@ -55,7 +56,6 @@
     "uuid": "^7.0.3"
   },
   "devDependencies": {
-    "@types/har-format": "^1.2.4",
     "@types/jest": "^25.2.1",
     "@types/lodash": "^4.14.149",
     "@types/node": "^13.13.4",
