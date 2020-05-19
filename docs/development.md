@@ -994,7 +994,7 @@ Entity data will be published to
 `https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/entities`.
 
 Relationship data will be published to
-`https://api.us.jupiterone.io//synchronization/:integrationInstanceId/jobs/:jobId/relationships`.
+`https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/relationships`.
 
 After all of the data under the `.j1-integration/graph` directory has been
 published, the CLI will `POST` to

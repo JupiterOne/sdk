@@ -3,10 +3,7 @@ import { createCommand } from 'commander';
 import * as log from '../../log';
 
 import { buildStepDependencyGraph } from '../../framework/execution/dependencyGraph';
-import {
-  executeIntegrationLocally,
-  IntegrationStepStartStates,
-} from '../../framework';
+import { executeIntegrationLocally, StepStartStates } from '../../framework';
 import { loadConfig } from '../../framework/config';
 
 // coercion function to collect multiple values for a flag
@@ -52,7 +49,7 @@ export function collect() {
         ? (ctx) => {
             const originalEnabledRecord =
               originalGetStepStartStates?.(ctx) ?? {};
-            const enabledRecord: IntegrationStepStartStates = {};
+            const enabledRecord: StepStartStates = {};
             for (const stepId of allStepIds) {
               const originalValue = originalEnabledRecord[stepId] ?? {};
               if (stepsToRun.includes(stepId)) {

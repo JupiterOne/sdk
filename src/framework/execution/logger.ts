@@ -235,8 +235,6 @@ function instrumentEventLogging(
 
       return createChildLogger({
         synchronizationJobId: job.id,
-        integrationJobId: job.integrationJobId,
-        integrationInstanceId: job.integrationInstanceId,
       });
     },
 

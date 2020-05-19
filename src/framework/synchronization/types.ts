@@ -11,8 +11,8 @@ export enum SynchronizationJobStatus {
 
 export interface SynchronizationJob {
   id: string;
-  integrationJobId: string;
-  integrationInstanceId: string;
+  // integrationJobId: string;
+  // integrationInstanceId: string;
   status: SynchronizationJobStatus;
   startTimestamp: number;
   numEntitiesUploaded: number;
@@ -23,6 +23,11 @@ export interface SynchronizationJob {
   numRelationshipsCreated: number;
   numRelationshipsUpdated: number;
   numRelationshipsDeleted: number;
+}
+
+export interface IntegrationSynchronizationJob extends SynchronizationJob {
+  integrationJobId: string;
+  integrationInstanceId: string;
 }
 
 export interface SynchronizatoinApiErrorResponse {

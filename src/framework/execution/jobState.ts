@@ -1,7 +1,7 @@
 import { FileSystemGraphObjectStore } from '../storage';
 import { Entity, Relationship } from '../types';
 import { IntegrationDuplicateKeyError } from './error';
-import { IntegrationStep, JobState } from './types';
+import { Step, StepExecutionContext, JobState } from './types';
 
 export class DuplicateKeyTracker {
   private readonly keySet = new Set<string>();
@@ -29,13 +29,15 @@ export class MemoryDataStore {
   }
 }
 
-export function createStepJobState({
+export function createStepJobState<
+  TStepExecutionContext extends StepExecutionContext
+>({
   step,
   duplicateKeyTracker,
   graphObjectStore,
   dataStore,
 }: {
-  step: IntegrationStep;
+  step: Step<TStepExecutionContext>;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: FileSystemGraphObjectStore;
   dataStore: MemoryDataStore;

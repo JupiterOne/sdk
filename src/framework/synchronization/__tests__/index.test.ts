@@ -4,7 +4,7 @@ import noop from 'lodash/noop';
 
 import {
   SynchronizationJobStatus,
-  initiateSynchronization,
+  initiateIntegrationSynchronization,
   uploadCollectedData,
   finalizeSynchronization,
   synchronizeCollectedData,
@@ -27,7 +27,7 @@ afterEach(() => {
   restoreProjectStructure();
 });
 
-describe('initiateSynchronization', () => {
+describe('initiateIntegrationSynchronization', () => {
   test('hits synchronization job api to start a new job', async () => {
     const job = generateSynchronizationJob();
 
@@ -39,7 +39,9 @@ describe('initiateSynchronization', () => {
       },
     });
 
-    const synchronizationContext = await initiateSynchronization(context);
+    const synchronizationContext = await initiateIntegrationSynchronization(
+      context,
+    );
 
     expect(synchronizationContext.job).toEqual(job);
 
@@ -66,7 +68,9 @@ describe('initiateSynchronization', () => {
       'registerSynchronizationJobContext',
     );
 
-    const synchronizationContext = await initiateSynchronization(context);
+    const synchronizationContext = await initiateIntegrationSynchronization(
+      context,
+    );
 
     expect(registerSynchronizationJobContextSpy).toHaveBeenCalledTimes(1);
     expect(registerSynchronizationJobContextSpy).toHaveBeenCalledWith({
@@ -93,7 +97,7 @@ describe('initiateSynchronization', () => {
       },
     });
 
-    await expect(initiateSynchronization(context)).rejects.toThrow(
+    await expect(initiateIntegrationSynchronization(context)).rejects.toThrow(
       /instance not found/,
     );
     expect(postSpy).toHaveBeenCalledTimes(1);

@@ -1,13 +1,12 @@
 import {
   SynchronizationJobStatus,
   SynchronizationJob,
+  IntegrationSynchronizationJob,
 } from '../framework/synchronization';
 
 export function generateSynchronizationJob(): SynchronizationJob {
   return {
     id: 'test',
-    integrationJobId: 'test-job-id',
-    integrationInstanceId: 'test-instance-id',
     status: SynchronizationJobStatus.AWAITING_UPLOADS,
     startTimestamp: Date.now(),
     numEntitiesUploaded: 0,
@@ -18,5 +17,13 @@ export function generateSynchronizationJob(): SynchronizationJob {
     numRelationshipsCreated: 0,
     numRelationshipsUpdated: 0,
     numRelationshipsDeleted: 0,
+  };
+}
+
+export function generateIntegrationSynchronizationJob(): IntegrationSynchronizationJob {
+  return {
+    integrationJobId: 'test-job-id',
+    integrationInstanceId: 'test-instance-id',
+    ...generateSynchronizationJob(),
   };
 }

@@ -69,6 +69,27 @@ export async function executeIntegrationInstance(
   return result;
 }
 
+// /**
+//  * Starts execution of an integration instance.
+//  */
+// export async function executeSteps(
+//   logger: IntegrationLogger,
+//   options: ExecuteIntegrationOptions = {},
+// ): Promise<ExecuteIntegrationResult> {
+//   if (options.enableSchemaValidation) {
+//     process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
+//   }
+
+//   const result = await executeIntegration(
+//     {
+//       logger,
+//     },
+//   );
+
+//   await logger.flush();
+//   return result;
+// }
+
 /**
  * Executes an integration and performs actions defined by the config
  * using context that was provided.
@@ -85,6 +106,50 @@ async function executeIntegration(
     context.logger.validationFailure(err);
     throw err;
   }
+
+  const stepStartStates =
+    config.getStepStartStates?.(context) ??
+    getDefaultStepStartStates(config.integrationSteps);
+
+  const integrationStepResults = await executeSteps(
+    context,
+    config.integrationSteps,
+    stepStartStates,
+  );
+
+  const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
+    integrationStepResults,
+  );
+
+  const summary = {
+    integrationStepResults,
+    metadata: {
+      partialDatasets,
+    },
+  };
+
+  await writeJsonToPath({
+    path: 'summary.json',
+    data: summary,
+  });
+
+  context.logger.info(
+    { collectionResult: summary },
+    'Integration data collection has completed.',
+  );
+
+  return summary;
+}
+
+/**
+ * Executes an integration and performs actions defined by the config
+ * using context that was provided.
+ */
+async function executeIntegration(
+  context: IntegrationExecutionContext,
+  config: IntegrationInvocationConfig,
+): Promise<ExecuteIntegrationResult> {
+  await removeStorageDirectory();
 
   const stepStartStates =
     config.getStepStartStates?.(context) ??

@@ -9,7 +9,7 @@ import {
 import { loadConfig } from '../../framework/config';
 import { createIntegrationLogger } from '../../framework/execution/logger';
 import {
-  initiateSynchronization,
+  initiateIntegrationSynchronization,
   uploadCollectedData,
   finalizeSynchronization,
   abortSynchronization,
@@ -44,7 +44,7 @@ export function run() {
 
       const invocationConfig = await loadConfig();
 
-      const synchronizationContext = await initiateSynchronization({
+      const synchronizationContext = await initiateIntegrationSynchronization({
         logger,
         apiClient,
         integrationInstanceId,

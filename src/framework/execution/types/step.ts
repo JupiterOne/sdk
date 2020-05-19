@@ -1,10 +1,11 @@
 import {
   IntegrationExecutionContext,
   IntegrationStepExecutionContext,
+  StepExecutionContext,
 } from './context';
 import { IntegrationInstanceConfig } from './instance';
 
-export interface IntegrationStepStartState {
+export interface StepStartState {
   /**
    * Indicates the step is disabled and should not be
    * executed by the state machine.
@@ -12,20 +13,20 @@ export interface IntegrationStepStartState {
   disabled: boolean;
 }
 
-export type IntegrationStepStartStates = Record<
-  string,
-  IntegrationStepStartState
->;
+export type StepStartStates = Record<string, StepStartState>;
 
 export type GetStepStartStatesFunction<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
-> = (
-  context: IntegrationExecutionContext<TConfig>,
-) => IntegrationStepStartStates;
+> = (context: IntegrationExecutionContext<TConfig>) => StepStartStates;
 
-export type StepExecutionHandlerFunction<
+export type ExecutionHandlerFunction<T extends StepExecutionContext> = (
+  context: T,
+) => Promise<void> | void;
+
+export type IntegrationStepExecutionHandlerFunction<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
-> = (context: IntegrationStepExecutionContext<TConfig>) => Promise<void> | void;
+> = ExecutionHandlerFunction<IntegrationStepExecutionContext<TConfig>>;
+// > = (context: IntegrationStepExecutionContext<TConfig>) => Promise<void> | void;
 
 export enum IntegrationStepResultStatus {
   SUCCESS = 'success',
@@ -35,20 +36,30 @@ export enum IntegrationStepResultStatus {
   PENDING_EVALUATION = 'pending_evaluation',
 }
 
-export type IntegrationStep<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
-> = IntegrationStepMetadata & {
-  /**
-   * Function that runs to perform the stpe that
-   */
-  executionHandler: StepExecutionHandlerFunction<TConfig>;
+export type Step<
+  TStepExecutionContext extends StepExecutionContext
+> = StepMetadata & {
+  executionHandler: ExecutionHandlerFunction<TStepExecutionContext>;
 };
 
-export type IntegrationStepResult = IntegrationStepMetadata & {
+export type IntegrationStep<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> = StepMetadata & Step<IntegrationStepExecutionContext<TConfig>> & {};
+
+// export type IntegrationStep<
+//   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+// > = StepMetadata & {
+//   /**
+//    * Function that runs to perform the stpe that
+//    */
+//   executionHandler: IntegrationStepExecutionHandlerFunction<TConfig>;
+// };
+
+export type IntegrationStepResult = StepMetadata & {
   status: IntegrationStepResultStatus;
 };
 
-interface IntegrationStepMetadata {
+interface StepMetadata {
   /*
    * Identifier used to reference and track steps
    */

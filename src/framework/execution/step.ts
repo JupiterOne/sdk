@@ -5,35 +5,41 @@ import {
   executeStepDependencyGraph,
 } from './dependencyGraph';
 import {
-  IntegrationExecutionContext,
+  ExecutionContext,
   IntegrationStep,
+  Step,
   IntegrationStepResult,
   IntegrationStepResultStatus,
-  IntegrationStepStartStates,
+  IntegrationExecutionContext,
+  StepStartStates,
   PartialDatasets,
 } from './types';
 
-export async function executeSteps(
+export async function executeIntegrationSteps(
   context: IntegrationExecutionContext,
   steps: IntegrationStep[],
-  stepStartStates: IntegrationStepStartStates,
+  stepStartStates: StepStartStates,
 ): Promise<IntegrationStepResult[]> {
   const stepGraph = buildStepDependencyGraph(steps);
   return executeStepDependencyGraph(context, stepGraph, stepStartStates);
 }
 
-export function getDefaultStepStartStates(
-  steps: IntegrationStep[],
-): IntegrationStepStartStates {
-  return steps.reduce(
-    (states: IntegrationStepStartStates, step: IntegrationStep) => {
-      states[step.id] = {
-        disabled: false,
-      };
-      return states;
-    },
-    {},
-  );
+export async function executeSteps(
+  context: ExecutionContext,
+  steps: Step[],
+  stepStartStates: StepStartStates,
+): Promise<IntegrationStepResult[]> {
+  const stepGraph = buildStepDependencyGraph(steps);
+  return executeStepDependencyGraph(context, stepGraph, stepStartStates);
+}
+
+export function getDefaultStepStartStates(steps: Step[]): StepStartStates {
+  return steps.reduce((states: StepStartStates, step: Step) => {
+    states[step.id] = {
+      disabled: false,
+    };
+    return states;
+  }, {});
 }
 
 export function determinePartialDatasetsFromStepExecutionResults(

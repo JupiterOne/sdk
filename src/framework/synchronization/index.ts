@@ -4,7 +4,7 @@ import pMap from 'p-map';
 
 import { ApiClient } from '../api';
 
-import { SynchronizationJob } from './types';
+import { SynchronizationJob, IntegrationSynchronizationJob } from './types';
 import {
   ExecuteIntegrationResult,
   PartialDatasets,
@@ -36,7 +36,7 @@ interface SynchronizeInput {
 export async function synchronizeCollectedData(
   input: SynchronizeInput,
 ): Promise<SynchronizationJob> {
-  const jobContext = await initiateSynchronization(input);
+  const jobContext = await initiateIntegrationSynchronization(input);
 
   try {
     await uploadCollectedData(jobContext);
@@ -58,21 +58,21 @@ export async function synchronizeCollectedData(
 
 export interface SynchronizationJobContext {
   apiClient: ApiClient;
-  job: SynchronizationJob;
+  job: IntegrationSynchronizationJob;
   logger: IntegrationLogger;
 }
 
 /**
  * Initializes a synchronization job
  */
-export async function initiateSynchronization({
+export async function initiateIntegrationSynchronization({
   logger,
   apiClient,
   integrationInstanceId,
 }: SynchronizeInput): Promise<SynchronizationJobContext> {
   logger.info('Initiating synchronization job...');
 
-  let job: SynchronizationJob;
+  let job: IntegrationSynchronizationJob;
   try {
     const response = await apiClient.post('/persister/synchronization/jobs', {
       source: 'integration-managed',
