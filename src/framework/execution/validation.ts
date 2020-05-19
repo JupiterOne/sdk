@@ -1,13 +1,13 @@
-import { IntegrationStep, IntegrationStepStartStates } from './types';
+import { IntegrationStep, StepStartStates } from './types';
 
 import {
-  IntegrationStepStartStateUnknownStepIdsError,
-  IntegrationUnaccountedStepStartStatesError,
+  StepStartStateUnknownStepIdsError,
+  UnaccountedStepStartStatesError,
 } from './error';
 
 export function validateStepStartStates(
   steps: IntegrationStep[],
-  stepStartStates: IntegrationStepStartStates,
+  stepStartStates: StepStartStates,
 ) {
   const stepSet = new Set<string>(steps.map((step) => step.id));
 
@@ -26,7 +26,7 @@ export function validateStepStartStates(
       .map((stepId) => `"${stepId}"`)
       .join(', ');
 
-    throw new IntegrationStepStartStateUnknownStepIdsError(
+    throw new StepStartStateUnknownStepIdsError(
       `Unknown steps found in start states: ${unknownStepIdsString}`,
     );
   }
@@ -36,7 +36,7 @@ export function validateStepStartStates(
       .map((stepId) => `"${stepId}"`)
       .join(', ');
 
-    throw new IntegrationUnaccountedStepStartStatesError(
+    throw new UnaccountedStepStartStatesError(
       `Start states not found for: ${unaccountedStepIdsString}`,
     );
   }

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import noop from 'lodash/noop';
 import * as log from '../log';
 
-import { IntegrationStepResultStatus } from '../framework';
+import { StepResultStatus } from '../framework';
 
 test("displays extraneous and undeclared types from a step's result", () => {
   const consoleSpy = jest.spyOn(console, 'log').mockImplementation(noop);
@@ -14,7 +14,7 @@ test("displays extraneous and undeclared types from a step's result", () => {
         name: 'Step A',
         declaredTypes: ['test_a', 'test_b'],
         encounteredTypes: ['test_a', 'test_c'],
-        status: IntegrationStepResultStatus.SUCCESS,
+        status: StepResultStatus.SUCCESS,
       },
     ],
     metadata: {

@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import {
   ExecuteIntegrationResult,
   IntegrationStepResult,
-  IntegrationStepResultStatus,
+  StepResultStatus,
 } from './framework/execution';
 import { SynchronizationJob } from './framework/synchronization';
 
@@ -34,7 +34,7 @@ export function displayExecutionResults(results: ExecuteIntegrationResult) {
   results.integrationStepResults.forEach((step) => {
     logStepStatus(step);
 
-    if (step.status === IntegrationStepResultStatus.SUCCESS) {
+    if (step.status === StepResultStatus.SUCCESS) {
       const { declaredTypes, encounteredTypes } = step;
 
       const declaredTypeSet = new Set(declaredTypes);
@@ -82,15 +82,15 @@ function logStepStatus(stepResult: IntegrationStepResult) {
   console.log(`${stepPrefix} ${statusText}`);
 }
 
-function getStepStatusText(status: IntegrationStepResultStatus) {
+function getStepStatusText(status: StepResultStatus) {
   switch (status) {
-    case IntegrationStepResultStatus.SUCCESS:
+    case StepResultStatus.SUCCESS:
       return chalk.green(status);
-    case IntegrationStepResultStatus.FAILURE:
+    case StepResultStatus.FAILURE:
       return chalk.red(status);
-    case IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE:
+    case StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE:
       return chalk.yellow(status);
-    case IntegrationStepResultStatus.DISABLED:
+    case StepResultStatus.DISABLED:
       return chalk.gray(status);
   }
 }

@@ -9,22 +9,22 @@ import {
   TypeTracker,
 } from './jobState';
 import {
-  IntegrationExecutionContext,
-  IntegrationStep,
-  IntegrationStepExecutionContext,
+  Step,
   IntegrationStepResult,
-  IntegrationStepResultStatus,
-  IntegrationStepStartStates,
+  StepResultStatus,
+  StepStartStates,
+  ExecutionContext,
+  StepExecutionContext,
 } from './types';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
  * using the `dependsOn` field from each step.
  */
-export function buildStepDependencyGraph(
-  steps: IntegrationStep[],
-): DepGraph<IntegrationStep> {
-  const dependencyGraph = new DepGraph<IntegrationStep>();
+export function buildStepDependencyGraph<
+  TStepExecutionContext extends StepExecutionContext
+>(steps: Step<TStepExecutionContext>[]): DepGraph<Step<TStepExecutionContext>> {
+  const dependencyGraph = new DepGraph<Step<TStepExecutionContext>>();
 
   // add all nodes first
   steps.forEach((step) => {
@@ -59,10 +59,13 @@ export function buildStepDependencyGraph(
  * created more leaf nodes and executes them. This continues
  * until there are no more nodes to execute.
  */
-export function executeStepDependencyGraph(
-  executionContext: IntegrationExecutionContext,
-  inputGraph: DepGraph<IntegrationStep>,
-  stepStartStates: IntegrationStepStartStates,
+export function executeStepDependencyGraph<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+>(
+  executionContext: TExecutionContext,
+  inputGraph: DepGraph<Step<TStepExecutionContext>>,
+  stepStartStates: StepStartStates,
 ): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -81,21 +84,21 @@ export function executeStepDependencyGraph(
   const duplicateKeyTracker = new DuplicateKeyTracker();
   const dataStore = new MemoryDataStore();
 
-  function isStepEnabled(step: IntegrationStep) {
-    return stepStartStates[step.id].disabled === false;
+  function isStepEnabled(stepId: string) {
+    return stepStartStates[stepId].disabled === false;
   }
-
+  StepResultStatus;
   /**
    * Updates the result of a step result with the provided satus
    */
   function updateStepResultStatus(
-    step: IntegrationStep,
-    status: IntegrationStepResultStatus,
+    stepId: string,
+    status: StepResultStatus,
     typeTracker: TypeTracker,
   ) {
-    const existingResult = stepResultsMap.get(step.id);
+    const existingResult = stepResultsMap.get(stepId);
     if (existingResult) {
-      stepResultsMap.set(step.id, {
+      stepResultsMap.set(stepId, {
         ...existingResult,
         status,
         encounteredTypes: typeTracker.getEncounteredTypes(),
@@ -110,16 +113,15 @@ export function executeStepDependencyGraph(
    * NOTE: the untouched input graph is used for determining
    * results since the working graph gets mutated.
    */
-  function stepHasDependencyFailure(step: IntegrationStep) {
+  function stepHasDependencyFailure(stepId: string) {
     return inputGraph
-      .dependenciesOf(step.id)
+      .dependenciesOf(stepId)
       .map((id) => stepResultsMap.get(id))
       .find((result) => {
         const status = result?.status;
         return (
-          status === IntegrationStepResultStatus.FAILURE ||
-          status ===
-            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
+          status === StepResultStatus.FAILURE ||
+          status === StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
         );
       });
   }
@@ -130,24 +132,24 @@ export function executeStepDependencyGraph(
    *
    * This function helps create new leaf nodes to execute.
    */
-  function removeStepFromWorkingGraph(step: IntegrationStep) {
-    workingGraph.dependantsOf(step.id).forEach((dependent) => {
-      workingGraph.removeDependency(dependent, step.id);
+  function removeStepFromWorkingGraph(stepId: string) {
+    workingGraph.dependantsOf(stepId).forEach((dependent) => {
+      workingGraph.removeDependency(dependent, stepId);
     });
 
-    workingGraph.removeNode(step.id);
+    workingGraph.removeNode(stepId);
   }
 
   /**
    * This function checks if a step's dependencies are complete
    */
-  function stepDependenciesAreComplete(step: IntegrationStep) {
+  function stepDependenciesAreComplete(stepId: string) {
     const executingDependencies = inputGraph
-      .dependenciesOf(step.id)
+      .dependenciesOf(stepId)
       .map((id) => stepResultsMap.get(id))
       .filter(
         (stepResult) =>
-          stepResult?.status === IntegrationStepResultStatus.PENDING_EVALUATION,
+          stepResult?.status === StepResultStatus.PENDING_EVALUATION,
       );
 
     return executingDependencies.length === 0;
@@ -157,8 +159,8 @@ export function executeStepDependencyGraph(
    * Logs undeclaredTypes if any are found.
    */
   function maybeLogUndeclaredTypes(
-    context: IntegrationStepExecutionContext,
-    step: IntegrationStep,
+    context: TStepExecutionContext,
+    step: Step<TStepExecutionContext>,
     typeTracker: TypeTracker,
   ) {
     const declaredTypes = step.types;
@@ -213,8 +215,8 @@ export function executeStepDependencyGraph(
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
          */
-        if (isStepEnabled(step) && stepDependenciesAreComplete(step)) {
-          removeStepFromWorkingGraph(step);
+        if (isStepEnabled(stepId) && stepDependenciesAreComplete(stepId)) {
+          removeStepFromWorkingGraph(stepId);
           promiseQueue.add(() =>
             executeStep(step).catch(handleUnexpectedError),
           );
@@ -228,31 +230,31 @@ export function executeStepDependencyGraph(
      * Errors from an execution handler are caught and used to
      * determine a status code for the step's result.
      */
-    async function executeStep(step: IntegrationStep) {
+    async function executeStep(step: Step<TStepExecutionContext>) {
+      const { id: stepId } = step;
       const typeTracker = new TypeTracker();
 
-      const context = buildStepContext({
+      const context = buildStepContext<TStepExecutionContext>({
         context: executionContext,
-        step,
         duplicateKeyTracker,
         typeTracker,
         graphObjectStore,
         dataStore,
+        stepId
       });
 
       context.logger.stepStart(step);
 
-      let status: IntegrationStepResultStatus;
+      let status: StepResultStatus;
 
       try {
         await step.executionHandler(context);
         context.logger.stepSuccess(step);
 
-        if (stepHasDependencyFailure(step)) {
-          status =
-            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
+        if (stepHasDependencyFailure(stepId)) {
+          status = StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
         } else {
-          status = IntegrationStepResultStatus.SUCCESS;
+          status = StepResultStatus.SUCCESS;
           maybeLogUndeclaredTypes(context, step, typeTracker);
         }
       } catch (err) {
@@ -263,11 +265,11 @@ export function executeStepDependencyGraph(
           throw err;
         }
 
-        status = IntegrationStepResultStatus.FAILURE;
+        status = StepResultStatus.FAILURE;
       }
 
       await context.jobState.flush();
-      updateStepResultStatus(step, status, typeTracker);
+      updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
 
@@ -278,39 +280,43 @@ export function executeStepDependencyGraph(
   });
 }
 
-function buildStepContext({
+function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
+  stepId,
   context,
-  step,
   duplicateKeyTracker,
   typeTracker,
   graphObjectStore,
   dataStore,
 }: {
-  context: IntegrationExecutionContext;
-  step: IntegrationStep;
+  stepId: string;
+  context: ExecutionContext;
   duplicateKeyTracker: DuplicateKeyTracker;
   typeTracker: TypeTracker;
   graphObjectStore: FileSystemGraphObjectStore;
   dataStore: MemoryDataStore;
-}): IntegrationStepExecutionContext {
-  return {
+}): TStepExecutionContext {
+  const stepExecutionContext: StepExecutionContext = {
     ...context,
     logger: context.logger.child({
-      step: step.id,
+      stepId,
     }),
     jobState: createStepJobState({
-      step,
+      stepId,
       duplicateKeyTracker,
       typeTracker,
       graphObjectStore,
       dataStore,
     }),
   };
+
+  return stepExecutionContext as TStepExecutionContext;
 }
 
-function buildStepResultsMap(
-  dependencyGraph: DepGraph<IntegrationStep>,
-  stepStartStates: IntegrationStepStartStates,
+function buildStepResultsMap<
+  TStepExecutionContext extends StepExecutionContext
+>(
+  dependencyGraph: DepGraph<Step<TStepExecutionContext>>,
+  stepStartStates: StepStartStates,
 ) {
   const stepResultMapEntries = dependencyGraph
     .overallOrder()
@@ -331,8 +337,8 @@ function buildStepResultsMap(
           encounteredTypes: [],
           status:
             stepStartStates[step.id].disabled || hasDisabledDependencies
-              ? IntegrationStepResultStatus.DISABLED
-              : IntegrationStepResultStatus.PENDING_EVALUATION,
+              ? StepResultStatus.DISABLED
+              : StepResultStatus.PENDING_EVALUATION,
         };
       },
     )

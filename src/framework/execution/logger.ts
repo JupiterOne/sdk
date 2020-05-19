@@ -13,7 +13,7 @@ import {
   IntegrationInstanceConfigFieldMap,
   IntegrationInvocationConfig,
   IntegrationLogger,
-  IntegrationStep,
+  StepMetadata,
   LoggerSynchronizationJobContext,
   IntegrationLoggerFunctions,
 } from './types';
@@ -243,21 +243,21 @@ function instrumentEventLogging(
 
     isHandledError: (err: Error) => errorSet.has(err),
 
-    stepStart: (step: IntegrationStep) => {
+    stepStart: (step: StepMetadata) => {
       const name = 'step_start';
       const description = `Starting step "${step.name}"...`;
       logger.info({ step: step.id }, description);
 
       publishEvent(name, description);
     },
-    stepSuccess: (step: IntegrationStep) => {
+    stepSuccess: (step: StepMetadata) => {
       const name = 'step_end';
       const description = `Completed step "${step.name}".`;
       logger.info({ step: step.id }, description);
 
       publishEvent(name, description);
     },
-    stepFailure: (step: IntegrationStep, err: Error) => {
+    stepFailure: (step: StepMetadata, err: Error) => {
       const name = 'step_failure';
       const { errorId, description } = createErrorEventDescription(
         err,

@@ -45,7 +45,7 @@ export const invocationConfig: IntegrationInvocationConfig = {
 
   getStepStartStates(
     executionContext: IntegrationExecutionContext,
-  ): IntegrationStepStartStates {
+  ): StepStartStates {
     const { config } = executionContext.instance;
 
     const notDisabled = { disabled: false };

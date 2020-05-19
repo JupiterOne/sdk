@@ -26,7 +26,7 @@ export class IntegrationConfigLoadError extends IntegrationError {
   }
 }
 
-export class IntegrationStepStartStateUnknownStepIdsError extends IntegrationError {
+export class StepStartStateUnknownStepIdsError extends IntegrationError {
   constructor(message: string) {
     super({
       code: 'UNKNOWN_STEP_ID_SPECIFIED_IN_START_STATE',
@@ -35,7 +35,7 @@ export class IntegrationStepStartStateUnknownStepIdsError extends IntegrationErr
   }
 }
 
-export class IntegrationUnaccountedStepStartStatesError extends IntegrationError {
+export class UnaccountedStepStartStatesError extends IntegrationError {
   constructor(message: string) {
     super({
       code: 'UNACCOUNTED_STEP_START_STATES',
