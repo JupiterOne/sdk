@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- Constructors of `IntegrationProviderAuthenticationError`,
+  `IntegrationProviderAuthorizationError` and `IntegrationProviderAPIError`
+  required `code`, `message`, and `fatal`, which were not meant to be provided
+  at all but set by the error classes themselves.
+
 ## 2.0.0 - 2020-05-18
 
 ### Added

@@ -1,4 +1,4 @@
-import { IntegrationError, IntegrationErrorOptions } from '../../errors';
+import { IntegrationError } from '../../errors';
 
 export class IntegrationLocalConfigFieldMissingError extends IntegrationError {
   constructor(message: string) {
@@ -75,26 +75,30 @@ export class IntegrationValidationError extends IntegrationError {
  * an integration cannot reach the provider.
  */
 export class IntegrationProviderAuthenticationError extends IntegrationError {
-  constructor(
-    options: IntegrationErrorOptions & {
-      /**
-       * The endpoint that provided the response indicating the authentication
-       * parameters are invalid.
-       */
-      endpoint: string;
+  constructor(options: {
+    /**
+     * An optional reference to the error that caused this error. The cause tree
+     * will be included in logging of the error to assist problem resolution.
+     */
+    cause?: Error;
 
-      /**
-       * The response status code, i.e. `401`, or in the case of GraphQL, whatever
-       * error code provided by the response body.
-       */
-      status: string | number;
+    /**
+     * The endpoint that provided the response indicating the authentication
+     * parameters are invalid.
+     */
+    endpoint: string;
 
-      /**
-       * The response status text, i.e. `"Unauthorized"`.
-       */
-      statusText: string;
-    },
-  ) {
+    /**
+     * The response status code, i.e. `401`, or in the case of GraphQL, whatever
+     * error code provided by the response body.
+     */
+    status: string | number;
+
+    /**
+     * The response status text, i.e. `"Unauthorized"`.
+     */
+    statusText: string;
+  }) {
     super({
       ...options,
       code: 'PROVIDER_AUTHENTICATION_ERROR',
@@ -111,32 +115,36 @@ export class IntegrationProviderAuthenticationError extends IntegrationError {
  * fix a configuration problem.
  */
 export class IntegrationProviderAuthorizationError extends IntegrationError {
-  constructor(
-    options: IntegrationErrorOptions & {
-      /**
-       * The endpoint that provided the response indicating the authenticated
-       * client is not authorized to access a resource.
-       */
-      endpoint: string;
+  constructor(options: {
+    /**
+     * An optional reference to the error that caused this error. The cause tree
+     * will be included in logging of the error to assist problem resolution.
+     */
+    cause?: Error;
 
-      /**
-       * The response status code, i.e. `403`, or in the case of GraphQL, whatever
-       * error code provided by the response body.
-       */
-      status: string | number;
+    /**
+     * The endpoint that provided the response indicating the authenticated
+     * client is not authorized to access a resource.
+     */
+    endpoint: string;
 
-      /**
-       * The response status text, i.e. `"Forbidden"`.
-       */
-      statusText: string;
+    /**
+     * The response status code, i.e. `403`, or in the case of GraphQL, whatever
+     * error code provided by the response body.
+     */
+    status: string | number;
 
-      /**
-       * The `_type` of entity/relationship data that could not be obtained due to
-       * the authorization error.
-       */
-      resourceType?: string[];
-    },
-  ) {
+    /**
+     * The response status text, i.e. `"Forbidden"`.
+     */
+    statusText: string;
+
+    /**
+     * The `_type` of entity/relationship data that could not be obtained due to
+     * the authorization error.
+     */
+    resourceType?: string[];
+  }) {
     super({
       ...options,
       code: 'PROVIDER_AUTHORIZATION_ERROR',
@@ -152,25 +160,29 @@ export class IntegrationProviderAuthorizationError extends IntegrationError {
  * user should see that may help them obtain support from the provider.
  */
 export class IntegrationProviderAPIError extends IntegrationError {
-  constructor(
-    options: IntegrationErrorOptions & {
-      /**
-       * The endpoint that provided the unexpected error response.
-       */
-      endpoint: string;
+  constructor(options: {
+    /**
+     * An optional reference to the error that caused this error. The cause tree
+     * will be included in logging of the error to assist problem resolution.
+     */
+    cause?: Error;
 
-      /**
-       * The response status code, i.e. `500`, or in the case of GraphQL, whatever
-       * error code provided by the response body.
-       */
-      status: string | number;
+    /**
+     * The endpoint that provided the unexpected error response.
+     */
+    endpoint: string;
 
-      /**
-       * The response status text, i.e. `"Internal Server Error"`.
-       */
-      statusText: string;
-    },
-  ) {
+    /**
+     * The response status code, i.e. `500`, or in the case of GraphQL, whatever
+     * error code provided by the response body.
+     */
+    status: string | number;
+
+    /**
+     * The response status text, i.e. `"Internal Server Error"`.
+     */
+    statusText: string;
+  }) {
     super({
       ...options,
       code: 'PROVIDER_API_ERROR',
