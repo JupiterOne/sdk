@@ -12,7 +12,7 @@
     "alwaysStrict": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "allowJs": false,
+    "allowJs": false
   },
   "exclude": ["dist"]
 }

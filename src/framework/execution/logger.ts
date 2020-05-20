@@ -15,6 +15,7 @@ import {
   IntegrationLogger,
   IntegrationStep,
   LoggerSynchronizationJobContext,
+  IntegrationLoggerFunctions,
 } from './types';
 
 // eslint-disable-next-line
@@ -222,7 +223,7 @@ function instrumentEventLogging(
     return instrumentEventLogging(childLogger, context);
   };
 
-  return Object.assign(logger, {
+  const integrationLoggerFunctions: IntegrationLoggerFunctions = {
     flush: async () => {
       await eventPublishingQueue.onIdle();
     },
@@ -301,13 +302,52 @@ function instrumentEventLogging(
       logger.error({ errorId, err }, description);
       publishEvent(name, description);
     },
+
+    publishEvent(options) {
+      return publishEvent(options.name, options.description);
+    },
+
+    publishErrorEvent(options) {
+      const {
+        name,
+        message,
+        err,
+
+        // `logData` is only logged (it is used to log data that should
+        // not be shown to customer but might be helpful for troubleshooting)
+        logData,
+
+        // `eventData` is added to error description but not logged
+        eventData,
+      } = options;
+      const { errorId, description } = createErrorEventDescription(
+        err,
+        message,
+        eventData,
+      );
+
+      logger.error({ ...logData, errorId, err }, description);
+      publishEvent(name, description);
+    },
+  };
+
+  return Object.assign(logger, {
+    ...integrationLoggerFunctions,
     child: createChildLogger,
   });
 }
 
+type NameValuePair = [string, any];
+
 export function createErrorEventDescription(
   err: Error | IntegrationError,
   message: string,
+
+  /**
+   * Optional data that will be added as name/value pairs to the
+   * event description.
+   */
+  eventData?: object,
 ) {
   const errorId = uuid();
 
@@ -322,7 +362,23 @@ export function createErrorEventDescription(
     errorReason = UNEXPECTED_ERROR_REASON;
   }
 
-  const errorDetails = `errorCode=${errorCode}, errorId=${errorId}, reason=${errorReason}`;
+  const nameValuePairs: NameValuePair[] = [
+    ['errorCode', errorCode],
+    ['errorId', errorId],
+    ['reason', errorReason],
+  ];
+
+  if (eventData) {
+    for (const key of Object.keys(eventData)) {
+      nameValuePairs.push([key, eventData[key]]);
+    }
+  }
+
+  const errorDetails = nameValuePairs
+    .map((nameValuePair) => {
+      return `${nameValuePair[0]}=${JSON.stringify(nameValuePair[1])}`;
+    })
+    .join(', ');
 
   return {
     errorId,

@@ -19,6 +19,7 @@ import {
 import {
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
+  IntegrationError,
 } from '../../../errors';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
@@ -257,7 +258,7 @@ describe('step event publishing', () => {
         step: step.id,
       },
       expect.stringContaining(
-        `Step "Mochi" failed to complete due to error. (errorCode=${error.code}`,
+        `Step "Mochi" failed to complete due to error. (errorCode="${error.code}"`,
       ),
     );
   });
@@ -312,7 +313,7 @@ describe('step event publishing', () => {
           name: 'step_failure',
           description: expect.stringMatching(
             new RegExp(
-              `Step "Mochi" failed to complete due to error. \\(errorCode=${error.code}, errorId=(.*)\\)$`,
+              `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", errorId="(.*)"\\)$`,
             ),
           ),
         },
@@ -386,7 +387,7 @@ describe('validation failure logging', () => {
     await logger.flush();
 
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode=${error.code}, errorId=(.*), reason=Bad Mochi\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", errorId="(.*)", reason="Bad Mochi"\\)$`,
     );
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
@@ -419,7 +420,7 @@ describe('createErrorEventDescription', () => {
       'testing',
     );
     expect(description).toEqual(
-      `testing (errorCode=${UNEXPECTED_ERROR_CODE}, errorId=${errorId}, reason=${UNEXPECTED_ERROR_REASON})`,
+      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", errorId="${errorId}", reason="${UNEXPECTED_ERROR_REASON}")`,
     );
   });
 
@@ -431,7 +432,102 @@ describe('createErrorEventDescription', () => {
       'testing',
     );
     expect(description).toEqual(
-      `testing (errorCode=${error.code}, errorId=${errorId}, reason=soba)`,
+      `testing (errorCode="${error.code}", errorId="${errorId}", reason="soba")`,
     );
+  });
+});
+
+describe('#publishEvent', () => {
+  test('should support publishEvent(...) function', async () => {
+    const logger = createIntegrationLogger({ name, invocationConfig });
+    const context: SynchronizationJobContext = {
+      logger,
+      job: { id: 'test-job-id' } as SynchronizationJob,
+      apiClient: createApiClient({
+        apiBaseUrl: 'https://api.us.jupiterone.io',
+        account: 'mocheronis',
+      }),
+    };
+
+    const expectedEventsUrl =
+      '/persister/synchronization/jobs/test-job-id/events';
+
+    logger.registerSynchronizationJobContext(context);
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation(noop as any);
+
+    logger.publishEvent({
+      name: 'the name',
+      description: 'the description',
+    });
+
+    await logger.flush();
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
+      events: [{ name: 'the name', description: 'the description' }],
+    });
+  });
+});
+
+describe('#publishErrorEvent', () => {
+  test('should support publishErrorEvent(...) function', async () => {
+    const logger = createIntegrationLogger({ name, invocationConfig });
+    const context: SynchronizationJobContext = {
+      logger,
+      job: { id: 'test-job-id' } as SynchronizationJob,
+      apiClient: createApiClient({
+        apiBaseUrl: 'https://api.us.jupiterone.io',
+        account: 'mocheronis',
+      }),
+    };
+
+    const expectedEventsUrl =
+      '/persister/synchronization/jobs/test-job-id/events';
+
+    logger.registerSynchronizationJobContext(context);
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation(noop as any);
+
+    const fakeError = new IntegrationError({
+      code: 'fake code',
+      message: 'fake reason',
+    });
+
+    const errorEvent = {
+      name: 'the name',
+      message: 'Something bad happened',
+      err: fakeError,
+      // `eventData` is serialized into the event description and logged
+      eventData: {
+        somethingExtra: 'abc',
+      },
+      // `logData` is not put into the event description but it is logged
+      logData: {
+        onlyForLogging: 'xyz',
+      },
+    };
+
+    logger.publishErrorEvent(errorEvent);
+
+    await logger.flush();
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenNthCalledWith(1, expectedEventsUrl, {
+      events: [
+        {
+          name: errorEvent.name,
+          description: expect.stringMatching(
+            new RegExp(
+              `^${errorEvent.message} \\(errorCode="${fakeError.code}", errorId="[^\\)]+", reason="${fakeError.message}", somethingExtra="${errorEvent.eventData.somethingExtra}"\\)$`,
+            ),
+          ),
+        },
+      ],
+    });
   });
 });
