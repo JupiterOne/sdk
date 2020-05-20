@@ -12,6 +12,8 @@ import { getTime } from './converters';
 import { validateRawData } from './validation';
 import { IntegrationError } from '../../errors';
 
+const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
+
 /**
  * Properties required to build a valid `Entity`.
  *
@@ -210,7 +212,10 @@ function whitelistedProviderData(
   const schemaProperties = schemaWhitelistedPropertyNames(_class);
   for (const [key, value] of Object.entries(source)) {
     if (value != null && schemaProperties.includes(key)) {
-      whitelistedProviderData[key] = value;
+      const valueType = Array.isArray(value) ? typeof value[0] : typeof value;
+      if (SUPPORTED_TYPES.includes(valueType)) {
+        whitelistedProviderData[key] = value;
+      }
     }
   }
   return whitelistedProviderData;

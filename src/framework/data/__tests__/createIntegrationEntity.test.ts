@@ -10,6 +10,8 @@ const networkSourceData = {
   CIDR: '255.255.255.0',
   name: 'My Network',
   notInDataModel: 'Not In Data Model',
+  owner: { name: 'Bob' },
+  summary: [{ title: 'Summary' }, { description: 'Description' }],
 };
 
 const networkResourceEntity = {
@@ -80,6 +82,20 @@ describe('createIntegrationEntity', () => {
       entityData,
     });
     expect('notWhitelisted' in entity).toBe(false);
+  });
+
+  test('ignore source properties that are object types', () => {
+    const entity = createIntegrationEntity({
+      entityData,
+    });
+    expect('owner' in entity).toBe(false);
+  });
+
+  test('ignore source properties that are object[] types', () => {
+    const entity = createIntegrationEntity({
+      entityData,
+    });
+    expect('summary' in entity).toBe(false);
   });
 
   test('handles empty tags in source data', () => {
