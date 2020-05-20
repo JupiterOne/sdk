@@ -21,6 +21,8 @@ export function createMockIntegrationLogger(): IntegrationLogger {
     synchronizationUploadEnd: noop,
     validationFailure: noop,
     flush: noopAsync,
+    publishEvent: noop,
+    publishErrorEvent: noop,
     child() {
       return this;
     },
