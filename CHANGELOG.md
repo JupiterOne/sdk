@@ -8,12 +8,20 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
 - Export `SetupRecordingInput` from `@jupiterone/integration-sdk/testing` to
   allow integrations to provide something like
   `setupAzureRecording(input: SetupRecordingInput)`, which may then add common
   options and call `setupRecording`.
 - Export `RecordingEntry` from `@jupiterone/integration-sdk/testing` to allow
   typing in `mutateEntry(entry: RecordingEntry)`.
+
+### Fixed
+
+- Constructors of `IntegrationProviderAuthenticationError`,
+  `IntegrationProviderAuthorizationError` and `IntegrationProviderAPIError`
+  required `code`, `message`, and `fatal`, which were not meant to be provided
+  at all but set by the error classes themselves.
 
 ## 2.0.0 - 2020-05-18
 
