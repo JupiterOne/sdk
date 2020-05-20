@@ -515,10 +515,10 @@
     "@types/yargs" "^15.0.0"
     chalk "^3.0.0"
 
-"@jupiterone/data-model@^0.4.1":
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.4.1.tgz#75405273c07eaab1892ef2a829f5894c6bf5b5a7"
-  integrity sha512-Z5NalEL9yQQ3wdQ0BLzo2rXvvxyURKZmw2V8kVX8UjKExwXBStgoArEIZEklN3l/r3PjjviPJk51V+J9K8+Q4w==
+"@jupiterone/data-model@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.5.0.tgz#0cfc2e0ca577e6507a109adda6d272860ddbba3f"
+  integrity sha512-o5m4tpKNIKxj0k2Ktk2i9jxMWq+5yOnmDnRkmfTrXme0NmCeRW70WGan0/YPkCVABcI+gqWytti3J1ipspdHsg==
   dependencies:
     ajv "^6.12.0"
 
