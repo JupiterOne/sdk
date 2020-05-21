@@ -10,6 +10,21 @@ describe('assignTags', () => {
     expect(entity).toEqual({});
   });
 
+  test('csv string', () => {
+    assignTags(entity, 'abc, xyz, 123');
+    expect(entity).toEqual({ tags: ['abc', 'xyz', '123'] });
+  });
+
+  test('long string', () => {
+    assignTags(entity, ' abc xyz 123 ');
+    expect(entity).toEqual({ tags: ['abc', 'xyz', '123'] });
+  });
+
+  test('string array', () => {
+    assignTags(entity, ['abc', 'xyz', '123']);
+    expect(entity).toEqual({ tags: ['abc', 'xyz', '123'] });
+  });
+
   test('empty tag list', () => {
     assignTags(entity, []);
     expect(entity).toEqual({});
