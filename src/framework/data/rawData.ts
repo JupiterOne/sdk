@@ -7,10 +7,10 @@ import { EntityRawData, RawDataTracking } from '../types';
  * @param name name of raw data, unique within scope of entity; `'default'`
  * unless otherwise specified
  */
-export function getRawData(
+export function getRawData<T>(
   trackingEntity: RawDataTracking,
   name: string = 'default',
-): any | undefined {
+): T | undefined {
   if (!trackingEntity._rawData || trackingEntity._rawData.length === 0) {
     return undefined;
   }
