@@ -8,6 +8,16 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- `setRawData`, `getRawData` support safer access to an entity's `_rawData`
+  collection. `createIntegrationEntity` will assign the `"default"` raw data
+  from the `source` argument, but there are some cases where additional raw data
+  needs to be added. The name needs to be unique within the entity, so `setData`
+  will ensure this to be the case. `rawData` is typically used during
+  `jobState.iterateEntities` loops, to get access to data that isn't added to
+  the entity properties but is useful in building relationships.
+
 ### Changed
 
 - `assignTags` was `trim()`ing twice, once is sufficient.
