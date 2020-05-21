@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import xor from 'lodash/xor';
 
 import {
   ExecuteIntegrationResult,
@@ -37,16 +36,24 @@ export function displayExecutionResults(results: ExecuteIntegrationResult) {
 
     if (step.status === IntegrationStepResultStatus.SUCCESS) {
       const { declaredTypes, encounteredTypes } = step;
-      const diff = xor(declaredTypes, encounteredTypes);
 
       const declaredTypeSet = new Set(declaredTypes);
-      const undeclaredTypes = diff.filter((type) => !declaredTypeSet.has(type));
+      const undeclaredTypes = encounteredTypes.filter(
+        (type) => !declaredTypeSet.has(type),
+      );
 
       if (undeclaredTypes.length) {
         undeclaredTypesDetected = true;
-      }
 
-      logUndeclaredAndExtraneousTypes(declaredTypeSet, diff);
+        const undeclaredTypesList = undeclaredTypes.map((type) => {
+          return `\n  - ${type}`;
+        });
+        warn(
+          `The following types were encountered but are not declared in the step's "types" field:${undeclaredTypesList}`,
+        );
+
+        console.log('');
+      }
     }
   });
 
@@ -85,29 +92,5 @@ function getStepStatusText(status: IntegrationStepResultStatus) {
       return chalk.yellow(status);
     case IntegrationStepResultStatus.DISABLED:
       return chalk.gray(status);
-  }
-}
-
-function logUndeclaredAndExtraneousTypes(
-  declaredTypeSet: Set<string>,
-  diff: string[],
-) {
-  const undeclaredTypes: string[] = [];
-
-  diff.forEach((type) => {
-    if (!declaredTypeSet.has(type)) {
-      undeclaredTypes.push(type);
-    }
-  });
-
-  if (undeclaredTypes.length) {
-    const undeclaredTypesList = undeclaredTypes.map((type) => {
-      return `\n  - ${type}`;
-    });
-    warn(
-      `The following types were encountered but are not declared in the step's "types" field:${undeclaredTypesList}`,
-    );
-
-    console.log('');
   }
 }

@@ -1,6 +1,5 @@
 import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
-import xor from 'lodash/xor';
 
 import { FileSystemGraphObjectStore } from '../storage';
 import {
@@ -164,14 +163,16 @@ export function executeStepDependencyGraph(
   ) {
     const declaredTypes = step.types;
     const encounteredTypes = typeTracker.getEncounteredTypes();
-    const diff = xor(declaredTypes, encounteredTypes);
 
     const declaredTypesSet = new Set(declaredTypes);
+    const undeclaredTypes = encounteredTypes.filter(
+      (type) => !declaredTypesSet.has(type),
+    );
 
-    if (diff.length) {
+    if (undeclaredTypes.length) {
       context.logger.warn(
         {
-          undeclaredTypes: diff.filter((type) => !declaredTypesSet.has(type)),
+          undeclaredTypes,
         },
         'Undeclared types were detected.',
       );
