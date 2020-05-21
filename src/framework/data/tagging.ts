@@ -70,40 +70,36 @@ export function assignTags<T extends object>(
     | null,
   assignProperties: string[] = [],
 ): T {
-  let tagMap: ResourceTagMap = {};
-
   if (tags) {
+    const taggedEntity = entity as TaggedEntity;
+    let tagMap: ResourceTagMap = {};
     if (typeof tags === 'string') {
-      if (tags.includes(',')) {
-        (entity as any).tags = tags
-          .split(',')
-          .filter((t) => t.trim().length > 0)
-          .map((t) => t.trim());
-      } else {
-        (entity as any).tags = tags
-          .split(' ')
-          .filter((t) => t.trim().length > 0)
-          .map((t) => t.trim());
-      }
-    } else if (typeof tags[0] === 'string') {
-      (entity as any).tags = tags;
+      const tagDelimiter = tags.includes(',') ? ',' : ' ';
+      taggedEntity.tags = tags
+        .split(tagDelimiter)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
     } else if (Array.isArray(tags)) {
-      tagMap = (tags as ResourceKeyValueTag[]).reduce(
-        (m: ResourceTagMap, t) => {
-          const k = t.Key || t.key;
-          const v = t.Value || t.value;
-          if (k && v) {
-            m[k] = v;
-          }
-          return m;
-        },
-        {},
-      );
+      if (typeof tags[0] === 'string') {
+        taggedEntity.tags = tags as string[];
+      } else {
+        tagMap = (tags as ResourceKeyValueTag[]).reduce(
+          (m: ResourceTagMap, t) => {
+            const k = t.Key || t.key;
+            const v = t.Value || t.value;
+            if (k && v) {
+              m[k] = v;
+            }
+            return m;
+          },
+          {},
+        );
+      }
     } else {
       tagMap = tags;
     }
 
-    assignTagMap(entity as TaggedEntity, tagMap, assignProperties);
+    assignTagMap(taggedEntity, tagMap, assignProperties);
   }
 
   return entity;
