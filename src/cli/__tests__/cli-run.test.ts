@@ -86,13 +86,15 @@ test('executes integration and performs upload', async () => {
       {
         id: 'fetch-accounts',
         name: 'Fetch Accounts',
-        types: ['my_account'],
+        declaredTypes: ['my_account'],
+        encounteredTypes: ['my_account'],
         status: IntegrationStepResultStatus.SUCCESS,
       },
       {
         id: 'fetch-users',
         name: 'Fetch Users',
-        types: ['my_user'],
+        declaredTypes: ['my_user', 'my_account_has_user'],
+        encounteredTypes: ['my_user', 'my_account_has_user'],
         status: IntegrationStepResultStatus.SUCCESS,
       },
     ],

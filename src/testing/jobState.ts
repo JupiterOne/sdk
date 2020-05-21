@@ -2,6 +2,7 @@ import { Entity, JobState, Relationship } from '../framework';
 import {
   DuplicateKeyTracker,
   MemoryDataStore,
+  TypeTracker,
 } from '../framework/execution/jobState';
 
 export interface CreateMockJobStateOptions {
@@ -16,6 +17,7 @@ export interface CreateMockJobStateOptions {
 export interface MockJobState extends JobState {
   collectedEntities: Entity[];
   collectedRelationships: Relationship[];
+  encounteredTypes: string[];
 }
 
 /**
@@ -34,17 +36,22 @@ export function createMockJobState({
   let collectedRelationships: Relationship[] = [];
 
   const duplicateKeyTracker = new DuplicateKeyTracker();
+  const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
 
   const addEntities = async (newEntities) => {
-    newEntities.forEach((e) => duplicateKeyTracker.registerKey(e._key));
+    newEntities.forEach((e) => {
+      duplicateKeyTracker.registerKey(e._key);
+      typeTracker.registerType(e._type);
+    });
     collectedEntities = collectedEntities.concat(newEntities);
   };
 
   const addRelationships = async (newRelationships) => {
-    newRelationships.forEach((r) =>
-      duplicateKeyTracker.registerKey(r._key as string),
-    );
+    newRelationships.forEach((r) => {
+      duplicateKeyTracker.registerKey(r._key as string);
+      typeTracker.registerType(r._type as string);
+    });
     collectedRelationships = collectedRelationships.concat(newRelationships);
   };
 
@@ -55,6 +62,10 @@ export function createMockJobState({
 
     get collectedRelationships() {
       return collectedRelationships;
+    },
+
+    get encounteredTypes() {
+      return typeTracker.getEncounteredTypes();
     },
 
     setData: async <T>(key: string, data: T): Promise<void> => {

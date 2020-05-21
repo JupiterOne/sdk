@@ -17,6 +17,18 @@ export class DuplicateKeyTracker {
   }
 }
 
+export class TypeTracker {
+  private readonly registeredTypeSet = new Set<string>();
+
+  registerType(type: string) {
+    this.registeredTypeSet.add(type);
+  }
+
+  getEncounteredTypes() {
+    return [...this.registeredTypeSet.values()];
+  }
+}
+
 export class MemoryDataStore {
   private readonly data = new Map<string, unknown>();
 
@@ -32,17 +44,20 @@ export class MemoryDataStore {
 export function createStepJobState({
   step,
   duplicateKeyTracker,
+  typeTracker,
   graphObjectStore,
   dataStore,
 }: {
   step: IntegrationStep;
   duplicateKeyTracker: DuplicateKeyTracker;
+  typeTracker: TypeTracker;
   graphObjectStore: FileSystemGraphObjectStore;
   dataStore: MemoryDataStore;
 }): JobState {
   const addEntities = (entities: Entity[]) => {
     entities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key);
+      typeTracker.registerType(e._type);
     });
 
     return graphObjectStore.addEntities(step.id, entities);
@@ -52,6 +67,7 @@ export function createStepJobState({
     relationships.forEach((r) => {
       // relationship types are not playing nicely
       duplicateKeyTracker.registerKey(r._key as string);
+      typeTracker.registerType(r._type as string);
     });
 
     return graphObjectStore.addRelationships(step.id, relationships);

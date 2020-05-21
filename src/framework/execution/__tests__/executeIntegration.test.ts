@@ -95,7 +95,8 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          declaredTypes: ['test'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.SUCCESS,
         },
       ],
@@ -127,7 +128,8 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          declaredTypes: ['test'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.FAILURE,
         },
       ],
@@ -166,13 +168,15 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-a',
           name: 'My awesome step',
-          types: ['test_a'],
+          declaredTypes: ['test_a'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.FAILURE,
         },
         {
           id: 'my-step-b',
           name: 'My awesome step',
-          types: ['test_b'],
+          declaredTypes: ['test_b'],
+          encounteredTypes: [],
           dependsOn: ['my-step-a'],
           status:
             IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
@@ -216,13 +220,15 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-a',
           name: 'My awesome step',
-          types: ['test_a'],
+          declaredTypes: ['test_a'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.FAILURE,
         },
         {
           id: 'my-step-b',
           name: 'My awesome step',
-          types: ['test_b'],
+          declaredTypes: ['test_b'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.DISABLED,
         },
       ],
@@ -310,13 +316,15 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          declaredTypes: ['test'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.SUCCESS,
         },
         {
           id: 'my-step-2',
           name: 'My awesome second step',
-          types: ['test_2'],
+          declaredTypes: ['test_2'],
+          encounteredTypes: [],
           status: IntegrationStepResultStatus.FAILURE,
         },
       ],

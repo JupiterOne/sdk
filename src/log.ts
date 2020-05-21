@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+
 import {
   ExecuteIntegrationResult,
   IntegrationStepResult,
@@ -18,11 +19,52 @@ export function warn(msg: string) {
   console.log(`${chalk.yellow(msg)}`);
 }
 
+export function displaySynchronizationResults(job: SynchronizationJob) {
+  info('\nSynchronization results:\n');
+  info(`Synchronization job status: ${chalk.cyan(job.status)}`);
+  info(`Entities uploaded: ${chalk.cyan(job.numEntitiesUploaded)}`);
+  info(`Relationships uploaded: ${chalk.cyan(job.numRelationshipsUploaded)}`);
+}
+
 export function displayExecutionResults(results: ExecuteIntegrationResult) {
   info('\nResults:\n');
+
+  let undeclaredTypesDetected: boolean = false;
+
   results.integrationStepResults.forEach((step) => {
     logStepStatus(step);
+
+    if (step.status === IntegrationStepResultStatus.SUCCESS) {
+      const { declaredTypes, encounteredTypes } = step;
+
+      const declaredTypeSet = new Set(declaredTypes);
+      const undeclaredTypes = encounteredTypes.filter(
+        (type) => !declaredTypeSet.has(type),
+      );
+
+      if (undeclaredTypes.length) {
+        undeclaredTypesDetected = true;
+
+        const undeclaredTypesList = undeclaredTypes.map((type) => {
+          return `\n  - ${type}`;
+        });
+        warn(
+          `The following types were encountered but are not declared in the step's "types" field:${undeclaredTypesList}`,
+        );
+
+        console.log('');
+      }
+    }
   });
+
+  if (undeclaredTypesDetected) {
+    warn(
+      `\nUndeclared types were detected!
+To ensure that integration failures do not cause accidental data loss,
+please ensure that all known entity and relationship types
+collected by a step are declared in the step's "types" field.`,
+    );
+  }
 
   const { partialDatasets } = results.metadata;
 
@@ -51,11 +93,4 @@ function getStepStatusText(status: IntegrationStepResultStatus) {
     case IntegrationStepResultStatus.DISABLED:
       return chalk.gray(status);
   }
-}
-
-export function displaySynchronizationResults(job: SynchronizationJob) {
-  info('\nSynchronization results:\n');
-  info(`Synchronization job status: ${chalk.cyan(job.status)}`);
-  info(`Entities uploaded: ${chalk.cyan(job.numEntitiesUploaded)}`);
-  info(`Relationships uploaded: ${chalk.cyan(job.numRelationshipsUploaded)}`);
 }

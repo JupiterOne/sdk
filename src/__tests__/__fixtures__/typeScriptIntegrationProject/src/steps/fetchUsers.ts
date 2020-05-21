@@ -7,7 +7,7 @@ import {
 export default {
   id: 'fetch-users',
   name: 'Fetch Users',
-  types: ['my_user'],
+  types: ['my_user', 'my_account_has_user'],
   executionHandler: async ({
     jobState,
   }: IntegrationStepExecutionContext<{}>) => {
