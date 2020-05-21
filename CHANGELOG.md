@@ -8,15 +8,38 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- `assignTags` was `trim()`ing twice, once is sufficient.
+
+## 2.1.3 - 2020-05-20
+
 ### Added
 
 - Detect and warn when undeclared `_type` values are found. Encountered types
   are now displayed on the `IntegrationStepResult` object.
 
+- `assignTags` now supports a `string` or `string[]` value that will be assigned
+  to a new `tags` property on the entity. Previously, the function would take
+  only key/value pairs and assign each pair to the entity as
+  `"tag.<key>": <value>`.
+
 ### Changed
 
 - A step's `types` are now stored as `declaredTypes` on the
   `IntegrationStepResult` object.
+
+## 2.1.2 - 2020-05-20
+
+### Changed
+
+- Upgrade to `@jupiterone/data-model@0.5.2`
+
+## 2.1.1 - 2020-05-20
+
+### Changed
+
+- Upgrade to `@jupiterone/data-model@0.5.0`
 
 ## 2.1.0 - 2020-05-20
 
