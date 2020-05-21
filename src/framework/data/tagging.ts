@@ -61,21 +61,44 @@ const TRUE_BOOLEAN_REGEX = /^true$/i;
  */
 export function assignTags<T extends object>(
   entity: T,
-  tags: ResourceKeyValueTag[] | ResourceTagMap | undefined | null,
+  tags:
+    | ResourceKeyValueTag[]
+    | ResourceTagMap
+    | string
+    | string[]
+    | undefined
+    | null,
   assignProperties: string[] = [],
 ): T {
-  let tagMap: ResourceTagMap;
+  let tagMap: ResourceTagMap = {};
 
   if (tags) {
-    if (Array.isArray(tags)) {
-      tagMap = tags.reduce((m: ResourceTagMap, t) => {
-        const k = t.Key || t.key;
-        const v = t.Value || t.value;
-        if (k && v) {
-          m[k] = v;
-        }
-        return m;
-      }, {});
+    if (typeof tags === 'string') {
+      if (tags.includes(',')) {
+        (entity as any).tags = tags
+          .split(',')
+          .filter((t) => t.trim().length > 0)
+          .map((t) => t.trim());
+      } else {
+        (entity as any).tags = tags
+          .split(' ')
+          .filter((t) => t.trim().length > 0)
+          .map((t) => t.trim());
+      }
+    } else if (typeof tags[0] === 'string') {
+      (entity as any).tags = tags;
+    } else if (Array.isArray(tags)) {
+      tagMap = (tags as ResourceKeyValueTag[]).reduce(
+        (m: ResourceTagMap, t) => {
+          const k = t.Key || t.key;
+          const v = t.Value || t.value;
+          if (k && v) {
+            m[k] = v;
+          }
+          return m;
+        },
+        {},
+      );
     } else {
       tagMap = tags;
     }
