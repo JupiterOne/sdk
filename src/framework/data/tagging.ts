@@ -85,17 +85,20 @@ export function assignTags<T extends object>(
           .filter((t) => t.trim().length > 0)
           .map((t) => t.trim());
       }
-    } else if (Array.isArray(tags) && typeof tags[0] === 'string') {
+    } else if (typeof tags[0] === 'string') {
       (entity as any).tags = tags;
     } else if (Array.isArray(tags)) {
-      tagMap = tags.reduce((m: ResourceTagMap, t) => {
-        const k = t.Key || t.key;
-        const v = t.Value || t.value;
-        if (k && v) {
-          m[k] = v;
-        }
-        return m;
-      }, {});
+      tagMap = (tags as ResourceKeyValueTag[]).reduce(
+        (m: ResourceTagMap, t) => {
+          const k = t.Key || t.key;
+          const v = t.Value || t.value;
+          if (k && v) {
+            m[k] = v;
+          }
+          return m;
+        },
+        {},
+      );
     } else {
       tagMap = tags;
     }
