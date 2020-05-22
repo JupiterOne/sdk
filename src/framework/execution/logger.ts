@@ -11,33 +11,50 @@ import { SynchronizationJob } from '../synchronization';
 import {
   IntegrationInstance,
   IntegrationInstanceConfigFieldMap,
-  IntegrationInvocationConfig,
   IntegrationLogger,
   StepMetadata,
   LoggerSynchronizationJobContext,
   IntegrationLoggerFunctions,
+  ExecutionContext,
+  StepExecutionContext,
+  InvocationConfig,
+  IntegrationExecutionContext,
+  IntegrationStepExecutionContext,
+  IntegrationInvocationConfig,
 } from './types';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
 
-interface CreateIntegrationLoggerInput {
+interface CreateLoggerInput<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+> {
   name: string;
-  invocationConfig?: IntegrationInvocationConfig;
+  invocationConfig?: InvocationConfig<TExecutionContext, TStepExecutionContext>;
   pretty?: boolean;
   serializers?: Logger.Serializers;
 }
 
-/**
- * Create a logger for the integration that will include invocation details and
- * serializers common to all integrations.
- */
-export function createIntegrationLogger({
+interface CreateIntegrationLoggerInput
+  extends CreateLoggerInput<
+    IntegrationExecutionContext,
+    IntegrationStepExecutionContext
+  > {
+  invocationConfig?: IntegrationInvocationConfig;
+}
+
+export function createLogger<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+>({
   name,
-  invocationConfig,
   pretty,
   serializers,
-}: CreateIntegrationLoggerInput): IntegrationLogger {
+}: CreateLoggerInput<
+  TExecutionContext,
+  TStepExecutionContext
+>): IntegrationLogger {
   const loggerConfig: Logger.LoggerOptions = {
     name,
     level: (process.env.LOG_LEVEL || 'info') as Logger.LogLevel,
@@ -51,21 +68,6 @@ export function createIntegrationLogger({
   }
 
   const logger = Logger.createLogger(loggerConfig);
-
-  const serializeInstanceConfig = createInstanceConfigSerializer(
-    invocationConfig?.instanceConfigFields,
-  );
-
-  logger.addSerializers({
-    integrationInstanceConfig: serializeInstanceConfig,
-    // since config is serializable from
-    instance: (instance: IntegrationInstance) => ({
-      ...instance,
-      config: instance.config
-        ? serializeInstanceConfig(instance.config)
-        : undefined,
-    }),
-  });
 
   if (serializers) {
     logger.addSerializers(serializers);
@@ -88,6 +90,37 @@ export function createIntegrationLogger({
       errorSet,
     },
   );
+}
+
+/**
+ * Create a logger for the integration that will include invocation details and
+ * serializers common to all integrations.
+ */
+export function createIntegrationLogger({
+  name,
+  invocationConfig,
+  pretty,
+  serializers,
+}: CreateIntegrationLoggerInput): IntegrationLogger {
+  const serializeInstanceConfig = createInstanceConfigSerializer(
+    invocationConfig?.instanceConfigFields,
+  );
+
+  return createLogger({
+    name,
+    pretty,
+    serializers: {
+      integrationInstanceConfig: serializeInstanceConfig,
+      // since config is serializable from
+      instance: (instance: IntegrationInstance) => ({
+        ...instance,
+        config: instance.config
+          ? serializeInstanceConfig(instance.config)
+          : undefined,
+      }),
+      ...serializers,
+    },
+  });
 }
 
 function createInstanceConfigSerializer(

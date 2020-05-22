@@ -140,7 +140,12 @@ describe('createIntegrationLogger', () => {
       invocationConfig,
       serializers: {},
     });
-    expect(addSerializers).toHaveBeenLastCalledWith({});
+
+    expect(addSerializers).toHaveBeenCalledTimes(1);
+    expect(addSerializers).toHaveBeenCalledWith({
+      integrationInstanceConfig: expect.any(Function),
+      instance: expect.any(Function),
+    });
   });
 
   describe('integrationInstanceConfig serializer', () => {
