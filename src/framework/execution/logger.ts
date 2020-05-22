@@ -223,6 +223,10 @@ function instrumentEventLogging(
   const child = logger.child;
 
   const publishEvent = (name: string, description: string) => {
+    if (process.env.JUPITERONE_DISABLE_EVENT_LOGGING === 'true') {
+      return;
+    }
+
     if (context.synchronizationJobContext) {
       const { job, apiClient } = context.synchronizationJobContext;
 
