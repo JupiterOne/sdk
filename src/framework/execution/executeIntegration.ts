@@ -7,7 +7,6 @@ import {
   getDefaultStepStartStates,
 } from './step';
 import {
-  IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInvocationConfig,
   IntegrationLogger,
@@ -15,6 +14,7 @@ import {
   PartialDatasets,
   InvocationConfig,
   StepExecutionContext,
+  ExecutionContext,
 } from './types';
 
 export interface ExecuteIntegrationResult {
@@ -76,7 +76,7 @@ export async function executeIntegrationInstance(
  * using context that was provided.
  */
 export async function executeWithContext<
-  TExecutionContext extends IntegrationExecutionContext,
+  TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
 >(
   context: TExecutionContext,
