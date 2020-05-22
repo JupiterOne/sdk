@@ -1,16 +1,14 @@
-import { Entity, RawDataTracking, EntityRawData } from '../types';
-
 import {
-  IntegrationEntitySchema,
   getSchema,
+  IntegrationEntitySchema,
   validateEntityWithSchema,
 } from '@jupiterone/data-model';
 
-import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
-import { getTime } from './converters';
-
-import { validateRawData } from './validation';
 import { IntegrationError } from '../../errors';
+import { Entity, EntityRawData, RawDataTracking } from '../types';
+import { getTime } from './converters';
+import { validateRawData } from './rawData';
+import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
 const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
 
