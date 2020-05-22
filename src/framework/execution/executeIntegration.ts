@@ -66,8 +66,6 @@ export async function executeIntegrationInstance(
     config,
   );
 
-  await logger.flush();
-
   return result;
 }
 
@@ -121,6 +119,8 @@ export async function executeWithContext<
     { collectionResult: summary },
     'Integration data collection has completed.',
   );
+
+  await context.logger.flush();
 
   return summary;
 }
