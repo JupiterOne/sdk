@@ -7,12 +7,14 @@ import {
   getDefaultStepStartStates,
 } from './step';
 import {
-  IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInvocationConfig,
   IntegrationLogger,
   IntegrationStepResult,
   PartialDatasets,
+  InvocationConfig,
+  StepExecutionContext,
+  ExecutionContext,
 } from './types';
 
 export interface ExecuteIntegrationResult {
@@ -56,15 +58,13 @@ export async function executeIntegrationInstance(
     process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
   }
 
-  const result = await executeIntegration(
+  const result = await executeWithContext(
     {
       instance,
       logger,
     },
     config,
   );
-
-  await logger.flush();
 
   return result;
 }
@@ -73,9 +73,12 @@ export async function executeIntegrationInstance(
  * Executes an integration and performs actions defined by the config
  * using context that was provided.
  */
-async function executeIntegration(
-  context: IntegrationExecutionContext,
-  config: IntegrationInvocationConfig,
+export async function executeWithContext<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+>(
+  context: TExecutionContext,
+  config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
 ): Promise<ExecuteIntegrationResult> {
   await removeStorageDirectory();
 
@@ -100,7 +103,7 @@ async function executeIntegration(
     integrationStepResults,
   );
 
-  const summary = {
+  const summary: ExecuteIntegrationResult = {
     integrationStepResults,
     metadata: {
       partialDatasets,
@@ -116,6 +119,8 @@ async function executeIntegration(
     { collectionResult: summary },
     'Integration data collection has completed.',
   );
+
+  await context.logger.flush();
 
   return summary;
 }

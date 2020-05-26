@@ -15,8 +15,8 @@ import {
   IntegrationInstance,
   IntegrationInvocationConfig,
   IntegrationLogger,
-  IntegrationStepResultStatus,
-  InvocationValidationFunction,
+  StepResultStatus,
+  IntegrationInvocationValidationFunction,
 } from '../types';
 import { IntegrationValidationError } from '../error';
 
@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe('executeIntegrationInstance', () => {
-  let validate: InvocationValidationFunction;
+  let validate: IntegrationInvocationValidationFunction;
   let instance: IntegrationInstance;
   let invocationConfig: IntegrationInvocationConfig;
   let logger: IntegrationLogger;
@@ -97,7 +97,7 @@ describe('executeIntegrationInstance', () => {
           name: 'My awesome step',
           declaredTypes: ['test'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
       ],
       metadata: {
@@ -130,7 +130,7 @@ describe('executeIntegrationInstance', () => {
           name: 'My awesome step',
           declaredTypes: ['test'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.FAILURE,
+          status: StepResultStatus.FAILURE,
         },
       ],
       metadata: {
@@ -170,7 +170,7 @@ describe('executeIntegrationInstance', () => {
           name: 'My awesome step',
           declaredTypes: ['test_a'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.FAILURE,
+          status: StepResultStatus.FAILURE,
         },
         {
           id: 'my-step-b',
@@ -178,8 +178,7 @@ describe('executeIntegrationInstance', () => {
           declaredTypes: ['test_b'],
           encounteredTypes: [],
           dependsOn: ['my-step-a'],
-          status:
-            IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+          status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
         },
       ],
       metadata: {
@@ -222,14 +221,14 @@ describe('executeIntegrationInstance', () => {
           name: 'My awesome step',
           declaredTypes: ['test_a'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.FAILURE,
+          status: StepResultStatus.FAILURE,
         },
         {
           id: 'my-step-b',
           name: 'My awesome step',
           declaredTypes: ['test_b'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.DISABLED,
+          status: StepResultStatus.DISABLED,
         },
       ],
       metadata: {
@@ -318,14 +317,14 @@ describe('executeIntegrationInstance', () => {
           name: 'My awesome step',
           declaredTypes: ['test'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
         {
           id: 'my-step-2',
           name: 'My awesome second step',
           declaredTypes: ['test_2'],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.FAILURE,
+          status: StepResultStatus.FAILURE,
         },
       ],
       metadata: {

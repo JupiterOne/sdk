@@ -12,7 +12,7 @@ import {
 } from './util/synchronization';
 
 import { SynchronizationJobStatus } from '../../framework/synchronization';
-import { IntegrationStepResultStatus } from '../../framework';
+import { StepResultStatus } from '../../framework';
 
 import * as log from '../../log';
 
@@ -88,14 +88,14 @@ test('executes integration and performs upload', async () => {
         name: 'Fetch Accounts',
         declaredTypes: ['my_account'],
         encounteredTypes: ['my_account'],
-        status: IntegrationStepResultStatus.SUCCESS,
+        status: StepResultStatus.SUCCESS,
       },
       {
         id: 'fetch-users',
         name: 'Fetch Users',
         declaredTypes: ['my_user', 'my_account_has_user'],
         encounteredTypes: ['my_user', 'my_account_has_user'],
-        status: IntegrationStepResultStatus.SUCCESS,
+        status: StepResultStatus.SUCCESS,
       },
     ],
     metadata: {

@@ -19,7 +19,7 @@ import {
   IntegrationLogger,
   IntegrationStep,
   IntegrationStepExecutionContext,
-  IntegrationStepResultStatus,
+  StepResultStatus,
   JobState,
 } from '../types';
 
@@ -253,7 +253,7 @@ describe('executeStepDependencyGraph', () => {
         name: 'a',
         declaredTypes: ['my_type_a'],
         encounteredTypes: ['my_type_b'],
-        status: IntegrationStepResultStatus.SUCCESS,
+        status: StepResultStatus.SUCCESS,
       },
     ]);
 
@@ -544,7 +544,7 @@ describe('executeStepDependencyGraph', () => {
         name: 'a',
         declaredTypes: [],
         encounteredTypes: [],
-        status: IntegrationStepResultStatus.SUCCESS,
+        status: StepResultStatus.SUCCESS,
       },
       {
         id: 'b',
@@ -552,7 +552,7 @@ describe('executeStepDependencyGraph', () => {
         declaredTypes: [],
         encounteredTypes: [],
         dependsOn: ['a'],
-        status: IntegrationStepResultStatus.FAILURE,
+        status: StepResultStatus.FAILURE,
       },
       {
         id: 'c',
@@ -560,8 +560,7 @@ describe('executeStepDependencyGraph', () => {
         declaredTypes: [],
         encounteredTypes: [],
         dependsOn: ['b'],
-        status:
-          IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
       },
     ]);
 
@@ -668,7 +667,7 @@ describe('executeStepDependencyGraph', () => {
         name: 'a',
         declaredTypes: [],
         encounteredTypes: [],
-        status: IntegrationStepResultStatus.FAILURE,
+        status: StepResultStatus.FAILURE,
       },
       {
         id: 'b',
@@ -676,8 +675,7 @@ describe('executeStepDependencyGraph', () => {
         declaredTypes: [],
         encounteredTypes: [],
         dependsOn: ['a'],
-        status:
-          IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
       },
       {
         id: 'c',
@@ -685,8 +683,7 @@ describe('executeStepDependencyGraph', () => {
         declaredTypes: [],
         encounteredTypes: [],
         dependsOn: ['b'],
-        status:
-          IntegrationStepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
       },
     ]);
 
@@ -1005,7 +1002,7 @@ describe('executeStepDependencyGraph', () => {
         name: 'a',
         declaredTypes: [],
         encounteredTypes: [],
-        status: IntegrationStepResultStatus.DISABLED,
+        status: StepResultStatus.DISABLED,
       },
     ]);
   });
@@ -1081,14 +1078,14 @@ describe('executeStepDependencyGraph', () => {
           name: 'a',
           declaredTypes: [],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
         {
           id: 'b',
           name: 'b',
           declaredTypes: [],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.DISABLED,
+          status: StepResultStatus.DISABLED,
         },
         {
           id: 'c',
@@ -1096,7 +1093,7 @@ describe('executeStepDependencyGraph', () => {
           declaredTypes: [],
           encounteredTypes: [],
           dependsOn: ['a'],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
         {
           id: 'd',
@@ -1104,14 +1101,14 @@ describe('executeStepDependencyGraph', () => {
           declaredTypes: [],
           encounteredTypes: [],
           dependsOn: ['b', 'c', 'e'],
-          status: IntegrationStepResultStatus.DISABLED,
+          status: StepResultStatus.DISABLED,
         },
         {
           id: 'e',
           name: 'e',
           declaredTypes: [],
           encounteredTypes: [],
-          status: IntegrationStepResultStatus.SUCCESS,
+          status: StepResultStatus.SUCCESS,
         },
       ]),
     );

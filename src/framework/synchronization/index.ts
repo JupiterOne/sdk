@@ -20,6 +20,7 @@ import { synchronizationApiError } from './error';
 import { Entity, Relationship } from '../types';
 
 export * from './types';
+export { synchronizationApiError };
 
 const UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 2;

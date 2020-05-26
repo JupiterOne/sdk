@@ -1,10 +1,10 @@
-import { IntegrationStep, IntegrationStepStartStates } from '../types';
+import { IntegrationStep, StepStartStates } from '../types';
 
 import { validateStepStartStates } from '../validation';
 
 describe('validateStepStartStates', () => {
   test('throws error if unknown steps are found in start states', () => {
-    const states: IntegrationStepStartStates = {
+    const states: StepStartStates = {
       a: {
         disabled: false,
       },
@@ -30,7 +30,7 @@ describe('validateStepStartStates', () => {
   });
 
   test('throws error when steps are not accounted for in start states', () => {
-    const states: IntegrationStepStartStates = {
+    const states: StepStartStates = {
       a: {
         disabled: false,
       },
@@ -62,7 +62,7 @@ describe('validateStepStartStates', () => {
   });
 
   test('passes if all steps are accounted for', () => {
-    const states: IntegrationStepStartStates = {
+    const states: StepStartStates = {
       a: {
         disabled: false,
       },
