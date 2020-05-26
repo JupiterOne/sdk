@@ -8,6 +8,33 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.0.1 - 2020-05-26
+
+`3.0.0` is a major release because a number of types have changed to clarify the
+capability of the data collecting step dependency graph to function apart from a
+JupiterOne integration definition/instance. Typical integrations should be able
+to adopt this version with no changes necessary.
+
+### Added
+
+- `JUPITERONE_DISABLE_EVENT_LOGGING` environment variable may be set to `"true"`
+  to disable sending job events to JupiterOne. This is useful when executing an
+  integration apart from the JupiterOne job execution lifecycle, where there is
+  no desire to have the activity of execution delivered to any job event log.
+
+- `synchronizationApiError()` generates an error based on an error response from
+  the JupiterOne synchronization API. This has been exported to allow for unique
+  synchronization processing situations, where interactions with the
+  synchronization API are not performed through `j1-integration sync`.
+
+- `createLogger()` configures a logger for executing data collection steps. This
+  has been exported alongside the existing `createIntegrationLogger()` to allow
+  for data collection outside the context of a JupiterOne integration. That is,
+  when there is no `IntegrationInstance` involved in data collection,
+  `createLogger()` is sufficient for executing the step dependency graph.
+
+## 2.1.4 - 2020-05-23
+
 ### Added
 
 - `setRawData`, `getRawData` support safer access to an entity's `_rawData`
@@ -19,6 +46,8 @@ and this project adheres to
   the entity properties but is useful in building relationships.
 
 ### Changed
+
+- Upgrade to `@jupiterone/data-model@0.6.0`
 
 - `assignTags` was `trim()`ing twice, once is sufficient.
 
