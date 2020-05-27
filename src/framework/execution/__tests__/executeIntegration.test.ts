@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe('executeIntegrationInstance', () => {
-  let validate: IntegrationInvocationValidationFunction;
+  let validateInvocation: IntegrationInvocationValidationFunction;
   let instance: IntegrationInstance;
   let invocationConfig: IntegrationInvocationConfig;
   let logger: IntegrationLogger;
@@ -37,12 +37,12 @@ describe('executeIntegrationInstance', () => {
     executeIntegrationInstance(logger, instance, invocationConfig);
 
   beforeEach(() => {
-    validate = jest.fn();
+    validateInvocation = jest.fn();
 
     instance = LOCAL_INTEGRATION_INSTANCE;
 
     invocationConfig = {
-      validateInvocation: validate,
+      validateInvocation,
       integrationSteps: [],
     };
 
@@ -52,7 +52,7 @@ describe('executeIntegrationInstance', () => {
     });
   });
 
-  test('executes validator function if provided in config', async () => {
+  test('executes validateInvocation function if provided in config', async () => {
     await execute();
 
     const expectedContext: IntegrationExecutionContext = {
@@ -60,7 +60,7 @@ describe('executeIntegrationInstance', () => {
       logger,
     };
 
-    expect(validate).toHaveBeenCalledWith(expectedContext);
+    expect(validateInvocation).toHaveBeenCalledWith(expectedContext);
   });
 
   test('logs validation error if validation fails', async () => {
@@ -75,6 +75,24 @@ describe('executeIntegrationInstance', () => {
 
     expect(validationFailureSpy).toHaveBeenCalledTimes(1);
     expect(validationFailureSpy).toHaveBeenCalledWith(error);
+  });
+
+  test('throws validation errors on invalid output of getStepStartStates', async () => {
+    invocationConfig.getStepStartStates = jest.fn().mockReturnValue({});
+    invocationConfig.integrationSteps = [
+      {
+        id: 'my-step',
+        name: 'My awesome step',
+        types: ['test'],
+        executionHandler: jest.fn(),
+      },
+    ];
+    const validationFailureSpy = jest.spyOn(logger, 'validationFailure');
+
+    await expect(execute()).rejects.toThrow(/Start states not found for/);
+
+    // This error is not one the user can fix, we just crash
+    expect(validationFailureSpy).not.toHaveBeenCalled();
   });
 
   test('returns integration step results and metadata about partial datasets', async () => {
@@ -428,10 +446,10 @@ describe('executeIntegrationInstance', () => {
 
 describe('executeIntegrationLocally', () => {
   test('provides generated logger and instance', async () => {
-    const validate = jest.fn();
+    const validateInvocation = jest.fn();
 
     await executeIntegrationLocally({
-      validateInvocation: validate,
+      validateInvocation,
       integrationSteps: [],
     });
 
@@ -440,16 +458,16 @@ describe('executeIntegrationLocally', () => {
       logger: expect.any(jest.requireActual('bunyan')),
     };
 
-    expect(validate).toHaveBeenCalledWith(expectedContext);
+    expect(validateInvocation).toHaveBeenCalledWith(expectedContext);
   });
 
   test('enables graph object schema validation', async () => {
-    const validate = jest.fn();
+    const validateInvocation = jest.fn();
 
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
 
     await executeIntegrationLocally({
-      validateInvocation: validate,
+      validateInvocation,
       integrationSteps: [],
     });
 

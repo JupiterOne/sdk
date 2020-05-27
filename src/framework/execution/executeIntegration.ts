@@ -16,6 +16,7 @@ import {
   StepExecutionContext,
   ExecutionContext,
 } from './types';
+import { validateStepStartStates } from './validation';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -92,6 +93,8 @@ export async function executeWithContext<
   const stepStartStates =
     config.getStepStartStates?.(context) ??
     getDefaultStepStartStates(config.integrationSteps);
+
+  validateStepStartStates(config.integrationSteps, stepStartStates);
 
   const integrationStepResults = await executeSteps(
     context,

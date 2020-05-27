@@ -15,6 +15,14 @@ and this project adheres to
   `--enable-source-maps`. For integration developers, this means
   `NODE_OPTIONS=--enable-source-maps yarn j1-integration collect`, for example.
 
+### Fixed
+
+- `getStepStartStates()` output was not being validated to ensure that all steps
+  had a defined start state. This was manifested as
+  `TypeError: Cannot read property 'disabled' of undefined`. Validation is now
+  being performed, with an error message indicating which steps have no start
+  state defined.
+
 ## 3.0.1 - 2020-05-26
 
 `3.0.0` is a major release because a number of types have changed to clarify the
