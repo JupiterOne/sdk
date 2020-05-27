@@ -8,6 +8,13 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Source maps are included in the `@jupiterone/integration-sdk` package to allow
+  for source stack traces. Using Node 12.12+, these can be enabled with
+  `--enable-source-maps`. For integration developers, this means
+  `NODE_OPTIONS=--enable-source-maps yarn j1-integration collect`, for example.
+
 ## 3.0.1 - 2020-05-26
 
 `3.0.0` is a major release because a number of types have changed to clarify the
