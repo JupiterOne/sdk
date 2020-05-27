@@ -6,8 +6,9 @@
   ],
   "scripts": {
     "lint": "eslint --ext .ts,.tsx,.js,.jsx .",
+    "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:ci": "jest",
+    "test:ci": "yarn lint && yarn type-check && jest",
     "compile": "lerna run compile",
     "build": "lerna run build",
     "format": "prettier --write '**/*.{js,ts,md,json}'"

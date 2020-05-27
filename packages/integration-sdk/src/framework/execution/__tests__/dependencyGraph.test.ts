@@ -962,17 +962,6 @@ describe('executeStepDependencyGraph', () => {
   test('does not execute step if marked as disabled', async () => {
     const spyA = jest.fn();
 
-    /**
-     *     e
-     *       \
-     * a - c - d
-     *       /
-     *     b
-     *
-     * In this situation, 'a', 'e', and 'b' are leaf nodes
-     * 'c' depends on 'a',
-     * 'd' depends on 'e', 'c', and 'b'
-     */
     const steps: IntegrationStep[] = [
       {
         id: 'a',
@@ -1006,7 +995,8 @@ describe('executeStepDependencyGraph', () => {
       },
     ]);
   });
-  test("does not execute step and it's dependencies if marked as disabled", async () => {
+
+  test('does not execute step and its dependencies if marked as disabled', async () => {
     const spyA = jest.fn();
     const spyB = jest.fn();
     const spyC = jest.fn();
