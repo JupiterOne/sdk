@@ -5,7 +5,7 @@ export const UNEXPECTED_ERROR_REASON =
 export const PROVIDER_AUTH_ERROR_DESCRIPTION =
   ' Failed to access provider resource.' +
   ' This integration is likely misconfigured or has insufficient permissions required to access the resource.' +
-  " Please ensure your integration's configuration settings are setup correctly.";
+  " Please ensure your integration's configuration settings are set up correctly.";
 
 export interface IntegrationErrorOptions {
   message: string;
