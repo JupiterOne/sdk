@@ -10,6 +10,11 @@ and this project adheres to
 
 ### Added
 
+- Source maps are included in the `@jupiterone/integration-sdk` package to allow
+  for source stack traces. Using Node 12.12+, these can be enabled with
+  `--enable-source-maps`. For integration developers, this means
+  `NODE_OPTIONS=--enable-source-maps yarn j1-integration collect`, for example.
+
 - When an `IntegrationProviderAuthenticationError` or
   `IntegrationProviderAuthorizationError` is thrown, additional information will
   be added to the published event's description to notify the end user that
