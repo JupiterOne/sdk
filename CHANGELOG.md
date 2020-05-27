@@ -10,6 +10,11 @@ and this project adheres to
 
 ### Added
 
+- When an `IntegrationProviderAuthenticationError` or
+  `IntegrationProviderAuthorizationError` is thrown, additional information will
+  be added to the published event's description to notify the end user that
+  action needs to be taken.
+
 - Source maps are included in the `@jupiterone/integration-sdk` package to allow
   for source stack traces. Using Node 12.12+, these can be enabled with
   `--enable-source-maps`. For integration developers, this means
