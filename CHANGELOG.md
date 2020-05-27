@@ -10,15 +10,23 @@ and this project adheres to
 
 ### Added
 
+- When an `IntegrationProviderAuthenticationError` or
+  `IntegrationProviderAuthorizationError` is thrown, additional information will
+  be added to the published event's description to notify the end user that
+  action needs to be taken.
+
 - Source maps are included in the `@jupiterone/integration-sdk` package to allow
   for source stack traces. Using Node 12.12+, these can be enabled with
   `--enable-source-maps`. For integration developers, this means
   `NODE_OPTIONS=--enable-source-maps yarn j1-integration collect`, for example.
 
-- When an `IntegrationProviderAuthenticationError` or
-  `IntegrationProviderAuthorizationError` is thrown, additional information will
-  be added to the published event's description to notify the end user that
-  action needs to be taken.
+### Fixed
+
+- `getStepStartStates()` output was not being validated to ensure that all steps
+  had a defined start state. This was manifested as
+  `TypeError: Cannot read property 'disabled' of undefined`. Validation is now
+  being performed, with an error message indicating which steps have no start
+  state defined.
 
 ## 3.0.1 - 2020-05-26
 

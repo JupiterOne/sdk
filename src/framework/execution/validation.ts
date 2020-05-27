@@ -1,14 +1,12 @@
-import { IntegrationStep, StepStartStates } from './types';
-
 import {
   StepStartStateUnknownStepIdsError,
   UnaccountedStepStartStatesError,
 } from './error';
+import { Step, StepExecutionContext, StepStartStates } from './types';
 
-export function validateStepStartStates(
-  steps: IntegrationStep[],
-  stepStartStates: StepStartStates,
-) {
+export function validateStepStartStates<
+  TStepExecutionContext extends StepExecutionContext
+>(steps: Step<TStepExecutionContext>[], stepStartStates: StepStartStates) {
   const stepSet = new Set<string>(steps.map((step) => step.id));
 
   const unknownStepIds: string[] = [];
