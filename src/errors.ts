@@ -2,6 +2,11 @@ export const UNEXPECTED_ERROR_CODE = 'UNEXPECTED_ERROR';
 export const UNEXPECTED_ERROR_REASON =
   'Unexpected error occurred executing integration! Please contact us in Slack or at https://support.jupiterone.io if the problem continues to occur.';
 
+export const PROVIDER_AUTH_ERROR_DESCRIPTION =
+  ' Failed to access provider resource.' +
+  ' This integration is likely misconfigured or has insufficient permissions required to access the resource.' +
+  " Please ensure your integration's configuration settings are set up correctly.";
+
 export interface IntegrationErrorOptions {
   message: string;
 
@@ -14,6 +19,7 @@ export interface IntegrationErrorOptions {
 
   /**
    * An optional flag used to mark the error as fatal. A fatal error will stop
+   *
    * execution of the entire integration.
    */
   fatal?: boolean;

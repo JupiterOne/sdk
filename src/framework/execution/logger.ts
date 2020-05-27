@@ -6,6 +6,7 @@ import {
   IntegrationError,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
+  PROVIDER_AUTH_ERROR_DESCRIPTION,
 } from '../../errors';
 import { SynchronizationJob } from '../synchronization';
 import {
@@ -22,6 +23,10 @@ import {
   IntegrationStepExecutionContext,
   IntegrationInvocationConfig,
 } from './types';
+import {
+  IntegrationProviderAuthorizationError,
+  IntegrationProviderAuthenticationError,
+} from './error';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -399,6 +404,12 @@ export function createErrorEventDescription(
     errorReason = UNEXPECTED_ERROR_REASON;
   }
 
+  if (isProviderAuthError(err)) {
+    // add additional instructions to the displayed message
+    // if we know that this is an auth error
+    message += PROVIDER_AUTH_ERROR_DESCRIPTION;
+  }
+
   const nameValuePairs: NameValuePair[] = [
     ['errorCode', errorCode],
     ['errorId', errorId],
@@ -421,4 +432,15 @@ export function createErrorEventDescription(
     errorId,
     description: `${message} (${errorDetails})`,
   };
+}
+
+type ProviderAuthError =
+  | IntegrationProviderAuthorizationError
+  | IntegrationProviderAuthenticationError;
+
+export function isProviderAuthError(err: Error): err is ProviderAuthError {
+  return (
+    err instanceof IntegrationProviderAuthorizationError ||
+    err instanceof IntegrationProviderAuthenticationError
+  );
 }
