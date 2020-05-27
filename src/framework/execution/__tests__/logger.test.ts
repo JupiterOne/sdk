@@ -6,7 +6,11 @@ import {
   createErrorEventDescription,
 } from '../logger';
 import Logger from 'bunyan';
-import { IntegrationInvocationConfig, IntegrationStep } from '../types';
+import {
+  IntegrationInvocationConfig,
+  IntegrationStep,
+  IntegrationLogger,
+} from '../types';
 import {
   SynchronizationJobContext,
   SynchronizationJob,
@@ -15,10 +19,13 @@ import { createApiClient } from '../../api';
 import {
   IntegrationLocalConfigFieldMissingError,
   IntegrationValidationError,
+  IntegrationProviderAuthorizationError,
+  IntegrationProviderAuthenticationError,
 } from '../error';
 import {
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
+  PROVIDER_AUTH_ERROR_DESCRIPTION,
   IntegrationError,
 } from '../../../errors';
 
@@ -323,6 +330,100 @@ describe('step event publishing', () => {
           ),
         },
       ],
+    });
+  });
+});
+
+describe('provider auth error details', () => {
+  const step: IntegrationStep = {
+    id: 'a',
+    name: 'Mochi',
+    types: [],
+    dependsOn: [],
+    executionHandler: jest.fn(),
+  };
+
+  const expectedEventsUrl =
+    '/persister/synchronization/jobs/test-job-id/events';
+
+  let postSpy: jest.MockedFunction<any>;
+  let logger: IntegrationLogger;
+
+  beforeEach(() => {
+    logger = createIntegrationLogger({ name, invocationConfig });
+
+    const context: SynchronizationJobContext = {
+      logger,
+      job: { id: 'test-job-id' } as SynchronizationJob,
+      apiClient: createApiClient({
+        apiBaseUrl: 'https://api.us.jupiterone.io',
+        account: 'mocheronis',
+      }),
+    };
+
+    logger.registerSynchronizationJobContext(context);
+
+    postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation(noop as any);
+  });
+
+  const errorDetails = {
+    endpoint: 'https://cute.af',
+    status: 403,
+    statusText: 'Forbidden',
+  };
+
+  [
+    {
+      error: new IntegrationProviderAuthenticationError(errorDetails),
+      expectedReason:
+        'Provider authentication failed at https://cute.af: 403 Forbidden',
+    },
+    {
+      error: new IntegrationProviderAuthorizationError(errorDetails),
+      expectedReason:
+        'Provider authorization failed at https://cute.af: 403 Forbidden',
+    },
+  ].forEach(({ error, expectedReason }) => {
+    test(`stepFailure adds additional information to the log message if an ${error.code} error is provided`, async () => {
+      logger.stepFailure(step, error);
+      await logger.flush();
+
+      expect(postSpy).toHaveBeenCalledWith(expectedEventsUrl, {
+        events: [
+          {
+            name: 'step_failure',
+            description: expect.stringMatching(
+              new RegExp(
+                '^Step "Mochi" failed to complete due to error.' +
+                  PROVIDER_AUTH_ERROR_DESCRIPTION +
+                  ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
+              ),
+            ),
+          },
+        ],
+      });
+    });
+
+    test(`validationFailure adds additional information to the log message if an ${error.code} error is provided`, async () => {
+      logger.validationFailure(error);
+      await logger.flush();
+
+      expect(postSpy).toHaveBeenCalledWith(expectedEventsUrl, {
+        events: [
+          {
+            name: 'validation_failure',
+            description: expect.stringMatching(
+              new RegExp(
+                '^Error occurred while validating integration configuration.' +
+                  PROVIDER_AUTH_ERROR_DESCRIPTION +
+                  ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
+              ),
+            ),
+          },
+        ],
+      });
     });
   });
 });
