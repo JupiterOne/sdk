@@ -8,6 +8,13 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- When an `IntegrationProviderAuthenticationError` or
+  `IntegrationProviderAuthorizationError` is thrown, additional information will
+  be added to the published event's description to notify the end user that
+  action needs to be taken.
+
 ## 3.0.1 - 2020-05-26
 
 `3.0.0` is a major release because a number of types have changed to clarify the
