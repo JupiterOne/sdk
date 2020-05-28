@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "lint": "eslint --ext .ts,.tsx,.js,.jsx .",
-    "type-check": "lerna run type-check",
+    "type-check": "tsc -b packages/*",
     "test": "jest",
     "test:ci": "yarn lint && yarn type-check && jest",
     "compile": "lerna run compile",
