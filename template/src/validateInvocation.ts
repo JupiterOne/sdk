@@ -1,9 +1,9 @@
 import {
   IntegrationExecutionContext,
-  IntegrationProviderAuthenticationError,
   IntegrationValidationError,
 } from '@jupiterone/integration-sdk';
 
+import { createAPIClient } from './client';
 import { IntegrationConfig } from './types';
 
 export default async function validateInvocation(
@@ -18,14 +18,5 @@ export default async function validateInvocation(
   }
 
   const apiClient = createAPIClient(config);
-  try {
-    await apiClient.verifyAuthentication();
-  } catch (err) {
-    throw new IntegrationProviderAuthenticationError({
-      cause: err,
-      endpoint: 'https://provider.com/api/v1/some/endpoint?limit=1',
-      status: err.status,
-      statusText: err.statusText,
-    });
-  }
+  await apiClient.verifyAuthentication();
 }
