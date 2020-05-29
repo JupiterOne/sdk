@@ -11,12 +11,36 @@ that was sent up will be diffed against JupiterOne's understanding of the
 ## The integration framework
 
 This SDK supports building JupiterOne integrations using either JavaScript or
-TypeScript. The execution process expects the integration to produce an object
-conforming to the `IntegrationInvocationConfig` interface:
+TypeScript.
+
+The execution process expects the integration to produce an object conforming to
+the [`IntegrationInvocationConfig`](/src/framework/execution/types/config.ts)
+interface.
+
+This includes configuration fields required to run the integration, a function
+for performing config field validation, a function for determining which steps
+of an integration to ignore, and a list of steps that define how an integration
+should collect data.
+
+Use the provided [Integration Template](/template/README.md#project-structure)
+to get started.
+
+### `IntegrationInvocationConfig` fields
+
+#### `instanceConfigFields`
+
+The `instanceConfigFields` field contains a map of integration fields that are
+required for authenticating with provider APIs and otherwise necessary to
+configure the integration for execution. This varies between services.
+
+The `type` will ensure the values are cast when
+[read from `.env`](#j1-integration-collect). It is important to mark secrets
+with `mask: true` to facilitate safe logging.
+
+Example:
 
 ```typescript
-export const invocationConfig: IntegrationInvocationConfig = {
-  instanceConfigFields: {
+{
     clientId: {
       type: 'string',
       mask: false,
@@ -29,157 +53,151 @@ export const invocationConfig: IntegrationInvocationConfig = {
       type: boolean,
       mask: true,
     },
-  },
-
-  validateInvocation(context: IntegrationExecutionContext) {
-    const { config } = context.instance;
-
-    if (!config.clientId || !config.clientSecret) {
-      throw new IntegrationInstanceConfigError(
-        'Config requires a clientId and clientSecret to be provided',
-      );
-    }
-
-    await validate(config);
-  },
-
-  getStepStartStates(
-    executionContext: IntegrationExecutionContext,
-  ): StepStartStates {
-    const { config } = executionContext.instance;
-
-    const notDisabled = { disabled: false };
-    const shouldIngestGroups = config.ingestGroups;
-
-    return {
-      'fetch-accounts': notDisabled,
-      'fetch-users': notDisabled,
-      'fetch-groups': { disabled: !config.ingestGroups },
-    };
-  },
-
-  integrationSteps: [
-    {
-      id: 'step-fetch-accounts',
-      name: 'Fetch Accounts',
-      types: ['my_integration_account'],
-      async executionHandler(
-        executionContext: IntegrationStepExecutionContext,
-      ) {
-        return fetchAccounts(executionContext);
-      },
-    },
-    {
-      id: 'step-fetch-users',
-      name: 'Fetch Users',
-      types: ['my_integration_user'],
-      async executionHandler(
-        executionContext: IntegrationStepExecutionContext,
-      ) {
-        return fetchUsers(executionContext);
-      },
-    },
-    {
-      id: 'step-fetch-groups',
-      name: 'Fetch Groups',
-      types: ['my_integration_group'],
-      executionHandler(executionContext: IntegrationStepExecutionContext) {
-        return fetchGroups(executionContext);
-      },
-    },
-    {
-      id: 'step-build-user-to-group-relationships',
-      name: 'Build relationships',
-      types: ['my_integration_user_to_group_relationship'],
-      dependsOn: ['step-fetch-users', 'step-fetch-groups'],
-      async executionHandler(
-        executionContext: IntegrationStepExecutionContext,
-      ) {
-        return fetchAccounts(executionContext);
-      },
-    },
-  ],
-};
+  }
 ```
-
-This includes required configuration fields needed to run the integration, a
-function for performing config field validation, a function for determining
-which steps of an integration to ignore, and a list of steps that define how an
-integration should collect data.
-
-The SDK execution process will construct this object based on an opinionated
-directory layout. Use the provided
-[Integration Template](/template/README.md#project-structure) to get started.
-
-### `IntegrationInvocationConfig` fields
-
-#### `instanceConfigFields`
-
-The `instanceConfigFields` field contains a map of integration fields that are
-required to be provided for authenticating with a given provider API. This
-varies between services.
 
 #### `validateInvocation`
 
 The `validateInvocation` field is a validation function that is required for
-ensuring the integration has received a valid set of `instanceConfigFields`. It
-is common practice to execute a test API call to ensure everything has been
-configured properly.
+ensuring the integration has received a valid set of `instanceConfigFields`.
 
 It is assumed that the integration's configuration is valid if the validation
 function executes without error. If an error is thrown, a message will be
 published to the integration's event log stating that validation has failed.
 
-It is recommended that integration developers throw an
-`IntegrationValidationError` with details about why validation has failed in the
-error's message. This allows for the error's message to be included in the logs.
+A typical implementation will:
+
+1. Verify required configuration properties are provided, throwing an
+   `IntegrationValidationError` when they are not.
+1. Create an instance of the API client and execute an authenticated API call to
+   ensure the credentials are valid, throwing an
+   `IntegrationProviderAuthenticationError` when they are not.
 
 Example:
 
 ```typescript
-import { IntegrationValidationError } from '@jupiterone/integration-sdk';
+import {
+  IntegrationExecutionContext,
+  IntegrationProviderAuthenticationError,
+  IntegrationValidationError,
+} from '@jupiterone/integration-sdk';
 
-function validateInvocation(context: IntegrationExecutionContext) {
+import { IntegrationConfig } from './types';
+
+function validateInvocation(
+  context: IntegrationExecutionContext<IntegrationConfig>,
+) {
   const { config } = context.instance;
 
   if (!config.clientId || !config.clientSecret) {
     throw new IntegrationValidationError(
-      'Config requires a clientId and clientSecret to be provided',
+      'Config requires all of {clientId, clientSecret}',
     );
   }
 
-  await validate(config);
+  const apiClient = createAPIClient(config);
+  try {
+    await apiClient.verifyAuthentication();
+  } catch (err) {
+    throw new IntegrationProviderAuthenticationError({
+      cause: err,
+      endpoint: 'https://provider.com/api/v1/some/endpoint?limit=1',
+      status: err.status,
+      statusText: err.statusText,
+    });
+  }
 }
 ```
 
 Using the above example, the following message will be logged if the config's
 `clientId` or `clientSecret` is not set:
 
-`Error occurred while validating integration configuration. (errorCode=CONFIG_VALIDATION_ERROR, errorId=<generated error id>, reason=Config requires a clientId and clientSecret to be provided)`;
+`Error occurred while validating integration configuration. (errorCode="CONFIG_VALIDATION_ERROR", errorId="<generated error id>", reason="Config requires all of {clientId, clientSecret}")`;
 
 #### `getStepStartStates`
 
 The `getStepStartStates` is an optional function that can be provided for
-determining if a certain step should be run or not.
+determining if a certain step should be run or not. The default implementation
+enables all steps. When you provide this function, it must return an entry for
+each step.
+
+Example:
+
+```typescript
+import { IntegrationExecutionContext } from '@jupiterone/integration-sdk';
+
+import { IntegrationConfig } from './types';
+
+function getStepStartStates(
+  executionContext: IntegrationExecutionContext<IntegrationConfig>,
+): StepStartStates {
+  const { config } = executionContext.instance;
+
+  const notDisabled = { disabled: false };
+  const shouldIngestGroups = config.ingestGroups;
+
+  return {
+    'fetch-accounts': notDisabled,
+    'fetch-users': notDisabled,
+    'fetch-groups': { disabled: !shouldIngestGroups },
+  };
+}
+```
 
 #### `integrationSteps`
 
-The `integrationSteps` field is used to define how an integration collects data.
-It is expected that an array of "steps" to perform the collection of data needs
-to be passed in.
+The `integrationSteps` field is used to define an `Array` of steps that collect
+data, producing entities and relationships.
 
-A `step` must contain an `id`, `name`, list of `types` that the step expects to
-generate and an `executionHandler` function that performs the data collection
-work. It is important to provide `types` because that data will be used to
-provide context for the backend synchronization process and determine how
-updates and deletes should be applied.
+Example:
 
-Optionally, a `step` can contain a `dependsOn` list that references to steps
-that need to execute before the current step can run. This field will be used to
-determine if previous work has failed to complete and if the synchronization
-process should treat the data retrieved in the step as a partial dataset. See
-the [Failure handling](#Failure handling) section below for more information on
-partial datasets.
+```typescript
+[
+  {
+    id: 'fetch-accounts',
+    name: 'Fetch Accounts',
+    types: ['my_integration_account'],
+    async executionHandler(executionContext: IntegrationStepExecutionContext) {
+      return fetchAccounts(executionContext);
+    },
+  },
+  {
+    id: 'fetch-users',
+    name: 'Fetch Users',
+    types: ['my_integration_user'],
+    async executionHandler(executionContext: IntegrationStepExecutionContext) {
+      return fetchUsers(executionContext);
+    },
+  },
+  {
+    id: 'fetch-groups',
+    name: 'Fetch Groups',
+    types: ['my_integration_group'],
+    executionHandler(executionContext: IntegrationStepExecutionContext) {
+      return fetchGroups(executionContext);
+    },
+  },
+  {
+    id: 'build-user-to-group-relationships',
+    name: 'Build relationships',
+    types: ['my_integration_user_to_group_relationship'],
+    dependsOn: ['fetch-users', 'fetch-groups'],
+    async executionHandler(executionContext: IntegrationStepExecutionContext) {
+      return fetchAccounts(executionContext);
+    },
+  },
+];
+```
+
+It is important to provide `types` for the backend synchronization process to
+determine how updates and deletes should be applied.
+
+Optionally, a `step` may contain a `dependsOn` list of step IDs that need to
+execute before the step can run. This field will be used to determine whether
+previous work has failed to complete. The synchronization process will treat the
+data retrieved in the step as a partial dataset. See the [Failure
+handling](#Failure handling) section below for more information on partial
+datasets.
 
 ### How integrations are executed
 
@@ -927,8 +945,8 @@ will use the [dotenv](https://github.com/motdotla/dotenv) package to
 automatically load and populate config values for what was supplied in the
 `instanceConfigFields`.
 
-An example `.env` file for the example integration configuration defined [in one
-of the earlier sections](#The integration framework) would look like this:
+An `.env` file for the
+[example integration configuration](#instanceConfigFields) would look like this:
 
 ```bash
 CLIENT_ID="<insert provider client id here>"
