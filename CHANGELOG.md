@@ -8,6 +8,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.1.0 - 2020-06-01
+
 ### Added
 
 - When an `IntegrationProviderAuthenticationError` or
