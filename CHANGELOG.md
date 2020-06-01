@@ -28,6 +28,13 @@ and this project adheres to
   being performed, with an error message indicating which steps have no start
   state defined.
 
+- `Type 'AxiosError' is not generic.` was produced when building dependent
+  projects because the `axios` package was not available as a (transient)
+  dependency.
+
+- `SynchronizationApiErrorResponse` was misspelled as
+  `SynchronizatoinApiErrorResponse`.
+
 ## 3.0.1 - 2020-05-26
 
 `3.0.0` is a major release because a number of types have changed to clarify the
