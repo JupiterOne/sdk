@@ -1,0 +1,12 @@
+{
+  "relationships": [
+    {
+      "_key": "account:1234|has|user:12345",
+      "_type": "my_account_has_user",
+      "_class": "HAS",
+      "_fromEntityKey": "account:1234",
+      "_toEntityKey": "user:12345",
+      "displayName": "HAS"
+    }
+  ]
+}

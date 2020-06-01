@@ -1,9 +1,0 @@
-{
-  "myBooleanConfig": {
-    "type": "boolean"
-  },
-  "myStringConfig": {
-    "type": "string"
-  },
-  "myTypelessConfig": {}
-}

@@ -1,0 +1,39 @@
+{
+  "integrationStepResults": [
+    {
+      "id": "fetch-accounts",
+      "name": "Fetch Accounts",
+      "declaredTypes": [
+        "my_account"
+      ],
+      "encounteredTypes": [],
+      "status": "success"
+    },
+    {
+      "id": "fetch-groups",
+      "name": "Fetch Groups",
+      "dependsOn": [
+        "fetch-accounts"
+      ],
+      "declaredTypes": [
+        "my_groups"
+      ],
+      "encounteredTypes": [],
+      "status": "success"
+    },
+    {
+      "id": "fetch-users",
+      "name": "Fetch Users",
+      "declaredTypes": [
+        "my_user"
+      ],
+      "encounteredTypes": [],
+      "status": "disabled"
+    }
+  ],
+  "metadata": {
+    "partialDatasets": {
+      "types": []
+    }
+  }
+}

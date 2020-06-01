@@ -40,6 +40,8 @@
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^0.1.0",
     "@types/uuid": "^7.0.2",
-    "get-port": "^5.1.1"
+    "get-port": "^5.1.1",
+    "memfs": "^3.2.0",
+    "wait-for-expect": "^3.0.2"
   }
 }

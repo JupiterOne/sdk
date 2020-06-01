@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "lint": "eslint --ext .ts,.tsx,.js,.jsx .",
-    "type-check": "tsc -b packages/integration-sdk packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli",
+    "type-check": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli",
     "test": "jest",
     "test:ci": "yarn lint && yarn type-check --force && jest",
     "compile": "lerna run compile",
@@ -23,6 +23,7 @@
     "eslint-plugin-jest": "^23.13.2",
     "husky": "^4.2.5",
     "jest": "^26.0.1",
+    "jest-extended": "^0.11.5",
     "lerna": "^3.22.0",
     "lint-staged": "^10.2.6",
     "prettier": "^2.0.5",
