@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint --ext .ts,.tsx,.js,.jsx .",
     "test": "jest",
-    "test:ci": "yarn lint && yarn type-check --force && jest",
+    "test:ci": "yarn lint && yarn build --force && jest",
     "build": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli",
     "build:dist": "lerna run build:dist",
     "format": "prettier --write '**/*.{js,ts,md,json}'"

@@ -27,7 +27,7 @@ jobs:
         run: yarn test:ci
 
       - name: Run build
-        run: yarn build
+        run: yarn build:dist
 
   # Publishing is done in a separate job to allow
   # for all matrix builds to complete.
