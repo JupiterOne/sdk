@@ -25,7 +25,7 @@ export interface SynchronizationJob {
   numRelationshipsDeleted: number;
 }
 
-export interface SynchronizatoinApiErrorResponse {
+export interface SynchronizationApiErrorResponse {
   error?: {
     code?: string;
     message: string;

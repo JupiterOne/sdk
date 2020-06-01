@@ -8,6 +8,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.1.0 - 2020-06-01
+
 ### Added
 
 - When an `IntegrationProviderAuthenticationError` or
@@ -27,6 +29,13 @@ and this project adheres to
   `TypeError: Cannot read property 'disabled' of undefined`. Validation is now
   being performed, with an error message indicating which steps have no start
   state defined.
+
+- `Type 'AxiosError' is not generic.` was produced when building dependent
+  projects because the `axios` package was not available as a (transient)
+  dependency.
+
+- `SynchronizationApiErrorResponse` was misspelled as
+  `SynchronizatoinApiErrorResponse`.
 
 ## 3.0.1 - 2020-05-26
 
