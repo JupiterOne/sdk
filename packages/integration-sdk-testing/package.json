@@ -15,8 +15,8 @@
   },
   "scripts": {
     "test": "jest",
-    "prebuild": "rm -rf dist && mkdir dist",
-    "build": "tsc -p tsconfig.dist.json --declaration"
+    "prebuild:dist": "rm -rf dist && mkdir dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration"
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^0.1.0",

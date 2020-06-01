@@ -15,9 +15,8 @@
   },
   "scripts": {
     "test": "jest",
-    "compile": "tsc -p tsconfig.dist.json --declaration",
-    "prebuild": "rm -rf dist && mkdir dist",
-    "build": "yarn compile && cp -R README.md ../../LICENSE package.json ./dist"
+    "prebuild:dist": "rm -rf dist && mkdir dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration"
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^0.1.0",
