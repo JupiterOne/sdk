@@ -23,8 +23,8 @@
     "test": "jest",
     "test:ci": "yarn lint && yarn type-check && yarn test --ci",
     "compile": "tsc -p tsconfig.dist.json --declaration",
-    "prebuild": "rm -rf dist",
-    "build": "yarn compile && cp -R bin README.md LICENSE yarn.lock package.json ./dist",
+    "prebuild": "rm -rf dist && mkdir dist",
+    "build": "yarn compile && cp -R bin README.md LICENSE package.json ./dist",
     "autobuild": "yarn build && (cd ./dist && yarn install --production && (yarn unlink || true) && yarn link) && yarn nodemon --exec 'yarn compile' --watch src -e ts --delay 3"
   },
   "dependencies": {
