@@ -8,7 +8,7 @@
     "lint": "eslint --ext .ts,.tsx,.js,.jsx .",
     "type-check": "tsc -b packages/integration-sdk packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils",
     "test": "jest",
-    "test:ci": "yarn lint && yarn type-check && jest",
+    "test:ci": "yarn lint && yarn type-check --force && jest",
     "compile": "lerna run compile",
     "build": "lerna run build",
     "format": "prettier --write '**/*.{js,ts,md,json}'"
