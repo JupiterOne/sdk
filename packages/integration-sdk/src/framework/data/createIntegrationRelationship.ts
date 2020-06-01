@@ -53,6 +53,7 @@ type MappedRelationshipOptions = {
 
 type MappedRelationshipLiteralOptions = {
   _class: string;
+  _type?: string;
   _key?: string;
   _mapping: RelationshipMapping;
   properties?: AdditionalRelationshipProperties;
@@ -121,12 +122,14 @@ function createMappedRelationship(
     delete mapping.skipTargetCreation;
   }
 
-  const _type = type(
-    options.properties,
-    options._class,
-    'mapping_source',
-    mapping.targetEntity._type,
-  );
+  const _type =
+    options._type ||
+    type(
+      options.properties,
+      options._class,
+      'mapping_source',
+      mapping.targetEntity._type,
+    );
 
   const relationshipClass = options._class.toUpperCase();
 

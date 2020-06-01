@@ -1,25 +1,22 @@
-import { IntegrationExecutionContext } from '@jupiterone/integration-sdk';
+import {
+  IntegrationExecutionContext,
+  IntegrationValidationError,
+} from '@jupiterone/integration-sdk';
+
+import { createAPIClient } from './client';
 import { IntegrationConfig } from './types';
 
 export default async function validateInvocation(
   context: IntegrationExecutionContext<IntegrationConfig>,
 ) {
-  context.logger.info(
-    {
-      instance: context.instance,
-    },
-    'Validating integration config...',
-  );
+  const { config } = context.instance;
 
-  if (await isConfigurationValid(context.instance.config)) {
-    context.logger.info('Integration instance is valid!');
-  } else {
-    throw new Error('Failed to authenticate with provided credentials');
+  if (!config.clientId || !config.clientSecret) {
+    throw new IntegrationValidationError(
+      'Config requires all of {clientId, clientSecret}',
+    );
   }
-}
 
-async function isConfigurationValid(config: IntegrationConfig) {
-  // add your own validation logic to ensure you
-  // can hit the provider's apis.
-  return config.clientId && config.clientSecret;
+  const apiClient = createAPIClient(config);
+  await apiClient.verifyAuthentication();
 }
