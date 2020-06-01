@@ -1,6 +1,7 @@
-import { IntegrationError } from '../../errors';
 import { AxiosError } from 'axios';
-import { SynchronizatoinApiErrorResponse } from './types';
+
+import { IntegrationError } from '../../errors';
+import { SynchronizationApiErrorResponse } from './types';
 
 export class IntegrationMalformedApiKeyError extends IntegrationError {
   constructor(message: string) {
@@ -21,12 +22,12 @@ export class IntegrationInstanceNotFound extends IntegrationError {
 }
 
 export function synchronizationApiError(
-  err: AxiosError<SynchronizatoinApiErrorResponse>,
+  err: AxiosError<SynchronizationApiErrorResponse>,
   errorMessage: string,
 ) {
   if (err.response?.data?.error) {
     // Looks like Axios error response with data
-    const responseData: SynchronizatoinApiErrorResponse = err.response.data;
+    const responseData: SynchronizationApiErrorResponse = err.response.data;
     const { code, message } = responseData!.error!;
     return new IntegrationError({
       code: 'SYNCRONIZATION_API_RESPONSE_ERROR',
