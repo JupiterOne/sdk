@@ -8,6 +8,14 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- `createIntegrationRelationship` for a mapped relationship would attempt to
+  generate a `_key` value when none was provided. This is not useful for a
+  mapped relationship since these are not actually a relationship, but a
+  directive to the mapper to produce one or more relationships, each of which
+  would not have the provided/generated `_key`.
+
 ## 3.1.0 - 2020-06-01
 
 ### Added
