@@ -134,12 +134,6 @@ function createMappedRelationship(
     _class: relationshipClass,
     _type,
     _mapping: options._mapping,
-    _key: key(
-      options.properties,
-      options._class,
-      mapping.sourceEntityKey,
-      options._key || mapping.targetEntity._key,
-    ),
     displayName: relationshipClass,
     ...options.properties,
   };
@@ -164,27 +158,6 @@ function createRelationship({
     displayName: relationshipClass,
     ...properties,
   };
-}
-
-function key(
-  properties: AdditionalRelationshipProperties | undefined,
-  _class: string,
-  fromKey: string,
-  toKey: string | undefined,
-): string {
-  if (properties && properties._key) {
-    return properties._key;
-  } else {
-    if (!toKey) {
-      throw new IntegrationError({
-        code: 'MISSING_RELATIONSHIP_TO_KEY',
-        message:
-          'Without _key provided in properties, _key generation requires mapping.targetEntity._key!',
-      });
-    }
-
-    return generateRelationshipKey(_class, fromKey, toKey);
-  }
 }
 
 function type(
