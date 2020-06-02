@@ -11,6 +11,13 @@ describe('convertProperties', () => {
     object: {
       name: 'me',
     },
+    objectArray: [
+      {
+        wut: 'no matter',
+      },
+    ],
+    arrayOfNull: [null],
+    arrayOfUndefined: [undefined],
   };
 
   const flattened: any = {
@@ -29,6 +36,7 @@ describe('convertProperties', () => {
     expect(convertProperties(original, { stringifyObject: true })).toEqual({
       ...flattened,
       object: JSON.stringify(original.object),
+      objectArray: [JSON.stringify(original.objectArray[0])],
     });
   });
 
@@ -36,6 +44,7 @@ describe('convertProperties', () => {
     expect(convertProperties(original, { stringifyArray: true })).toEqual({
       ...flattened,
       array: JSON.stringify(original.array),
+      objectArray: JSON.stringify(original.objectArray),
     });
   });
 });

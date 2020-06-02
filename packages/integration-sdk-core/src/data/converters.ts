@@ -51,18 +51,25 @@ export function convertProperties(
         ? convertPropertyValue(value)
         : value;
     } else if (Array.isArray(value)) {
+      const firstEntry = value.length > 0 ? value[0] : undefined;
+      if (firstEntry == undefined) {
+        continue;
+      }
+
       if (options.stringifyArray) {
         flattenedObject[newKey] = JSON.stringify(value);
       } else {
-        const items: string[] | boolean[] | number[] = value.map((v) => {
-          if (supportedTypes.includes(typeof v)) {
-            return v;
-          } else if (options.stringifyObject) {
-            return JSON.stringify(v);
+        if (typeof firstEntry !== 'object' || options.stringifyObject) {
+          const items: string[] | boolean[] | number[] = value.map((v) => {
+            if (supportedTypes.includes(typeof v)) {
+              return v;
+            } else if (options.stringifyObject) {
+              return JSON.stringify(v);
+            }
+          });
+          if (items.length > 0) {
+            flattenedObject[newKey] = items;
           }
-        });
-        if (items.length > 0) {
-          flattenedObject[newKey] = items;
         }
       }
     } else if (options.stringifyObject) {
