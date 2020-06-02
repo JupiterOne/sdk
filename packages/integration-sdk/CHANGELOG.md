@@ -16,6 +16,17 @@ and this project adheres to
   directive to the mapper to produce one or more relationships, each of which
   would not have the provided/generated `_key`.
 
+### Removed
+
+- Removed the deprecated convention based invocation config loading.
+
+### Changed
+
+- Related to the removal of convention based configuration loading, the
+  `createMockExecutionContext` and `createMockStepExecutionContext` utilities
+  exposed by `@jupiterone/integration-sdk-testing` now require
+  `instanceConfigFields` to be passed in for config value generation to work.
+
 ## 3.1.0 - 2020-06-01
 
 ### Added
