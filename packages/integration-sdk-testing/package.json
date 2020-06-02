@@ -33,7 +33,8 @@
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^0.1.0",
     "@types/lodash": "^4.14.149",
-    "get-port": "^5.1.1"
+    "get-port": "^5.1.1",
+    "memfs": "^3.2.0"
   }
 }
 
