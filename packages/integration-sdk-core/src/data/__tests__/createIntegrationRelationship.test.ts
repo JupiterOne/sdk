@@ -115,7 +115,6 @@ describe('MappedRelationshipOptions', () => {
   };
 
   const expected: MappedRelationship = {
-    _key: 'a|has|b',
     _type: 'mapping_source_has_b_entity',
     _class: 'HAS',
     _mapping: {
@@ -187,7 +186,6 @@ describe('MappedRelationshipOptions', () => {
 
 describe('MappedRelationshipLiteralOptions', () => {
   const expected: MappedRelationship = {
-    _key: 'a|has|b',
     _type: 'mapping_source_has_b_entity',
     _class: 'HAS',
     _mapping: {
@@ -217,23 +215,6 @@ describe('MappedRelationshipLiteralOptions', () => {
         },
       }),
     ).toEqual(expected);
-  });
-
-  test('missing _key in targetEntity', () => {
-    expect(() => {
-      createIntegrationRelationship({
-        _class: 'HAS',
-        _mapping: {
-          relationshipDirection: RelationshipDirection.REVERSE,
-          targetEntity: {
-            something: 'missing',
-            _type: 'b_entity',
-          },
-          targetFilterKeys: [['something']],
-          sourceEntityKey: 'a',
-        },
-      });
-    }).toThrowError(/_key/);
   });
 
   test('missing _type in targetEntity', () => {
