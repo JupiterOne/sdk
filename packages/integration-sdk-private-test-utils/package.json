@@ -1,0 +1,22 @@
+{
+  "name": "@jupiterone/integration-sdk-private-test-utils",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The SDK for developing JupiterOne integrations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": "git@github.com:JupiterOne/sdk.git",
+  "author": "JupiterOne <dev@jupiterone.io>",
+  "license": "MPL-2.0",
+  "engines": {
+    "node": "10.x || 12.x || 14.x"
+  },
+  "dependencies": {
+    "@jupiterone/integration-sdk-core": "^0.1.0",
+    "lodash": "^4.17.15",
+    "uuid": "^7.0.3"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.149"
+  }
+}
