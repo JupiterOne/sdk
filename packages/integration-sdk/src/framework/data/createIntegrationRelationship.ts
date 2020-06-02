@@ -122,12 +122,14 @@ function createMappedRelationship(
     delete mapping.skipTargetCreation;
   }
 
-  const _type = options._type || type(
-    options.properties,
-    options._class,
-    'mapping_source',
-    mapping.targetEntity._type,
-  );
+  const _type =
+    options._type ||
+    type(
+      options.properties,
+      options._class,
+      'mapping_source',
+      mapping.targetEntity._type,
+    );
 
   const relationshipClass = options._class.toUpperCase();
 
