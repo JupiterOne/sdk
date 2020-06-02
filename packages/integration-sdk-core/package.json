@@ -14,9 +14,8 @@
     "access": "public"
   },
   "scripts": {
-    "compile": "tsc -p tsconfig.dist.json --declaration",
-    "prebuild": "rm -rf dist && mkdir dist",
-    "build": "yarn compile"
+    "prebuild:dist": "rm -rf dist && mkdir dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.6.2",
