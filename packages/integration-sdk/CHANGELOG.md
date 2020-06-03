@@ -22,6 +22,11 @@ and this project adheres to
 
 ### Changed
 
+- `convertProperties` would transfer an Array such as `[ null ]`. Now an Array
+  where the first entry is an object is not transferred unless
+  `stringifyArray: true`, or `stringifyObjects: true` (the property will be an
+  array full of JSON strings), and where the first value is `null` or
+  `undefined`, the property is not transferred at all.
 - Related to the removal of convention based configuration loading, the
   `createMockExecutionContext` and `createMockStepExecutionContext` utilities
   exposed by `@jupiterone/integration-sdk-testing` now require
