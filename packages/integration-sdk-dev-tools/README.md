@@ -39,7 +39,7 @@ Create `lint-staged.config.js` at root of your project that contains:
 module.exports = require('@jupiterone/integration-sdk-dev-tools/config/lint-staged');
 ```
 
-Create `.huskyrc.js` at root of your project that contains:
+Create `husky.config.js` at root of your project that contains:
 
 ```javascript
 module.exports = require('@jupiterone/integration-sdk-dev-tools/config/husky');
@@ -56,5 +56,16 @@ Create `tsconfig.json` at root of your project that contains:
 ```json
 {
   "extends": "./node_modules/@jupiterone/integration-sdk-dev-tools/config/typescript"
+}
+```
+
+Create a `.eslintrc` at the root of your project that contains:
+
+```
+{
+  "root": true,
+  "extends": [
+    "./node_modules/@jupiterone/integration-sdk-dev-tools/config/eslint.json"
+  ]
 }
 ```
