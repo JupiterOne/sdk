@@ -23,7 +23,7 @@
     "@jupiterone/integration-sdk-runtime": "^0.1.0",
     "@pollyjs/adapter-node-http": "^4.0.4",
     "@pollyjs/core": "^4.0.4",
-    "@pollyjs/persister-fs": "4.0.4",
+    "@pollyjs/persister-fs": "^4.0.4",
     "@types/har-format": "^1.2.4",
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",

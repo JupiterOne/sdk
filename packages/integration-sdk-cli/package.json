@@ -30,6 +30,13 @@
   },
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^0.1.0",
+    "@pollyjs/adapter-node-http": "^4.0.4",
+    "@pollyjs/core": "^4.0.4",
+    "@pollyjs/persister-fs": "^4.0.4",
+    "@types/pollyjs__adapter-node-http": "^2.0.0",
+    "@types/pollyjs__core": "^4.0.0",
+    "@types/pollyjs__persister": "^2.0.1",
+    "jsonwebtoken": "^8.5.1",
     "memfs": "^3.2.0"
   }
 }
