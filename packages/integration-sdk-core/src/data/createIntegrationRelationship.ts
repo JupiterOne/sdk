@@ -169,7 +169,7 @@ function createMappedRelationship(
     delete mapping.skipTargetCreation;
   }
 
-  const _type = type(
+  const _type = options._type || type(
     options.properties,
     options._class,
     'mapping_source',
@@ -180,18 +180,14 @@ function createMappedRelationship(
 
   const mappedRelationship: MappedRelationship = {
     _class: relationshipClass,
-    _type,
     _mapping: options._mapping,
     displayName: relationshipClass,
     ...options.properties,
+    _type,
   };
 
   if (options._key) {
     mappedRelationship._key = options._key;
-  }
-
-  if (options._type) {
-    mappedRelationship._type = options._type;
   }
 
   return mappedRelationship;
