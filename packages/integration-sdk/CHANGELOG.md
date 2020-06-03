@@ -32,6 +32,10 @@ and this project adheres to
   exposed by `@jupiterone/integration-sdk-testing` now require
   `instanceConfigFields` to be passed in for config value generation to work.
 
+### Changed
+
+- Upgrade to `@jupiterone/data-model@0.6.4`
+
 ## 3.1.0 - 2020-06-01
 
 ### Added
