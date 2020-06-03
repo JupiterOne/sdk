@@ -22,6 +22,10 @@ and this project adheres to
   array full of JSON strings), and where the first value is `null` or
   `undefined`, the property is not transferred at all.
 
+### Changed
+
+- Upgrade to `@jupiterone/data-model@0.6.4`
+
 ## 3.1.0 - 2020-06-01
 
 ### Added
