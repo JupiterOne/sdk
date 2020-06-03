@@ -18,7 +18,8 @@
   },
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
-    "build:dist": "tsc -p tsconfig.dist.json --declaration"
+    "build:dist": "tsc -p tsconfig.dist.json --declaration",
+    "prepack": "yarn build:dist"
   },
   "dependencies": {
     "@jupiterone/integration-sdk-runtime": "^0.1.0",

@@ -15,7 +15,8 @@
   },
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
-    "build:dist": "tsc -p tsconfig.dist.json --declaration"
+    "build:dist": "tsc -p tsconfig.dist.json --declaration",
+    "prepack": "yarn build:dist"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.6.4",
