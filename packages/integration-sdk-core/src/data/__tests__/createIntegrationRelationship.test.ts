@@ -114,6 +114,7 @@ describe('MappedRelationshipOptions', () => {
   };
 
   const expected: MappedRelationship = {
+    _key: 'a|has|b',
     _type: 'mapping_source_has_b_entity',
     _class: 'HAS',
     _mapping: {
@@ -176,7 +177,21 @@ describe('MappedRelationshipOptions', () => {
     });
   });
 
-  test('override defaults', () => {
+  test('_key provided explicitly', () => {
+    expect(
+      createIntegrationRelationship({
+        _class: 'has',
+        _key: 'use_my_key',
+        source: entityA,
+        target: entityB,
+      }),
+    ).toEqual({
+      ...expected,
+      _key: 'use_my_key',
+    });
+  });
+
+  test('override defaults with properties option', () => {
     expect(
       createIntegrationRelationship({
         _class: 'HAS',
@@ -199,6 +214,7 @@ describe('MappedRelationshipOptions', () => {
 
 describe('MappedRelationshipLiteralOptions', () => {
   const expected: MappedRelationship = {
+    _key: 'a|has|b',
     _type: 'mapping_source_has_b_entity',
     _class: 'HAS',
     _mapping: {
@@ -247,16 +263,16 @@ describe('MappedRelationshipLiteralOptions', () => {
     }).toThrowError(/_type/);
   });
 
-  test('_key, _type provided explicitly', () => {
+  test('_key provided explicitly', () => {
     expect(
       createIntegrationRelationship({
         _class: 'HAS',
-        _key: 'a-has-b',
-        _type: 'a_entity_has_b_entity',
+        _key: 'my-key-please',
         _mapping: {
           relationshipDirection: RelationshipDirection.REVERSE,
           targetEntity: {
-            something: 'missing',
+            _key: 'b',
+            _type: 'b_entity',
           },
           targetFilterKeys: [['something']],
           sourceEntityKey: 'a',
@@ -264,18 +280,32 @@ describe('MappedRelationshipLiteralOptions', () => {
       }),
     ).toEqual({
       ...expected,
-      _key: 'a-has-b',
-      _type: 'a_entity_has_b_entity',
-      _mapping: {
-        ...expected._mapping,
-        targetEntity: {
-          something: 'missing',
-        },
-      },
+      _key: 'my-key-please',
     });
   });
 
-  test('override defaults', () => {
+  test('_type provided explicitly', () => {
+    expect(
+      createIntegrationRelationship({
+        _class: 'HAS',
+        _type: 'my_type_please',
+        _mapping: {
+          relationshipDirection: RelationshipDirection.REVERSE,
+          targetEntity: {
+            _key: 'b',
+            _type: 'b_entity',
+          },
+          targetFilterKeys: [['something']],
+          sourceEntityKey: 'a',
+        },
+      }),
+    ).toEqual({
+      ...expected,
+      _type: 'my_type_please',
+    });
+  });
+
+  test('override defaults with properties option', () => {
     expect(
       createIntegrationRelationship({
         _class: 'HAS',
@@ -301,6 +331,34 @@ describe('MappedRelationshipLiteralOptions', () => {
         targetEntity: {
           something: 'missing',
         },
+      },
+    });
+  });
+
+  test('generate key from mapping when no key on targetEntity', () => {
+    const mapping = {
+      relationshipDirection: RelationshipDirection.REVERSE,
+      targetEntity: {
+        _type: 'b_entity',
+        something: 'more',
+        another: 'thing',
+        whatever: 'stuff',
+      },
+      targetFilterKeys: ['another', ['something', 'whatever']],
+      sourceEntityKey: 'a',
+    };
+
+    expect(
+      createIntegrationRelationship({
+        _class: 'HAS',
+        _mapping: mapping,
+      }),
+    ).toEqual({
+      ...expected,
+      _key: 'a|has|REVERSE:another=thing:something=more:whatever=stuff',
+      _mapping: {
+        ...expected._mapping,
+        ...mapping,
       },
     });
   });
