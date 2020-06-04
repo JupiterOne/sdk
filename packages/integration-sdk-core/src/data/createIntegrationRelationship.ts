@@ -281,7 +281,9 @@ function targetEntityKey(mapping: RelationshipMapping): string {
   let key = mapping.relationshipDirection.toString();
   mapping.targetFilterKeys.forEach((filterKey) => {
     if (Array.isArray(filterKey)) {
-      key = `${key}:${filterKey.map((e) => `${e}=${mapping.targetEntity[e]}`).join(':')}`;
+      key = `${key}:${filterKey
+        .map((e) => `${e}=${mapping.targetEntity[e]}`)
+        .join(':')}`;
     } else {
       key = `${key}:${filterKey}=${mapping.targetEntity[filterKey]}`;
     }

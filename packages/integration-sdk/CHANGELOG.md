@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added the `@jupiterone/integration-sdk-dev-tools` package which contains some
+  shared development dependencies and configuration files.
+
 ### Fixed
 
 - `createIntegrationRelationship` made `_key` optional for relationship
