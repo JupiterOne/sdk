@@ -16,9 +16,23 @@ and this project adheres to
 
 ### Fixed
 
+- `createIntegrationRelationship` made `_key` optional for relationship
+  mappings, a fine thing to do because specifying the `_key` for those insn't
+  necessary. However, the function was changed at the same time to stop
+  generating a `_key`, which is required to ensure the collected relationships
+  are unique. This fixes things so the `_key` remains an optional argument, and
+  improves the generation of the `_key` to ensure better uniqueness.
+
+## 1.0.2 - 2020-06-04
+
+### Fixed
+
 - Regression: `createIntegrationRelationship()` lost a change to accept optional
   `_type` for relationship mappings, overriding the generated value or values
   provided in `properties` option.
+- Removed `@types/vis` from dependencies to devDependencies because having the
+  type forces typescript consumers to have `DOM` in the their `lib` compiler
+  option.
 
 ## 1.0.1 - 2020-06-03
 

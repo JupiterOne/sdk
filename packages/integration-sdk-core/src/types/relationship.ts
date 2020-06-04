@@ -51,7 +51,8 @@ export enum RelationshipDirection {
  * integration.
  */
 export interface MappedRelationship
-  extends Omit<ExplicitRelationship, '_fromEntityKey' | '_toEntityKey'> {
+  extends PersistedObject,
+    RelationshipAdditionalProperties {
   /**
    * Metadata providing properties for finding or creating the other side of the
    * relationship.
