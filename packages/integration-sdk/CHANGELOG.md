@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 1.1.0 - 2020-06-04
+
 ### Added
 
 - Added the `@jupiterone/integration-sdk-dev-tools` package which contains some
