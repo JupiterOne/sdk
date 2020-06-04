@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 1.0.2 - 2020-06-04
+
 ### Fixed
 
 - Regression: `createIntegrationRelationship()` lost a change to accept optional
