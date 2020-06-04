@@ -14,6 +14,9 @@ and this project adheres to
 - Regression: `createIntegrationRelationship()` lost a change to accept optional
   `_type` for relationship mappings, overriding the generated value or values
   provided in `properties` option.
+- Removed `@types/vis` from dependencies to devDependencies because having the
+  type forces typescript consumers to have `DOM` in the their `lib` compiler
+  option.
 
 ## 1.0.1 - 2020-06-03
 
