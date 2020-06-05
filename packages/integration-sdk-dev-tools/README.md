@@ -55,13 +55,17 @@ Create `tsconfig.json` at root of your project that contains:
 
 ```json
 {
-  "extends": "./node_modules/@jupiterone/integration-sdk-dev-tools/config/typescript"
+  "extends": "./node_modules/@jupiterone/integration-sdk-dev-tools/config/typescript",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "exclude": ["dist"]
 }
 ```
 
 Create a `.eslintrc` at the root of your project that contains:
 
-```
+```json
 {
   "root": true,
   "extends": [
