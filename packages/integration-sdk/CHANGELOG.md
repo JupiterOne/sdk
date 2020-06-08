@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 1.1.1 - 2020-06-08
+
+### Added
+
+- Allow extended types of Relationships/Entities to be iterated over with
+  `iterateEntities` and `iterateRelationships` on `JobState`
+
 ## 1.1.0 - 2020-06-04
 
 ### Added
