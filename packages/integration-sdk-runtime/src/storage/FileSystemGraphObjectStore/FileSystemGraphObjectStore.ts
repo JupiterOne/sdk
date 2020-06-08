@@ -56,9 +56,9 @@ export class FileSystemGraphObjectStore {
     }
   }
 
-  async iterateEntities(
+  async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<Entity>,
+    iteratee: GraphObjectIteratee<T>,
   ) {
     await this.flushEntitiesToDisk();
 
@@ -68,9 +68,9 @@ export class FileSystemGraphObjectStore {
     });
   }
 
-  async iterateRelationships(
+  async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<Relationship>,
+    iteratee: GraphObjectIteratee<T>,
   ) {
     await this.flushRelationshipsToDisk();
 
