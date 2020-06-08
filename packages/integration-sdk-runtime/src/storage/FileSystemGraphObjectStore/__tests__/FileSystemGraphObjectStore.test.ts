@@ -270,6 +270,38 @@ describe('iterateEntities', () => {
 
     expect(collectedEntities).toEqual(matchingEntities);
   });
+
+  test('should allow extended types to be iterated', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const entityType = uuid();
+
+    type TestEntity = Entity & { randomField: string };
+
+    const entities = times(25, () =>
+      generateEntity({ _type: entityType, randomField: 'field' }),
+    );
+
+    await store.addEntities(storageDirectoryPath, entities);
+
+    const collectedEntities: TestEntity[] = [];
+    const collectEntity = (e: TestEntity) => {
+      collectedEntities.push(e);
+    };
+
+    await store.iterateEntities<TestEntity>(
+      { _type: entityType },
+      collectEntity,
+    );
+
+    expect(collectedEntities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          randomField: 'field',
+        }),
+      ]),
+    );
+  });
 });
 
 describe('iterateRelationships', () => {
@@ -303,6 +335,38 @@ describe('iterateRelationships', () => {
     expect(store.relationshipStorageMap.totalItemCount).toEqual(0);
 
     expect(collectedRelationships).toEqual(matchingRelationships);
+  });
+
+  test('should allow extended types to be iterated', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const relationshipType = uuid();
+
+    type TestRelationship = Relationship & { randomField: string };
+
+    const relationships = times(25, () =>
+      generateRelationship({ _type: relationshipType, randomField: 'field' }),
+    );
+
+    await store.addRelationships(storageDirectoryPath, relationships);
+
+    const collectedRelationships: TestRelationship[] = [];
+    const collectRelationship = (e: TestRelationship) => {
+      collectedRelationships.push(e);
+    };
+
+    await store.iterateRelationships<TestRelationship>(
+      { _type: relationshipType },
+      collectRelationship,
+    );
+
+    expect(collectedRelationships).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          randomField: 'field',
+        }),
+      ]),
+    );
   });
 });
 

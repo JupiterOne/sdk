@@ -90,21 +90,24 @@ export function createMockJobState({
     },
     addRelationships,
 
-    iterateEntities: async (filter, iteratee) => {
+    iterateEntities: async <T extends Entity = Entity>(filter, iteratee) => {
       const filteredEntities = [...inputEntities, ...collectedEntities].filter(
         (e) => e._type === filter._type,
       );
-      for (const entity of filteredEntities) {
+      for (const entity of filteredEntities as T[]) {
         await iteratee(entity);
       }
     },
 
-    iterateRelationships: async (filter, iteratee) => {
+    iterateRelationships: async <T extends Relationship = Relationship>(
+      filter,
+      iteratee,
+    ) => {
       const filteredRelationships = [
         ...inputRelationships,
         ...collectedRelationships,
       ].filter((r) => r._type === filter._type);
-      for (const relationship of filteredRelationships) {
+      for (const relationship of filteredRelationships as T[]) {
         await iteratee(relationship);
       }
     },

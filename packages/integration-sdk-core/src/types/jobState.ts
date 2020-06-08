@@ -74,9 +74,9 @@ export interface JobState {
    * have run and therefore entities collected by those other steps should not
    * be expected to exist.
    */
-  iterateEntities: (
+  iterateEntities: <T extends Entity = Entity>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<Entity>,
+    iteratee: GraphObjectIteratee<T>,
   ) => Promise<void>;
 
   /**
@@ -89,9 +89,9 @@ export interface JobState {
    * may not have run and therefore relationships collected by those other steps
    * should not be expected to exist.
    */
-  iterateRelationships: (
+  iterateRelationships: <T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<Relationship>,
+    iteratee: GraphObjectIteratee<T>,
   ) => Promise<void>;
 
   /**

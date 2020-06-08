@@ -11,7 +11,7 @@
     "build": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli",
     "build:dist": "lerna run build:dist",
     "format": "prettier --write '**/*.{js,ts,md,json}'",
-    "prepush": "yarn lint && yarn build && yarn jest --changedSince master"
+    "prepush": "yarn lint && yarn build:dist && yarn jest --changedSince master"
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",

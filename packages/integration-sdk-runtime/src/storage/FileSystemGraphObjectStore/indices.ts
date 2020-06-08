@@ -14,10 +14,10 @@ interface IterateIndexInput<GraphObject> {
   iteratee: GraphObjectIteratee<GraphObject>;
 }
 
-export async function iterateEntityTypeIndex({
+export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
-}: IterateIndexInput<Entity>) {
+}: IterateIndexInput<T>) {
   const path = buildIndexDirectoryPath({
     collectionType: 'entities',
     type,
@@ -28,7 +28,7 @@ export async function iterateEntityTypeIndex({
     iteratee: async (input) => {
       const object = parseData(input);
       if (isObjectFlushedEntityData(object)) {
-        for (const entity of object.entities) {
+        for (const entity of object.entities as T[]) {
           await iteratee(entity);
         }
       }
@@ -36,10 +36,9 @@ export async function iterateEntityTypeIndex({
   });
 }
 
-export async function iterateRelationshipTypeIndex({
-  type,
-  iteratee,
-}: IterateIndexInput<Relationship>) {
+export async function iterateRelationshipTypeIndex<
+  T extends Relationship = Relationship
+>({ type, iteratee }: IterateIndexInput<T>) {
   const path = buildIndexDirectoryPath({
     collectionType: 'relationships',
     type,
@@ -50,7 +49,7 @@ export async function iterateRelationshipTypeIndex({
     iteratee: async (input) => {
       const object = parseData(input);
       if (isObjectFlushedRelationshipData(object)) {
-        for (const relationship of object.relationships) {
+        for (const relationship of object.relationships as T[]) {
           await iteratee(relationship);
         }
       }
