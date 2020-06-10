@@ -12,6 +12,7 @@ import {
   createIntegrationLogger,
   executeIntegrationInstance,
   createIntegrationInstanceForLocalExecution,
+  createEventPublishingQueue,
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
@@ -41,15 +42,20 @@ export function run() {
         pretty: true,
       });
 
-      const invocationConfig = await loadConfig();
-
       const synchronizationContext = await initiateSynchronization({
         logger,
         apiClient,
         integrationInstanceId,
       });
 
+      const eventPublishingQueue = createEventPublishingQueue(
+        synchronizationContext,
+      );
+      logger.on('event', (event) => eventPublishingQueue.enqueue(event));
+
       logger = synchronizationContext.logger;
+
+      const invocationConfig = await loadConfig();
 
       try {
         const executionResults = await executeIntegrationInstance(
@@ -60,6 +66,8 @@ export function run() {
             enableSchemaValidation: true,
           },
         );
+
+        await eventPublishingQueue.onIdle();
 
         log.displayExecutionResults(executionResults);
 
@@ -72,8 +80,7 @@ export function run() {
 
         log.displaySynchronizationResults(synchronizationResult);
       } catch (err) {
-        await logger.flush();
-
+        await eventPublishingQueue.onIdle();
         if (!logger.isHandledError(err)) {
           logger.error(
             err,
