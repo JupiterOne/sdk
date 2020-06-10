@@ -1,0 +1,35 @@
+{
+  "name": "@jupiterone/integration-sdk-parser",
+  "version": "1.1.1",
+  "description": "The SDK for developing JupiterOne integrations",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "repository": "git@github.com:JupiterOne/sdk.git",
+  "author": "JupiterOne <dev@jupiterone.io>",
+  "license": "MPL-2.0",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": "10.x || 12.x || 14.x"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prebuild:dist": "rm -rf dist && mkdir dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration",
+    "prepack": "yarn build:dist"
+  },
+  "dependencies": {
+    "@jupiterone/integration-sdk-core": "^1.1.1",
+    "json2csv": "^5.0.1",
+    "lodash": "^4.17.15",
+    "uuid": "^7.0.3"
+  },
+  "devDependencies": {
+    "@types/json2csv": "^5.0.1",
+    "@types/lodash": "^4.14.155",
+    "csvtojson": "^2.0.10"
+  }
+}
