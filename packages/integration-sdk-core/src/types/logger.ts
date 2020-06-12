@@ -1,5 +1,6 @@
 import { StepMetadata } from './';
 import { SynchronizationJob } from './synchronization';
+import { Metric } from './metric';
 
 export interface IntegrationEvent {
   name: string;
@@ -24,6 +25,8 @@ type PublishEventInput = {
   name: string;
   description: string;
 };
+
+type PublishMetricFunction = (metric: Omit<Metric, 'timestamp'>) => void;
 
 type PublishEventFunction = (options: PublishEventInput) => void;
 
@@ -75,6 +78,8 @@ export interface IntegrationLoggerFunctions {
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
   validationFailure: ValidationLogFunction;
+
+  publishMetric: PublishMetricFunction;
 
   /**
    * @deprecated

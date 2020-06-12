@@ -16,6 +16,7 @@ import {
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
+import { Metric } from '@jupiterone/integration-sdk-core';
 
 export function run() {
   return createCommand('run')
@@ -29,6 +30,8 @@ export function run() {
       const apiKey = getApiKeyFromEnvironment();
       const apiBaseUrl = getApiBaseUrl({ dev: !!process.env.JUPITERONE_DEV });
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
+
+      const startTime = Date.now();
 
       const apiClient = createApiClientWithApiKey({
         apiBaseUrl,
@@ -48,12 +51,16 @@ export function run() {
         integrationInstanceId,
       });
 
+      logger = synchronizationContext.logger;
+
       const eventPublishingQueue = createEventPublishingQueue(
         synchronizationContext,
       );
-      logger.on('event', (event) => eventPublishingQueue.enqueue(event));
+      const metrics: Metric[] = [];
 
-      logger = synchronizationContext.logger;
+      logger
+        .on('event', (event) => eventPublishingQueue.enqueue(event))
+        .on('metric', (metric) => metrics.push(metric));
 
       const invocationConfig = await loadConfig();
 
@@ -94,6 +101,12 @@ export function run() {
         });
 
         log.displaySynchronizationResults(abortResult);
+      } finally {
+        logger.publishMetric({
+          name: 'total-duration',
+          value: Date.now() - startTime,
+          unit: 'Milliseconds',
+        });
       }
     });
 }
