@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "exclude": [
+    "**/dist/*"
+  ],
+  "references": [
+    {
+      "path": "../integration-sdk-core"
+    }
+  ]
+}
