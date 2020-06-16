@@ -157,7 +157,7 @@ export function convertNameValuePairs(
  * @see parseTimePropertyValue
  */
 export function getTime(
-  time: Date | string | number | undefined,
+  time: Date | string | number | undefined | null,
 ): number | undefined {
   return parseTimePropertyValue(time);
 }
@@ -169,7 +169,7 @@ export function getTime(
  * @param time a time value
  */
 export function parseTimePropertyValue(
-  time: Date | string | number | undefined,
+  time: Date | string | number | undefined | null,
 ): number | undefined {
   if (time) {
     const parsed = new Date(time).getTime();
