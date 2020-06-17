@@ -1,4 +1,4 @@
-import { convertPropertyValue } from './converters';
+import { parseStringPropertyValue } from './converters';
 
 /**
  * A key/value tag associated with a resource in the provider. Some providers
@@ -119,7 +119,7 @@ function assignTagMap(
         tags.push(key);
       }
 
-      entity[`tag.${key}`] = convertPropertyValue(value);
+      entity[`tag.${key}`] = parseStringPropertyValue(value);
 
       const lowerKey = key.toLowerCase();
       if (lowerKey === 'name' && value) {
