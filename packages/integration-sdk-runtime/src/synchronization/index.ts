@@ -56,10 +56,19 @@ export async function synchronizeCollectedData(
   } catch (err) {
     jobContext.logger.error(
       err,
-      'Error occured while synchronizing collected data',
+      'Error occurred while synchronizing collected data',
     );
 
-    await abortSynchronization({ ...jobContext, reason: err.message });
+    try {
+      await abortSynchronization({ ...jobContext, reason: err.message });
+    } catch (abortError) {
+      jobContext.logger.error(
+        abortError,
+        'Error occurred while aborting synchronization job.',
+      );
+      throw abortError;
+    }
+
     throw err;
   } finally {
     await eventPublishingQueue.onIdle();
