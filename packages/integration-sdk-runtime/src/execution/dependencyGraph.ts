@@ -221,7 +221,10 @@ export function executeStepDependencyGraph<
           promiseQueue.add(() =>
             timeOperation({
               logger: executionContext.logger,
-              metricName: `${stepId}-duration`,
+              metricName: `duration-step`,
+              dimensions: {
+                stepId,
+              },
               operation: () => executeStep(step),
             }).catch(handleUnexpectedError),
           );

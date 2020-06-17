@@ -174,7 +174,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
 
   await timeOperation({
     logger: context.logger,
-    metricName: 'synchronization-upload-duration',
+    metricName: 'duration-sync-upload',
     operation: () =>
       walkDirectory({
         path: 'graph',

@@ -63,7 +63,7 @@ export async function executeIntegrationInstance(
 
   return timeOperation({
     logger,
-    metricName: 'collection-duration',
+    metricName: 'duration-collect',
     operation: () =>
       executeWithContext(
         {

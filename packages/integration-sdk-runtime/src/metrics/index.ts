@@ -1,13 +1,15 @@
-import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
+import { IntegrationLogger, Metric } from '@jupiterone/integration-sdk-core';
 
 interface TimeOperationInput<T extends () => any> {
   logger: IntegrationLogger;
   metricName: string;
   operation: T;
+  dimensions?: Metric['dimensions'];
 }
 export async function timeOperation<T extends () => any>({
   logger,
   metricName,
+  dimensions,
   operation,
 }: TimeOperationInput<T>): Promise<ReturnType<T>> {
   const startTime = Date.now();
@@ -17,6 +19,7 @@ export async function timeOperation<T extends () => any>({
     logger.publishMetric({
       name: metricName,
       unit: 'Milliseconds',
+      dimensions,
       value: duration,
     });
   });

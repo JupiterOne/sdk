@@ -103,7 +103,7 @@ export function run() {
         log.displaySynchronizationResults(abortResult);
       } finally {
         logger.publishMetric({
-          name: 'total-duration',
+          name: 'duration-total',
           value: Date.now() - startTime,
           unit: 'Milliseconds',
         });
