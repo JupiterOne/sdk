@@ -18,6 +18,7 @@ import {
   getDefaultStepStartStates,
 } from './step';
 import { validateStepStartStates } from './validation';
+import { timeOperation } from '../metrics';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -60,15 +61,18 @@ export async function executeIntegrationInstance(
     process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
   }
 
-  const result = await executeWithContext(
-    {
-      instance,
-      logger,
-    },
-    config,
-  );
-
-  return result;
+  return timeOperation({
+    logger,
+    metricName: 'duration-collect',
+    operation: () =>
+      executeWithContext(
+        {
+          instance,
+          logger,
+        },
+        config,
+      ),
+  });
 }
 
 /**

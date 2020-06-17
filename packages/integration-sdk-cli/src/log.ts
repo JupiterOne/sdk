@@ -5,6 +5,7 @@ import {
   IntegrationStepResult,
   StepResultStatus,
   SynchronizationJob,
+  Metric,
 } from '@jupiterone/integration-sdk-core';
 
 export function debug(msg: string) {
@@ -72,6 +73,16 @@ collected by a step are declared in the step's "types" field.`,
     warn('\nThe following datasets were marked as partial:');
     info(partialDatasets.types.map((type) => `  - ${type}`).join('\n'));
   }
+}
+
+export function displayMetrics(metrics: Metric[]) {
+  metrics.forEach((metric) => {
+    switch (metric.unit) {
+      case 'Milliseconds':
+        info(`Metric "${metric.name}" = ${metric.value}ms`);
+        break;
+    }
+  });
 }
 
 function logStepStatus(stepResult: IntegrationStepResult) {

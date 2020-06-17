@@ -20,6 +20,7 @@ import {
 } from '../fileSystem';
 import { synchronizationApiError } from './error';
 import { ApiClient } from '../api';
+import { timeOperation } from '../metrics';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
@@ -171,23 +172,35 @@ async function getPartialDatasets() {
 export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
 
-  await walkDirectory({
-    path: 'graph',
-    async iteratee({ filePath, data }) {
-      const parsedData = JSON.parse(data);
+  await timeOperation({
+    logger: context.logger,
+    metricName: 'duration-sync-upload',
+    operation: () =>
+      walkDirectory({
+        path: 'graph',
+        async iteratee({ data }) {
+          const parsedData = JSON.parse(data);
 
-      try {
-        if (Array.isArray(parsedData.entities)) {
-          await uploadData(context, 'entities', parsedData.entities);
-        }
+          try {
+            if (Array.isArray(parsedData.entities)) {
+              await uploadData(context, 'entities', parsedData.entities);
+            }
 
-        if (Array.isArray(parsedData.relationships)) {
-          await uploadData(context, 'relationships', parsedData.relationships);
-        }
-      } catch (err) {
-        throw synchronizationApiError(err, 'Error uploading collected data');
-      }
-    },
+            if (Array.isArray(parsedData.relationships)) {
+              await uploadData(
+                context,
+                'relationships',
+                parsedData.relationships,
+              );
+            }
+          } catch (err) {
+            throw synchronizationApiError(
+              err,
+              'Error uploading collected data',
+            );
+          }
+        },
+      }),
   });
 
   context.logger.synchronizationUploadEnd(context.job);

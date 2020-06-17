@@ -469,6 +469,56 @@ describe('createErrorEventDescription', () => {
   });
 });
 
+describe('publishMetric', () => {
+  test('emits a "metric" event when called', () => {
+    const onEmitMetric = jest.fn();
+
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    logger.on('metric', onEmitMetric);
+
+    logger.publishMetric({
+      name: 'metric',
+      value: 1000,
+      unit: 'Milliseconds',
+    });
+
+    expect(onEmitMetric).toHaveBeenCalledWith({
+      name: 'metric',
+      value: 1000,
+      unit: 'Milliseconds',
+      timestamp: expect.any(Number),
+    });
+  });
+
+  test('emits a "metric" event when called with child logger', () => {
+    const onEmitMetric = jest.fn();
+
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    logger.on('metric', onEmitMetric);
+
+    logger.child({}).publishMetric({
+      name: 'metric',
+      value: 1000,
+      unit: 'Milliseconds',
+    });
+
+    expect(onEmitMetric).toHaveBeenCalledWith({
+      name: 'metric',
+      value: 1000,
+      unit: 'Milliseconds',
+      timestamp: expect.any(Number),
+    });
+  });
+});
+
 describe('#publishEvent', () => {
   test('should support publishEvent(...) function', async () => {
     const onEmitEvent = jest.fn();

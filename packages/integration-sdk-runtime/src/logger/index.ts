@@ -20,6 +20,7 @@ import {
   IntegrationProviderAuthenticationError,
   SynchronizationJob,
   IntegrationEvent,
+  Metric,
 } from '@jupiterone/integration-sdk-core';
 
 import { EventEmitter } from 'events';
@@ -138,6 +139,7 @@ function createInstanceConfigSerializer(
 
 interface EventLookup {
   event: IntegrationEvent;
+  metric: Metric;
 }
 
 interface IntegrationLoggerInput {
@@ -212,9 +214,8 @@ export class IntegrationLogger extends EventEmitter
     });
 
     // pass events to parent
-    childLogger.on('event', (data) => {
-      this.emit('event', data);
-    });
+    childLogger.on('event', (data) => this.emit('event', data));
+    childLogger.on('metric', (data) => this.emit('metric', data));
 
     return childLogger;
   }
@@ -284,6 +285,13 @@ export class IntegrationLogger extends EventEmitter
 
     this.error({ errorId, err }, description);
     this.publishEvent({ name, description });
+  }
+
+  publishMetric(metric: Omit<Metric, 'timestamp'>) {
+    return this.emit('metric', {
+      ...metric,
+      timestamp: Date.now(),
+    });
   }
 
   publishEvent(event: IntegrationEvent) {
