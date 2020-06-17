@@ -1,8 +1,8 @@
 import Logger from 'bunyan';
-import PromiseQueue from 'p-queue';
 import { v4 as uuid } from 'uuid';
 
 import {
+  IntegrationLogger as IntegrationLoggerType,
   IntegrationError,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
@@ -18,11 +18,11 @@ import {
   IntegrationInvocationConfig,
   IntegrationProviderAuthorizationError,
   IntegrationProviderAuthenticationError,
-  IntegrationLogger,
-  LoggerSynchronizationJobContext,
-  IntegrationLoggerFunctions,
   SynchronizationJob,
+  IntegrationEvent,
 } from '@jupiterone/integration-sdk-core';
+
+import { EventEmitter } from 'events';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -74,23 +74,12 @@ export function createLogger<
     logger.addSerializers(serializers);
   }
 
-  // NOTE: concurrency is set to one to allow for logs to be published in
-  // the order that they are added to the queue.
-  //
-  // Optimizations can come later once the synchronization api supports
-  // accepting a timestamp.
-  const eventPublishingQueue = new PromiseQueue({ concurrency: 1 });
   const errorSet = new Set<Error>();
 
-  const verboseTraceLogger = instrumentVerboseTrace(logger);
-
-  return instrumentEventLogging(
-    instrumentErrorTracking(verboseTraceLogger, errorSet),
-    {
-      eventPublishingQueue,
-      errorSet,
-    },
-  );
+  return new IntegrationLogger({
+    logger,
+    errorSet,
+  });
 }
 
 /**
@@ -147,232 +136,183 @@ function createInstanceConfigSerializer(
   };
 }
 
-function instrumentVerboseTrace(logger: Logger): Logger {
-  const trace = logger.trace;
-  const child = logger.child;
-
-  Object.assign(logger, {
-    trace: (...params: any[]) => {
-      if (params.length === 0) {
-        return trace.apply(logger);
-      }
-
-      let additionalFields: Record<string, any> = {};
-      let remainingArgs: any[] = params;
-      if (params[0] instanceof Error) {
-        additionalFields = { err: params[0] };
-        remainingArgs = params.slice(1);
-      } else if (typeof params[0] === 'object') {
-        additionalFields = params[0];
-        remainingArgs = params.slice(1);
-      }
-
-      trace.apply(logger, [
-        { verbose: true, ...additionalFields },
-        ...remainingArgs,
-      ]);
-    },
-
-    child: (options: object = {}, simple?: boolean) => {
-      const c = child.apply(logger, [options, simple]);
-      return instrumentVerboseTrace(c);
-    },
-  });
-
-  return logger;
+interface EventLookup {
+  event: IntegrationEvent;
 }
 
-function instrumentErrorTracking(logger: Logger, errorSet: Set<Error>): Logger {
-  const error = logger.error;
-  const child = logger.child;
-
-  Object.assign(logger, {
-    error: (...params: any[]) => {
-      if (params.length === 0) {
-        return error.apply(logger);
-      }
-
-      if (params[0] instanceof Error) {
-        errorSet.add(params[0]);
-      } else if (params[0]?.err instanceof Error) {
-        errorSet.add(params[0].err);
-      }
-
-      error.apply(logger, [...params]);
-    },
-
-    child: (options: object = {}, simple?: boolean) => {
-      const c = child.apply(logger, [options, simple]);
-      return instrumentErrorTracking(c, errorSet);
-    },
-  });
-
-  return logger;
-}
-
-interface LogContext {
-  eventPublishingQueue: PromiseQueue;
+interface IntegrationLoggerInput {
+  logger: Logger;
   errorSet: Set<Error>;
-  synchronizationJobContext?: LoggerSynchronizationJobContext;
 }
 
-function instrumentEventLogging(
-  logger: Logger,
-  context: LogContext,
-): IntegrationLogger {
-  const { eventPublishingQueue, errorSet } = context;
-  const child = logger.child;
+export class IntegrationLogger extends EventEmitter
+  implements IntegrationLoggerType {
+  private _logger: Logger;
+  private _errorSet: Set<Error>;
 
-  const publishEvent = (name: string, description: string) => {
-    if (process.env.JUPITERONE_DISABLE_EVENT_LOGGING === 'true') {
+  constructor(input: IntegrationLoggerInput) {
+    super();
+    this._logger = input.logger;
+    this._errorSet = input.errorSet;
+  }
+
+  isHandledError(err: Error) {
+    return this._errorSet.has(err);
+  }
+
+  debug(...params: any[]) {
+    return this._logger.debug(...params);
+  }
+  info(...params: any[]) {
+    return this._logger.info(...params);
+  }
+  warn(...params: any[]) {
+    return this._logger.warn(...params);
+  }
+  fatal(...params: any[]) {
+    return this._logger.fatal(...params);
+  }
+
+  trace(...params: any[]) {
+    if (params.length === 0) {
       return;
     }
 
-    if (context.synchronizationJobContext) {
-      const { job, apiClient } = context.synchronizationJobContext;
+    let additionalFields: Record<string, any> = {};
+    let remainingArgs: any[] = params;
 
-      const event = { name, description };
-
-      eventPublishingQueue.add(async () => {
-        try {
-          await apiClient.post(
-            `/persister/synchronization/jobs/${job.id}/events`,
-            {
-              events: [event],
-            },
-          );
-        } catch (err) {
-          // It's not the end of the world if we fail to publish
-          // an event
-          logger.error(
-            {
-              err,
-              event,
-            },
-            'Failed to publish integration event.',
-          );
-        }
-      });
+    if (params[0] instanceof Error) {
+      additionalFields = { err: params[0] };
+      remainingArgs = params.slice(1);
+    } else if (typeof params[0] === 'object') {
+      additionalFields = params[0];
+      remainingArgs = params.slice(1);
     }
-  };
 
-  const createChildLogger = (options: object = {}, simple?: boolean) => {
-    const childLogger = child.apply(logger, [options, simple]);
-    return instrumentEventLogging(childLogger, context);
-  };
+    return this._logger.trace(
+      { verbose: true, ...additionalFields },
+      ...remainingArgs,
+    );
+  }
 
-  const integrationLoggerFunctions: IntegrationLoggerFunctions = {
-    flush: async () => {
-      await eventPublishingQueue.onIdle();
-    },
+  error(...params: any[]) {
+    if (params[0] instanceof Error) {
+      this._errorSet.add(params[0]);
+    } else if (params[0]?.err instanceof Error) {
+      this._errorSet.add(params[0].err);
+    }
 
-    registerSynchronizationJobContext: (
-      synchronizationJobContext: LoggerSynchronizationJobContext,
-    ) => {
-      context.synchronizationJobContext = synchronizationJobContext;
-      const { job } = synchronizationJobContext;
+    this._logger.error(...params);
+  }
 
-      return createChildLogger({
+  child(options: object = {}, simple?: boolean) {
+    const childLogger = new IntegrationLogger({
+      errorSet: this._errorSet,
+      logger: this._logger.child(options, simple),
+    });
+
+    // pass events to parent
+    childLogger.on('event', (data) => {
+      this.emit('event', data);
+    });
+
+    return childLogger;
+  }
+
+  emit<T extends EventLookup, K extends keyof EventLookup>(
+    name: K,
+    data: T[K],
+  ) {
+    return super.emit(name, data);
+  }
+
+  stepStart(step: StepMetadata) {
+    const name = 'step_start';
+    const description = `Starting step "${step.name}"...`;
+    this.info({ step: step.id }, description);
+    this.publishEvent({ name, description });
+  }
+
+  stepSuccess(step: StepMetadata) {
+    const name = 'step_end';
+    const description = `Completed step "${step.name}".`;
+    this.info({ step: step.id }, description);
+    this.publishEvent({ name, description });
+  }
+
+  stepFailure(step: StepMetadata, err: Error) {
+    const name = 'step_failure';
+    const { errorId, description } = createErrorEventDescription(
+      err,
+      `Step "${step.name}" failed to complete due to error.`,
+    );
+
+    this.error({ errorId, err, step: step.id }, description);
+    this.publishEvent({ name, description });
+  }
+
+  synchronizationUploadStart(job: SynchronizationJob) {
+    const name = 'sync_upload_start';
+    const description = 'Uploading collected data for synchronization...';
+    this.info(
+      {
         synchronizationJobId: job.id,
-        integrationJobId: job.integrationJobId,
-        integrationInstanceId: job.integrationInstanceId,
-      });
-    },
+      },
+      description,
+    );
+    this.publishEvent({ name, description });
+  }
 
-    isHandledError: (err: Error) => errorSet.has(err),
+  synchronizationUploadEnd(job: SynchronizationJob) {
+    const name = 'sync_upload_end';
+    const description = 'Upload complete.';
+    this.info(
+      {
+        synchronizationJobId: job.id,
+      },
+      description,
+    );
+    this.publishEvent({ name, description });
+  }
 
-    stepStart: (step: StepMetadata) => {
-      const name = 'step_start';
-      const description = `Starting step "${step.name}"...`;
-      logger.info({ step: step.id }, description);
+  validationFailure(err: Error) {
+    const name = 'validation_failure';
+    const { errorId, description } = createErrorEventDescription(
+      err,
+      `Error occurred while validating integration configuration.`,
+    );
 
-      publishEvent(name, description);
-    },
-    stepSuccess: (step: StepMetadata) => {
-      const name = 'step_end';
-      const description = `Completed step "${step.name}".`;
-      logger.info({ step: step.id }, description);
+    this.error({ errorId, err }, description);
+    this.publishEvent({ name, description });
+  }
 
-      publishEvent(name, description);
-    },
-    stepFailure: (step: StepMetadata, err: Error) => {
-      const name = 'step_failure';
-      const { errorId, description } = createErrorEventDescription(
-        err,
-        `Step "${step.name}" failed to complete due to error.`,
-      );
+  publishEvent(event: IntegrationEvent) {
+    return this.emit('event', event);
+  }
 
-      logger.error({ errorId, err, step: step.id }, description);
+  publishErrorEvent(options) {
+    const {
+      name,
+      message,
+      err,
 
-      publishEvent(name, description);
-    },
-    synchronizationUploadStart: (job: SynchronizationJob) => {
-      const name = 'sync_upload_start';
-      const description = 'Uploading collected data for synchronization...';
-      logger.info(
-        {
-          synchronizationJobId: job.id,
-        },
-        description,
-      );
+      // `logData` is only logged (it is used to log data that should
+      // not be shown to customer but might be helpful for troubleshooting)
+      logData,
 
-      publishEvent(name, description);
-    },
-    synchronizationUploadEnd: (job: SynchronizationJob) => {
-      const name = 'sync_upload_end';
-      const description = 'Upload complete.';
-      logger.info(
-        {
-          synchronizationJobId: job.id,
-        },
-        description,
-      );
+      // `eventData` is added to error description but not logged
+      eventData,
+    } = options;
 
-      publishEvent(name, description);
-    },
-    validationFailure: (err: Error) => {
-      const name = 'validation_failure';
-      const { errorId, description } = createErrorEventDescription(
-        err,
-        `Error occurred while validating integration configuration.`,
-      );
+    const { errorId, description } = createErrorEventDescription(
+      err,
+      message,
+      eventData,
+    );
 
-      logger.error({ errorId, err }, description);
-      publishEvent(name, description);
-    },
-
-    publishEvent(options) {
-      return publishEvent(options.name, options.description);
-    },
-
-    publishErrorEvent(options) {
-      const {
-        name,
-        message,
-        err,
-
-        // `logData` is only logged (it is used to log data that should
-        // not be shown to customer but might be helpful for troubleshooting)
-        logData,
-
-        // `eventData` is added to error description but not logged
-        eventData,
-      } = options;
-      const { errorId, description } = createErrorEventDescription(
-        err,
-        message,
-        eventData,
-      );
-
-      logger.error({ ...logData, errorId, err }, description);
-      publishEvent(name, description);
-    },
-  };
-
-  return Object.assign(logger, {
-    ...integrationLoggerFunctions,
-    child: createChildLogger,
-  });
+    this._logger.error({ ...logData, errorId, err }, description);
+    this.publishEvent({ name, description });
+  }
 }
 
 type NameValuePair = [string, any];

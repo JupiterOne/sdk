@@ -7,8 +7,9 @@ import {
   Entity,
   Relationship,
   SynchronizationJob,
-  IntegrationLogger,
 } from '@jupiterone/integration-sdk-core';
+
+import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
 
@@ -21,6 +22,8 @@ import { synchronizationApiError } from './error';
 import { ApiClient } from '../api';
 
 export { synchronizationApiError };
+import { createEventPublishingQueue } from './events';
+export { createEventPublishingQueue } from './events';
 
 const UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 2;
@@ -39,6 +42,9 @@ export async function synchronizeCollectedData(
 ): Promise<SynchronizationJob> {
   const jobContext = await initiateSynchronization(input);
 
+  const eventPublishingQueue = createEventPublishingQueue(jobContext);
+  jobContext.logger.on('event', (event) => eventPublishingQueue.enqueue(event));
+
   try {
     await uploadCollectedData(jobContext);
 
@@ -49,11 +55,22 @@ export async function synchronizeCollectedData(
   } catch (err) {
     jobContext.logger.error(
       err,
-      'Error occured while synchronizing collected data',
+      'Error occurred while synchronizing collected data',
     );
 
-    await abortSynchronization({ ...jobContext, reason: err.message });
+    try {
+      await abortSynchronization({ ...jobContext, reason: err.message });
+    } catch (abortError) {
+      jobContext.logger.error(
+        abortError,
+        'Error occurred while aborting synchronization job.',
+      );
+      throw abortError;
+    }
+
     throw err;
+  } finally {
+    await eventPublishingQueue.onIdle();
   }
 }
 
@@ -91,9 +108,10 @@ export async function initiateSynchronization({
   return {
     apiClient,
     job,
-    logger: logger.registerSynchronizationJobContext({
-      apiClient,
-      job,
+    logger: logger.child({
+      synchronizationJobId: job.id,
+      integrationJobId: job.integrationJobId,
+      integrationInstanceId: job.integrationInstanceId,
     }),
   };
 }

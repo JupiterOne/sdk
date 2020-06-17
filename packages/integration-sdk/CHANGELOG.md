@@ -9,6 +9,19 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Decoupled synchronization event publishing from the `IntegrationLogger`.
+  Events publishing can now be performed by listening to events that the logger
+  publishes.
+
+### Removed
+
+- Remove the need for the `JUPITERONE_DISABLE_EVENT_LOGGING` environment
+  variable.
+- Removed `ApiClient` type from the `@jupiterone/integration-sdk-core` package.
+  Also removed the dependency on `axios` from the package as well.
+
 ### Added
 
 - `convertProperties` supports an option `parseTime`, directing the function to
