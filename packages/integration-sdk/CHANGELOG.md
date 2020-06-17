@@ -22,6 +22,12 @@ and this project adheres to
 - Removed `ApiClient` type from the `@jupiterone/integration-sdk-core` package.
   Also removed the dependency on `axios` from the package as well.
 
+### Added
+
+- `convertProperties` supports an option `parseTime`, directing the function to
+  convert properties that are named with common suffixes (on, at, time, date) to
+  a UNIX timestamp (number).
+
 ## 1.1.1 - 2020-06-08
 
 ### Added

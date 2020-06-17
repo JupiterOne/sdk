@@ -1,4 +1,4 @@
-import { convertProperties, convertNameValuePairs } from '../converters';
+import { convertNameValuePairs, convertProperties } from '../converters';
 
 describe('convertProperties', () => {
   const original: any = {
@@ -8,6 +8,14 @@ describe('convertProperties', () => {
     // eslint-disable-next-line
     snake_case: 'snake',
     TitleCase: 'title',
+    aGoodTime: '2019-04-23T18:06:05Z',
+    another_time: '2019-04-23T18:06:05Z',
+    someDate: '2019-04-23T18:06:05Z',
+    occurredOn: '2019-04-23T18:06:05Z',
+    updatedAt: '2019-04-23T18:06:05Z',
+    aBadTime: 'do I look like time to you?',
+    anUndefinedTime: undefined,
+    aNullTime: null,
     object: {
       name: 'me',
     },
@@ -20,31 +28,48 @@ describe('convertProperties', () => {
     arrayOfUndefined: [undefined],
   };
 
-  const flattened: any = {
+  const converted: any = {
     string: 'a',
     array: ['a', 'b', 'c'],
     number: 123,
     snakeCase: 'snake',
     titleCase: 'title',
+    aGoodTime: '2019-04-23T18:06:05Z',
+    anotherTime: '2019-04-23T18:06:05Z',
+    someDate: '2019-04-23T18:06:05Z',
+    occurredOn: '2019-04-23T18:06:05Z',
+    updatedAt: '2019-04-23T18:06:05Z',
+    aBadTime: 'do I look like time to you?',
   };
 
-  test('flatten object without options', () => {
-    expect(convertProperties(original, {})).toEqual(flattened);
+  test('default options', () => {
+    expect(convertProperties(original, {})).toEqual(converted);
   });
 
-  test('flatten object stringify object', () => {
+  test('stringify object', () => {
     expect(convertProperties(original, { stringifyObject: true })).toEqual({
-      ...flattened,
+      ...converted,
       object: JSON.stringify(original.object),
       objectArray: [JSON.stringify(original.objectArray[0])],
     });
   });
 
-  test('flatten object stringify array', () => {
+  test('stringify array', () => {
     expect(convertProperties(original, { stringifyArray: true })).toEqual({
-      ...flattened,
+      ...converted,
       array: JSON.stringify(original.array),
       objectArray: JSON.stringify(original.objectArray),
+    });
+  });
+
+  test('parseTime', () => {
+    expect(convertProperties(original, { parseTime: true })).toEqual({
+      ...converted,
+      aGoodTime: 1556042765000,
+      anotherTime: 1556042765000,
+      someDate: 1556042765000,
+      occurredOn: 1556042765000,
+      updatedAt: 1556042765000,
     });
   });
 });
