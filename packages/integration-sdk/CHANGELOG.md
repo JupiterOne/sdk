@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Replace `createMockIntegrationLogger` implementation with a silent version of
+  the logger exposed by `@jupiterone/integration-sdk-runtime`.
+
 ## 2.0.0 - 2020-06-17
 
 ### Changed
