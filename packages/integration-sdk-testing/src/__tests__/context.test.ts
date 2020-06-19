@@ -1,5 +1,3 @@
-import noop from 'lodash/noop';
-
 import {
   Entity,
   Relationship,
@@ -9,7 +7,7 @@ import {
 
 import {
   LOCAL_INTEGRATION_INSTANCE,
-  SynchronizationJobContext,
+  IntegrationLogger,
 } from '@jupiterone/integration-sdk-runtime';
 
 import {
@@ -17,11 +15,12 @@ import {
   restoreProjectStructure,
 } from '@jupiterone/integration-sdk-private-test-utils';
 
+import { RingBuffer } from 'bunyan';
+
 import {
   createMockExecutionContext,
   createMockStepExecutionContext,
 } from '../context';
-import { noopAsync } from '../logger';
 import { v4 as uuid } from 'uuid';
 
 interface Config {
@@ -57,16 +56,14 @@ const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
         restoreProjectStructure();
       });
 
-      test('generates an execution context with a fake logger', () => {
+      test('generates an execution context with an silent IntegrationLogger', () => {
         const { logger } = createContext({ instanceConfigFields });
 
-        Object.keys(logger).forEach((key) => {
-          if (key !== 'child' && key !== 'flush' && key !== 'isHandledError') {
-            expect(logger[key]).toEqual(noop);
-          }
-        });
+        expect(logger).toEqual(expect.any(IntegrationLogger));
 
-        expect(logger.child({})).toEqual(logger);
+        const streams = (logger as any)._logger.streams;
+        expect(streams).toHaveLength(1);
+        expect(streams[0].stream).toEqual(expect.any(RingBuffer));
       });
 
       test('generates an execution context with the integration instance used for local development', () => {

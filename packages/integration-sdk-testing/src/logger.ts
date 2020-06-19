@@ -1,29 +1,25 @@
-import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
-import noop from 'lodash/noop';
+import { IntegrationLogger } from '@jupiterone/integration-sdk-runtime';
+
+import Logger, { RingBuffer } from 'bunyan';
+
 export const noopAsync = () => Promise.resolve();
 
 export function createMockIntegrationLogger(): IntegrationLogger {
-  const logger: IntegrationLogger = {
-    trace: noop,
-    debug: noop,
-    info: noop,
-    warn: noop,
-    error: noop,
-    fatal: noop,
-    isHandledError: () => false,
-    stepStart: noop,
-    stepSuccess: noop,
-    stepFailure: noop,
-    synchronizationUploadStart: noop,
-    synchronizationUploadEnd: noop,
-    validationFailure: noop,
-    publishMetric: noop,
-    publishEvent: noop,
-    publishErrorEvent: noop,
-    child() {
-      return this;
-    },
-  };
+  const ringbuffer = new RingBuffer({ limit: 100 });
 
-  return logger;
+  const quietLogger = new Logger({
+    name: 'test',
+    streams: [
+      {
+        level: 'trace',
+        type: 'raw',
+        stream: ringbuffer,
+      },
+    ],
+  });
+
+  return new IntegrationLogger({
+    logger: quietLogger,
+    errorSet: new Set(),
+  });
 }
