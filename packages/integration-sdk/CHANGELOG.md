@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.1.0 - 2020-06-19
+
 ### Changed
 
 - Replace `createMockIntegrationLogger` implementation with a silent version of
