@@ -9,6 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- The `validateInvocation` function will have certain types of errors it throws
+  (`IntegrationValidationError`, `IntegrationProviderAuthenticationError`)
+  logged at `level: 40` (warn) instead of `level: 50` (error). These are types
+  that are considered handled user errors and are expected to be communicated to
+  the user in a way that allows them to address the problem. All other error
+  types thrown from the function will continue to be logged at `level: 50`.
+
 ## 2.1.0 - 2020-06-19
 
 ### Changed

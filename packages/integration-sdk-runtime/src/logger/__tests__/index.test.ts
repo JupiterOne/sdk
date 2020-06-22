@@ -1,28 +1,59 @@
-import { Writable } from 'stream';
 import Logger from 'bunyan';
+import { Writable } from 'stream';
 
 import {
-  SynchronizationJob,
   IntegrationError,
   IntegrationInvocationConfig,
-  IntegrationStep,
   IntegrationLocalConfigFieldMissingError,
-  IntegrationValidationError,
-  IntegrationProviderAuthorizationError,
   IntegrationProviderAuthenticationError,
+  IntegrationProviderAuthorizationError,
+  IntegrationStep,
+  IntegrationValidationError,
+  PROVIDER_AUTH_ERROR_DESCRIPTION,
+  SynchronizationJob,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
-  PROVIDER_AUTH_ERROR_DESCRIPTION,
 } from '@jupiterone/integration-sdk-core';
 
 import {
-  IntegrationLogger,
-  createIntegrationLogger,
   createErrorEventDescription,
+  createIntegrationLogger,
+  IntegrationLogger,
 } from '../../logger';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
 const name = 'integration-logger';
+
+describe('isHandledError', () => {
+  const integrationLogger = createIntegrationLogger({
+    name,
+    invocationConfig,
+  });
+
+  test('error() tracks args[0].err property', () => {
+    const err = new Error('Something bad');
+    integrationLogger.error({ err });
+    expect(integrationLogger.isHandledError(err)).toBe(true);
+  });
+
+  test('error() tracks args[0]', () => {
+    const err = new Error('Something bad');
+    integrationLogger.error(err);
+    expect(integrationLogger.isHandledError(err)).toBe(true);
+  });
+
+  test('warn() tracks args[0].err property', () => {
+    const err = new Error('Something bad');
+    integrationLogger.warn({ err });
+    expect(integrationLogger.isHandledError(err)).toBe(true);
+  });
+
+  test('warn() tracks args[0]', () => {
+    const err = new Error('Something bad');
+    integrationLogger.warn(err);
+    expect(integrationLogger.isHandledError(err)).toBe(true);
+  });
+});
 
 describe('logger.trace', () => {
   test('includes verbose: true for downstream verbose log pruning', () => {
@@ -412,34 +443,66 @@ describe('sync upload logging', () => {
 });
 
 describe('validation failure logging', () => {
-  test('publishes message to synchronizer and writes error log', async () => {
-    const onEmitEvent = jest.fn();
+  test('unexpected error', async () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
     });
+
+    const onEmitEvent = jest.fn();
     logger.on('event', onEmitEvent);
 
     const errorSpy = jest.spyOn(logger, 'error');
 
-    const error = new IntegrationValidationError('Bad Mochi');
-    logger.validationFailure(error);
-
+    const error = new Error('WAT?');
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", errorId="(.*)", reason="Bad Mochi"\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", errorId="(.*)", reason="Unexpected error .*?"\\)$`,
     );
 
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith(
-      { errorId: expect.any(String), err: error },
-      expect.stringMatching(expectedDescriptionRegex),
-    );
+    logger.validationFailure(error);
 
     expect(onEmitEvent).toHaveBeenCalledTimes(1);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'validation_failure',
       description: expect.stringMatching(expectedDescriptionRegex),
     });
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      { errorId: expect.any(String), err: error },
+      expect.stringMatching(expectedDescriptionRegex),
+    );
+  });
+
+  test('expected user error', async () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const onEmitEvent = jest.fn();
+    logger.on('event', onEmitEvent);
+
+    const warnSpy = jest.spyOn(logger, 'warn');
+
+    const error = new IntegrationValidationError('Bad Mochi');
+    const expectedDescriptionRegex = new RegExp(
+      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", errorId="(.*)", reason="Bad Mochi"\\)$`,
+    );
+
+    logger.validationFailure(error);
+
+    expect(onEmitEvent).toHaveBeenCalledTimes(1);
+    expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
+      name: 'validation_failure',
+      description: expect.stringMatching(expectedDescriptionRegex),
+    });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      { errorId: expect.any(String), err: error },
+      expect.stringMatching(expectedDescriptionRegex),
+    );
   });
 });
 

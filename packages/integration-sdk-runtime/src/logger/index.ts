@@ -1,29 +1,29 @@
 import Logger from 'bunyan';
+import { EventEmitter } from 'events';
 import { v4 as uuid } from 'uuid';
 
 import {
-  IntegrationLogger as IntegrationLoggerType,
+  ExecutionContext,
   IntegrationError,
-  UNEXPECTED_ERROR_CODE,
-  UNEXPECTED_ERROR_REASON,
-  PROVIDER_AUTH_ERROR_DESCRIPTION,
+  IntegrationEvent,
+  IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInstanceConfigFieldMap,
-  StepMetadata,
-  ExecutionContext,
-  StepExecutionContext,
-  InvocationConfig,
-  IntegrationExecutionContext,
-  IntegrationStepExecutionContext,
   IntegrationInvocationConfig,
-  IntegrationProviderAuthorizationError,
+  IntegrationLogger as IntegrationLoggerType,
   IntegrationProviderAuthenticationError,
-  SynchronizationJob,
-  IntegrationEvent,
+  IntegrationProviderAuthorizationError,
+  IntegrationStepExecutionContext,
+  IntegrationValidationError,
+  InvocationConfig,
   Metric,
+  PROVIDER_AUTH_ERROR_DESCRIPTION,
+  StepExecutionContext,
+  StepMetadata,
+  SynchronizationJob,
+  UNEXPECTED_ERROR_CODE,
+  UNEXPECTED_ERROR_REASON,
 } from '@jupiterone/integration-sdk-core';
-
-import { EventEmitter } from 'events';
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -169,6 +169,7 @@ export class IntegrationLogger extends EventEmitter
     return this._logger.info(...params);
   }
   warn(...params: any[]) {
+    this.trackHandledError(params[0]);
     return this._logger.warn(...params);
   }
   fatal(...params: any[]) {
@@ -198,12 +199,7 @@ export class IntegrationLogger extends EventEmitter
   }
 
   error(...params: any[]) {
-    if (params[0] instanceof Error) {
-      this._errorSet.add(params[0]);
-    } else if (params[0]?.err instanceof Error) {
-      this._errorSet.add(params[0].err);
-    }
-
+    this.trackHandledError(params[0]);
     this._logger.error(...params);
   }
 
@@ -283,7 +279,12 @@ export class IntegrationLogger extends EventEmitter
       `Error occurred while validating integration configuration.`,
     );
 
-    this.error({ errorId, err }, description);
+    if (isUserConfigError(err)) {
+      this.warn({ errorId, err }, description);
+    } else {
+      this.error({ errorId, err }, description);
+    }
+
     this.publishEvent({ name, description });
   }
 
@@ -320,6 +321,14 @@ export class IntegrationLogger extends EventEmitter
 
     this._logger.error({ ...logData, errorId, err }, description);
     this.publishEvent({ name, description });
+  }
+
+  private trackHandledError(logArg: any): void {
+    if (logArg instanceof Error) {
+      this._errorSet.add(logArg);
+    } else if (logArg?.err instanceof Error) {
+      this._errorSet.add(logArg.err);
+    }
   }
 }
 
@@ -376,6 +385,17 @@ export function createErrorEventDescription(
     errorId,
     description: `${message} (${errorDetails})`,
   };
+}
+
+type UserConfigError =
+  | IntegrationValidationError
+  | IntegrationProviderAuthenticationError;
+
+export function isUserConfigError(err: Error): err is UserConfigError {
+  return (
+    err instanceof IntegrationValidationError ||
+    err instanceof IntegrationProviderAuthenticationError
+  );
 }
 
 type ProviderAuthError =

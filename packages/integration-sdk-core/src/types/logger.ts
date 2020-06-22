@@ -69,14 +69,34 @@ interface BaseLogger {
 }
 
 export interface IntegrationLoggerFunctions {
+  /**
+   * Answers true when an error has already by handled by this logger instance
+   * (in `warn` or `error`).
+   *
+   * There are some errors which are handled in the context where they occur.
+   * Once they have been logged, they may be re-thrown to break out of that
+   * context, but they should not be logged again. This mechanism allows higher
+   * catch blocks to discover whether the logger has already handled an error
+   * and if so, to avoid double logging.
+   */
   isHandledError: IsHandledErrorFunction;
 
   // Special log functions used to publish events to j1
+
   stepStart: StepLogFunction;
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
+
+  /**
+   * Handles logging of errors that are raised in `validateInvocation`.
+   *
+   * `IntegrationValidationError` and `IntegrationProviderAuthenticationError`
+   * are logged at `level: 40`, expecting these to be user errors that should
+   * not alert in runtime environments. Other error types will be logged at
+   * `level: 50`.
+   */
   validationFailure: ValidationLogFunction;
 
   publishMetric: PublishMetricFunction;
