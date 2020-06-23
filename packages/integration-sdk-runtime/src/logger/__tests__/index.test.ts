@@ -580,6 +580,34 @@ describe('publishMetric', () => {
       timestamp: expect.any(Number),
     });
   });
+
+  test('logs the metric', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const infoSpy = jest.spyOn(logger, 'info');
+
+    logger.publishMetric({
+      name: 'metric',
+      value: 1000,
+      unit: 'Milliseconds',
+    });
+
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy).toHaveBeenCalledWith(
+      {
+        metric: {
+          name: 'metric',
+          value: 1000,
+          unit: 'Milliseconds',
+          timestamp: expect.any(Number),
+        },
+      },
+      'Collected metric.',
+    );
+  });
 });
 
 describe('#publishEvent', () => {

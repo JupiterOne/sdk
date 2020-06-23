@@ -289,10 +289,16 @@ export class IntegrationLogger extends EventEmitter
   }
 
   publishMetric(metric: Omit<Metric, 'timestamp'>) {
-    return this.emit('metric', {
+    const metricWithTimestamp = {
       ...metric,
       timestamp: Date.now(),
-    });
+    };
+
+    this.info({ metric: metricWithTimestamp }, 'Collected metric.');
+
+    // emit the metric so that consumers can collect the metric
+    // and publish it if needed
+    return this.emit('metric', metricWithTimestamp);
   }
 
   publishEvent(event: IntegrationEvent) {
