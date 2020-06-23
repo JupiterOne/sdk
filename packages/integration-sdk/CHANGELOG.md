@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.1.1 - 2020-06-23
+
 ### Changed
 
 - The `validateInvocation` function will have certain types of errors it throws

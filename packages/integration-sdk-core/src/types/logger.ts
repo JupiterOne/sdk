@@ -70,7 +70,7 @@ interface BaseLogger {
 
 export interface IntegrationLoggerFunctions {
   /**
-   * Answers true when an error has already by handled by this logger instance
+   * Answers true when an error has already been handled by this logger instance
    * (in `warn` or `error`).
    *
    * There are some errors which are handled in the context where they occur.
