@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- `publishMetric` now logs the metric that is published.
+
 ### Changed
 
 - The `validateInvocation` function will have certain types of errors it throws
