@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.2.0 - 2020-06-23
+
 ### Changed
 
 - `publishMetric` now logs the metric that is published.
