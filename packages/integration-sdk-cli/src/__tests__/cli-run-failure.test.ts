@@ -88,7 +88,7 @@ test('does not log errors that have been previously logged', async () => {
 
   const isHandledErrorSpy = jest.spyOn(logger, 'isHandledError');
   const validationFailureSpy = jest.spyOn(logger, 'validationFailure');
-  const errorSpy = jest.spyOn(logger, 'error');
+  const warnSpy = jest.spyOn(logger, 'warn');
 
   jest.spyOn(logger, 'child').mockReturnValue(logger);
 
@@ -110,5 +110,5 @@ test('does not log errors that have been previously logged', async () => {
   expect(isHandledErrorSpy).toHaveBeenCalledWith(loggedError);
   expect(isHandledErrorSpy).toHaveReturnedWith(true);
 
-  expect(errorSpy).toHaveBeenCalledTimes(1);
+  expect(warnSpy).toHaveBeenCalledTimes(1);
 });
