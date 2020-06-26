@@ -129,6 +129,30 @@ describe('executeIntegrationInstance', () => {
     });
   });
 
+  test('publishes disk usage metric', async () => {
+    const publishMetricSpy = jest.spyOn(logger, 'publishMetric');
+
+    invocationConfig = {
+      ...invocationConfig,
+      integrationSteps: [
+        {
+          id: 'my-step',
+          name: 'My awesome step',
+          types: ['test'],
+          executionHandler: jest.fn(),
+        },
+      ],
+    };
+
+    await execute();
+
+    expect(publishMetricSpy).toHaveBeenCalledWith({
+      name: 'disk-usage',
+      unit: 'Bytes',
+      value: expect.any(Number),
+    });
+  });
+
   test('populates partialDatasets type for failed steps', async () => {
     invocationConfig = {
       ...invocationConfig,
