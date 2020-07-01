@@ -1,23 +1,22 @@
 {
-  "name": "@jupiterone/integration-sdk-testing",
-  "version": "2.2.1",
-  "description": "Testing utilities for JupiterOne integrations",
+  "name": "@jupiterone/cli",
+  "version": "1.0.1",
+  "description": "The JupiterOne cli",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "repository": "git@github.com:JupiterOne/sdk.git",
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
-  "files": [
-    "dist"
-  ],
   "engines": {
     "node": "10.x || 12.x || 14.x"
+  },
+  "bin": {
+    "j1": "./bin/j1"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "test": "jest",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"
@@ -25,19 +24,21 @@
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^2.2.1",
     "@jupiterone/integration-sdk-runtime": "^2.2.1",
-    "@pollyjs/adapter-node-http": "^4.0.4",
-    "@pollyjs/core": "^4.0.4",
-    "@pollyjs/persister-fs": "^4.0.4",
-    "@types/har-format": "^1.2.4",
-    "@types/pollyjs__adapter-node-http": "^2.0.0",
-    "@types/pollyjs__core": "^4.0.0",
-    "@types/pollyjs__persister": "^2.0.1",
-    "lodash": "^4.17.15"
+    "@lifeomic/attempt": "^3.0.0",
+    "commander": "^5.0.0",
+    "globby": "^11.0.1",
+    "jsonexport": "^3.0.1",
+    "lodash": "^4.17.15",
+    "ora": "^4.0.4",
+    "p-all": "^3.0.0",
+    "rimraf": "^3.0.2",
+    "upath": "^1.2.0",
+    "uuid": "^8.1.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^2.2.1",
-    "@types/lodash": "^4.14.149",
-    "get-port": "^5.1.1",
+    "@types/json2csv": "^5.0.1",
+    "@types/lodash": "^4.14.155",
+    "csvtojson": "^2.0.10",
     "memfs": "^3.2.0"
   }
 }
