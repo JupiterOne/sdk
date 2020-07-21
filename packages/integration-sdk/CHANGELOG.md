@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- `@jupiterone/integration-sdk-dev-tools` did not include `ts-node`, so that
+  `yarn start` would fail to execute with 'Integration invocation configuration
+  not found. Configuration should be exported as "invocationConfig" from
+  "src/index".'
+
 ## 2.2.0 - 2020-06-23
 
 ### Changed
