@@ -1,7 +1,8 @@
 {
   "npmClient": "yarn",
   "packages": [
-    "packages/integration-sdk-*"
+    "packages/integration-sdk-*",
+    "packages/cli"
   ],
   "version": "independent"
 }
