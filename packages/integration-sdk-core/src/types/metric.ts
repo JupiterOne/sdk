@@ -5,7 +5,7 @@ export interface Metric {
   /*
    * The unit that the metric value is associated with
    */
-  unit: 'Milliseconds';
+  unit: 'Milliseconds' | 'Bytes';
 
   /**
    * Additional dimensions to add to a metric
