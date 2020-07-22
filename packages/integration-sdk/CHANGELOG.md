@@ -9,13 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
-## 2.3.0 - 2020-07-22
+## 2.4.0 - 2020-07-22
 
 ### Added
 
 - Disk usage metrics are now published by the logger.
 
-## 2.3.0 - 2020-07-22
+## 2.3.0 - 2020-07-06
 
 ### Changed
 
