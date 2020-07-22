@@ -22,7 +22,7 @@ for performing config field validation, a function for determining which steps
 of an integration to ignore, and a list of steps that define how an integration
 should collect data.
 
-Use the provided [Integration Template](/template/README.md#project-structure)
+Use the provided [Integration Template](https://github.com/JupiterOne/integration-template)
 to get started.
 
 ### `IntegrationInvocationConfig` fields
