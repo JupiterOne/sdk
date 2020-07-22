@@ -9,6 +9,18 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.3.0 - 2020-07-22
+
+### Added
+
+- Disk usage metrics are now published by the logger.
+
+## 2.3.0 - 2020-07-22
+
+### Changed
+
+- Updated `@jupiterone/data-model` to latest version (`0.7.1`).
+
 ### Fixed
 
 - `@jupiterone/integration-sdk-dev-tools` did not include `ts-node`, so that
