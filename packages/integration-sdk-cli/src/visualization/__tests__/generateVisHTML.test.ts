@@ -17,7 +17,7 @@ test('renders html with default config', () => {
   const html = generateVisHTML(nodeDataSets, edgeDataSet);
 
   expect(html).toContain(
-    'var options = {"edges":{"arrows":{"to":{"enabled":true}}}}',
+    'var options = {"edges":{"arrows":{"to":{"enabled":true}}},"physics":{"barnesHut":{"springLength":300,"centralGravity":0.03}}}',
   );
   expect(html).toMatchSnapshot();
 });

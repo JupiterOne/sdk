@@ -31,7 +31,8 @@ export async function generateVisualization(
 
   const nodeDataSets = entities.map((entity) => ({
     id: entity._key,
-    label: entity.displayName,
+    label: `${entity.displayName}\n[${entity._type}]`,
+    group: entity._type,
   }));
   const edgeDataSets = relationships.map(
     (relationship): Edge => ({
