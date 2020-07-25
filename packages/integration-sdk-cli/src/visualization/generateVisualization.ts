@@ -8,6 +8,7 @@ import globby from 'globby';
 import upath from 'upath';
 
 import * as log from '../log';
+import { createMappedRelationshipNodesAndEdges } from './createMappedRelationshipNodesAndEdges';
 
 /**
  * Generates visualization of Vertices and Edges using https://visjs.github.io/vis-network/docs/network/
@@ -25,15 +26,16 @@ export async function generateVisualization(
     log.warn(`Unable to find any files under path: ${resolvedIntegrationPath}`);
   }
 
-  const { entities, relationships } = await retrieveIntegrationData(
+  const { entities, relationships, mappedRelationships } = await retrieveIntegrationData(
     entitiesAndRelationshipPaths,
   );
 
   const nodeDataSets = entities.map((entity) => ({
     id: entity._key,
-    label: entity.displayName,
+    label: `${entity.displayName}\n[${entity._type}]`,
+    group: entity._type,
   }));
-  const edgeDataSets = relationships.map(
+  const explicitEdgeDataSets = relationships.map(
     (relationship): Edge => ({
       from: relationship._fromEntityKey,
       to: relationship._toEntityKey,
@@ -41,11 +43,16 @@ export async function generateVisualization(
     }),
   );
 
+  const {
+    mappedRelationshipEdges, 
+    mappedRelationshipNodes,
+  } = createMappedRelationshipNodesAndEdges(mappedRelationships, entities);
+
   const htmlFileLocation = path.join(resolvedIntegrationPath, 'index.html');
 
   await writeFileToPath({
     path: htmlFileLocation,
-    content: generateVisHTML(nodeDataSets, edgeDataSets),
+    content: generateVisHTML([...nodeDataSets, ...mappedRelationshipNodes], [...explicitEdgeDataSets, ...mappedRelationshipEdges]),
   });
 
   return htmlFileLocation;

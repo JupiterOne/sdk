@@ -47,7 +47,7 @@ exports[`renders html with default config 1`] = `
           nodes: nodes,
           edges: edges
         };
-        var options = {\\"edges\\":{\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}}};
+        var options = {\\"edges\\":{\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>

@@ -28,6 +28,7 @@ const integrationData: IntegrationData = {
       toType: 'entity',
     }) as ExplicitRelationship,
   ],
+  mappedRelationships: [],
 };
 
 afterEach(() => {
@@ -53,7 +54,7 @@ test('returns the json objects read from the files', async () => {
   expect(result).toEqual(integrationData);
 });
 
-test('excludes mapped relationships', async () => {
+test('includes mapped relationships', async () => {
   const mappedRelationship = {
     _mapping: 'user_is_user',
     id: '123456',
@@ -69,5 +70,5 @@ test('excludes mapped relationships', async () => {
     `${integrationPath}/graph/entity/relationships/abc.json`,
   ]);
 
-  expect(result).toEqual(integrationData);
+  expect(result).toEqual({...integrationData, mappedRelationships: [{_mapping: 'user_is_user', id: '123456'}]});
 });

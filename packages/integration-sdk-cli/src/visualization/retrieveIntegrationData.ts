@@ -1,4 +1,4 @@
-import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
+import { Entity, ExplicitRelationship, MappedRelationship } from '@jupiterone/integration-sdk-core';
 import { readJsonFromPath } from '@jupiterone/integration-sdk-runtime';
 import { IntegrationData } from './types/IntegrationData';
 
@@ -9,7 +9,8 @@ export async function retrieveIntegrationData(
   entitiesAndRelationshipPaths: string[],
 ): Promise<IntegrationData> {
   const entities: Entity[] = [];
-  const relationships: ExplicitRelationship[] = [];
+  const explicitRelationships: ExplicitRelationship[] = [];
+  const mappedRelationships: MappedRelationship[] = [];
 
   const entitiesAndRelationships = await Promise.all(
     entitiesAndRelationshipPaths.map(
@@ -26,18 +27,20 @@ export async function retrieveIntegrationData(
       }
 
       if (item.relationships && Array.isArray(item.relationships)) {
-        relationships.push(
-          ...item.relationships.filter(
-            (relationship) =>
-              typeof relationship === 'object' && !relationship._mapping,
-          ),
-        );
+        for (const relationship of item.relationships) {
+          if (typeof relationship === 'object' && !relationship._mapping) {
+            explicitRelationships.push(relationship);
+          } else {
+            mappedRelationships.push(relationship);
+          }
+        }
       }
     }
   }
 
   return {
     entities,
-    relationships,
+    relationships: explicitRelationships,
+    mappedRelationships,
   };
 }
