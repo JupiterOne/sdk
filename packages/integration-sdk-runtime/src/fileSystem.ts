@@ -9,6 +9,7 @@ const fs = nodeFs.promises;
 import path from 'path';
 
 import rimraf from 'rimraf';
+import getFolderSize from 'get-folder-size';
 
 export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
 
@@ -17,6 +18,14 @@ export function getRootStorageDirectory() {
     process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY ||
     path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME)
   );
+}
+
+export function getRootStorageDirectorySize(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    getFolderSize(getRootStorageDirectory(), (err: Error, size: number) =>
+      err ? reject(err) : resolve(size),
+    );
+  });
 }
 
 interface WriteDataToPathInput {

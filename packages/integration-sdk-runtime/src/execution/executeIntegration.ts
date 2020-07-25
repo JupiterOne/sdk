@@ -9,7 +9,11 @@ import {
   StepExecutionContext,
 } from '@jupiterone/integration-sdk-core';
 
-import { removeStorageDirectory, writeJsonToPath } from '../fileSystem';
+import {
+  removeStorageDirectory,
+  writeJsonToPath,
+  getRootStorageDirectorySize,
+} from '../fileSystem';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 import { createIntegrationLogger } from '../logger';
 import {
@@ -129,6 +133,12 @@ export async function executeWithContext<
     { collectionResult: summary },
     'Integration data collection has completed.',
   );
+
+  context.logger.publishMetric({
+    name: 'disk-usage',
+    value: await getRootStorageDirectorySize(),
+    unit: 'Bytes',
+  });
 
   return summary;
 }
