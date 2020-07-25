@@ -25,6 +25,7 @@
     "@jupiterone/integration-sdk-runtime": "^2.4.0",
     "commander": "^5.0.0",
     "globby": "^11.0.0",
+    "lodash": "^4.17.19",
     "upath": "^1.2.0",
     "vis": "^4.21.0-EOL"
   },
@@ -33,11 +34,13 @@
     "@pollyjs/adapter-node-http": "^4.0.4",
     "@pollyjs/core": "^4.0.4",
     "@pollyjs/persister-fs": "^4.0.4",
+    "@types/lodash": "^4.14.158",
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister": "^2.0.1",
     "@types/vis": "^4.21.20",
     "jsonwebtoken": "^8.5.1",
-    "memfs": "^3.2.0"
+    "memfs": "^3.2.0",
+    "uuid": "^8.2.0"
   }
 }

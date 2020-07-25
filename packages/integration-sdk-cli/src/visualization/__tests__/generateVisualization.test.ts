@@ -41,6 +41,7 @@ const integrationData: IntegrationData = {
     },
   ],
   relationships: [],
+  mappedRelationships: [],
 };
 
 beforeEach(() => {
