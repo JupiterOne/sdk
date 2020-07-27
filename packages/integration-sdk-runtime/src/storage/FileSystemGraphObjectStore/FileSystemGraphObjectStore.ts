@@ -4,10 +4,11 @@ import { Sema } from 'async-sema';
 import {
   Entity,
   Relationship,
-  IntegrationError,
   GraphObjectLookupKey,
   GraphObjectFilter,
   GraphObjectIteratee,
+  IntegrationDuplicateKeyError,
+  IntegrationMissingKeyError,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -74,11 +75,14 @@ export class FileSystemGraphObjectStore {
       }
     );
 
-    if (entities.length !== 1) {
-      throw new IntegrationError({
-        code: 'GET_ENTITY_ERROR',
-        message: `Failed to find entity with _type=${_type}, _key=${_key}`,
-      });
+    if (entities.length === 0) {
+      throw new IntegrationMissingKeyError(
+        `Failed to find entity (_type=${_type}, _key=${_key})`,
+      );
+    } else if (entities.length > 1) {
+      throw new IntegrationDuplicateKeyError(
+        `Duplicate _key detected (_type=${_type}, _key=${_key})`,
+      )
     } else {
       return entities[0];
     }

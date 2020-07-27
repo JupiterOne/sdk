@@ -153,6 +153,15 @@ export class IntegrationDuplicateKeyError extends IntegrationError {
   }
 }
 
+export class IntegrationMissingKeyError extends IntegrationError {
+  constructor(message: string) {
+    super({
+      code: 'MISSING_KEY_ERROR',
+      message,
+    });
+  }
+}
+
 /**
  * An error that may be thrown by an integration during `validateInvocation`,
  * used to communicate something the user should see that can help them fix a

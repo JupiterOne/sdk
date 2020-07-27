@@ -4,7 +4,8 @@ export interface GraphObjectFilter {
   _type: string;
 }
 
-export interface GraphObjectLookupKey extends GraphObjectFilter {
+export interface GraphObjectLookupKey {
+  _type: string;
   _key: string;
 }
 
