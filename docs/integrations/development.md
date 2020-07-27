@@ -295,6 +295,14 @@ await iterateEntities({ _type: 'my_integration_user' }, async (userEntity) => {
 });
 ```
 
+Specific entities can be looked up using `_key` and `_type` properties via the `getEntity` function.
+
+Example usage:
+
+```typescript
+const entity = getEntity({_type: 'my_integration_user', _key: 'some_unique_identifier'})
+```
+
 More details about how the framework uses `jobState` is detailed in the [Data
 collection](# Data collection) section below.
 
@@ -671,7 +679,7 @@ automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that based
 on the step that was run. Entities and relationships will also be grouped by the
 `_type` and linked into separate directories to provide faster look ups. These
-directories will be used by the `iterateEntities` and `iterateRelationships`
+directories will be used by the `getEntity`, `iterateEntities`, and `iterateRelationships`
 functions to provide faster lookups.
 
 From our experience, integrations most commonly query collected data from

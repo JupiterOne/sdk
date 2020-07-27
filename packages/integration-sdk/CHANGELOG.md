@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `getEntity({ _type, _key })` function
+- `j1-integration visualize`:
+  - Nodes (entities) are colored by `_type`.
+  - Mapped relationships are shown as dashed lines (edges)
+
 ## 2.4.0 - 2020-07-22
 
 ### Added

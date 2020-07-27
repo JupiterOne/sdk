@@ -4,6 +4,10 @@ export interface GraphObjectFilter {
   _type: string;
 }
 
+export interface GraphObjectLookupKey extends GraphObjectFilter {
+  _key: string;
+}
+
 export type GraphObjectIteratee<T> = (obj: T) => void | Promise<void>;
 
 /**
@@ -63,6 +67,12 @@ export interface JobState {
    * to add a single relationship to the collection.
    */
   addRelationships: (relationships: Relationship[]) => Promise<void>;
+
+  /**
+   * Gets an entity by _key and _type
+   * Throws when !== 1 entity
+   */
+  getEntity: (lookupKey: GraphObjectLookupKey) => Promise<Entity>
 
   /**
    * Allows a step to iterate all entities collected into the job state, limited

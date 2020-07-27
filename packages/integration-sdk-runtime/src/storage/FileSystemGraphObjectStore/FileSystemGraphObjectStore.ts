@@ -4,6 +4,8 @@ import { Sema } from 'async-sema';
 import {
   Entity,
   Relationship,
+  IntegrationError,
+  GraphObjectLookupKey,
   GraphObjectFilter,
   GraphObjectIteratee,
 } from '@jupiterone/integration-sdk-core';
@@ -53,6 +55,32 @@ export class FileSystemGraphObjectStore {
       GRAPH_OBJECT_BUFFER_THRESHOLD
     ) {
       await this.flushRelationshipsToDisk();
+    }
+  }
+
+  async getEntity(
+    getEntityOptions: GraphObjectLookupKey,
+  ): Promise<Entity> {
+    const { _type, _key } = getEntityOptions;
+    await this.flushEntitiesToDisk();
+
+    const entities: Entity[] = [];
+    await this.iterateEntities(
+      { _type, },
+      async (e) => {
+        if (e._key === _key) {
+          entities.push(e);
+        }
+      }
+    );
+
+    if (entities.length !== 1) {
+      throw new IntegrationError({
+        code: 'GET_ENTITY_ERROR',
+        message: `Failed to find entity with _type=${_type}, _key=${_key}`,
+      });
+    } else {
+      return entities[0];
     }
   }
 

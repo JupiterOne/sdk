@@ -59,6 +59,15 @@ export function createMockJobState({
     collectedRelationships = collectedRelationships.concat(newRelationships);
   };
 
+  const iterateEntities = async <T extends Entity = Entity>(filter, iteratee) => {
+    const filteredEntities = [...inputEntities, ...collectedEntities].filter(
+      (e) => e._type === filter._type,
+    );
+    for (const entity of filteredEntities as T[]) {
+      await iteratee(entity);
+    }
+  };
+
   return {
     get collectedEntities() {
       return collectedEntities;
@@ -90,14 +99,29 @@ export function createMockJobState({
     },
     addRelationships,
 
-    iterateEntities: async <T extends Entity = Entity>(filter, iteratee) => {
-      const filteredEntities = [...inputEntities, ...collectedEntities].filter(
-        (e) => e._type === filter._type,
+    getEntity: async (lookupKey) => {
+      const { _type, _key } = lookupKey;
+      const entities: Entity[] = [];
+
+      iterateEntities(
+        { _type },
+        async (e) => {
+          if (e._key === _key) {
+            entities.push(e);
+          }
+        }
       );
-      for (const entity of filteredEntities as T[]) {
-        await iteratee(entity);
+  
+      if (entities.length !== 1) {
+        throw new Error(  
+          `Failed to find entity with _type=${_type}, _key=${_key}`,
+        );
+      } else {
+        return entities[0];
       }
     },
+
+    iterateEntities,
 
     iterateRelationships: async <T extends Relationship = Relationship>(
       filter,
