@@ -87,6 +87,11 @@ export interface RelationshipMapping {
   sourceEntityKey: string;
 
   /**
+   * The `_type` value of the entity managed by the integration. This allows generated relationship types to match entity types.
+   */
+  sourceEntityType?: string;
+
+  /**
    * Identifies properties in the `targetEntity` that are used to locate the
    * entites to connect to the `sourceEntityKey`. For example, if you know that
    * you want to build a relationship to user entities with a known email, this

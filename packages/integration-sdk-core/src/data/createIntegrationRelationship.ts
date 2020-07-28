@@ -153,6 +153,7 @@ export function createIntegrationRelationship(
         relationshipDirection:
           options.relationshipDirection || RelationshipDirection.FORWARD,
         sourceEntityKey: options.source._key,
+        sourceEntityType: options.source._type,
         targetEntity: options.target,
         targetFilterKeys: options.targetFilterKeys || [['_type', '_key']],
         skipTargetCreation: options.skipTargetCreation,
@@ -196,7 +197,7 @@ function createMappedRelationship(
     type(
       options.properties,
       options._class,
-      'mapping_source',
+      mapping.sourceEntityType || 'mapping_source',
       mapping.targetEntity._type,
     );
 

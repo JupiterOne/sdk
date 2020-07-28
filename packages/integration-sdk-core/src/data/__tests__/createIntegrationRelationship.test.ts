@@ -115,11 +115,12 @@ describe('MappedRelationshipOptions', () => {
 
   const expected: MappedRelationship = {
     _key: 'a|has|b',
-    _type: 'mapping_source_has_b_entity',
+    _type: 'a_entity_has_b_entity',
     _class: 'HAS',
     _mapping: {
       relationshipDirection: RelationshipDirection.FORWARD,
       sourceEntityKey: 'a',
+      sourceEntityType: 'a_entity',
       targetFilterKeys: [['_type', '_key']],
       targetEntity: {
         _key: 'b',
@@ -305,6 +306,31 @@ describe('MappedRelationshipLiteralOptions', () => {
     });
   });
 
+  test('sourceEntityType provided explicitly', () => {
+    expect(
+      createIntegrationRelationship({
+        _class: 'HAS',
+        _mapping: {
+          relationshipDirection: RelationshipDirection.REVERSE,
+          targetEntity: {
+            _key: 'b',
+            _type: 'b_entity',
+          },
+          targetFilterKeys: [['something']],
+          sourceEntityKey: 'a',
+          sourceEntityType: 'a_entity',
+        },
+      }),
+    ).toEqual({
+      ...expected,
+      _type: 'a_entity_has_b_entity',
+      _mapping: {
+        ...expected._mapping,
+        sourceEntityType: 'a_entity',
+      }
+    });
+  });
+
   test('override defaults with properties option', () => {
     expect(
       createIntegrationRelationship({
@@ -319,13 +345,13 @@ describe('MappedRelationshipLiteralOptions', () => {
         },
         properties: {
           _key: 'a-has-b',
-          _type: 'a_entity_has_b_entity',
+          _type: 'a_special_type',
         },
       }),
     ).toEqual({
       ...expected,
       _key: 'a-has-b',
-      _type: 'a_entity_has_b_entity',
+      _type: 'a_special_type',
       _mapping: {
         ...expected._mapping,
         targetEntity: {

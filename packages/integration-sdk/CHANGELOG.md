@@ -12,6 +12,7 @@ and this project adheres to
 ### Added
 
 - Added `getEntity({ _type, _key })` function
+- Added optional `sourceEntityType` property on `RelationshipMapping`
 
 ## 2.5.0 - 2020-07-28
 
