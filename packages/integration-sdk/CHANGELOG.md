@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.6.0 - 2020-07-28
+
 ### Added
 
 - Added `getEntity({ _type, _key })` function
@@ -22,7 +24,7 @@ and this project adheres to
 
 ### Added
 
-- `j1-integration visualize` added mapped relationships as dashed lines. 
+- `j1-integration visualize` added mapped relationships as dashed lines.
 
 ### Changed
 
