@@ -129,11 +129,9 @@ type TargetEntity = TargetEntityProperties & {
 type AdditionalRelationshipProperties = { [key: string]: any };
 
 /**
- * Create an `IntegrationRelationship`.
- *
- * `DirectRelationshipOptions` and `MappedRelationshipOptions` are recommended
- * over literal forms. Older integrations may need to use the literal forms to
- * control values for some reason or other.
+ * @deprecated
+ * @see createDirectRelationship
+ * @see createMappedRelationship
  */
 export function createIntegrationRelationship(
   options:
@@ -142,10 +140,51 @@ export function createIntegrationRelationship(
     | MappedRelationshipOptions
     | MappedRelationshipLiteralOptions,
 ): Relationship {
-  if ('_mapping' in options) {
+  if ('_mapping' in options || 'target' in options) {
     return createMappedRelationship(options);
-  } else if ('target' in options) {
-    return createMappedRelationship({
+  } else {
+    return createDirectRelationship(options);
+  }
+}
+
+/**
+ * Create a direct `IntegrationRelationship` between two entities
+ *
+ * `DirectRelationshipOptions` is recommended over `DirectRelationshipOptionsLiteral`. Older integrations may need to use the literal forms to control values for some reason or other.
+ */
+export function createDirectRelationship(
+  options: DirectRelationshipOptions | DirectRelationshipLiteralOptions,
+): ExplicitRelationship {
+  //
+  if ('fromType' in options) {
+    return createRelationship(options);
+  //
+  } else {
+    return createRelationship({
+      _class: options._class,
+      fromType: options.from._type,
+      fromKey: options.from._key,
+      toType: options.to._type,
+      toKey: options.to._key,
+      properties: options.properties,
+    });
+  }
+}
+
+/**
+ * Create a mapped `IntegrationRelationship`.
+ *
+ * `MappedRelationshipOptions` is recommended over `MappedRelationshipOptionsLiteral`. Older integrations may need to use the literal forms to control values for some reason or other.
+ */
+export function createMappedRelationship(
+  options: MappedRelationshipOptions | MappedRelationshipLiteralOptions,
+): MappedRelationship {
+  // MappedRelationshipLiteralOptions
+  if ('_mapping' in options) {
+    return createMappedRelationshipLiteral(options);
+  // MappedRelationshipOptions
+  } else {
+    return createMappedRelationshipLiteral({
       _class: options._class,
       _type: options._type,
       _key: options._key,
@@ -160,21 +199,10 @@ export function createIntegrationRelationship(
       },
       properties: options.properties,
     });
-  } else if ('fromType' in options) {
-    return createRelationship(options);
-  } else {
-    return createRelationship({
-      _class: options._class,
-      fromType: options.from._type,
-      fromKey: options.from._key,
-      toType: options.to._type,
-      toKey: options.to._key,
-      properties: options.properties,
-    });
   }
 }
 
-function createMappedRelationship(
+function createMappedRelationshipLiteral(
   options: MappedRelationshipLiteralOptions,
 ): MappedRelationship {
   const mapping = options._mapping;
