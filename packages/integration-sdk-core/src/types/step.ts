@@ -17,7 +17,7 @@ export type StepStartStates = Record<string, StepStartState>;
 
 export type GetStepStartStatesFunction<T extends ExecutionContext> = (
   context: T,
-) => StepStartStates;
+) => StepStartStates | Promise<StepStartStates>;
 
 export type ExecutionHandlerFunction<T extends StepExecutionContext> = (
   context: T,

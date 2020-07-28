@@ -93,8 +93,10 @@ export function prepareLocalStepCollection<
   const originalGetStepStartStates = config.getStepStartStates;
 
   config.getStepStartStates = stepsToRun.length
-    ? (ctx) => {
-        const originalEnabledRecord = originalGetStepStartStates?.(ctx) ?? {};
+    ? async (ctx) => {
+        const originalEnabledRecord = await (originalGetStepStartStates?.(
+          ctx,
+        ) ?? {});
         const enabledRecord: StepStartStates = {};
         for (const stepId of allStepIds) {
           const originalValue = originalEnabledRecord[stepId] ?? {};
@@ -112,7 +114,8 @@ export function prepareLocalStepCollection<
         }
         return enabledRecord;
       }
-    : originalGetStepStartStates;
+    : originalGetStepStartStates &&
+      (async (ctx) => originalGetStepStartStates(ctx));
 
   return config;
 }

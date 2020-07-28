@@ -25,6 +25,12 @@ import {
 
 jest.mock('fs');
 
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), ms);
+  });
+}
+
 afterEach(() => {
   vol.reset();
   delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
@@ -241,6 +247,60 @@ describe('executeIntegrationInstance', () => {
         'my-step-b': { disabled: true },
         'my-step-a': { disabled: false },
       }),
+      integrationSteps: [
+        {
+          id: 'my-step-a',
+          name: 'My awesome step',
+          types: ['test_a'],
+          executionHandler: jest
+            .fn()
+            .mockRejectedValue(new Error('something broke')),
+        },
+        {
+          id: 'my-step-b',
+          name: 'My awesome step',
+          types: ['test_b'],
+          executionHandler: jest.fn(),
+        },
+      ],
+    };
+
+    await expect(execute()).resolves.toEqual({
+      integrationStepResults: [
+        {
+          id: 'my-step-a',
+          name: 'My awesome step',
+          declaredTypes: ['test_a'],
+          encounteredTypes: [],
+          status: StepResultStatus.FAILURE,
+        },
+        {
+          id: 'my-step-b',
+          name: 'My awesome step',
+          declaredTypes: ['test_b'],
+          encounteredTypes: [],
+          status: StepResultStatus.DISABLED,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['test_a'],
+        },
+      },
+    });
+  });
+
+  test('does not include partial data sets for disabled steps in async "getStepStartStates"', async () => {
+    invocationConfig = {
+      ...invocationConfig,
+      getStepStartStates: async () => {
+        await sleep(5);
+
+        return {
+          'my-step-b': { disabled: true },
+          'my-step-a': { disabled: false },
+        };
+      },
       integrationSteps: [
         {
           id: 'my-step-a',

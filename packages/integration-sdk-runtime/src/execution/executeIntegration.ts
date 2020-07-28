@@ -7,6 +7,7 @@ import {
   IntegrationLogger,
   ExecutionContext,
   StepExecutionContext,
+  StepStartStates,
 } from '@jupiterone/integration-sdk-core';
 
 import {
@@ -101,8 +102,8 @@ export async function executeWithContext<
     throw err;
   }
 
-  const stepStartStates =
-    config.getStepStartStates?.(context) ??
+  const stepStartStates: StepStartStates =
+    (await config.getStepStartStates?.(context)) ??
     getDefaultStepStartStates(config.integrationSteps);
 
   validateStepStartStates(config.integrationSteps, stepStartStates);
