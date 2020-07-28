@@ -12,6 +12,11 @@ and this project adheres to
 ### Added
 
 - Added `getEntity({ _type, _key })` function
+- Added optional `sourceEntityType` property on `RelationshipMapping`
+
+### Changed
+
+- Deprecated `createIntegrationRelationship`. Developers should use the exported `createDirectRelationship` or `createMappedRelationship` functions.
 
 ## 2.5.0 - 2020-07-28
 

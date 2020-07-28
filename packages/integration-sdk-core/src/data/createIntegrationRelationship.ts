@@ -129,11 +129,9 @@ type TargetEntity = TargetEntityProperties & {
 type AdditionalRelationshipProperties = { [key: string]: any };
 
 /**
- * Create an `IntegrationRelationship`.
- *
- * `DirectRelationshipOptions` and `MappedRelationshipOptions` are recommended
- * over literal forms. Older integrations may need to use the literal forms to
- * control values for some reason or other.
+ * @deprecated
+ * @see createDirectRelationship
+ * @see createMappedRelationship
  */
 export function createIntegrationRelationship(
   options:
@@ -142,24 +140,22 @@ export function createIntegrationRelationship(
     | MappedRelationshipOptions
     | MappedRelationshipLiteralOptions,
 ): Relationship {
-  if ('_mapping' in options) {
+  if ('_mapping' in options || 'target' in options) {
     return createMappedRelationship(options);
-  } else if ('target' in options) {
-    return createMappedRelationship({
-      _class: options._class,
-      _type: options._type,
-      _key: options._key,
-      _mapping: {
-        relationshipDirection:
-          options.relationshipDirection || RelationshipDirection.FORWARD,
-        sourceEntityKey: options.source._key,
-        targetEntity: options.target,
-        targetFilterKeys: options.targetFilterKeys || [['_type', '_key']],
-        skipTargetCreation: options.skipTargetCreation,
-      },
-      properties: options.properties,
-    });
-  } else if ('fromType' in options) {
+  } else {
+    return createDirectRelationship(options);
+  }
+}
+
+/**
+ * Create a direct `IntegrationRelationship` between two entities
+ *
+ * `DirectRelationshipOptions` is recommended over `DirectRelationshipOptionsLiteral`. Older integrations may need to use the literal forms to control values for some reason or other.
+ */
+export function createDirectRelationship(
+  options: DirectRelationshipOptions | DirectRelationshipLiteralOptions,
+): ExplicitRelationship {
+  if ('fromType' in options) {
     return createRelationship(options);
   } else {
     return createRelationship({
@@ -173,7 +169,36 @@ export function createIntegrationRelationship(
   }
 }
 
-function createMappedRelationship(
+/**
+ * Create a mapped `IntegrationRelationship`.
+ *
+ * `MappedRelationshipOptions` is recommended over `MappedRelationshipOptionsLiteral`. Older integrations may need to use the literal forms to control values for some reason or other.
+ */
+export function createMappedRelationship(
+  options: MappedRelationshipOptions | MappedRelationshipLiteralOptions,
+): MappedRelationship {
+  if ('_mapping' in options) {
+    return createMappedRelationshipLiteral(options);
+  } else {
+    return createMappedRelationshipLiteral({
+      _class: options._class,
+      _type: options._type,
+      _key: options._key,
+      _mapping: {
+        relationshipDirection:
+          options.relationshipDirection || RelationshipDirection.FORWARD,
+        sourceEntityKey: options.source._key,
+        sourceEntityType: options.source._type,
+        targetEntity: options.target,
+        targetFilterKeys: options.targetFilterKeys || [['_type', '_key']],
+        skipTargetCreation: options.skipTargetCreation,
+      },
+      properties: options.properties,
+    });
+  }
+}
+
+function createMappedRelationshipLiteral(
   options: MappedRelationshipLiteralOptions,
 ): MappedRelationship {
   const mapping = options._mapping;
@@ -196,7 +221,7 @@ function createMappedRelationship(
     type(
       options.properties,
       options._class,
-      'mapping_source',
+      mapping.sourceEntityType || 'mapping_source',
       mapping.targetEntity._type,
     );
 
