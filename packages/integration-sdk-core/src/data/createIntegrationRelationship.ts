@@ -155,10 +155,8 @@ export function createIntegrationRelationship(
 export function createDirectRelationship(
   options: DirectRelationshipOptions | DirectRelationshipLiteralOptions,
 ): ExplicitRelationship {
-  //
   if ('fromType' in options) {
     return createRelationship(options);
-  //
   } else {
     return createRelationship({
       _class: options._class,
