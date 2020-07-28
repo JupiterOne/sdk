@@ -279,7 +279,7 @@ describe('getEntity', () => {
       ...nonMatchingEntities,
     ]);
 
-    await expect(store.getEntity({ _type, _key })).rejects.toThrow(`Failed to find entity with _type=${_type}, _key=${_key}`);
+    await expect(store.getEntity({ _type, _key })).rejects.toThrow(`Failed to find entity (_type=${_type}, _key=${_key})`);
   });
 });
 
