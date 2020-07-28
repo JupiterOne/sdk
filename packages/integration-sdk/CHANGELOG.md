@@ -12,9 +12,31 @@ and this project adheres to
 ### Added
 
 - Added `getEntity({ _type, _key })` function
-- `j1-integration visualize`:
-  - Nodes (entities) are colored by `_type`.
-  - Mapped relationships are shown as dashed lines (edges)
+
+## 2.5.0 - 2020-07-28
+
+### Added
+
+- `j1-integration visualize` added mapped relationships as dashed lines. 
+
+### Changed
+
+- `j1-integration visualize` entities are colored by `_type`.
+- Updated `IntegrationConfig` to support asynchronous `getStepStartStates`. See
+  [#254](https://github.com/JupiterOne/sdk/issues/254) for more information.
+
+Example:
+
+```typescript
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = {
+  async getStepStartStates(ctx) {
+    return {
+      'fetch-users': { disabled: await checkFetchUsersStepDisabled(ctx) }
+    };
+  },
+  ...
+};
+```
 
 ## 2.4.0 - 2020-07-22
 
