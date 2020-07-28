@@ -177,10 +177,8 @@ export function createDirectRelationship(
 export function createMappedRelationship(
   options: MappedRelationshipOptions | MappedRelationshipLiteralOptions,
 ): MappedRelationship {
-  // MappedRelationshipLiteralOptions
   if ('_mapping' in options) {
     return createMappedRelationshipLiteral(options);
-  // MappedRelationshipOptions
   } else {
     return createMappedRelationshipLiteral({
       _class: options._class,
