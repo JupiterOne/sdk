@@ -4,8 +4,11 @@ import { Sema } from 'async-sema';
 import {
   Entity,
   Relationship,
+  GraphObjectLookupKey,
   GraphObjectFilter,
   GraphObjectIteratee,
+  IntegrationDuplicateKeyError,
+  IntegrationMissingKeyError,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -53,6 +56,35 @@ export class FileSystemGraphObjectStore {
       GRAPH_OBJECT_BUFFER_THRESHOLD
     ) {
       await this.flushRelationshipsToDisk();
+    }
+  }
+
+  async getEntity(
+    getEntityOptions: GraphObjectLookupKey,
+  ): Promise<Entity> {
+    const { _type, _key } = getEntityOptions;
+    await this.flushEntitiesToDisk();
+
+    const entities: Entity[] = [];
+    await this.iterateEntities(
+      { _type, },
+      async (e) => {
+        if (e._key === _key) {
+          entities.push(e);
+        }
+      }
+    );
+
+    if (entities.length === 0) {
+      throw new IntegrationMissingKeyError(
+        `Failed to find entity (_type=${_type}, _key=${_key})`,
+      );
+    } else if (entities.length > 1) {
+      throw new IntegrationDuplicateKeyError(
+        `Duplicate _key detected (_type=${_type}, _key=${_key})`,
+      )
+    } else {
+      return entities[0];
     }
   }
 

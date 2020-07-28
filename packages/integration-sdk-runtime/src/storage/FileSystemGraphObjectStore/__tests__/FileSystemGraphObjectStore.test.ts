@@ -242,6 +242,47 @@ describe('addRelationships', () => {
   });
 });
 
+describe('getEntity', () => {
+  test('should flush buffered entities and get an entity by "_type" and "_key"', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const _type = uuid();
+    const _key = uuid();
+
+    const nonMatchingEntities = times(25, () =>
+      generateEntity({ _type }),
+    );
+    const matchingEntity = generateEntity({ _type, _key })
+
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+      matchingEntity,
+    ]);
+
+    const entity = await store.getEntity({ _type, _key });
+    expect(store.entityStorageMap.totalItemCount).toEqual(0);
+
+    expect(entity).toEqual(matchingEntity);
+  });
+
+  test('should throw if entity is not found by "_type" and "_key"', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const _type = uuid();
+    const _key = uuid();
+
+    const nonMatchingEntities = times(25, () =>
+      generateEntity({ _type }),
+    );
+
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+    ]);
+
+    await expect(store.getEntity({ _type, _key })).rejects.toThrow(`Failed to find entity (_type=${_type}, _key=${_key})`);
+  });
+});
+
 describe('iterateEntities', () => {
   test('should flush buffered entities and iterate the entity "_type" index stored on disk', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();

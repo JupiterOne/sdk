@@ -96,6 +96,10 @@ export function createStepJobState({
     },
     addRelationships,
 
+    getEntity: (lookupKey) => {
+      return graphObjectStore.getEntity(lookupKey)
+    },
+
     iterateEntities: (filter, iteratee) =>
       graphObjectStore.iterateEntities(filter, iteratee),
 
