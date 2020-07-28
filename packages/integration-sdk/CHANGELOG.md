@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.5.0 - 2020-07-28
+
 ### Changed
 
 - Updated `IntegrationConfig` to support asynchronous `getStepStartStates`. See
