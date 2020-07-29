@@ -9,6 +9,7 @@ import upath from 'upath';
 
 import * as log from '../log';
 import { createMappedRelationshipNodesAndEdges } from './createMappedRelationshipNodesAndEdges';
+import { getNodeIdFromEntity } from './utils';
 
 /**
  * Generates visualization of Vertices and Edges using https://visjs.github.io/vis-network/docs/network/
@@ -31,7 +32,7 @@ export async function generateVisualization(
   );
 
   const nodeDataSets = entities.map((entity) => ({
-    id: entity._key,
+    id: getNodeIdFromEntity(entity, []),
     label: `${entity.displayName}\n[${entity._type}]`,
     group: entity._type,
   }));
@@ -46,7 +47,10 @@ export async function generateVisualization(
   const {
     mappedRelationshipEdges, 
     mappedRelationshipNodes,
-  } = createMappedRelationshipNodesAndEdges(mappedRelationships, entities);
+  } = createMappedRelationshipNodesAndEdges({
+    mappedRelationships, 
+    explicitEntities: entities,
+  });
 
   const htmlFileLocation = path.join(resolvedIntegrationPath, 'index.html');
 

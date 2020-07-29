@@ -1,41 +1,152 @@
-import { Node, Edge } from "vis";
-import { Entity, MappedRelationship, RelationshipDirection } from "@jupiterone/integration-sdk-core";
-import { isMatch } from "lodash";
-import { v4 as uuid } from 'uuid';
+import { Node, Edge, NodeOptions } from "vis";
+import { 
+  Entity,
+  MappedRelationship,
+  RelationshipDirection,
+  RelationshipMapping,
+  TargetEntityProperties,
+} from "@jupiterone/integration-sdk-core";
+import { isMatch, pick } from "lodash";
+import { getNodeIdFromEntity, NodeEntity, isNodeIdDuplicate } from "./utils";
 
 interface MappedRelationshipNodesAndEdges {
   mappedRelationshipNodes: Node[];
   mappedRelationshipEdges: Edge[];
 }
 
-export function createMappedRelationshipNodesAndEdges(mappedRelationships: MappedRelationship[], explicitEntities: Entity[]): MappedRelationshipNodesAndEdges {
+export function isClassMatch(entityClasses: string | string[] | undefined, targetEntityClasses: string | string[] | undefined): boolean {
+  if (targetEntityClasses === undefined) {
+    return true;
+  } else if (!Array.isArray(targetEntityClasses)) {
+    targetEntityClasses = [targetEntityClasses];
+  }
+
+  if (entityClasses === undefined) {
+    return false;
+  } else if (!Array.isArray(entityClasses)) {
+    entityClasses = [entityClasses];
+  }
+
+  return targetEntityClasses.every((targetClass) => (entityClasses as string[]).includes(targetClass));
+}
+
+export function findTargetEntity(entities: NodeEntity[], _mapping: RelationshipMapping): NodeEntity | undefined {
+  for (const targetFilterKey of _mapping.targetFilterKeys) {
+    const targetEntity = pick(_mapping.targetEntity, targetFilterKey);
+
+    const matchedEntity = entities.find((entity) => {
+      const { _class: entityClass, ...entityRest } = entity;
+      const { _class: targetEntityClass, ...targetEntityRest } = targetEntity;
+
+      return isMatch(entityRest, targetEntityRest) && isClassMatch(entityClass, (targetEntityClass as string | string[] | undefined));
+    });
+
+    if (matchedEntity !== undefined) return matchedEntity;
+  }
+}
+
+type NewMissingEntity = { _key: string };
+
+function isNewMissingEntity(sourceEntity: NodeEntity | NewMissingEntity): sourceEntity is NewMissingEntity {
+  return (sourceEntity as any).nodeId === undefined;
+}
+
+function findOrCreateSourceEntity(explicitEntities: NodeEntity[], sourceEntityKey: string): NodeEntity | NewMissingEntity {
+  const sourceEntity = explicitEntities.find((e) => e._key === sourceEntityKey);
+  if (sourceEntity === undefined) {
+    // This should never happen! The "sourceEntity" ought to exist in the integration.
+    return {
+      _key: sourceEntityKey,
+    };
+  } else {
+    return sourceEntity;
+  }
+}
+
+type NewPlaceholderEntity = TargetEntityProperties;
+
+function isNewPlaceholderEntity(targetEntity: NodeEntity | NewPlaceholderEntity): targetEntity is NewPlaceholderEntity {
+  return (targetEntity as any).nodeId === undefined;
+};
+
+function findOrCreatePlaceholderEntity(nodeEntities: NodeEntity[], _mapping: RelationshipMapping): Entity | NewPlaceholderEntity {
+  const targetEntity = findTargetEntity(nodeEntities, _mapping);
+  if (targetEntity === undefined) {
+    return _mapping.targetEntity;
+  } else {
+    return targetEntity;
+  }
+}
+
+export function createMappedRelationshipNodesAndEdges(options: {
+  mappedRelationships: MappedRelationship[], 
+  explicitEntities: Entity[],
+}): MappedRelationshipNodesAndEdges {
+  const { mappedRelationships, explicitEntities } = options;
   const mappedRelationshipNodes: Node[] = [];
   const mappedRelationshipEdges: Edge[] = [];
 
-  const entities = [...explicitEntities];
+  const explicitNodeEntities: NodeEntity[] = [...explicitEntities.map((e) => ({ ...e, nodeId: getNodeIdFromEntity(e, [])}))];
+  const missingNodeEntities: NodeEntity[] = [];
+  const placeholderNodeEntities: NodeEntity[] = [];
 
   for (const mappedRelationship of mappedRelationships) {
-    let sourceKey = explicitEntities.find((e) => e._key === mappedRelationship._mapping.sourceEntityKey)?._key;
-    if (sourceKey === undefined) {
-      // This should never happen! The "sourceEntity" ought to exist in the integration.
-      const sourceNode = createMissingEntity(mappedRelationship._mapping.sourceEntityKey);
+    const sourceEntity = findOrCreateSourceEntity([
+      ...explicitNodeEntities, 
+      ...missingNodeEntities
+    ], mappedRelationship._mapping.sourceEntityKey);
+    let sourceNodeId: string;
+    if (isNewMissingEntity(sourceEntity)) {
+      const missingSourceEntity = {
+        ...sourceEntity,
+        nodeId: getNodeIdFromEntity(sourceEntity, [
+          ...explicitNodeEntities, 
+          ...missingNodeEntities, 
+          ...placeholderNodeEntities
+        ]),
+      };
+      missingNodeEntities.push(missingSourceEntity);
+    
+      const sourceNode = createMissingEntityNode(missingSourceEntity);
       mappedRelationshipNodes.push(sourceNode);
-      sourceKey = sourceNode.id as string;
+      sourceNodeId = missingSourceEntity.nodeId;
+    } else {
+      sourceNodeId = getNodeIdFromEntity(sourceEntity, [
+        ...explicitNodeEntities, 
+        ...missingNodeEntities, 
+        ...placeholderNodeEntities
+      ]);
     }
 
-    let targetKey = entities.find((e) => isMatch(e, mappedRelationship._mapping.targetEntity))?._key;
+    const targetEntity = findOrCreatePlaceholderEntity([
+      ...explicitNodeEntities, 
+      ...missingNodeEntities, 
+      ...placeholderNodeEntities
+    ], mappedRelationship._mapping);
+    let targetNodeId: string;
+    if (isNewPlaceholderEntity(targetEntity)) {
+      const placeholderTargetEntity = {
+        ...targetEntity,
+        nodeId: getNodeIdFromEntity(targetEntity, [
+          ...explicitNodeEntities, 
+          ...missingNodeEntities, 
+          ...placeholderNodeEntities
+        ]),
+      };
+      placeholderNodeEntities.push(placeholderTargetEntity);
 
-    if (targetKey === undefined) {
-      const targetNode = createPlaceholderEntity(mappedRelationship._mapping.targetEntity);
-      entities.push({
-        _key: targetNode.id as string,
-        ...(mappedRelationship._mapping.targetEntity),
-      } as Entity);
+      const targetNode = createPlaceholderEntityNode(placeholderTargetEntity);
       mappedRelationshipNodes.push(targetNode);
-      targetKey = targetNode.id
+      targetNodeId = placeholderTargetEntity.nodeId;
+    } else {
+      targetNodeId = getNodeIdFromEntity(targetEntity, [
+        ...explicitNodeEntities, 
+        ...missingNodeEntities, 
+        ...placeholderNodeEntities
+      ]);
     }
 
-    mappedRelationshipEdges.push(createMappedRelationshipEdge(sourceKey, targetKey, mappedRelationship.displayName, mappedRelationship._mapping.relationshipDirection))
+    mappedRelationshipEdges.push(createMappedRelationshipEdge(sourceNodeId, targetNodeId, mappedRelationship.displayName, mappedRelationship._mapping.relationshipDirection))
   }
 
   return {
@@ -44,19 +155,46 @@ export function createMappedRelationshipNodesAndEdges(mappedRelationships: Mappe
   }
 }
 
+function createEntityNode(
+  node: Node, 
+  options: {
+    isDuplicateId?: boolean,
+    labelHeader?: string,
+    labelBody?: string,
+  }
+): Node {
+  const overrides: Partial<NodeOptions> = {};
+  const labelBody = options.labelBody || node.label;
+  if (options.isDuplicateId === true) {
+    options.labelHeader = '[DUPLICATE _KEY]' + options.labelHeader || '';
+    overrides.color = 'red';
+  }
+
+  if (options.labelHeader !== undefined) {
+    overrides.label = `<b>${options.labelHeader}</b>\n${labelBody}`;
+    overrides.font = { multi: 'html' };
+  }
+  return {
+    ...node,
+    ...overrides,
+  };
+}
+
 const MISSING_GROUP = 'missing';
 
-function createMissingEntity(sourceEntityKey: string): Node {
-  return {
-    id: sourceEntityKey,
-    label: `<b>[MISSING ENTITY]</b>\n${sourceEntityKey}`,
-    color: 'red',
-    group: MISSING_GROUP,
-    font: {
-      // required: enables displaying <b>text</b> in the label as bold text
-      multi: 'html',
-    }
-  };
+function createMissingEntityNode(sourceEntity: NodeEntity): Node {
+  return createEntityNode(
+    {
+      id:sourceEntity.nodeId,
+      color: 'red',
+      group: MISSING_GROUP,
+    },
+    {
+      isDuplicateId: isNodeIdDuplicate(sourceEntity),
+      labelHeader: '[MISSING ENTITY]',
+      labelBody: sourceEntity._key,
+    },
+  );
 }
 
 const UNKNOWN_GROUP = 'unknown';
@@ -65,37 +203,46 @@ const UNKNOWN_GROUP = 'unknown';
  * 
  * @param JSONableObject 
  */
-function getWrappedJsonString(JSONableObject: object): string {
+function getWrappedJsonString(options: {JSONableObject: object, keysToOmit: string[]}): string {
+  const { JSONableObject, keysToOmit } = options;
   const keyValueArray: string[] = [];
   for (const key of Object.keys(JSONableObject)) {
-    keyValueArray.push(`${key}: ${JSON.stringify(JSONableObject[key])}`);
+    if (!keysToOmit.includes(key)) {
+      keyValueArray.push(`${key}: ${JSON.stringify(JSONableObject[key])}`);
+    }
   }
   return keyValueArray.join('\n');
 }
 
-function createPlaceholderEntity(targetEntity: Partial<Entity>) {
-  return {
-    id: targetEntity._key || uuid(),
-    label: `<b>[PLACEHOLDER ENTITY]</b>\n${getWrappedJsonString(targetEntity)}`,
-    group: targetEntity._type || UNKNOWN_GROUP,
-    font: {
-      // required: enables displaying <b>text</b> in the label as bold text
-      multi: 'html',
-    }
-  }
+function getWrappedEntityPropertiesString(nodeEntity: NodeEntity): string {
+  return getWrappedJsonString({JSONableObject: nodeEntity, keysToOmit: ['nodeId']})
 }
 
-export function createMappedRelationshipEdge(sourceKey: string, targetKey: string, label: string | undefined, relationshipDirection: RelationshipDirection): Edge {
+function createPlaceholderEntityNode(targetEntity: NodeEntity) {
+  return createEntityNode(
+    {
+      id: targetEntity.nodeId,
+      group: targetEntity._type || UNKNOWN_GROUP,
+    },
+    {
+      isDuplicateId: isNodeIdDuplicate(targetEntity),
+      labelHeader: '[PLACEHOLDER ENTITY]',
+      labelBody: getWrappedEntityPropertiesString(targetEntity),
+    },
+  );
+}
+
+export function createMappedRelationshipEdge(sourceNodeId: string, targetNodeId: string, label: string | undefined, relationshipDirection: RelationshipDirection): Edge {
   let fromKey: string;
   let toKey: string;
   switch (relationshipDirection) {
     case RelationshipDirection.FORWARD:
-      fromKey = sourceKey;
-      toKey = targetKey;
+      fromKey = sourceNodeId;
+      toKey = targetNodeId;
       break;
     case RelationshipDirection.REVERSE:
-      fromKey = targetKey;
-      toKey = sourceKey;
+      fromKey = targetNodeId;
+      toKey = sourceNodeId;
       break;
   }
 
