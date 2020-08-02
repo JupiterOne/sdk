@@ -9,6 +9,40 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.7.0 - 2020-08-1
+
+### Added
+
+- Added Jest test matcher for validating collected entities against a JSON
+  schema. See: https://github.com/JupiterOne/sdk/issues/263
+
+Example:
+
+```typescript
+expect(context.jobState.collectedEntities).toMatchGraphObjectSchema({
+  _class: ['Service'],
+  schema: {
+    additionalProperties: false,
+    properties: {
+      _type: { const: 'google_cloud_api_service' },
+      category: { const: ['infrastructure'] },
+      state: {
+        type: 'string',
+        enum: ['STATE_UNSPECIFIED', 'DISABLED', 'ENABLED'],
+      },
+      enabled: { type: 'boolean' },
+      usageRequirements: {
+        type: 'array',
+        items: { type: 'string' },
+      },
+      _rawData: {
+        type: 'array',
+        items: { type: 'object' },
+      }
+   }
+});
+```
+
 ## 2.6.0 - 2020-07-28
 
 ### Added
@@ -18,7 +52,8 @@ and this project adheres to
 
 ### Changed
 
-- Deprecated `createIntegrationRelationship`. Developers should use the exported `createDirectRelationship` or `createMappedRelationship` functions.
+- Deprecated `createIntegrationRelationship`. Developers should use the exported
+  `createDirectRelationship` or `createMappedRelationship` functions.
 
 ## 2.5.0 - 2020-07-28
 
