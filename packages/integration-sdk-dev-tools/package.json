@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@jupiterone/integration-sdk-cli": "^2.7.0",
+    "@jupiterone/integration-sdk-testing": "^2.7.0",
     "@types/jest": "^25.2.3",
     "@types/node": "^14.0.5",
     "@typescript-eslint/eslint-plugin": "^3.0.2",

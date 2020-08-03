@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Automatically register custom Jest test matchers when using
+  `@jupiterone/integration-sdk-dev-tools`. See:
+  https://github.com/JupiterOne/sdk/issues/265
+
 ## 2.7.0 - 2020-08-1
 
 ### Added

@@ -2,6 +2,17 @@ import * as dataModel from '@jupiterone/data-model';
 import * as deepmerge from 'deepmerge';
 import { Entity } from '@jupiterone/integration-sdk-core';
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toMatchGraphObjectSchema<T extends Entity>(
+        params: ToMatchGraphObjectSchemaParams,
+      ): R;
+    }
+  }
+}
+
 function createGraphObjectSchemaValidationError<T>(
   ajv: typeof dataModel.IntegrationSchema,
   data: T,
@@ -185,4 +196,8 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     message: () => 'Success!',
     pass: true,
   };
+}
+
+export function registerMatchers(expect: jest.Expect) {
+  expect.extend({ toMatchGraphObjectSchema });
 }
