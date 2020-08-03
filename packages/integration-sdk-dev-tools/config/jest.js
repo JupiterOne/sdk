@@ -15,4 +15,7 @@ module.exports = {
     },
   },
   testEnvironment: 'node',
+  setupFilesAfterEnv: [
+    '<rootDir>/node_modules/@jupiterone/integration-sdk-dev-tools/config/setupJestTestFramework.js',
+  ],
 };
