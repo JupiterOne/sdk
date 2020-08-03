@@ -1,5 +1,9 @@
 import { Entity } from '@jupiterone/integration-sdk-core';
-import { toMatchGraphObjectSchema, GraphObjectSchema } from '../jest';
+import {
+  toMatchGraphObjectSchema,
+  GraphObjectSchema,
+  registerMatchers,
+} from '../jest';
 
 function generateCollectedEntity(partial?: Partial<Entity>): Entity {
   return {
@@ -167,5 +171,21 @@ describe('#toMatchGraphObjectSchema', () => {
     expect(result.message()).toEqual(
       `Error loading schemas for class (err=Invalid _class passed in schema for "toMatchGraphObjectSchema" (_class=#INVALID_DATA_MODEL_CLASS))`,
     );
+  });
+});
+
+describe('#registerMatchers', () => {
+  test('should register all test matchers', () => {
+    const mockJestExtendFn = jest.fn();
+    const mockExpect = ({
+      extend: mockJestExtendFn,
+    } as unknown) as jest.Expect;
+
+    registerMatchers(mockExpect);
+
+    expect(mockJestExtendFn).toHaveBeenCalledTimes(1);
+    expect(mockJestExtendFn).toHaveBeenCalledWith({
+      toMatchGraphObjectSchema,
+    });
   });
 });
