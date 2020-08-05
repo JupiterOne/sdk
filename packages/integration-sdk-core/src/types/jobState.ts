@@ -49,13 +49,13 @@ export interface JobState {
    * Adds an entity to the job's collection. `addEntities` can be used
    * to add a batch of entities to the collection.
    */
-  addEntity: (entity: Entity) => Promise<void>;
+  addEntity: (entity: Entity) => Promise<Entity>;
 
   /**
    * Adds a batch of entities to the job's collection. `addEntity` can be used
    * to add a single entity to the collection.
    */
-  addEntities: (entities: Entity[]) => Promise<void>;
+  addEntities: (entities: Entity[]) => Promise<Entity[]>;
 
   /**
    * Adds a relationship to the job's collection. `addRelationships` can be used
@@ -73,7 +73,7 @@ export interface JobState {
    * Gets an entity by _key and _type
    * Throws when !== 1 entity
    */
-  getEntity: (lookupKey: GraphObjectLookupKey) => Promise<Entity>
+  getEntity: (lookupKey: GraphObjectLookupKey) => Promise<Entity>;
 
   /**
    * Allows a step to iterate all entities collected into the job state, limited

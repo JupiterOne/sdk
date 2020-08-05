@@ -36,14 +36,23 @@ describe('entities', () => {
     },
   ];
 
-  test('creates a job state object that can collect and query entities', async () => {
+  test('creates a job state object that can collect and query an array of entities', async () => {
     expect.hasAssertions();
     const jobState = createMockJobState();
-    await jobState.addEntities(inputEntities);
+    const entities = await jobState.addEntities(inputEntities);
 
     await assertEntityFilteringCapabilities(jobState);
 
+    expect(entities).toBe(inputEntities);
     expect(jobState.collectedEntities).toEqual(inputEntities);
+  });
+
+  test('creates a job state object that can collect a single entity', async () => {
+    expect.hasAssertions();
+    const jobState = createMockJobState();
+    const entity = await jobState.addEntity(inputEntities[0]);
+    expect(entity).toBe(inputEntities[0]);
+    expect(jobState.collectedEntities).toEqual([entity]);
   });
 
   test('does not include pre-existing entities in collectedEntities', async () => {

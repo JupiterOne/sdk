@@ -43,12 +43,13 @@ export function createMockJobState({
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
 
-  const addEntities = async (newEntities) => {
+  const addEntities = async (newEntities): Promise<Entity[]> => {
     newEntities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key);
       typeTracker.registerType(e._type);
     });
     collectedEntities = collectedEntities.concat(newEntities);
+    return newEntities;
   };
 
   const addRelationships = async (newRelationships) => {
@@ -59,7 +60,10 @@ export function createMockJobState({
     collectedRelationships = collectedRelationships.concat(newRelationships);
   };
 
-  const iterateEntities = async <T extends Entity = Entity>(filter, iteratee) => {
+  const iterateEntities = async <T extends Entity = Entity>(
+    filter,
+    iteratee,
+  ) => {
     const filteredEntities = [...inputEntities, ...collectedEntities].filter(
       (e) => e._type === filter._type,
     );
@@ -89,8 +93,9 @@ export function createMockJobState({
       return dataStore.get(key) as T;
     },
 
-    addEntity: async (entity: Entity) => {
-      addEntities([entity]);
+    addEntity: async (entity: Entity): Promise<Entity> => {
+      await addEntities([entity]);
+      return entity;
     },
     addEntities,
 
@@ -103,17 +108,14 @@ export function createMockJobState({
       const { _type, _key } = lookupKey;
       const entities: Entity[] = [];
 
-      iterateEntities(
-        { _type },
-        async (e) => {
-          if (e._key === _key) {
-            entities.push(e);
-          }
+      iterateEntities({ _type }, async (e) => {
+        if (e._key === _key) {
+          entities.push(e);
         }
-      );
-  
+      });
+
       if (entities.length !== 1) {
-        throw new Error(  
+        throw new Error(
           `Failed to find entity with _type=${_type}, _key=${_key}`,
         );
       } else {
