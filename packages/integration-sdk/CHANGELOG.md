@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Fixed `visualize` cmd where mapped relationships did not consider `targetFilterKey` when matching entities
+- Fixed `visualize` cmd where multiple nodes with the same nodeId could be created, which causes rendering to fail
+
 ## 2.8.0 - 2020-08-3
 
 ### Added
