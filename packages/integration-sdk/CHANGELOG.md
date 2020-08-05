@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.9.0 - 2020-08-05
+
 ### Updated
 
 - #270 - Return the Entity from `jobState.addEntity` and `jobState.addEntities`
