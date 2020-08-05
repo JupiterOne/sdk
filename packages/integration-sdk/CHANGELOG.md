@@ -9,10 +9,34 @@ and this project adheres to
 
 ## Unreleased
 
+### Updated
+
+- #270 - Return the Entity from `jobState.addEntity` and `jobState.addEntities`
+
+Example:
+
+```typescript
+const entity = await jobState.addEntity(convertToEntity(data));
+const entity2 = await jobState.addEntity(convertToOtherEntity(entity2));
+await jobState.addRelationship(
+  convertToRelationship(entity, entity2)
+);
+
+// Or this:
+await jobState.addRelationship(
+  convertToRelationship(
+    await jobState.addEntity(convertToEntity(data))
+    await jobState.addEntity(convertToOtherEntity(entity2))
+  )
+);
+```
+
 ### Fixed
 
-- Fixed `visualize` cmd where mapped relationships did not consider `targetFilterKey` when matching entities
-- Fixed `visualize` cmd where multiple nodes with the same nodeId could be created, which causes rendering to fail
+- Fixed `visualize` cmd where mapped relationships did not consider
+  `targetFilterKey` when matching entities
+- Fixed `visualize` cmd where multiple nodes with the same nodeId could be
+  created, which causes rendering to fail
 
 ## 2.8.0 - 2020-08-3
 

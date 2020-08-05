@@ -45,26 +45,29 @@ export class MemoryDataStore {
   }
 }
 
+export interface CreateStepJobStateParams {
+  stepId: string;
+  duplicateKeyTracker: DuplicateKeyTracker;
+  typeTracker: TypeTracker;
+  graphObjectStore: FileSystemGraphObjectStore;
+  dataStore: MemoryDataStore;
+}
+
 export function createStepJobState({
   stepId,
   duplicateKeyTracker,
   typeTracker,
   graphObjectStore,
   dataStore,
-}: {
-  stepId: string;
-  duplicateKeyTracker: DuplicateKeyTracker;
-  typeTracker: TypeTracker;
-  graphObjectStore: FileSystemGraphObjectStore;
-  dataStore: MemoryDataStore;
-}): JobState {
-  const addEntities = (entities: Entity[]) => {
+}: CreateStepJobStateParams): JobState {
+  const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     entities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key);
       typeTracker.registerType(e._type);
     });
 
-    return graphObjectStore.addEntities(stepId, entities);
+    await graphObjectStore.addEntities(stepId, entities);
+    return entities;
   };
 
   const addRelationships = (relationships: Relationship[]) => {
@@ -86,8 +89,9 @@ export function createStepJobState({
       return dataStore.get(key) as T;
     },
 
-    addEntity: (entity: Entity) => {
-      return addEntities([entity]);
+    addEntity: async (entity: Entity): Promise<Entity> => {
+      await addEntities([entity]);
+      return entity;
     },
     addEntities,
 
@@ -97,7 +101,7 @@ export function createStepJobState({
     addRelationships,
 
     getEntity: (lookupKey) => {
-      return graphObjectStore.getEntity(lookupKey)
+      return graphObjectStore.getEntity(lookupKey);
     },
 
     iterateEntities: (filter, iteratee) =>
