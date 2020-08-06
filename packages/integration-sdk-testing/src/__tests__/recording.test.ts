@@ -22,7 +22,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await server.close();
-  recording.stop();
+  await recording.stop();
   vol.reset();
 });
 

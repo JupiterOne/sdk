@@ -41,10 +41,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(async () => {
+afterEach(() => {
   delete process.env.JUPITERONE_API_KEY;
   delete process.env.JUPITERONE_DEV;
-  await polly.disconnect();
+  polly.disconnect();
 });
 
 test('uploads data to the synchronization api and displays the results', async () => {

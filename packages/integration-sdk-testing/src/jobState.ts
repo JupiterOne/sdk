@@ -49,7 +49,7 @@ export function createMockJobState({
       typeTracker.registerType(e._type);
     });
     collectedEntities = collectedEntities.concat(newEntities);
-    return newEntities;
+    return Promise.resolve(newEntities);
   };
 
   const addRelationships = async (newRelationships) => {
@@ -58,6 +58,7 @@ export function createMockJobState({
       typeTracker.registerType(r._type as string);
     });
     collectedRelationships = collectedRelationships.concat(newRelationships);
+    return Promise.resolve();
   };
 
   const iterateEntities = async <T extends Entity = Entity>(
@@ -87,10 +88,11 @@ export function createMockJobState({
 
     setData: async <T>(key: string, data: T): Promise<void> => {
       dataStore.set(key, data);
+      return Promise.resolve();
     },
 
     getData: async <T>(key: string): Promise<T> => {
-      return dataStore.get(key) as T;
+      return Promise.resolve(dataStore.get(key) as T);
     },
 
     addEntity: async (entity: Entity): Promise<Entity> => {
@@ -100,7 +102,7 @@ export function createMockJobState({
     addEntities,
 
     addRelationship: async (relationship: Relationship) => {
-      addRelationships([relationship]);
+      await addRelationships([relationship]);
     },
     addRelationships,
 
@@ -112,6 +114,8 @@ export function createMockJobState({
         if (e._key === _key) {
           entities.push(e);
         }
+
+        return Promise.resolve();
       });
 
       if (entities.length !== 1) {

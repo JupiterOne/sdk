@@ -83,10 +83,11 @@ export function createStepJobState({
   return {
     setData: async <T>(key: string, data: T): Promise<void> => {
       dataStore.set(key, data);
+      return Promise.resolve();
     },
 
     getData: async <T>(key: string): Promise<T> => {
-      return dataStore.get(key) as T;
+      return Promise.resolve(dataStore.get(key) as T);
     },
 
     addEntity: async (entity: Entity): Promise<Entity> => {

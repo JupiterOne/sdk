@@ -135,7 +135,7 @@ describe('createIntegrationLogger', () => {
     } as unknown) as Logger);
   });
 
-  test('installs expected properties', async () => {
+  test('installs expected properties', () => {
     createIntegrationLogger({ name, invocationConfig });
 
     expect(Logger.createLogger).toHaveBeenCalledWith({
@@ -299,7 +299,7 @@ describe('step event publishing', () => {
     );
   });
 
-  test('posts events via api client if synchronizationContext is registered', async () => {
+  test('posts events via api client if synchronizationContext is registered', () => {
     const onEmitEvent = jest.fn();
 
     const logger = createIntegrationLogger({
@@ -383,7 +383,7 @@ describe('provider auth error details', () => {
         'Provider authorization failed at https://cute.af: 403 Forbidden',
     },
   ].forEach(({ error, expectedReason }) => {
-    test(`stepFailure adds additional information to the log message if an ${error.code} error is provided`, async () => {
+    test(`stepFailure adds additional information to the log message if an ${error.code} error is provided`, () => {
       logger.stepFailure(step, error);
 
       expect(onEmitEvent).toHaveBeenCalledWith({
@@ -398,7 +398,7 @@ describe('provider auth error details', () => {
       });
     });
 
-    test(`validationFailure adds additional information to the log message if an ${error.code} error is provided`, async () => {
+    test(`validationFailure adds additional information to the log message if an ${error.code} error is provided`, () => {
       logger.validationFailure(error);
 
       expect(onEmitEvent).toHaveBeenCalledWith({
@@ -416,7 +416,7 @@ describe('provider auth error details', () => {
 });
 
 describe('sync upload logging', () => {
-  test('posts events to api client', async () => {
+  test('posts events to api client', () => {
     const onEmitEvent = jest.fn();
 
     const logger = createIntegrationLogger({
@@ -443,7 +443,7 @@ describe('sync upload logging', () => {
 });
 
 describe('validation failure logging', () => {
-  test('unexpected error', async () => {
+  test('unexpected error', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
@@ -474,7 +474,7 @@ describe('validation failure logging', () => {
     );
   });
 
-  test('expected user error', async () => {
+  test('expected user error', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
@@ -611,7 +611,7 @@ describe('publishMetric', () => {
 });
 
 describe('#publishEvent', () => {
-  test('should support publishEvent(...) function', async () => {
+  test('should support publishEvent(...) function', () => {
     const onEmitEvent = jest.fn();
 
     const logger = createIntegrationLogger({
@@ -635,7 +635,7 @@ describe('#publishEvent', () => {
 });
 
 describe('#publishErrorEvent', () => {
-  test('should support publishErrorEvent(...) function', async () => {
+  test('should support publishErrorEvent(...) function', () => {
     const onEmitEvent = jest.fn();
 
     const logger = createIntegrationLogger({

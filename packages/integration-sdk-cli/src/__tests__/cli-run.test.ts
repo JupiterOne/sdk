@@ -44,10 +44,10 @@ beforeEach(() => {
   });
 });
 
-afterEach(async () => {
+afterEach(() => {
   delete process.env.JUPITERONE_API_KEY;
   delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
-  await polly.disconnect();
+  polly.disconnect();
 });
 
 test('enables graph object schema validation', async () => {

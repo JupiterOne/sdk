@@ -59,21 +59,18 @@ export class FileSystemGraphObjectStore {
     }
   }
 
-  async getEntity(
-    getEntityOptions: GraphObjectLookupKey,
-  ): Promise<Entity> {
+  async getEntity(getEntityOptions: GraphObjectLookupKey): Promise<Entity> {
     const { _type, _key } = getEntityOptions;
     await this.flushEntitiesToDisk();
 
     const entities: Entity[] = [];
-    await this.iterateEntities(
-      { _type, },
-      async (e) => {
-        if (e._key === _key) {
-          entities.push(e);
-        }
+    await this.iterateEntities({ _type }, async (e) => {
+      if (e._key === _key) {
+        entities.push(e);
       }
-    );
+
+      return Promise.resolve();
+    });
 
     if (entities.length === 0) {
       throw new IntegrationMissingKeyError(
@@ -82,7 +79,7 @@ export class FileSystemGraphObjectStore {
     } else if (entities.length > 1) {
       throw new IntegrationDuplicateKeyError(
         `Duplicate _key detected (_type=${_type}, _key=${_key})`,
-      )
+      );
     } else {
       return entities[0];
     }

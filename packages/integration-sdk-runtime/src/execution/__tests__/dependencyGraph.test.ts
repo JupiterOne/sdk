@@ -199,7 +199,10 @@ describe('executeStepDependencyGraph', () => {
     ];
 
     const graph = buildStepDependencyGraph(steps);
-    executeStepDependencyGraph(
+
+    // NOTE: This is intentionally not awaiting because the `spyB` function
+    // never resolves.
+    void executeStepDependencyGraph(
       executionContext,
       graph,
       getDefaultStepStartStates(steps),

@@ -167,14 +167,14 @@ describe('createMockStepExecutionContext', () => {
       instanceConfigFields,
     });
 
-    jobState.addEntities(entities);
-    jobState.addRelationships(relationships);
+    await jobState.addEntities(entities);
+    await jobState.addRelationships(relationships);
 
     expect(jobState.collectedEntities).toEqual(entities);
     expect(jobState.collectedRelationships).toEqual(relationships);
   });
 
-  test('throws error if duplicate key is added', () => {
+  test('throws error if duplicate key is added', async () => {
     const entities: Entity[] = [
       {
         _key: 'test',
@@ -191,7 +191,7 @@ describe('createMockStepExecutionContext', () => {
       instanceConfigFields,
     });
 
-    expect(jobState.addEntities(entities)).rejects.toThrow(
+    await expect(jobState.addEntities(entities)).rejects.toThrow(
       /Duplicate _key detected \(_key=test\)/,
     );
   });
@@ -212,18 +212,18 @@ describe('createMockStepExecutionContext', () => {
     await step.executionHandler(context);
   });
 
-  test('tracks encounteredTypes', () => {
+  test('tracks encounteredTypes', async () => {
     const { jobState } = createMockStepExecutionContext({
       instanceConfigFields,
     });
 
-    jobState.addEntity({
+    await jobState.addEntity({
       _key: 'entity:0',
       _type: 'test_entity',
       _class: 'Resource',
     });
 
-    jobState.addRelationship({
+    await jobState.addRelationship({
       _key: 'relationship:0',
       _type: 'test_relationship',
       _class: 'Resource',

@@ -17,7 +17,7 @@ jest.mock('../log');
 const mockedAxios = mocked(axios, true);
 const mockedCreateApiClient = mocked(runtime.createApiClientWithApiKey, true);
 
-beforeEach(async () => {
+beforeEach(() => {
   mockedCreateApiClient.mockReturnValue(axios);
   mockedAxios.get.mockReset();
   delete process.env.JUPITERONE_API_KEY;
@@ -62,7 +62,7 @@ test('should export assets', async () => {
       `--api-key=${TEST_API_KEY}`,
     ]),
   ).resolves.toEqual(expect.anything());
-  await expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
+  expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
           Array [
             "[{\\"id\\":\\"entity-1\\",\\"name\\":\\"Entity 1\\",\\"displayName\\":\\"Entity 1\\",\\"createdOn\\":1591831808891,\\"_class\\":\\"Entity\\",\\"_type\\":\\"entity_type_1\\",\\"_key\\":\\"entity-1\\",\\"tag.Production\\":\\"{\\\\\\"object\\\\\\":{\\\\\\"innerProp\\\\\\":\\\\\\"foobar\\\\\\"}}\\"}]",
             "[{\\"id\\":\\"entity-2\\",\\"name\\":\\"Entity 2\\",\\"displayName\\":\\"Entity 2\\",\\"createdOn\\":1591831808892,\\"_class\\":\\"Entity\\",\\"_type\\":\\"entity_type_2\\",\\"_key\\":\\"entity-2\\"}]",
@@ -114,7 +114,7 @@ test('should only export relationships when specified', async () => {
       `--no-include-entities`,
     ]),
   ).resolves.toEqual(expect.anything());
-  await expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
+  expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
           Array [
             "[{\\"_key\\":\\"entity-1|has|entity-2\\",\\"_type\\":\\"entity_type_1_has_2\\",\\"_class\\":\\"HAS\\",\\"_fromEntityKey\\":\\"entity-1\\",\\"_toEntityKey\\":\\"entity-2\\",\\"displayName\\":\\"HAS\\"}]",
             "_key,_type,_class,_fromEntityKey,_toEntityKey,displayName
@@ -160,7 +160,7 @@ test('should only export entities when specified', async () => {
       `--no-include-entities`,
     ]),
   ).resolves.toEqual(expect.anything());
-  await expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
+  expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
           Array [
             "[{\\"id\\":\\"entity-1\\",\\"name\\":\\"Entity 1\\",\\"displayName\\":\\"Entity 1\\",\\"createdOn\\":1591831808891,\\"_class\\":\\"Entity\\",\\"_type\\":\\"entity_type_1\\",\\"_key\\":\\"entity-1\\",\\"tag.Production\\":\\"{\\\\\\"object\\\\\\":{\\\\\\"innerProp\\\\\\":\\\\\\"foobar\\\\\\"}}\\"}]",
             "[{\\"id\\":\\"entity-2\\",\\"name\\":\\"Entity 2\\",\\"displayName\\":\\"Entity 2\\",\\"createdOn\\":1591831808892,\\"_class\\":\\"Entity\\",\\"_type\\":\\"entity_type_2\\",\\"_key\\":\\"entity-2\\"}]",
@@ -171,8 +171,6 @@ test('should only export entities when specified', async () => {
           ]
         `);
 });
-
-
 
 test('should log error when export fails', async () => {
   const error = new Error();

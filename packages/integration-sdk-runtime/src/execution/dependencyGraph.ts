@@ -218,7 +218,7 @@ export function executeStepDependencyGraph<
          */
         if (isStepEnabled(stepId) && stepDependenciesAreComplete(stepId)) {
           removeStepFromWorkingGraph(stepId);
-          promiseQueue.add(() =>
+          void promiseQueue.add(() =>
             timeOperation({
               logger: executionContext.logger,
               metricName: `duration-step`,
@@ -286,7 +286,10 @@ export function executeStepDependencyGraph<
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 
-    promiseQueue.onIdle().then(() => resolve([...stepResultsMap.values()]));
+    void promiseQueue
+      .onIdle()
+      .then(() => resolve([...stepResultsMap.values()]))
+      .catch(reject);
   });
 }
 

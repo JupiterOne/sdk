@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- #279 - Update `.eslintrc` to include eslint rules that will help catch async
+  errors
+
+### Fixed
+
+- `jobState.addRelationships` floating promise in
+  `@jupiterone/integration-sdk-testing`
+- Various async fixes in test suites
+
 ## 2.9.2 - 2020-08-06
 
 ### Fixed

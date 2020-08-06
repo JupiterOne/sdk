@@ -20,8 +20,8 @@ test('publishes events added to the queue in the order they were enqueued', asyn
 
   const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
 
-  queue.enqueue(eventA);
-  queue.enqueue(eventB);
+  await queue.enqueue(eventA);
+  await queue.enqueue(eventB);
 
   await queue.onIdle();
 
@@ -52,7 +52,7 @@ test('logs an error if publish fails', async () => {
 
   const logErrorSpy = jest.spyOn(logger, 'error');
 
-  queue.enqueue(event);
+  await queue.enqueue(event);
 
   await queue.onIdle();
 
