@@ -115,7 +115,7 @@ export function prepareLocalStepCollection<
         return enabledRecord;
       }
     : originalGetStepStartStates &&
-      (async (ctx) => originalGetStepStartStates(ctx));
+      (async (ctx) => Promise.resolve(originalGetStepStartStates(ctx)));
 
   return config;
 }

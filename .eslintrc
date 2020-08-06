@@ -2,7 +2,9 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2020,
+    "project": "./tsconfig.base.json",
+    "tsconfigRootDir": "."
   },
   "extends": ["eslint:recommended", "prettier"],
   "ignorePatterns": ["node_modules/", "dist/", "work/", "coverage/"],
@@ -25,7 +27,10 @@
         "@typescript-eslint/no-var-requires": "off",
         "@typescript-eslint/camelcase": "off",
         "@typescript-eslint/ban-types": "off",
-        "@typescript-eslint/explicit-module-boundary-types": "off"
+        "@typescript-eslint/explicit-module-boundary-types": "off",
+        "@typescript-eslint/await-thenable": "error",
+        "@typescript-eslint/require-await": "error",
+        "@typescript-eslint/no-floating-promises": "error"
       }
     },
     {

@@ -14,8 +14,8 @@ describe('createIntegrationInstanceForLocalExecution', () => {
     delete process.env.MY_FIELD;
   });
 
-  test('creates local integration instance with config loaded from env if no instance id is provided', async () => {
-    const instance = await createIntegrationInstanceForLocalExecution({
+  test('creates local integration instance with config loaded from env if no instance id is provided', () => {
+    const instance = createIntegrationInstanceForLocalExecution({
       validateInvocation: jest.fn(),
       integrationSteps: [],
     });
@@ -23,10 +23,10 @@ describe('createIntegrationInstanceForLocalExecution', () => {
     expect(instance).toEqual(LOCAL_INTEGRATION_INSTANCE);
   });
 
-  test('should allow specifying local JupiterOne account id through environment variable', async () => {
+  test('should allow specifying local JupiterOne account id through environment variable', () => {
     const accountId = (process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID = uuid());
 
-    const instance = await createIntegrationInstanceForLocalExecution({
+    const instance = createIntegrationInstanceForLocalExecution({
       validateInvocation: jest.fn(),
       integrationSteps: [],
     });
@@ -37,8 +37,8 @@ describe('createIntegrationInstanceForLocalExecution', () => {
     });
   });
 
-  test('should load config from env onto instance', async () => {
-    const instance = await createIntegrationInstanceForLocalExecution({
+  test('should load config from env onto instance', () => {
+    const instance = createIntegrationInstanceForLocalExecution({
       validateInvocation: jest.fn(),
       integrationSteps: [],
       instanceConfigFields: {
