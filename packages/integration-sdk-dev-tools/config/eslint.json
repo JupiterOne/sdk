@@ -2,7 +2,9 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2020,
+    "project": "./tsconfig.json",
+    "tsconfigRootDir": "."
   },
   "extends": ["eslint:recommended", "prettier"],
   "ignorePatterns": ["node_modules/", "dist/", "coverage/"],
