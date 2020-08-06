@@ -108,7 +108,7 @@ export function createMockJobState({
       const { _type, _key } = lookupKey;
       const entities: Entity[] = [];
 
-      iterateEntities({ _type }, async (e) => {
+      await iterateEntities({ _type }, async (e) => {
         if (e._key === _key) {
           entities.push(e);
         }
