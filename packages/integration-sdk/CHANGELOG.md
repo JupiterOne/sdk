@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.9.1 - 2020-08-06
+
+### Fixed
+
+- Install direct `deepmerge` dependency into
+  `@jupiterone/integration-sdk-testing` package.
+
 ## 2.9.0 - 2020-08-05
 
 ### Updated
