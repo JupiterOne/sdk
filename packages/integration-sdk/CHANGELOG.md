@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.9.2 - 2020-08-06
+
+### Fixed
+
+- Test instance of `jobState.getEntity()` threw error saying entity not found
+  even though it was added to the job state.
+
 ## 2.9.1 - 2020-08-06
 
 ### Fixed
