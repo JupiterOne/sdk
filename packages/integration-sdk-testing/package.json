@@ -32,6 +32,7 @@
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister": "^2.0.1",
+    "deepmerge": "^4.2.2",
     "lodash": "^4.17.15"
   },
   "devDependencies": {
