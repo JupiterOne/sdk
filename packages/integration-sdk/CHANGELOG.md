@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+### 2.10.0 - 2020-08-06
+
 ### Changed
 
 - #279 - Update `.eslintrc` to include eslint rules that will help catch async
