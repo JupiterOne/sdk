@@ -14,6 +14,10 @@ and this project adheres to
 - #279 - Update `.eslintrc` to include eslint rules that will help catch async
   errors
 
+- Updated root `.eslintrc` to use
+  `@jupiterone/integration-sdk-dev-tools/config/eslint.json` directly with
+  specific overrides.
+
 ### Fixed
 
 - `jobState.addRelationships` floating promise in
