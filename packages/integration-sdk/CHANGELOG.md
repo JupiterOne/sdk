@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Fixed #284 - Introduce `jobState.findEntity`, which will return `null` if the
+  entity does not exist.
+
+Example:
+
+```typescript
+const entity = await jobState.findEntity('entity-key-here');
+```
+
 ### Changed
 
 - [BREAKING] Fixed [#283](https://github.com/JupiterOne/sdk/issues/283) - Change
