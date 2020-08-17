@@ -64,6 +64,31 @@ describe('#createStepJobState', () => {
   });
 });
 
+describe('#findEntity', () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  test('should find entity by _key', async () => {
+    const params = getMockCreateStepJobStateParams();
+    const jobState = createStepJobState(params);
+    const entity: Entity = {
+      _type: 'a_entity',
+      _class: 'A',
+      _key: 'a',
+    };
+
+    await jobState.addEntity(entity);
+    expect(await jobState.findEntity('a')).toStrictEqual(entity);
+  });
+
+  test('should return "null" if entity not found', async () => {
+    const params = getMockCreateStepJobStateParams();
+    const jobState = createStepJobState(params);
+    expect(await jobState.findEntity('invalid-entity-key')).toEqual(null);
+  });
+});
+
 describe('#getEntity', () => {
   afterEach(() => {
     vol.reset();

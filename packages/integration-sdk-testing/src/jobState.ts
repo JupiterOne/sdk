@@ -79,6 +79,41 @@ export function createMockJobState({
     }
   };
 
+  const getEntity = async (_key: string) => {
+    const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
+      _key,
+    );
+
+    if (!graphObjectMetadata) {
+      throw new IntegrationMissingKeyError(
+        `Failed to find entity in in-memory graph object metadata store _key=${_key})`,
+      );
+    }
+
+    const { _type } = graphObjectMetadata;
+    const entities: Entity[] = [];
+
+    await iterateEntities({ _type }, async (e) => {
+      if (e._key === _key) {
+        entities.push(e);
+      }
+
+      return Promise.resolve();
+    });
+
+    if (entities.length === 0) {
+      throw new IntegrationMissingKeyError(
+        `Failed to find entity (_type=${_type}, _key=${_key})`,
+      );
+    } else if (entities.length > 1) {
+      throw new IntegrationDuplicateKeyError(
+        `Duplicate _key detected (_type=${_type}, _key=${_key})`,
+      );
+    } else {
+      return entities[0];
+    }
+  };
+
   return {
     get collectedEntities() {
       return collectedEntities;
@@ -112,38 +147,18 @@ export function createMockJobState({
     },
     addRelationships,
 
-    getEntity: async (_key: string) => {
-      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
-        _key,
-      );
+    getEntity,
 
-      if (!graphObjectMetadata) {
-        throw new IntegrationMissingKeyError(
-          `Failed to find entity in in-memory graph object metadata store _key=${_key})`,
-        );
-      }
-
-      const { _type } = graphObjectMetadata;
-      const entities: Entity[] = [];
-
-      await iterateEntities({ _type }, async (e) => {
-        if (e._key === _key) {
-          entities.push(e);
+    findEntity: async (_key: string) => {
+      try {
+        const entity = await getEntity(_key);
+        return entity;
+      } catch (err) {
+        if (err instanceof IntegrationMissingKeyError) {
+          return null;
         }
 
-        return Promise.resolve();
-      });
-
-      if (entities.length === 0) {
-        throw new IntegrationMissingKeyError(
-          `Failed to find entity (_type=${_type}, _key=${_key})`,
-        );
-      } else if (entities.length > 1) {
-        throw new IntegrationDuplicateKeyError(
-          `Duplicate _key detected (_type=${_type}, _key=${_key})`,
-        );
-      } else {
-        return entities[0];
+        throw err;
       }
     },
 

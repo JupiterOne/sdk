@@ -76,6 +76,18 @@ describe('entities', () => {
     await expect(jobState.getEntity('does-not-exist')).rejects.toThrow();
   });
 
+  test('findEntity returns entity from jobState when _key matches', async () => {
+    const jobState = createMockJobState();
+    await jobState.addEntities(inputEntities);
+    const result = await jobState.findEntity('a');
+    expect(result).toEqual(inputEntities[0]);
+  });
+
+  test('findEntity returns null when entity cannot be found in jobState', async () => {
+    const jobState = createMockJobState();
+    expect(await jobState.findEntity('does-not-exist')).toEqual(null);
+  });
+
   async function assertEntityFilteringCapabilities(jobState: MockJobState) {
     const entitiesA: Entity[] = [];
     await jobState.iterateEntities({ _type: 'test_a' }, (e) => {
