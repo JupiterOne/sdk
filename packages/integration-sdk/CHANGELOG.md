@@ -15,11 +15,29 @@ and this project adheres to
   `j1-integration document` command that is used to automatically generate
   documentation in `{integration-proj-dir}/docs/jupiterone.md`.
 
+- Fixed [#284](https://github.com/JupiterOne/sdk/issues/284) - Introduce
+`jobState.findEntity`, which will return `null` if the entity does not exist.
+
+Example:
+
+```typescript
+const entity = await jobState.findEntity('entity-key-here');
+```
+
 ### Changed
 
-- BREAKING [#291](https://github.com/JupiterOne/sdk/issues/291) - Remove `types`
+- **BREAKING** [#291](https://github.com/JupiterOne/sdk/issues/291) - Remove `types`
   from `IntegrationStep` in favor of `entities` and `relationships`, which
   contain metadata used to generate documentation.
+
+- **BREAKING** Fixed [#283](https://github.com/JupiterOne/sdk/issues/283) - Change
+  `jobState.getEntity` to require `_key` value only.
+
+Example:
+
+```typescript
+await jobState.getEntity('myentitykey');
+```
 
 ## 2.11.1 - 2020-08-21
 

@@ -13,10 +13,12 @@ import { Entity } from '@jupiterone/integration-sdk-core';
 jest.mock('fs');
 
 function getMockCreateStepJobStateParams(): CreateStepJobStateParams {
+  const duplicateKeyTracker = new DuplicateKeyTracker();
+
   return {
     stepId: uuid(),
-    graphObjectStore: new FileSystemGraphObjectStore(),
-    duplicateKeyTracker: new DuplicateKeyTracker(),
+    graphObjectStore: new FileSystemGraphObjectStore({ duplicateKeyTracker }),
+    duplicateKeyTracker,
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
   };

@@ -4,7 +4,6 @@ import { Sema } from 'async-sema';
 import {
   Entity,
   Relationship,
-  GraphObjectLookupKey,
   GraphObjectFilter,
   GraphObjectIteratee,
   IntegrationDuplicateKeyError,
@@ -13,7 +12,7 @@ import {
 
 import { flushDataToDisk } from './flushDataToDisk';
 import { BucketMap } from './BucketMap';
-
+import { DuplicateKeyTracker } from '../../execution/jobState';
 import {
   iterateEntityTypeIndex,
   iterateRelationshipTypeIndex,
@@ -25,19 +24,31 @@ export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subje
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
+export interface FileSystemGraphObjectStoreParams {
+  duplicateKeyTracker: DuplicateKeyTracker;
+}
+
 export class FileSystemGraphObjectStore {
+  private duplicateKeyTracker: DuplicateKeyTracker;
+
   semaphore: Sema;
   entityStorageMap: BucketMap<Entity>;
   relationshipStorageMap: BucketMap<Relationship>;
 
-  constructor() {
+  constructor({ duplicateKeyTracker }: FileSystemGraphObjectStoreParams) {
     this.entityStorageMap = new BucketMap();
     this.relationshipStorageMap = new BucketMap();
-
+    this.duplicateKeyTracker = duplicateKeyTracker;
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
   }
 
   async addEntities(storageDirectoryPath: string, newEntities: Entity[]) {
+    newEntities.forEach((e) => {
+      this.duplicateKeyTracker.registerKey(e._key, {
+        _type: e._type,
+      });
+    });
+
     this.entityStorageMap.add(storageDirectoryPath, newEntities);
 
     if (this.entityStorageMap.totalItemCount >= GRAPH_OBJECT_BUFFER_THRESHOLD) {
@@ -59,11 +70,21 @@ export class FileSystemGraphObjectStore {
     }
   }
 
-  async getEntity(getEntityOptions: GraphObjectLookupKey): Promise<Entity> {
-    const { _type, _key } = getEntityOptions;
+  async getEntity(_key: string): Promise<Entity> {
     await this.flushEntitiesToDisk();
+    const graphObjectMetadata = this.duplicateKeyTracker.getGraphObjectMetadata(
+      _key,
+    );
 
+    if (!graphObjectMetadata) {
+      throw new IntegrationMissingKeyError(
+        `Failed to find entity in in-memory graph object metadata store (_key=${_key})`,
+      );
+    }
+
+    const { _type } = graphObjectMetadata;
     const entities: Entity[] = [];
+
     await this.iterateEntities({ _type }, async (e) => {
       if (e._key === _key) {
         entities.push(e);
