@@ -7,17 +7,35 @@ import {
 
 import { FileSystemGraphObjectStore } from '../storage';
 
-export class DuplicateKeyTracker {
-  private readonly keySet = new Set<string>();
+export interface DuplicateKeyTrackerGraphObjectMetadata {
+  _type: string;
+}
 
-  registerKey(key: string) {
-    if (this.keySet.has(key)) {
+/**
+ * Contains a map of every graph object key to a specific set of metadata about
+ * the graph object used for filtering. For example, we use the `_type` property
+ * on graph objects as a method of filtering data down when interating entities
+ * or relationships. We store the `_type` inside the metadata for a fast lookup
+ * table.
+ */
+export class DuplicateKeyTracker {
+  private readonly graphObjectKeyMap = new Map<
+    string,
+    DuplicateKeyTrackerGraphObjectMetadata
+  >();
+
+  registerKey(_key: string, metadata: DuplicateKeyTrackerGraphObjectMetadata) {
+    if (this.graphObjectKeyMap.has(_key)) {
       throw new IntegrationDuplicateKeyError(
-        `Duplicate _key detected (_key=${key})`,
+        `Duplicate _key detected (_key=${_key})`,
       );
     }
 
-    this.keySet.add(key);
+    this.graphObjectKeyMap.set(_key, metadata);
+  }
+
+  getGraphObjectMetadata(_key: string) {
+    return this.graphObjectKeyMap.get(_key);
   }
 }
 
@@ -62,7 +80,6 @@ export function createStepJobState({
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     entities.forEach((e) => {
-      duplicateKeyTracker.registerKey(e._key);
       typeTracker.registerType(e._type);
     });
 
@@ -73,7 +90,9 @@ export function createStepJobState({
   const addRelationships = (relationships: Relationship[]) => {
     relationships.forEach((r) => {
       // relationship types are not playing nicely
-      duplicateKeyTracker.registerKey(r._key as string);
+      duplicateKeyTracker.registerKey(r._key as string, {
+        _type: r._type,
+      });
       typeTracker.registerType(r._type as string);
     });
 

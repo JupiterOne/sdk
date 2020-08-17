@@ -79,10 +79,12 @@ export function executeStepDependencyGraph<
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
 
-  const graphObjectStore = new FileSystemGraphObjectStore();
+  const duplicateKeyTracker = new DuplicateKeyTracker();
+  const graphObjectStore = new FileSystemGraphObjectStore({
+    duplicateKeyTracker,
+  });
 
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
-  const duplicateKeyTracker = new DuplicateKeyTracker();
   const dataStore = new MemoryDataStore();
 
   function isStepEnabled(stepId: string) {

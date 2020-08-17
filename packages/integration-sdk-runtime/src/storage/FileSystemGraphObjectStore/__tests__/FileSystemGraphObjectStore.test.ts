@@ -20,6 +20,7 @@ import {
   createIntegrationEntity,
   createIntegrationRelationship,
 } from '@jupiterone/integration-sdk-core';
+import { DuplicateKeyTracker } from '../../../execution';
 
 jest.mock('fs');
 
@@ -249,37 +250,33 @@ describe('getEntity', () => {
     const _type = uuid();
     const _key = uuid();
 
-    const nonMatchingEntities = times(25, () =>
-      generateEntity({ _type }),
-    );
-    const matchingEntity = generateEntity({ _type, _key })
+    const nonMatchingEntities = times(25, () => generateEntity({ _type }));
+    const matchingEntity = generateEntity({ _type, _key });
 
     await store.addEntities(storageDirectoryPath, [
       ...nonMatchingEntities,
       matchingEntity,
     ]);
 
-    const entity = await store.getEntity({ _type, _key });
+    const entity = await store.getEntity(_key);
     expect(store.entityStorageMap.totalItemCount).toEqual(0);
 
     expect(entity).toEqual(matchingEntity);
   });
 
-  test('should throw if entity is not found by "_type" and "_key"', async () => {
+  test('should throw if entity is not found by "_key"', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const _type = uuid();
     const _key = uuid();
 
-    const nonMatchingEntities = times(25, () =>
-      generateEntity({ _type }),
+    const nonMatchingEntities = times(25, () => generateEntity({ _type }));
+
+    await store.addEntities(storageDirectoryPath, [...nonMatchingEntities]);
+
+    await expect(store.getEntity(_key)).rejects.toThrow(
+      `Failed to find entity in in-memory graph object metadata store (_key=${_key})`,
     );
-
-    await store.addEntities(storageDirectoryPath, [
-      ...nonMatchingEntities,
-    ]);
-
-    await expect(store.getEntity({ _type, _key })).rejects.toThrow(`Failed to find entity (_type=${_type}, _key=${_key})`);
   });
 });
 
@@ -413,7 +410,8 @@ describe('iterateRelationships', () => {
 
 function setupFileSystemObjectStore() {
   const storageDirectoryPath = uuid();
-  const store = new FileSystemGraphObjectStore();
+  const duplicateKeyTracker = new DuplicateKeyTracker();
+  const store = new FileSystemGraphObjectStore({ duplicateKeyTracker });
 
   return {
     storageDirectoryPath,
