@@ -63,7 +63,7 @@ describe('entities', () => {
     expect(jobState.collectedEntities).toEqual([]);
   });
 
-  test.only('getEntity returns entity from jobState when _key matches', async () => {
+  test('getEntity returns entity from jobState when _key matches', async () => {
     const jobState = createMockJobState();
     await jobState.addEntities(inputEntities);
     const result = await jobState.getEntity('a');
