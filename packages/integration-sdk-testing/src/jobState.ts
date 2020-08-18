@@ -4,6 +4,7 @@ import {
   Relationship,
   IntegrationMissingKeyError,
   IntegrationDuplicateKeyError,
+  GraphObjectLookupKey,
 } from '@jupiterone/integration-sdk-core';
 import {
   DuplicateKeyTracker,
@@ -79,18 +80,8 @@ export function createMockJobState({
     }
   };
 
-  const getEntity = async (_key: string) => {
-    const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
-      _key,
-    );
-
-    if (!graphObjectMetadata) {
-      throw new IntegrationMissingKeyError(
-        `Failed to find entity in in-memory graph object metadata store _key=${_key})`,
-      );
-    }
-
-    const { _type } = graphObjectMetadata;
+  const getEntity = async (lookupKey: GraphObjectLookupKey) => {
+    const { _key, _type } = lookupKey;
     const entities: Entity[] = [];
 
     await iterateEntities({ _type }, async (e) => {
@@ -147,19 +138,40 @@ export function createMockJobState({
     },
     addRelationships,
 
-    getEntity,
+    getEntity: async (_key: string) => {
+      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
+        _key,
+      );
+
+      if (!graphObjectMetadata) {
+        throw new IntegrationMissingKeyError(
+          `Failed to find entity in in-memory graph object metadata store _key=${_key})`,
+        );
+      }
+
+      const entity = await getEntity({
+        _key,
+        _type: graphObjectMetadata._type,
+      });
+
+      return entity;
+    },
 
     findEntity: async (_key: string) => {
-      try {
-        const entity = await getEntity(_key);
-        return entity;
-      } catch (err) {
-        if (err instanceof IntegrationMissingKeyError) {
-          return null;
-        }
+      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
+        _key,
+      );
 
-        throw err;
+      if (!graphObjectMetadata) {
+        return null;
       }
+
+      const entity = await getEntity({
+        _key,
+        _type: graphObjectMetadata._type,
+      });
+
+      return entity;
     },
 
     iterateEntities,
