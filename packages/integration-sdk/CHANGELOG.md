@@ -30,7 +30,7 @@ const entity = await jobState.findEntity('entity-key-here');
   from `IntegrationStep` in favor of `entities` and `relationships`, which
   contain metadata used to generate documentation.
 
-- **BREAKING** Fixed [#283](https://github.com/JupiterOne/sdk/issues/283) - Change
+- **BREAKING** [#283](https://github.com/JupiterOne/sdk/issues/283) - Change
   `jobState.getEntity` to require `_key` value only.
 
 Example:

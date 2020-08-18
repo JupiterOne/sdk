@@ -3,6 +3,7 @@ import {
   Entity,
   Relationship,
   JobState,
+  IntegrationMissingKeyError,
 } from '@jupiterone/integration-sdk-core';
 
 import { FileSystemGraphObjectStore } from '../storage';
@@ -80,6 +81,10 @@ export function createStepJobState({
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     entities.forEach((e) => {
+      duplicateKeyTracker.registerKey(e._key, {
+        _type: e._type,
+      });
+
       typeTracker.registerType(e._type);
     });
 
@@ -120,8 +125,21 @@ export function createStepJobState({
     },
     addRelationships,
 
-    getEntity: (lookupKey) => {
-      return graphObjectStore.getEntity(lookupKey);
+    getEntity: (_key: string) => {
+      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
+        _key,
+      );
+
+      if (!graphObjectMetadata) {
+        throw new IntegrationMissingKeyError(
+          `Failed to find entity in in-memory graph object metadata store (_key=${_key})`,
+        );
+      }
+
+      return graphObjectStore.getEntity({
+        _key,
+        _type: graphObjectMetadata._type,
+      });
     },
 
     iterateEntities: (filter, iteratee) =>
