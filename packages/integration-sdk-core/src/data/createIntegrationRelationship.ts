@@ -188,7 +188,6 @@ export function createMappedRelationship(
         relationshipDirection:
           options.relationshipDirection || RelationshipDirection.FORWARD,
         sourceEntityKey: options.source._key,
-        sourceEntityType: options.source._type,
         targetEntity: options.target,
         targetFilterKeys: options.targetFilterKeys || [['_type', '_key']],
         skipTargetCreation: options.skipTargetCreation,
@@ -221,7 +220,7 @@ function createMappedRelationshipLiteral(
     type(
       options.properties,
       options._class,
-      mapping.sourceEntityType || 'mapping_source',
+      'mapping_source',
       mapping.targetEntity._type,
     );
 

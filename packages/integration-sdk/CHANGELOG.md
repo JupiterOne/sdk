@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Removed
+
+- #288 - Remove `sourceEntityType` from `RelationshipMapping` interface
+
 ### 2.10.0 - 2020-08-06
 
 ### Changed
