@@ -151,20 +151,12 @@ export function createStepJobState({
         return null;
       }
 
-      try {
-        const entity = await graphObjectStore.getEntity({
-          _key,
-          _type: graphObjectMetadata._type,
-        });
+      const entity = await graphObjectStore.getEntity({
+        _key,
+        _type: graphObjectMetadata._type,
+      });
 
-        return entity;
-      } catch (err) {
-        if (err instanceof IntegrationMissingKeyError) {
-          return null;
-        }
-
-        throw err;
-      }
+      return entity;
     },
 
     iterateEntities: (filter, iteratee) =>
