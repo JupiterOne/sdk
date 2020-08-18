@@ -12,7 +12,13 @@ and this project adheres to
 ### Changed
 
 - [BREAKING] Fixed [#283](https://github.com/JupiterOne/sdk/issues/283) - Change
-  `jobState.getEntity` to only to a `_key`.
+  `jobState.getEntity` to require `_key` value only.
+
+Example:
+
+```typescript
+await jobState.getEntity('myentitykey');
+```
 
 ### 2.10.0 - 2020-08-06
 

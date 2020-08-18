@@ -80,9 +80,7 @@ export function executeStepDependencyGraph<
   const promiseQueue = new PromiseQueue();
 
   const duplicateKeyTracker = new DuplicateKeyTracker();
-  const graphObjectStore = new FileSystemGraphObjectStore({
-    duplicateKeyTracker,
-  });
+  const graphObjectStore = new FileSystemGraphObjectStore();
 
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
   const dataStore = new MemoryDataStore();
