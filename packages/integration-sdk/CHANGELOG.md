@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.11.1 - 2020-08-21
+
+### Fixed
+
+- [#293](https://github.com/JupiterOne/sdk/issues/293)
+  `toMatchGraphObjectSchema` generates an invalid JSON schema when using
+  `_class` with duplicate `required` or `types` properties.
+
 ## 2.11.0 - 2020-08-20
 
 ### Changed
