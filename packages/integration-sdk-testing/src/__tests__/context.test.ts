@@ -202,7 +202,8 @@ describe('createMockStepExecutionContext', () => {
     const step: IntegrationStep = {
       id: 'step-a',
       name: 'My step',
-      types: [],
+      entities: [],
+      relationships: [],
       executionHandler() {
         return Promise.resolve();
       },

@@ -92,7 +92,14 @@ describe('executeIntegrationInstance', () => {
       {
         id: 'my-step',
         name: 'My awesome step',
-        types: ['test'],
+        entities: [
+          {
+            resourceName: 'The Test',
+            _type: 'test',
+            _class: 'Test',
+          },
+        ],
+        relationships: [],
         executionHandler: jest.fn(),
       },
     ];
@@ -111,7 +118,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest.fn(),
         },
       ],
@@ -144,7 +158,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest.fn(),
         },
       ],
@@ -166,7 +187,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest
             .fn()
             .mockRejectedValue(new Error('something broke')),
@@ -199,7 +227,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-a',
           name: 'My awesome step',
-          types: ['test_a'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_a',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest
             .fn()
             .mockRejectedValue(new Error('something broke')),
@@ -207,7 +242,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-b',
           name: 'My awesome step',
-          types: ['test_b'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_b',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           dependsOn: ['my-step-a'],
           executionHandler: jest.fn(),
         },
@@ -251,7 +293,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-a',
           name: 'My awesome step',
-          types: ['test_a'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_a',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest
             .fn()
             .mockRejectedValue(new Error('something broke')),
@@ -259,7 +308,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-b',
           name: 'My awesome step',
-          types: ['test_b'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_b',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest.fn(),
         },
       ],
@@ -305,7 +361,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-a',
           name: 'My awesome step',
-          types: ['test_a'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_a',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest
             .fn()
             .mockRejectedValue(new Error('something broke')),
@@ -313,7 +376,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step-b',
           name: 'My awesome step',
-          types: ['test_b'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_b',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest.fn(),
         },
       ],
@@ -362,7 +432,14 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           async executionHandler({ jobState }) {
             await jobState.addEntity({
               _key: 'test',
@@ -401,13 +478,27 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'my-step',
           name: 'My awesome step',
-          types: ['test'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest.fn(),
         },
         {
           id: 'my-step-2',
           name: 'My awesome second step',
-          types: ['test_2'],
+          entities: [
+            {
+              resourceName: 'The Test',
+              _type: 'test_2',
+              _class: 'Test',
+            },
+          ],
+          relationships: [],
           executionHandler: jest
             .fn()
             .mockRejectedValue(new Error('something went wrong')),
@@ -455,7 +546,8 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'a',
           name: 'a',
-          types: [],
+          entities: [],
+          relationships: [],
           async executionHandler({ jobState }) {
             await jobState.addEntities([
               {
@@ -486,7 +578,8 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'a',
           name: 'a',
-          types: [],
+          entities: [],
+          relationships: [],
           async executionHandler({ jobState }) {
             await jobState.addEntity({
               _key: 'key_a',
@@ -498,7 +591,8 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'b',
           name: 'b',
-          types: [],
+          entities: [],
+          relationships: [],
           async executionHandler({ jobState }) {
             await jobState.addEntity({
               _key: 'key_a',

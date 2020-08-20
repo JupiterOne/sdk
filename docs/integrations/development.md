@@ -22,8 +22,9 @@ for performing config field validation, a function for determining which steps
 of an integration to ignore, and a list of steps that define how an integration
 should collect data.
 
-Use the provided [Integration Template](https://github.com/JupiterOne/integration-template)
-to get started.
+Use the provided
+[Integration Template](https://github.com/JupiterOne/integration-template) to
+get started.
 
 ### `IntegrationInvocationConfig` fields
 
@@ -295,12 +296,16 @@ await iterateEntities({ _type: 'my_integration_user' }, async (userEntity) => {
 });
 ```
 
-Specific entities can be looked up using `_key` and `_type` properties via the `getEntity` function.
+Specific entities can be looked up using `_key` and `_type` properties via the
+`getEntity` function.
 
 Example usage:
 
 ```typescript
-const entity = getEntity({_type: 'my_integration_user', _key: 'some_unique_identifier'})
+const entity = getEntity({
+  _type: 'my_integration_user',
+  _key: 'some_unique_identifier',
+});
 ```
 
 More details about how the framework uses `jobState` is detailed in the [Data
@@ -679,8 +684,8 @@ automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that based
 on the step that was run. Entities and relationships will also be grouped by the
 `_type` and linked into separate directories to provide faster look ups. These
-directories will be used by the `getEntity`, `iterateEntities`, and `iterateRelationships`
-functions to provide faster lookups.
+directories will be used by the `getEntity`, `iterateEntities`, and
+`iterateRelationships` functions to provide faster lookups.
 
 From our experience, integrations most commonly query collected data from
 previous steps the `_type` property for constructing relationships, so the
@@ -1164,6 +1169,32 @@ files:
   ]
 }
 ```
+
+#### `j1-integration document`
+
+Usage:
+
+```
+Usage: j1-integration document [options]
+
+Generates documentation for all steps
+
+Options:
+  -d, --project-path <directory>
+    Absolute file path to the integration project directory. Defaults to the
+    currenct working directory.
+
+  -f, --documentation-file-path <directory>
+    Absolute file path to the Markdown file that should be created/updated.
+    Defaults to {PWD}/docs/jupiterone.md.
+
+  -h, --help
+    display help for command
+```
+
+`j1-integration document` generates entity and relationship documentation based
+on the metadata defined in each step. Documentation for an integration is stored
+in the `{integration-project-dir}/docs/jupiterone.md` file.
 
 #### Future commands and utilities
 

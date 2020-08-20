@@ -258,7 +258,8 @@ describe('step event publishing', () => {
     const step: IntegrationStep = {
       id: 'a',
       name: 'Mochi',
-      types: [],
+      entities: [],
+      relationships: [],
       dependsOn: [],
       executionHandler: jest.fn(),
     };
@@ -312,7 +313,8 @@ describe('step event publishing', () => {
     const step: IntegrationStep = {
       id: 'a',
       name: 'Mochi',
-      types: [],
+      entities: [],
+      relationships: [],
       dependsOn: [],
       executionHandler: jest.fn(),
     };
@@ -348,7 +350,8 @@ describe('provider auth error details', () => {
   const step: IntegrationStep = {
     id: 'a',
     name: 'Mochi',
-    types: [],
+    entities: [],
+    relationships: [],
     dependsOn: [],
     executionHandler: jest.fn(),
   };

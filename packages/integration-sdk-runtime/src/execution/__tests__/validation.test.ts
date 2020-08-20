@@ -22,7 +22,8 @@ describe('validateStepStartStates', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: jest.fn(),
       },
     ];
@@ -42,19 +43,22 @@ describe('validateStepStartStates', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: jest.fn(),
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: jest.fn(),
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: jest.fn(),
       },
     ];
@@ -74,7 +78,8 @@ describe('validateStepStartStates', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: jest.fn(),
       },
     ];

@@ -47,14 +47,16 @@ describe('buildStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: jest.fn(),
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: jest.fn(),
       },
@@ -70,14 +72,16 @@ describe('buildStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: jest.fn(),
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['c'],
         executionHandler: jest.fn(),
       },
@@ -93,14 +97,16 @@ describe('buildStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: jest.fn(),
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: jest.fn(),
       },
     ];
@@ -131,7 +137,8 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: executionHandlerSpy,
       },
     ];
@@ -180,19 +187,40 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: ['my_type_a'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_a',
+            _class: 'MyClassC',
+          },
+        ],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: ['my_type_b'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_b',
+            _class: 'MyClassC',
+          },
+        ],
+        relationships: [],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: ['my_type_c'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_c',
+            _class: 'MyClassC',
+          },
+        ],
+        relationships: [],
         dependsOn: ['a', 'b'],
         executionHandler: spyC,
       },
@@ -229,7 +257,14 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: ['my_type_a'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_a',
+            _class: 'MyClassA',
+          },
+        ],
+        relationships: [],
         executionHandler: async ({ jobState }) => {
           await jobState.addEntities([
             {
@@ -285,7 +320,14 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: ['my_type_a'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_a',
+            _class: 'MyClassA',
+          },
+        ],
+        relationships: [],
         executionHandler: async ({ jobState }) => {
           await jobState.addEntities([
             {
@@ -299,7 +341,14 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'b',
         name: 'b',
-        types: ['my_type_b'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_b',
+            _class: 'MyClassB',
+          },
+        ],
+        relationships: [],
         executionHandler: async ({ jobState }) => {
           await jobState.addEntities([
             {
@@ -313,7 +362,14 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'c',
         name: 'c',
-        types: ['my_type_c'],
+        entities: [
+          {
+            resourceName: 'The Class',
+            _type: 'my_type_c',
+            _class: 'MyClassC',
+          },
+        ],
+        relationships: [],
         dependsOn: ['a', 'b'],
         executionHandler: async ({ jobState }) => {
           await jobState.iterateEntities({ _type: 'my_type_a' }, (e) => {
@@ -378,7 +434,8 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: ({ jobState }) => {
           jobStateFlushSpy = jest.spyOn(jobState, 'flush');
         },
@@ -416,13 +473,15 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: spyB,
       },
@@ -468,7 +527,8 @@ describe('executeStepDependencyGraph', () => {
       const step: IntegrationStep = {
         id: uuid(),
         name: uuid(),
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spy,
       };
 
@@ -519,20 +579,23 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: spyC,
       },
@@ -598,7 +661,8 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: ({ logger }) => {
           errorLogSpy = jest.spyOn(logger, 'error');
           throw error;
@@ -642,20 +706,23 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: spyC,
       },
@@ -719,20 +786,23 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: spyC,
       },
@@ -774,26 +844,30 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a', 'b'],
         executionHandler: spyC,
       },
       {
         id: 'd',
         name: 'd',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['c'],
         executionHandler: spyD,
       },
@@ -839,33 +913,38 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: spyC,
       },
       {
         id: 'd',
         name: 'd',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b', 'c', 'e'],
         executionHandler: spyD,
       },
       {
         id: 'e',
         name: 'e',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyE,
       },
     ];
@@ -911,33 +990,38 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a', 'b'],
         executionHandler: spyC,
       },
       {
         id: 'd',
         name: 'd',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b'],
         executionHandler: spyD,
       },
       {
         id: 'e',
         name: 'e',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['c', 'd'],
         executionHandler: spyE,
       },
@@ -973,7 +1057,8 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
     ];
@@ -1025,33 +1110,38 @@ describe('executeStepDependencyGraph', () => {
       {
         id: 'a',
         name: 'a',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyA,
       },
       {
         id: 'b',
         name: 'b',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyB,
       },
       {
         id: 'c',
         name: 'c',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['a'],
         executionHandler: spyC,
       },
       {
         id: 'd',
         name: 'd',
-        types: [],
+        entities: [],
+        relationships: [],
         dependsOn: ['b', 'c', 'e'],
         executionHandler: spyD,
       },
       {
         id: 'e',
         name: 'e',
-        types: [],
+        entities: [],
+        relationships: [],
         executionHandler: spyE,
       },
     ];

@@ -11,13 +11,27 @@ export const invocationConfig = {
     {
       id: 'fetch-accounts',
       name: 'Fetch Accounts',
-      types: ['my_account'],
+      entities: [
+        {
+          resourceName: 'The Account',
+          _type: 'my_account',
+          _class: 'User',
+        },
+      ],
+      relationships: [],
       executionHandler: noop,
     },
     {
       id: 'fetch-users',
       name: 'Fetch Users',
-      types: ['my_user'],
+      entities: [
+        {
+          resourceName: 'The user',
+          _type: 'my_user',
+          _class: 'User',
+        },
+      ],
+      relationships: [],
       executionHandler: noop,
     },
   ],

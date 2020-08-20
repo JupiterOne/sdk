@@ -1,8 +1,18 @@
 import noop from 'lodash/noop';
+import { StepExecutionContext, Step } from '@jupiterone/integration-sdk-core';
 
-export default {
+const fetchAccountsStep: Step<StepExecutionContext> = {
   id: 'fetch-accounts',
   name: 'Fetch Accounts',
-  types: ['my_account'],
+  entities: [
+    {
+      resourceName: 'The Account',
+      _type: 'my_account',
+      _class: 'Account',
+    },
+  ],
+  relationships: [],
   executionHandler: noop,
 };
+
+export default fetchAccountsStep;
