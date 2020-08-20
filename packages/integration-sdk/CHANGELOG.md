@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 2.11.0 - 2020-08-20
+
+### Changed
+
+- Updated `@jupiterone/data-model` to latest version (`0.8.1`).
+
+## 2.10.1 - 2020-08-18
+
 ### Removed
 
 - #288 - Remove `sourceEntityType` from `RelationshipMapping` interface
