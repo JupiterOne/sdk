@@ -100,6 +100,120 @@ describe('#toMatchGraphObjectSchema', () => {
     expect(result.message()).toEqual('Success!');
   });
 
+  test('should dedup "required" and "type" properties', () => {
+    const googleComputeDisk = {
+      id: '6905138577447433802',
+      name: 'testvm',
+      status: 'READY',
+      _class: ['DataStore', 'Disk'],
+      _type: 'google_compute_disk',
+      _key:
+        'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/disks/testvm',
+      displayName: 'testvm',
+      createdOn: 1597245605930,
+      zone: 'us-central1-a',
+      sizeGB: '10',
+      active: true,
+      sourceImage:
+        'https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-9-stretch-v20200805',
+      sourceImageId: '6709658075886210235',
+      type: 'pd-standard',
+      licenses: [
+        'https://www.googleapis.com/compute/v1/projects/debian-cloud/global/licenses/debian-9-stretch',
+      ],
+      guestOsFeatures: ['VIRTIO_SCSI_MULTIQUEUE'],
+      lastAttachTimestamp: 1597245605930,
+      labelFingerprint: '42WmSpB8rSM=',
+      licenseCodes: ['1000205'],
+      physicalBlockSizeBytes: '4096',
+      kind: 'compute#disk',
+      encrypted: true,
+      classification: null,
+      _rawData: [
+        {
+          name: 'default',
+          rawData: {
+            id: '6905138577447433802',
+            creationTimestamp: '2020-08-12T08:20:05.930-07:00',
+            name: 'testvm',
+            sizeGb: '10',
+            zone:
+              'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a',
+            status: 'READY',
+            selfLink:
+              'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/disks/testvm',
+            sourceImage:
+              'https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-9-stretch-v20200805',
+            sourceImageId: '6709658075886210235',
+            type:
+              'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/diskTypes/pd-standard',
+            licenses: [
+              'https://www.googleapis.com/compute/v1/projects/debian-cloud/global/licenses/debian-9-stretch',
+            ],
+            guestOsFeatures: [
+              {
+                type: 'VIRTIO_SCSI_MULTIQUEUE',
+              },
+            ],
+            lastAttachTimestamp: '2020-08-12T08:20:05.930-07:00',
+            users: [
+              'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/instances/testvm',
+            ],
+            labelFingerprint: '42WmSpB8rSM=',
+            licenseCodes: ['1000205'],
+            physicalBlockSizeBytes: '4096',
+            kind: 'compute#disk',
+            classification: null,
+          },
+        },
+      ],
+    };
+
+    const result = toMatchGraphObjectSchema(googleComputeDisk, {
+      _class: ['DataStore', 'Disk'],
+      schema: {
+        additionalProperties: false,
+        properties: {
+          _type: { const: 'google_compute_disk' },
+          _rawData: {
+            type: 'array',
+            items: { type: 'object' },
+          },
+          description: { type: 'string' },
+          zone: { type: 'string' },
+          sizeGB: { type: 'string' },
+          status: { type: 'string' },
+          sourceImage: { type: 'string' },
+          sourceImageId: { type: 'string' },
+          type: { type: 'string' },
+          licenses: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+          guestOsFeatures: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+          lastAttachTimestamp: { type: 'number' },
+          labelFingerprint: { type: 'string' },
+          licenseCodes: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+          physicalBlockSizeBytes: { type: 'string' },
+          kind: { type: 'string' },
+          encrypted: true,
+        },
+      },
+    });
+
+    expect(result.message()).toEqual('Success!');
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
   test('should match array of custom entities using schema', () => {
     const result = toMatchGraphObjectSchema(
       [generateCollectedEntity(), generateCollectedEntity()],

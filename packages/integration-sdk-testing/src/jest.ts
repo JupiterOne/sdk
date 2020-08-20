@@ -63,6 +63,53 @@ function collectSchemasFromRef(
   return schemas;
 }
 
+/**
+ *
+ * @param schema
+ */
+function dedupSchemaRequiredPropertySchema(
+  schema: GraphObjectSchema,
+): GraphObjectSchema {
+  if (!schema.required) {
+    return schema;
+  }
+
+  const requiredSet = new Set(schema.required);
+
+  return {
+    ...schema,
+    required: Array.from(requiredSet),
+  };
+}
+
+function dedupSchemaPropertyTypes(
+  schema: GraphObjectSchema,
+): GraphObjectSchema {
+  if (!schema.properties) {
+    return schema;
+  }
+
+  const newProperties: Record<string, any> = {};
+
+  for (const propertyName in schema.properties) {
+    const property = schema.properties[propertyName];
+
+    if (Array.isArray(property.type)) {
+      newProperties[propertyName] = {
+        ...property,
+        type: Array.from(new Set(property.type)),
+      };
+    } else {
+      newProperties[propertyName] = property;
+    }
+  }
+
+  return {
+    ...schema,
+    properties: newProperties,
+  };
+}
+
 function generateEntitySchemaFromDataModelSchemas(
   schemas: GraphObjectSchema[],
 ) {
@@ -105,7 +152,9 @@ function generateEntitySchemaFromDataModelSchemas(
     newSchemas.push(schema);
   }
 
-  return deepmerge.all(newSchemas);
+  return dedupSchemaRequiredPropertySchema(
+    dedupSchemaPropertyTypes(deepmerge.all(newSchemas)),
+  );
 }
 
 function graphObjectClassToSchemaRef(_class: string) {
@@ -161,20 +210,20 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     }
   }
 
-  const newEntitySchema = generateEntitySchemaFromDataModelSchemas([
-    // Merging should have the highest-level schemas at the end of the array
-    // so that they can override the parent classes
-    ...schemas.reverse(),
-    {
-      ...schema,
-      properties: {
-        ...schema.properties,
-        _class: {
-          const: _class,
-        },
-      },
-    },
-  ]);
+  const newEntitySchema: GraphObjectSchema = generateEntitySchemaFromDataModelSchemas(
+    [
+      // Merging should have the highest-level schemas at the end of the array
+      // so that they can override the parent classes
+      ...schemas.reverse(),
+      schema,
+    ],
+  );
+
+  if (newEntitySchema.properties) {
+    newEntitySchema.properties._class = {
+      const: _class,
+    };
+  }
 
   received = Array.isArray(received) ? received : [received];
 
