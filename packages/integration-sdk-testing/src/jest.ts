@@ -63,10 +63,6 @@ function collectSchemasFromRef(
   return schemas;
 }
 
-/**
- *
- * @param schema
- */
 function dedupSchemaRequiredPropertySchema(
   schema: GraphObjectSchema,
 ): GraphObjectSchema {
