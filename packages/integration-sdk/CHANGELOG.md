@@ -9,6 +9,18 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- [#291](https://github.com/JupiterOne/sdk/issues/291) - Introduce
+  `j1-integration document` command that is used to automatically generate
+  documentation in `{integration-proj-dir}/docs/jupiterone.md`.
+
+### Changed
+
+- BREAKING [#291](https://github.com/JupiterOne/sdk/issues/291) - Remove `types`
+  from `IntegrationStep` in favor of `entities` and `relationships`, which
+  contain metadata used to generate documentation.
+
 ## 2.11.1 - 2020-08-21
 
 ### Fixed
