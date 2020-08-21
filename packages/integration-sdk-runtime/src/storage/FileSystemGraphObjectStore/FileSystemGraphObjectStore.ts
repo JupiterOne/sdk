@@ -4,16 +4,15 @@ import { Sema } from 'async-sema';
 import {
   Entity,
   Relationship,
-  GraphObjectLookupKey,
   GraphObjectFilter,
   GraphObjectIteratee,
   IntegrationDuplicateKeyError,
   IntegrationMissingKeyError,
+  GraphObjectLookupKey,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
 import { BucketMap } from './BucketMap';
-
 import {
   iterateEntityTypeIndex,
   iterateRelationshipTypeIndex,
@@ -33,7 +32,6 @@ export class FileSystemGraphObjectStore {
   constructor() {
     this.entityStorageMap = new BucketMap();
     this.relationshipStorageMap = new BucketMap();
-
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
   }
 
@@ -59,11 +57,10 @@ export class FileSystemGraphObjectStore {
     }
   }
 
-  async getEntity(getEntityOptions: GraphObjectLookupKey): Promise<Entity> {
-    const { _type, _key } = getEntityOptions;
+  async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
     await this.flushEntitiesToDisk();
-
     const entities: Entity[] = [];
+
     await this.iterateEntities({ _type }, async (e) => {
       if (e._key === _key) {
         entities.push(e);

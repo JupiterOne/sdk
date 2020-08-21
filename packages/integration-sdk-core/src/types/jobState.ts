@@ -70,10 +70,10 @@ export interface JobState {
   addRelationships: (relationships: Relationship[]) => Promise<void>;
 
   /**
-   * Gets an entity by _key and _type
+   * Gets an entity by _key
    * Throws when !== 1 entity
    */
-  getEntity: (lookupKey: GraphObjectLookupKey) => Promise<Entity>;
+  getEntity: (_key: string) => Promise<Entity>;
 
   /**
    * Allows a step to iterate all entities collected into the job state, limited

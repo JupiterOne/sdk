@@ -296,16 +296,24 @@ await iterateEntities({ _type: 'my_integration_user' }, async (userEntity) => {
 });
 ```
 
-Specific entities can be looked up using `_key` and `_type` properties via the
-`getEntity` function.
+Specific entities can be looked up using the entity `_key` property via the
+`findEntity` function. `findEntity` will return `null` if the entity does not
+exist.
 
 Example usage:
 
 ```typescript
-const entity = getEntity({
-  _type: 'my_integration_user',
-  _key: 'some_unique_identifier',
-});
+const entity = await jobState.findEntity('myentitykey');
+```
+
+Similarly to `findEntity`, `getEntity` can also be used to look up an entity by
+`_key`. `getEntity` will throw a `IntegrationMissingKeyError` error if the
+entity does not exist.
+
+Example usage:
+
+```typescript
+const entity = await jobState.getEntity('myentitykey');
 ```
 
 More details about how the framework uses `jobState` is detailed in the [Data
