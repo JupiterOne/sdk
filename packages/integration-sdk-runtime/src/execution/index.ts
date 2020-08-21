@@ -6,3 +6,4 @@ export {
 export { prepareLocalStepCollection } from './step';
 export { loadConfigFromEnvironmentVariables } from './config';
 export { DuplicateKeyTracker, TypeTracker, MemoryDataStore } from './jobState';
+export { buildStepDependencyGraph } from './dependencyGraph';

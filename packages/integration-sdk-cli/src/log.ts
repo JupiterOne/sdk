@@ -20,6 +20,10 @@ export function warn(msg: string) {
   console.log(`${chalk.yellow(msg)}`);
 }
 
+export function error(msg: string) {
+  console.log(`${chalk.red(msg)}`);
+}
+
 export function displaySynchronizationResults(job: SynchronizationJob) {
   info('\nSynchronization results:\n');
   info(`Synchronization job status: ${chalk.cyan(job.status)}`);

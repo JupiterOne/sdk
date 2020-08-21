@@ -1,5 +1,8 @@
 import path from 'path';
-import { loadProjectStructure } from '@jupiterone/integration-sdk-private-test-utils';
+import {
+  loadProjectStructure,
+  getProjectDirectoryPath,
+} from '@jupiterone/integration-sdk-private-test-utils';
 
 import { StepResultStatus } from '@jupiterone/integration-sdk-core';
 
@@ -10,6 +13,31 @@ import * as nodeFs from 'fs';
 const fs = nodeFs.promises;
 
 jest.mock('../log');
+
+function getDocumentationFilePath(fixtureName: string) {
+  return path.join(getProjectDirectoryPath(fixtureName), 'docs/jupiterone.md');
+}
+
+async function documentCommandSnapshotTest(fixtureName: string) {
+  loadProjectStructure(fixtureName);
+
+  const writeFileSpy = jest
+    .spyOn(fs, 'writeFile')
+    .mockResolvedValueOnce(Promise.resolve());
+
+  await createCli().parseAsync(['node', 'j1-integration', 'document']);
+
+  expect(writeFileSpy).toHaveBeenCalledTimes(1);
+  expect(writeFileSpy).toHaveBeenCalledWith(
+    getDocumentationFilePath(fixtureName),
+    expect.any(String),
+    {
+      encoding: 'utf-8',
+    },
+  );
+
+  expect(writeFileSpy.mock.calls[0][1]).toMatchSnapshot();
+}
 
 afterEach(() => {
   delete process.env.MY_CONFIG;
@@ -298,5 +326,106 @@ describe('collect/visualize integration', () => {
     );
     expect(content).toEqual(expect.stringMatching(nodesRegex));
     expect(content).toEqual(expect.stringMatching(edgesRegex));
+  });
+});
+
+describe('document', () => {
+  test('loads the integration with entities and relationships and writes documentation results', async () => {
+    await documentCommandSnapshotTest('docsInstanceWithRelationships');
+  });
+
+  test('loads the integration without relationships and writes documentation results', async () => {
+    await documentCommandSnapshotTest(
+      'docsInstanceWithDependentStepsNoRelationships',
+    );
+  });
+
+  test('loads the integration without entities and writes documentation results', async () => {
+    await documentCommandSnapshotTest('docsInstanceNoEntities');
+  });
+
+  test('loads the integration with array of entity classes and writes document', async () => {
+    await documentCommandSnapshotTest('docsInstanceArrayEntityClasses');
+  });
+
+  test('loads the integration and writes documentation when documentation markers already exist', async () => {
+    await documentCommandSnapshotTest('docsWithExistingGeneratedDocs');
+  });
+
+  test('handles duplicate entity _type ingested in multiple steps', async () => {
+    await documentCommandSnapshotTest('docsInstanceDuplicateEntityTypes');
+  });
+
+  test('handles duplicate relationship _type ingested in multiple steps', async () => {
+    await documentCommandSnapshotTest('docsInstanceDuplicateRelationshipTypes');
+  });
+
+  test('should allow passing a file path for the generated documentation', async () => {
+    loadProjectStructure('docsInstanceCustomDocLoc');
+
+    const writeFileSpy = jest
+      .spyOn(fs, 'writeFile')
+      .mockResolvedValueOnce(Promise.resolve());
+
+    const customDocumentationFilePath = path.join(
+      getProjectDirectoryPath('docsInstanceCustomDocLoc'),
+      'custom-docs/custom-jupiterone.md',
+    );
+
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'document',
+      '-f',
+      customDocumentationFilePath,
+    ]);
+
+    expect(writeFileSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSpy).toHaveBeenCalledWith(
+      customDocumentationFilePath,
+      expect.any(String),
+      {
+        encoding: 'utf-8',
+      },
+    );
+
+    expect(writeFileSpy.mock.calls[0][1]).toMatchSnapshot();
+  });
+
+  test('loads the integration without entities or relationships and does not write a file', async () => {
+    loadProjectStructure('docsInstanceNoEntitiesNoRelationships');
+
+    const writeFileSpy = jest
+      .spyOn(fs, 'writeFile')
+      .mockResolvedValueOnce(Promise.resolve());
+
+    await createCli().parseAsync(['node', 'j1-integration', 'document']);
+    expect(writeFileSpy).toHaveBeenCalledTimes(0);
+    expect(log.info).toHaveBeenCalledWith(
+      `No entities or relationships found to generate documentation for. Exiting.`,
+    );
+  });
+
+  test('should throw error when an existing doc does not exist', async () => {
+    loadProjectStructure('docsWithoutExistingDoc');
+
+    const writeFileSpy = jest
+      .spyOn(fs, 'writeFile')
+      .mockResolvedValueOnce(Promise.resolve());
+
+    const documentationFilePath = getDocumentationFilePath(
+      'docsWithoutExistingDoc',
+    );
+    const expectedErrorMessageThrown = `ENOENT: no such file or directory, open '${documentationFilePath}'`;
+
+    await expect(
+      createCli().parseAsync(['node', 'j1-integration', 'document']),
+    ).rejects.toThrowError(expectedErrorMessageThrown);
+
+    expect(log.error).toHaveBeenCalledTimes(1);
+    expect(log.error).toHaveBeenCalledWith(
+      `Error loading documentation file from path (path=${documentationFilePath}, err=${expectedErrorMessageThrown})`,
+    );
+    expect(writeFileSpy).toHaveBeenCalledTimes(0);
   });
 });

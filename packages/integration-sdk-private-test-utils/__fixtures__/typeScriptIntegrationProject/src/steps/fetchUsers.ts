@@ -2,12 +2,28 @@ import {
   IntegrationStepExecutionContext,
   createIntegrationEntity,
   createIntegrationRelationship,
+  Step,
+  StepExecutionContext,
 } from '@jupiterone/integration-sdk-core';
 
-export default {
+const fetchUsersStep: Step<StepExecutionContext> = {
   id: 'fetch-users',
   name: 'Fetch Users',
-  types: ['my_user', 'my_account_has_user'],
+  entities: [
+    {
+      resourceName: 'The User',
+      _type: 'my_user',
+      _class: 'User',
+    },
+  ],
+  relationships: [
+    {
+      _class: 'HAS',
+      _type: 'my_account_has_user',
+      sourceType: 'my_account',
+      targetType: 'my_user',
+    },
+  ],
   executionHandler: async ({
     jobState,
   }: IntegrationStepExecutionContext<{}>) => {
@@ -39,3 +55,5 @@ export default {
     ]);
   },
 };
+
+export default fetchUsersStep;

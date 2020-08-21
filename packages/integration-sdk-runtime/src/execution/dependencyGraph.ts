@@ -164,10 +164,8 @@ export function executeStepDependencyGraph<
     step: Step<TStepExecutionContext>,
     typeTracker: TypeTracker,
   ) {
-    const declaredTypes = step.types;
     const encounteredTypes = typeTracker.getEncounteredTypes();
-
-    const declaredTypesSet = new Set(declaredTypes);
+    const declaredTypesSet = new Set(getDeclaredTypesInStep(step));
     const undeclaredTypes = encounteredTypes.filter(
       (type) => !declaredTypesSet.has(type),
     );
@@ -346,7 +344,7 @@ function buildStepResultsMap<
           id: step.id,
           name: step.name,
           dependsOn: step.dependsOn,
-          declaredTypes: step.types,
+          declaredTypes: getDeclaredTypesInStep(step),
           encounteredTypes: [],
           status:
             stepStartStates[step.id].disabled || hasDisabledDependencies
@@ -358,4 +356,15 @@ function buildStepResultsMap<
     .map((result): [string, IntegrationStepResult] => [result.id, result]);
 
   return new Map<string, IntegrationStepResult>(stepResultMapEntries);
+}
+
+function getDeclaredTypesInStep<
+  TStepExecutionContext extends StepExecutionContext
+>(step: Step<TStepExecutionContext>) {
+  const declaredTypes: string[] = [
+    ...step.entities.map((e) => e._type),
+    ...step.relationships.map((e) => e._type),
+  ];
+
+  return declaredTypes;
 }

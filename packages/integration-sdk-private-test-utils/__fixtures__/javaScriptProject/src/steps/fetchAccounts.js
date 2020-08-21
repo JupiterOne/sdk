@@ -3,6 +3,13 @@ const noop = require('lodash/noop');
 module.exports = {
   id: 'fetch-accounts',
   name: 'Fetch Accounts',
-  types: ['my_account'],
+  entities: [
+    {
+      resourceName: 'The Account',
+      _type: 'my_account',
+      _class: 'Account',
+    },
+  ],
+  relationships: [],
   executionHandler: noop,
 };

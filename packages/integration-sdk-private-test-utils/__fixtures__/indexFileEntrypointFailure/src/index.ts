@@ -1,8 +1,20 @@
 import noop from 'lodash/noop';
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
 
-// this fixture helps ensure that the
-// invocation config is read correctly
-export default {
+import {
+  IntegrationInstanceConfig,
+  IntegrationStepExecutionContext,
+} from '@jupiterone/integration-sdk-core';
+
+export type IntegrationStepContext = IntegrationStepExecutionContext<
+  IntegrationConfig
+>;
+
+export interface IntegrationConfig extends IntegrationInstanceConfig {
+  myConfig: boolean;
+}
+
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = {
   instanceConfigFields: {
     myConfig: {
       mask: true,
@@ -13,13 +25,27 @@ export default {
     {
       id: 'fetch-accounts',
       name: 'Fetch Accounts',
-      types: ['my_account'],
+      entities: [
+        {
+          resourceName: 'The Account',
+          _type: 'my_account',
+          _class: 'Account',
+        },
+      ],
+      relationships: [],
       executionHandler: noop,
     },
     {
       id: 'fetch-users',
       name: 'Fetch Users',
-      types: ['my_user'],
+      entities: [
+        {
+          resourceName: 'The User',
+          _type: 'my_user',
+          _class: 'User',
+        },
+      ],
+      relationships: [],
       executionHandler: noop,
     },
   ],
@@ -33,3 +59,5 @@ export default {
     },
   }),
 };
+
+export default invocationConfig;
