@@ -18,8 +18,9 @@ import {
   Entity,
   Relationship,
   createIntegrationEntity,
-  createIntegrationRelationship,
+  createDirectRelationship,
 } from '@jupiterone/integration-sdk-core';
+import { RelationshipClass } from '@jupiterone/data-model';
 
 jest.mock('fs');
 
@@ -199,7 +200,7 @@ describe('addRelationships', () => {
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('accepts Relationship from createIntegrationRelationship utility', async () => {
+  test('accepts Relationship from createDirectRelationship utility', async () => {
     expect.assertions(0);
     const { store } = setupFileSystemObjectStore();
 
@@ -232,8 +233,8 @@ describe('addRelationships', () => {
       },
     });
 
-    const relationship = createIntegrationRelationship({
-      _class: 'has',
+    const relationship = createDirectRelationship({
+      _class: RelationshipClass.HAS,
       from: entityA,
       to: entityB,
     });

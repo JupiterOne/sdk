@@ -5,71 +5,11 @@ import {
   RelationshipDirection,
 } from '../../types';
 import {
-  createIntegrationRelationship,
   generateRelationshipType,
   createDirectRelationship,
   createMappedRelationship,
 } from '../createIntegrationRelationship';
-
-describe('createIntegrationRelationship', () => {
-  const entityA: Entity = {
-    _type: 'a_entity',
-    _class: 'A',
-    _key: 'a',
-  };
-
-  const entityB: Entity = {
-    _type: 'b_entity',
-    _class: 'B',
-    _key: 'b',
-  };
-
-  test('creates direct relationships', () => {
-    const expected: Relationship = {
-      _type: 'a_entity_has_b_entity',
-      _class: 'HAS',
-      _key: 'a|has|b',
-      _fromEntityKey: 'a',
-      _toEntityKey: 'b',
-      displayName: 'HAS',
-    };
-
-    expect(
-      createIntegrationRelationship({
-        _class: 'HAS',
-        from: entityA,
-        to: entityB,
-      }),
-    ).toEqual(expected);
-  });
-
-  test('creates mapped relationships', () => {
-    const expected: MappedRelationship = {
-      _key: 'a|has|b',
-      _type: 'mapping_source_has_b_entity',
-      _class: 'HAS',
-      _mapping: {
-        relationshipDirection: RelationshipDirection.FORWARD,
-        sourceEntityKey: 'a',
-        targetFilterKeys: [['_type', '_key']],
-        targetEntity: {
-          _key: 'b',
-          _class: 'B',
-          _type: 'b_entity',
-        },
-      },
-      displayName: 'HAS',
-    };
-
-    expect(
-      createMappedRelationship({
-        _class: 'HAS',
-        source: entityA,
-        target: entityB,
-      }),
-    ).toEqual(expected);
-  })
-});
+import { RelationshipClass } from '@jupiterone/data-model';
 
 describe('DirectRelationshipOptions', () => {
   const entityA: Entity = {
@@ -96,7 +36,7 @@ describe('DirectRelationshipOptions', () => {
   test('defaults', () => {
     expect(
       createDirectRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         from: entityA,
         to: entityB,
       }),
@@ -106,7 +46,7 @@ describe('DirectRelationshipOptions', () => {
   test('_class is upcased', () => {
     expect(
       createDirectRelationship({
-        _class: 'has',
+        _class: 'has' as RelationshipClass,
         from: entityA,
         to: entityB,
       }),
@@ -116,7 +56,7 @@ describe('DirectRelationshipOptions', () => {
   test('transfers additional properties', () => {
     expect(
       createDirectRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         from: entityA,
         to: entityB,
         properties: {
@@ -140,7 +80,7 @@ describe('DirectRelationshipLiteralOptions', () => {
   test('defaults', () => {
     expect(
       createDirectRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         fromKey: 'a',
         fromType: 'a_entity',
         toKey: 'b',
@@ -152,7 +92,7 @@ describe('DirectRelationshipLiteralOptions', () => {
   test('_class is upcased', () => {
     expect(
       createDirectRelationship({
-        _class: 'has',
+        _class: 'has' as RelationshipClass,
         fromKey: 'a',
         fromType: 'a_entity',
         toKey: 'b',
@@ -195,7 +135,7 @@ describe('MappedRelationshipOptions', () => {
   test('defaults', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         source: entityA,
         target: entityB,
       }),
@@ -205,7 +145,7 @@ describe('MappedRelationshipOptions', () => {
   test('_class is upcased', () => {
     expect(
       createMappedRelationship({
-        _class: 'has',
+        _class: RelationshipClass.HAS,
         source: entityA,
         target: entityB,
       }),
@@ -215,7 +155,7 @@ describe('MappedRelationshipOptions', () => {
   test('additional properties', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         source: entityA,
         target: entityB,
         properties: {
@@ -228,7 +168,7 @@ describe('MappedRelationshipOptions', () => {
   test('_type provided explicitly', () => {
     expect(
       createMappedRelationship({
-        _class: 'has',
+        _class: 'has' as RelationshipClass,
         _type: 'use_my_type',
         source: entityA,
         target: entityB,
@@ -242,7 +182,7 @@ describe('MappedRelationshipOptions', () => {
   test('_key provided explicitly', () => {
     expect(
       createMappedRelationship({
-        _class: 'has',
+        _class: 'has' as RelationshipClass,
         _key: 'use_my_key',
         source: entityA,
         target: entityB,
@@ -256,7 +196,7 @@ describe('MappedRelationshipOptions', () => {
   test('override defaults with properties option', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         source: entityA,
         target: entityB,
         properties: {
@@ -294,7 +234,7 @@ describe('MappedRelationshipLiteralOptions', () => {
   test('defaults', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         _mapping: {
           relationshipDirection: RelationshipDirection.REVERSE,
           targetEntity: {
@@ -311,7 +251,7 @@ describe('MappedRelationshipLiteralOptions', () => {
   test('missing _type in targetEntity', () => {
     expect(() => {
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         _mapping: {
           relationshipDirection: RelationshipDirection.REVERSE,
           targetEntity: {
@@ -328,7 +268,7 @@ describe('MappedRelationshipLiteralOptions', () => {
   test('_key provided explicitly', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         _key: 'my-key-please',
         _mapping: {
           relationshipDirection: RelationshipDirection.REVERSE,
@@ -349,7 +289,7 @@ describe('MappedRelationshipLiteralOptions', () => {
   test('_type provided explicitly', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         _type: 'my_type_please',
         _mapping: {
           relationshipDirection: RelationshipDirection.REVERSE,
@@ -370,7 +310,7 @@ describe('MappedRelationshipLiteralOptions', () => {
   test('override defaults with properties option', () => {
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         _mapping: {
           relationshipDirection: RelationshipDirection.REVERSE,
           targetEntity: {
@@ -412,7 +352,7 @@ describe('MappedRelationshipLiteralOptions', () => {
 
     expect(
       createMappedRelationship({
-        _class: 'HAS',
+        _class: RelationshipClass.HAS,
         _mapping: mapping,
       }),
     ).toEqual({
@@ -440,50 +380,66 @@ describe('generateRelationshipType', () => {
   };
 
   test('entities', () => {
-    expect(generateRelationshipType('HAS', entityA, entityB)).toEqual(
-      'a_entity_has_b_entity',
-    );
+    expect(
+      generateRelationshipType(RelationshipClass.HAS, entityA, entityB),
+    ).toEqual('a_entity_has_b_entity');
   });
 
   test('strings', () => {
-    expect(generateRelationshipType('HAS', 'a_entity', 'b_entity')).toEqual(
-      'a_entity_has_b_entity',
-    );
+    expect(
+      generateRelationshipType(RelationshipClass.HAS, 'a_entity', 'b_entity'),
+    ).toEqual('a_entity_has_b_entity');
   });
 
   test('from entity to string', () => {
-    expect(generateRelationshipType('HAS', entityA, 'b_entity')).toEqual(
-      'a_entity_has_b_entity',
-    );
+    expect(
+      generateRelationshipType(RelationshipClass.HAS, entityA, 'b_entity'),
+    ).toEqual('a_entity_has_b_entity');
   });
 
   test('from string to entity', () => {
-    expect(generateRelationshipType('HAS', 'a_entity', entityB)).toEqual(
-      'a_entity_has_b_entity',
-    );
+    expect(
+      generateRelationshipType(RelationshipClass.HAS, 'a_entity', entityB),
+    ).toEqual('a_entity_has_b_entity');
   });
 
   test('from and to entities of the same type', () => {
     expect(
-      generateRelationshipType('HAS', 'aws_instance', 'aws_instance'),
+      generateRelationshipType(
+        RelationshipClass.HAS,
+        'aws_instance',
+        'aws_instance',
+      ),
     ).toEqual('aws_instance_has_instance');
   });
 
   test('from and to entities within the same provider but different service scope', () => {
     expect(
-      generateRelationshipType('HAS', 'aws_vpc', 'aws_lambda_function'),
+      generateRelationshipType(
+        RelationshipClass.HAS,
+        'aws_vpc',
+        'aws_lambda_function',
+      ),
     ).toEqual('aws_vpc_has_lambda_function');
   });
 
   test('from and to entities within the same provider and service scope', () => {
     expect(
-      generateRelationshipType('HAS', 'azure_sql_server', 'azure_sql_database'),
+      generateRelationshipType(
+        RelationshipClass.HAS,
+        'azure_sql_server',
+        'azure_sql_database',
+      ),
     ).toEqual('azure_sql_server_has_database');
   });
 
   test('entity type has no underscore', () => {
     expect(
-      generateRelationshipType('HAS', 'employee', 'user_endpoint'),
+      generateRelationshipType(
+        RelationshipClass.HAS,
+        'employee',
+        'user_endpoint',
+      ),
     ).toEqual('employee_has_user_endpoint');
   });
 });

@@ -1,17 +1,23 @@
-import { Entity, createIntegrationRelationship } from "@jupiterone/integration-sdk-core";
+import {
+  Entity,
+  createDirectRelationship,
+} from '@jupiterone/integration-sdk-core';
+import { RelationshipClass } from '@jupiterone/data-model';
 
 interface CreateRelationshipParams {
-  _class?: string;
+  _class?: RelationshipClass;
   from: Entity;
-  to: Entity
+  to: Entity;
 }
 
-export function createRelationship(
-  { _class, from, to }: CreateRelationshipParams
-) {
-  return createIntegrationRelationship({
-    _class: _class || 'HAS',
+export function createRelationship({
+  _class,
+  from,
+  to,
+}: CreateRelationshipParams) {
+  return createDirectRelationship({
+    _class: _class || RelationshipClass.HAS,
     from,
     to,
   });
-};
+}
