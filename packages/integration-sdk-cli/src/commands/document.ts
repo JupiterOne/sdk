@@ -27,13 +27,13 @@ export function document() {
   return createCommand('document')
     .description('Generates documentation for all steps')
     .option(
-      '-d, --project-path <directory>',
-      'Absolute file path to the integration project directory. Defaults to the currenct working directory.',
+      '-p, --project-path <directory>',
+      'Absolute file path to the integration project directory. Defaults to the current working directory.',
       process.cwd(),
     )
     .option(
       '-f, --documentation-file-path <directory>',
-      'Absolute file path to the Markdown file that should be created/updated. Defaults to {PWD}/docs/jupiterone.md.',
+      'Absolute file path to the Markdown file that should be created/updated. Defaults to {CWD}/docs/jupiterone.md.',
     )
     .action(executeDocumentAction);
 }

@@ -1180,21 +1180,21 @@ Usage: j1-integration document [options]
 Generates documentation for all steps
 
 Options:
-  -d, --project-path <directory>
+  -p, --project-path <directory>
     Absolute file path to the integration project directory. Defaults to the
-    currenct working directory.
+    current working directory.
 
   -f, --documentation-file-path <directory>
     Absolute file path to the Markdown file that should be created/updated.
-    Defaults to {PWD}/docs/jupiterone.md.
+    Defaults to {CWD}/docs/jupiterone.md.
 
   -h, --help
-    display help for command
+    Display help for command.
 ```
 
 `j1-integration document` generates entity and relationship documentation based
 on the metadata defined in each step. Documentation for an integration is stored
-in the `{integration-project-dir}/docs/jupiterone.md` file.
+in the `{integration-project-dir}/docs/jupiterone.md` file by default.
 
 #### Future commands and utilities
 
