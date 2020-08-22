@@ -42,19 +42,19 @@ Example:
 
 ```typescript
 {
-    clientId: {
-      type: 'string',
-      mask: false,
-    },
-    clientSecret: {
-      type: 'string',
-      mask: true,
-    },
-    ingestGroups: {
-      type: boolean,
-      mask: true,
-    },
-  }
+  clientId: {
+    type: 'string',
+    mask: false,
+  },
+  clientSecret: {
+    type: 'string',
+    mask: true,
+  },
+  ingestGroups: {
+    type: boolean,
+    mask: true,
+  },
+}
 ```
 
 #### `validateInvocation`
@@ -330,8 +330,8 @@ a flattened object that can be used for building entities.
 
 To assist with constructing data that is compliant with JupiterOne's model, the
 integration SDK exposes utility functions (`createIntegrationEntity` and
-`createIntegrationRelationship`) for validating entities and relationships based
-on their assigned `_class`.
+`createDirectRelationship`) for validating entities and relationships based on
+their assigned `_class`.
 
 These functions will automatically validate that an entity contains required
 fields.
@@ -420,40 +420,22 @@ export function createDatabaseEntity(
 }
 ```
 
-##### `createIntegrationRelationship`
+##### `createDirectRelationship`
 
-`createIntegrationRelationship` can be used to help build relationships between
-entities.
+`createDirectRelationship` can be used to help build non-mapped relationships
+between entities.
 
-There are two types of relationships that can be built: Direct relationships and
-Mapped relationships.
+There are two types of relationships that can be built: direct relationships and
+mapped relationships. When creating a mapped relationship, one should use the
+`createMappedRelationship` function.
 
 Direct relationships are explicit edges constructed between two entities from
 the same integration.
-
-Mapped relationships are edges that are built from a source entity to a target
-entity that may be managed by a different integration or may not be known by any
-integration. Mapped relationships also allow for more generalized relationships
-to be created from a source entity to multiple target entities based on a set of
-filters.
-
-A common use case for mapped relationships is for building edges between a
-security group that allows access to the public internet (a global entity not
-managed by an integration). This can help determine which servers or workloads
-have access to the open internet and can be used to assist with locking down
-security groups for services that do not require internet access.
-
-Another use case is for mapping `User` entities created by an integration to
-their `Person` entity based off of their name or email. That relationship can
-then be used to help determine what services a person in an organization may
-have access to.
 
 The function accepts multiple different options:
 
 - `DirectRelationshipOptions`
 - `DirectRelationshipLiteralOptions`
-- `MappedRelationshipOptions`
-- `MappedRelationshipLiteralOptions`
 
 If needed, additional properties can be added to relationships created via the
 `properties` field that exists on all options.
@@ -473,8 +455,8 @@ type DirectRelationshipOptions = {
 };
 
 // usage
-createIntegrationRelationship({
-  _class: 'has',
+createDirectRelationship({
+  _class: RelationshipClass.HAS,
   source: entityA,
   target: entityB,
 });
@@ -498,14 +480,33 @@ type DirectRelationshipLiteralOptions = {
 };
 
 // usage
-createIntegrationRelationship({
-  _class: 'HAS',
+createDirectRelationship({
+  _class: RelationshipClass.HAS,
   fromKey: 'a',
   fromType: 'a_entity',
   toKey: 'b',
   toType: 'b_entity',
 });
 ```
+
+##### `createMappedRelationship`
+
+Mapped relationships are edges that are built from a source entity to a target
+entity that may be managed by a different integration or may not be known by any
+integration. Mapped relationships also allow for more generalized relationships
+to be created from a source entity to multiple target entities based on a set of
+filters.
+
+A common use case for mapped relationships is for building edges between a
+security group that allows access to the public internet (a global entity not
+managed by an integration). This can help determine which servers or workloads
+have access to the open internet and can be used to assist with locking down
+security groups for services that do not require internet access.
+
+Another use case is for mapping `User` entities created by an integration to
+their `Person` entity based off of their name or email. That relationship can
+then be used to help determine what services a person in an organization may
+have access to.
 
 ###### `MappedRelationshipOptions`
 
@@ -554,8 +555,8 @@ type MappedRelationshipOptions = {
 };
 
 // usage
-createIntegrationRelationship({
-  _class: 'allows',
+createMappedRelationship({
+  _class: RelationshipClass.ALLOWS,
   source: securityGroupEntity,
   target: DataModel.Internet,
   relationshipDirection: RelationshipDirection.FORWARD
@@ -641,8 +642,8 @@ export interface RelationshipMapping {
 // source entity with _key = 'a'
 // and target entities that match the class 'User'
 // and have the email set to 'email@example.com'
-createIntegrationRelationship({
-  _class: 'HAS',
+createMappedRelationship({
+  _class: RelationshipClass.HAS,
   _mapping: {
     relationshipDirection: RelationshipDirection.REVERSE,
     sourceEntityKey: 'a',
@@ -658,10 +659,10 @@ createIntegrationRelationship({
 #### Raw data collection
 
 In addition to performing validation, the `createIntegrationEntity` and
-`createIntegrationRelationship` will also automatically encode and store the
-original provider data under a `_rawData` field. For now, this will always
-assume that data coming in was stored as `json`, but support for other data
-types will come later.
+`createDirectRelationship` will also automatically encode and store the original
+provider data under a `_rawData` field. For now, this will always assume that
+data coming in was stored as `json`, but support for other data types will come
+later.
 
 #### Testing
 

@@ -1,10 +1,11 @@
 import {
   IntegrationStepExecutionContext,
   createIntegrationEntity,
-  createIntegrationRelationship,
+  createDirectRelationship,
   Step,
   StepExecutionContext,
 } from '@jupiterone/integration-sdk-core';
+import { RelationshipClass } from '@jupiterone/data-model';
 
 const fetchUsersStep: Step<StepExecutionContext> = {
   id: 'fetch-users',
@@ -45,8 +46,8 @@ const fetchUsersStep: Step<StepExecutionContext> = {
       }),
     ]);
     await jobState.addRelationships([
-      createIntegrationRelationship({
-        _class: 'HAS',
+      createDirectRelationship({
+        _class: RelationshipClass.HAS,
         fromKey: 'account:1234',
         fromType: 'my_account',
         toKey: 'user:12345',

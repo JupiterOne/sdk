@@ -2,12 +2,13 @@ import { mocked } from 'ts-jest/utils';
 
 import { readJsonFromPath } from '@jupiterone/integration-sdk-runtime';
 import {
-  createIntegrationRelationship,
+  createDirectRelationship,
   ExplicitRelationship,
 } from '@jupiterone/integration-sdk-core';
 
 import { retrieveIntegrationData } from '../retrieveIntegrationData';
 import { IntegrationData } from '../types';
+import { RelationshipClass } from '@jupiterone/data-model';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
 
@@ -20,8 +21,8 @@ const integrationData: IntegrationData = {
     { id: '2', _class: 'entity', _key: 'entity:2', _type: 'entity' },
   ],
   relationships: [
-    createIntegrationRelationship({
-      _class: 'HAS',
+    createDirectRelationship({
+      _class: RelationshipClass.HAS,
       fromKey: 'entity:1',
       fromType: 'entity',
       toKey: 'entity:2',
@@ -70,5 +71,8 @@ test('includes mapped relationships', async () => {
     `${integrationPath}/graph/entity/relationships/abc.json`,
   ]);
 
-  expect(result).toEqual({...integrationData, mappedRelationships: [{_mapping: 'user_is_user', id: '123456'}]});
+  expect(result).toEqual({
+    ...integrationData,
+    mappedRelationships: [{ _mapping: 'user_is_user', id: '123456' }],
+  });
 });

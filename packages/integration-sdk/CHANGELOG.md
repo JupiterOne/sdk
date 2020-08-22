@@ -16,7 +16,7 @@ and this project adheres to
   documentation in `{integration-proj-dir}/docs/jupiterone.md`.
 
 - Fixed [#284](https://github.com/JupiterOne/sdk/issues/284) - Introduce
-`jobState.findEntity`, which will return `null` if the entity does not exist.
+  `jobState.findEntity`, which will return `null` if the entity does not exist.
 
 Example:
 
@@ -26,9 +26,9 @@ const entity = await jobState.findEntity('entity-key-here');
 
 ### Changed
 
-- **BREAKING** [#291](https://github.com/JupiterOne/sdk/issues/291) - Remove `types`
-  from `IntegrationStep` in favor of `entities` and `relationships`, which
-  contain metadata used to generate documentation.
+- **BREAKING** [#291](https://github.com/JupiterOne/sdk/issues/291) - Remove
+  `types` from `IntegrationStep` in favor of `entities` and `relationships`,
+  which contain metadata used to generate documentation.
 
 - **BREAKING** [#283](https://github.com/JupiterOne/sdk/issues/283) - Change
   `jobState.getEntity` to require `_key` value only.
@@ -38,6 +38,27 @@ Example:
 ```typescript
 await jobState.getEntity('myentitykey');
 ```
+
+- **BREAKING** [#285](https://github.com/JupiterOne/sdk/issues/285) - Require a
+  `RelationshipClass` from `@jupiterone/data-model` to be specified in
+  relationship creation functions.
+
+Example:
+
+```typescript
+import { RelationshipClass } from '@jupiterone/data-model';
+import { createDirectRelationship } from '@jupiterone/integration-sdk-core';
+
+createDirectRelationship({
+  _class: RelationshipClass.HAS,
+  ...
+});
+```
+
+### Removed
+
+- [#288](https://github.com/JupiterOne/sdk/issues/299) - Remove deprecated
+  `createIntegrationRelationship` function
 
 ## 2.11.1 - 2020-08-21
 

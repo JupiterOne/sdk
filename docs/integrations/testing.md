@@ -19,8 +19,8 @@ drive clients to avoid loading complete sets of provider data into memory.
 
 Converter functions take source data and produce an entity or relationship graph
 object. These typically wrap up a call to `createIntegrationEntity` or
-`createIntegrationRelationship`, which can handle most of the work. However, it
-is important to write a test that expresses the expected properties of graph
+`createDirectRelationship`, which can handle most of the work. However, it is
+important to write a test that expresses the expected properties of graph
 objects so that the integration remains stable throughout changes to these
 helper functions.
 
