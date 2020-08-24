@@ -24,6 +24,16 @@ Example:
 const entity = await jobState.findEntity('entity-key-here');
 ```
 
+- [#303](https://github.com/JupiterOne/sdk/issues/303) Export
+  `RelationshipClass` from the `@jupiterone/data-model` inside of
+  `@jupiterone/integration-sdk-core`.
+
+Usage:
+
+```typescript
+import { RelationshipClass } from '@jupiterone/integration-sdk-core';
+```
+
 ### Changed
 
 - **BREAKING** [#291](https://github.com/JupiterOne/sdk/issues/291) - Remove
@@ -46,8 +56,10 @@ await jobState.getEntity('myentitykey');
 Example:
 
 ```typescript
-import { RelationshipClass } from '@jupiterone/data-model';
-import { createDirectRelationship } from '@jupiterone/integration-sdk-core';
+import {
+  createDirectRelationship,
+  RelationshipClass
+} from '@jupiterone/integration-sdk-core';
 
 createDirectRelationship({
   _class: RelationshipClass.HAS,

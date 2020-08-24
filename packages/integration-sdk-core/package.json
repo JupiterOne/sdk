@@ -17,6 +17,7 @@
     "access": "public"
   },
   "scripts": {
+    "test": "jest",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"
