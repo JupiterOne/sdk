@@ -1,5 +1,6 @@
 import noop from 'lodash/noop';
 import { StepExecutionContext, Step } from '@jupiterone/integration-sdk-core';
+import { RelationshipClass } from '@jupiterone/data-model';
 
 const fetchGroupsStep: Step<StepExecutionContext> = {
   id: 'fetch-groups',
@@ -18,7 +19,7 @@ const fetchGroupsStep: Step<StepExecutionContext> = {
   ],
   relationships: [
     {
-      _class: 'HAS',
+      _class: RelationshipClass.HAS,
       _type: 'my_group_has_user',
       sourceType: 'my_group',
       targetType: 'my_user',
