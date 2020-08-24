@@ -76,6 +76,13 @@ export interface JobState {
   getEntity: (_key: string) => Promise<Entity>;
 
   /**
+   * Finds an entity by `_key` and returns `null` if the entity does not exist.
+   * This function will also throw an error if multiple entities are found with
+   * the same `_key` value.
+   */
+  findEntity: (_key: string) => Promise<Entity | null>;
+
+  /**
    * Allows a step to iterate all entities collected into the job state, limited
    * to those that match the provided `filter`.
    *

@@ -142,6 +142,23 @@ export function createStepJobState({
       });
     },
 
+    findEntity: async (_key: string) => {
+      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
+        _key,
+      );
+
+      if (!graphObjectMetadata) {
+        return null;
+      }
+
+      const entity = await graphObjectStore.getEntity({
+        _key,
+        _type: graphObjectMetadata._type,
+      });
+
+      return entity;
+    },
+
     iterateEntities: (filter, iteratee) =>
       graphObjectStore.iterateEntities(filter, iteratee),
 
