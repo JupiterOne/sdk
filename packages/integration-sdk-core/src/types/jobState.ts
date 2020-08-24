@@ -70,12 +70,6 @@ export interface JobState {
   addRelationships: (relationships: Relationship[]) => Promise<void>;
 
   /**
-   * Gets an entity by _key
-   * Throws when !== 1 entity
-   */
-  getEntity: (_key: string) => Promise<Entity>;
-
-  /**
    * Finds an entity by `_key` and returns `null` if the entity does not exist.
    * This function will also throw an error if multiple entities are found with
    * the same `_key` value.

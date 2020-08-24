@@ -60,6 +60,9 @@ createDirectRelationship({
 - [#288](https://github.com/JupiterOne/sdk/issues/299) - Remove deprecated
   `createIntegrationRelationship` function
 
+- [#306](https://github.com/JupiterOne/sdk/issues/306) - Remove
+  `jobState.getEntity` in favor of `jobState.findEntity`
+
 ## 2.11.1 - 2020-08-21
 
 ### Fixed
