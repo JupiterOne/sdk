@@ -19,7 +19,7 @@ const fetchUsersStep: Step<StepExecutionContext> = {
   ],
   relationships: [
     {
-      _class: 'HAS',
+      _class: RelationshipClass.HAS,
       _type: 'my_account_has_user',
       sourceType: 'my_account',
       targetType: 'my_user',

@@ -4,7 +4,7 @@ import {
   StepExecutionContext,
 } from './context';
 import { IntegrationInstanceConfig } from './instance';
-
+import { RelationshipClass } from '@jupiterone/data-model';
 export interface StepStartState {
   /**
    * Indicates the step is disabled and should not be
@@ -80,7 +80,7 @@ export interface StepEntityMetadata extends StepGraphObjectMetadata {
 }
 
 export interface StepRelationshipMetadata extends StepGraphObjectMetadata {
-  _class: string;
+  _class: RelationshipClass;
   sourceType: string;
   targetType: string;
 }
