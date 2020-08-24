@@ -306,16 +306,6 @@ Example usage:
 const entity = await jobState.findEntity('myentitykey');
 ```
 
-Similarly to `findEntity`, `getEntity` can also be used to look up an entity by
-`_key`. `getEntity` will throw a `IntegrationMissingKeyError` error if the
-entity does not exist.
-
-Example usage:
-
-```typescript
-const entity = await jobState.getEntity('myentitykey');
-```
-
 More details about how the framework uses `jobState` is detailed in the [Data
 collection](# Data collection) section below.
 

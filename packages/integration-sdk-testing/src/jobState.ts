@@ -138,25 +138,6 @@ export function createMockJobState({
     },
     addRelationships,
 
-    getEntity: async (_key: string) => {
-      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
-        _key,
-      );
-
-      if (!graphObjectMetadata) {
-        throw new IntegrationMissingKeyError(
-          `Failed to find entity in in-memory graph object metadata store _key=${_key})`,
-        );
-      }
-
-      const entity = await getEntity({
-        _key,
-        _type: graphObjectMetadata._type,
-      });
-
-      return entity;
-    },
-
     findEntity: async (_key: string) => {
       const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
         _key,
