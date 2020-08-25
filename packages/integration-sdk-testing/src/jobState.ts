@@ -46,6 +46,19 @@ export function createMockJobState({
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
 
+  inputEntities.forEach((e) => {
+    duplicateKeyTracker.registerKey(e._key, {
+      _type: e._type,
+    });
+    typeTracker.registerType(e._type);
+  });
+  inputRelationships.forEach((r) => {
+    duplicateKeyTracker.registerKey(r._key as string, {
+      _type: r._type,
+    });
+    typeTracker.registerType(r._type as string);
+  });
+
   const addEntities = async (newEntities: Entity[]): Promise<Entity[]> => {
     newEntities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key, {
