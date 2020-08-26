@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.0.1 - 2020-08-26
+
+### Fixed
+
+- [#301](https://github.com/JupiterOne/sdk/issues/301) - Fix test `findEntity` for initialized entities in a `MockJobState`.
+
 ## 3.0.0 - 2020-08-24
 
 ### Added
