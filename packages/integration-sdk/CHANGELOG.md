@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.1.0 - 2020-08-26
+
 ### Changed
 
 - Upgrade to `@jupiterone/data-model@0.9.0`
