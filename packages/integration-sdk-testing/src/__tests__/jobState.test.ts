@@ -70,6 +70,12 @@ describe('entities', () => {
     expect(result).toEqual(inputEntities[0]);
   });
 
+  test('findEntity returns initialized entity from jobState when _key matches', async () => {
+    const jobState = createMockJobState({entities: inputEntities});
+    const result = await jobState.findEntity('a');
+    expect(result).toEqual(inputEntities[0]);
+  });
+
   test('findEntity returns null when entity cannot be found in jobState', async () => {
     const jobState = createMockJobState();
     expect(await jobState.findEntity('does-not-exist')).toEqual(null);
