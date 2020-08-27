@@ -219,7 +219,9 @@ function generateGraphObjectDocumentationFromStepsMetadata(
       metadata.entities,
     );
 
-    entitySection += `### Entities
+    entitySection += `
+
+### Entities
 
 The following entities are created:
 
@@ -231,7 +233,9 @@ ${generatedEntityTable}`;
       metadata.relationships,
     );
 
-    relationshipSection += `### Relationships
+    relationshipSection += `
+
+### Relationships
 
 The following relationships are created/mapped:
 
@@ -248,11 +252,9 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
-## Data Model
 
-${entitySection}
+## Data Model${entitySection}${relationshipSection}
 
-${relationshipSection}
 <!--
 ********************************************************************************
 END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
