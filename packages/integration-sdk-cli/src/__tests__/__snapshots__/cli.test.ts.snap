@@ -20,6 +20,7 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
 
 ### Entities
@@ -29,7 +30,6 @@ The following entities are created:
 | Resources | Entity \`_type\` | Entity \`_class\` |
 | --------- | -------------- | --------------- |
 | The Group | \`my_group\`     | \`Group\`         |
-
 
 <!--
 ********************************************************************************
@@ -59,9 +59,8 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
-
-
 
 ### Relationships
 
@@ -70,6 +69,7 @@ The following relationships are created/mapped:
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
 | \`the_root\`            | **HAS**               | \`my_account\`          |
+
 <!--
 ********************************************************************************
 END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
@@ -97,6 +97,7 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
 
 ### Entities
@@ -115,6 +116,7 @@ The following relationships are created/mapped:
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
 | \`my_group\`            | **HAS**               | \`my_user\`             |
+
 <!--
 ********************************************************************************
 END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
@@ -144,6 +146,7 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
 
 ### Entities
@@ -153,7 +156,6 @@ The following entities are created:
 | Resources | Entity \`_type\` | Entity \`_class\`  |
 | --------- | -------------- | ---------------- |
 | The Group | \`my_group\`     | \`Group\`, \`Other\` |
-
 
 <!--
 ********************************************************************************
@@ -183,6 +185,7 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
 
 ### Entities
@@ -201,6 +204,7 @@ The following relationships are created/mapped:
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
 | \`my_group\`            | **HAS**               | \`my_user\`             |
+
 <!--
 ********************************************************************************
 END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
@@ -229,9 +233,8 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
-
-
 
 ### Relationships
 
@@ -240,6 +243,7 @@ The following relationships are created/mapped:
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
 | \`the_root\`            | **HAS**               | \`my_account\`          |
+
 <!--
 ********************************************************************************
 END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
@@ -268,6 +272,7 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
 
 ### Entities
@@ -279,7 +284,6 @@ The following entities are created:
 | The Account | \`my_account\`   | \`Account\`       |
 | The Group   | \`my_groups\`    | \`Group\`         |
 | The User    | \`my_user\`      | \`User\`          |
-
 
 <!--
 ********************************************************************************
@@ -309,6 +313,7 @@ DOCUMENTATION FOR USAGE INFORMATION:
 https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
 ********************************************************************************
 -->
+
 ## Data Model
 
 ### Entities
@@ -318,7 +323,6 @@ The following entities are created:
 | Resources | Entity \`_type\` | Entity \`_class\` |
 | --------- | -------------- | --------------- |
 | The Group | \`my_group\`     | \`Group\`         |
-
 
 <!--
 ********************************************************************************
