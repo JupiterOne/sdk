@@ -14,7 +14,7 @@ This SDK supports building JupiterOne integrations using either JavaScript or
 TypeScript.
 
 The execution process expects the integration to produce an object conforming to
-the [`IntegrationInvocationConfig`](/src/framework/execution/types/config.ts)
+the [`IntegrationInvocationConfig`](/packages/integration-sdk-core/src/types/config.ts)
 interface.
 
 This includes configuration fields required to run the integration, a function
@@ -197,7 +197,7 @@ Optionally, a `step` may contain a `dependsOn` list of step IDs that need to
 execute before the step can run. This field will be used to determine whether
 previous work has failed to complete. The synchronization process will treat the
 data retrieved in the step as a partial dataset. See the [Failure
-handling](#Failure handling) section below for more information on partial
+handling](#failure-handling) section below for more information on partial
 datasets.
 
 ### How integrations are executed
@@ -307,7 +307,7 @@ const entity = await jobState.findEntity('myentitykey');
 ```
 
 More details about how the framework uses `jobState` is detailed in the [Data
-collection](# Data collection) section below.
+collection](#data-collection) section below.
 
 ### Additional utilities
 
@@ -670,7 +670,7 @@ to keep track of how the integration is progressing without the need to
 explicitly add logging information themselves.
 
 When the integration is run with context about an integration instance (via the
-`run` command exposed by the [The CLI](# The CLI)), the transitions between each
+`run` command exposed by the [The CLI](#the-cli)), the transitions between each
 `step` will be published to the JupiterOne integration events log. `auth` and
 `error` logs will also be published there.
 
@@ -680,7 +680,7 @@ The `executionContext` that is provided in the `executionHandler` step exposes a
 `jobState` utility that can be used to collect entity and relationship data via
 `addEntities` and `addRelationships` functions. The `jobState` utility will
 automatically flush the data to disk as a certain threshold of entities and
-relationships is met. The data flushed to disk are grouped in folders that based
+relationships is met. The data flushed to disk are grouped in folders that are based
 on the step that was run. Entities and relationships will also be grouped by the
 `_type` and linked into separate directories to provide faster look ups. These
 directories will be used by the `getEntity`, `iterateEntities`, and
@@ -742,8 +742,8 @@ Integration data that is staged for publishing will be stored under the
 `.j1-integration/graph` directory. Files containing Entities will be suffixed
 with `.entities.json` and files containing Relationships will be suffixed with
 `.relationships.json`. This is done because the directory structure of the
-`graph` directory is meant to assist with debugging and provide developrs
-insight about the data collect in each step. During synchronization, the
+`graph` directory is meant to assist with debugging and provide developers
+insight about the data collected in each step. During synchronization, the
 directory will be blind
 
 Data will be indexed by `_type` and stored under the
@@ -779,7 +779,7 @@ end of an integration run, a summary will be displayed of the overall status to
 give developers a good idea of how failures will have affected the JupiterOne
 graph.
 
-An example summary of the steps will like this:
+An example summary of the steps looks like this:
 
 ```json
 [
@@ -832,7 +832,7 @@ has happened.
 The framework's state machine will utilize `declaredTypes` and `dependsOn`
 fields from the step results for constructing a list of entity and relationship
 types that should be considered a partial dataset. The backend synchronization
-process that performs he diffing of the data will receive a list of types that
+process that performs the diffing of the data will receive a list of types that
 have been affected by a failure to help determine how updates should be applied
 and what data is safe to delete. The information about partial datasets will be
 sent when starting the synchronization process to prevent data that should be
@@ -918,7 +918,7 @@ CLI tool will also be exposed by this project.
 ### Authentication
 
 For commands that require interaction with JupiterOne's API, the CLI will
-provide ways or inputing credentials. To support that, all commands that
+provide ways of inputing credentials. To support that, all commands that
 interact with an API will accept an `--api-key` option.
 
 For convenience when developing locally, we will also look for a
@@ -944,7 +944,7 @@ the following order relative to the current working directory:
 3. `src/index.ts`
 
 Data will be written to disk under a generated `.j1-integration` directory
-(described in [this section](### Data collection). A JupiterOne API key or set
+(described in [this section](#data-collection). A JupiterOne API key or set
 of credentials do not have to be supplied since the JupiterOne synchronization
 API will not be hit. An exception to this is when the `--instance` option is
 provided. (see `Options` below).
@@ -980,7 +980,7 @@ integration expects to see set.
 
 ###### `--module` or `-m`
 
-If you prefer to not to place your integration configuration in one of the
+If you prefer not to place your integration configuration in one of the
 supported file paths, you can optionally specify the `--module` or `-m` option
 and provide a path to your integration file.
 
@@ -989,7 +989,7 @@ ex: `j1-integration collect --module path/to/my/integration.ts`
 ###### `--instance` or `-i`
 
 If you are working with an existing integration instance and would prefer to
-leverage the configuration field values from that be used, you can optionally
+leverage the configuration field values from that instance, you can optionally
 supply an instance id. The CLI will leverage the values stored on the
 integration instance instead of locally defined environment variables.
 
