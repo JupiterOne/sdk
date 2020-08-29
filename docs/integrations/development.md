@@ -680,7 +680,7 @@ The `executionContext` that is provided in the `executionHandler` step exposes a
 `jobState` utility that can be used to collect entity and relationship data via
 `addEntities` and `addRelationships` functions. The `jobState` utility will
 automatically flush the data to disk as a certain threshold of entities and
-relationships is met. The data flushed to disk are grouped in folders that based
+relationships is met. The data flushed to disk are grouped in folders that are based
 on the step that was run. Entities and relationships will also be grouped by the
 `_type` and linked into separate directories to provide faster look ups. These
 directories will be used by the `getEntity`, `iterateEntities`, and
