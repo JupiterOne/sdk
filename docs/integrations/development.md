@@ -989,7 +989,7 @@ ex: `j1-integration collect --module path/to/my/integration.ts`
 ###### `--instance` or `-i`
 
 If you are working with an existing integration instance and would prefer to
-leverage the configuration field values from that be used, you can optionally
+leverage the configuration field values from that instance, you can optionally
 supply an instance id. The CLI will leverage the values stored on the
 integration instance instead of locally defined environment variables.
 
