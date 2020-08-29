@@ -14,7 +14,7 @@ This SDK supports building JupiterOne integrations using either JavaScript or
 TypeScript.
 
 The execution process expects the integration to produce an object conforming to
-the [`IntegrationInvocationConfig`](/packages/integration-sdk-core/src/types/config.ts)
+the [`IntegrationInvocationConfig`](/src/framework/execution/types/config.ts)
 interface.
 
 This includes configuration fields required to run the integration, a function
@@ -307,7 +307,7 @@ const entity = await jobState.findEntity('myentitykey');
 ```
 
 More details about how the framework uses `jobState` is detailed in the [Data
-collection](# Data collection) section below.
+collection](# data-collection) section below.
 
 ### Additional utilities
 
@@ -670,7 +670,7 @@ to keep track of how the integration is progressing without the need to
 explicitly add logging information themselves.
 
 When the integration is run with context about an integration instance (via the
-`run` command exposed by the [The CLI](# The CLI)), the transitions between each
+`run` command exposed by the [The CLI](# the-cli)), the transitions between each
 `step` will be published to the JupiterOne integration events log. `auth` and
 `error` logs will also be published there.
 
@@ -944,7 +944,7 @@ the following order relative to the current working directory:
 3. `src/index.ts`
 
 Data will be written to disk under a generated `.j1-integration` directory
-(described in [this section](### Data collection). A JupiterOne API key or set
+(described in [this section](### data-collection). A JupiterOne API key or set
 of credentials do not have to be supplied since the JupiterOne synchronization
 API will not be hit. An exception to this is when the `--instance` option is
 provided. (see `Options` below).
