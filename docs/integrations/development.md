@@ -918,7 +918,7 @@ CLI tool will also be exposed by this project.
 ### Authentication
 
 For commands that require interaction with JupiterOne's API, the CLI will
-provide ways or inputing credentials. To support that, all commands that
+provide ways of inputing credentials. To support that, all commands that
 interact with an API will accept an `--api-key` option.
 
 For convenience when developing locally, we will also look for a
