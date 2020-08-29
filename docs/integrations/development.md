@@ -980,7 +980,7 @@ integration expects to see set.
 
 ###### `--module` or `-m`
 
-If you prefer to not to place your integration configuration in one of the
+If you prefer not to place your integration configuration in one of the
 supported file paths, you can optionally specify the `--module` or `-m` option
 and provide a path to your integration file.
 
