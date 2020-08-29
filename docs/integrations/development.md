@@ -197,7 +197,7 @@ Optionally, a `step` may contain a `dependsOn` list of step IDs that need to
 execute before the step can run. This field will be used to determine whether
 previous work has failed to complete. The synchronization process will treat the
 data retrieved in the step as a partial dataset. See the [Failure
-handling](#Failure handling) section below for more information on partial
+handling](#failure-handling) section below for more information on partial
 datasets.
 
 ### How integrations are executed
