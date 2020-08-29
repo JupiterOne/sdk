@@ -742,8 +742,8 @@ Integration data that is staged for publishing will be stored under the
 `.j1-integration/graph` directory. Files containing Entities will be suffixed
 with `.entities.json` and files containing Relationships will be suffixed with
 `.relationships.json`. This is done because the directory structure of the
-`graph` directory is meant to assist with debugging and provide developrs
-insight about the data collect in each step. During synchronization, the
+`graph` directory is meant to assist with debugging and provide developers
+insight about the data collected in each step. During synchronization, the
 directory will be blind
 
 Data will be indexed by `_type` and stored under the
