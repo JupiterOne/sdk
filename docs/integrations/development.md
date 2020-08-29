@@ -14,7 +14,7 @@ This SDK supports building JupiterOne integrations using either JavaScript or
 TypeScript.
 
 The execution process expects the integration to produce an object conforming to
-the [`IntegrationInvocationConfig`](/src/framework/execution/types/config.ts)
+the [`IntegrationInvocationConfig`](/packages/integration-sdk-core/src/types/config.ts)
 interface.
 
 This includes configuration fields required to run the integration, a function
