@@ -779,7 +779,7 @@ end of an integration run, a summary will be displayed of the overall status to
 give developers a good idea of how failures will have affected the JupiterOne
 graph.
 
-An example summary of the steps will like this:
+An example summary of the steps looks like this:
 
 ```json
 [
