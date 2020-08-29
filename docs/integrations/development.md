@@ -832,7 +832,7 @@ has happened.
 The framework's state machine will utilize `declaredTypes` and `dependsOn`
 fields from the step results for constructing a list of entity and relationship
 types that should be considered a partial dataset. The backend synchronization
-process that performs he diffing of the data will receive a list of types that
+process that performs the diffing of the data will receive a list of types that
 have been affected by a failure to help determine how updates should be applied
 and what data is safe to delete. The information about partial datasets will be
 sent when starting the synchronization process to prevent data that should be
