@@ -1,5 +1,88 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`document alphabetizes "entities" metadata 1`] = `
+"# Integration with JupiterOne
+
+## Setup
+
+In this section, please provide details about how to set up the integration with
+JupiterOne. This may require provisioning some resources on the provider's side
+(perhaps a role, app, or api key) and passing information over to JupiterOne.
+
+
+<!-- {J1_DOCUMENTATION_MARKER_START} -->
+<!--
+********************************************************************************
+NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
+\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+DOCUMENTATION FOR USAGE INFORMATION:
+
+https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
+********************************************************************************
+-->
+
+## Data Model
+
+### Entities
+
+The following entities are created:
+
+| Resources   | Entity \`_type\` | Entity \`_class\` |
+| ----------- | -------------- | --------------- |
+| The Group   | \`my_group\`     | \`Group\`         |
+| The Group 2 | \`my_group_2\`   | \`Group\`         |
+| The User    | \`my_user\`      | \`User\`          |
+| The User 2  | \`my_user_2\`    | \`User\`          |
+
+<!--
+********************************************************************************
+END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
+********************************************************************************
+-->
+<!-- {J1_DOCUMENTATION_MARKER_END} -->"
+`;
+
+exports[`document alphabetizes "relationships" metadata 1`] = `
+"# Integration with JupiterOne
+
+## Setup
+
+In this section, please provide details about how to set up the integration with
+JupiterOne. This may require provisioning some resources on the provider's side
+(perhaps a role, app, or api key) and passing information over to JupiterOne.
+
+
+<!-- {J1_DOCUMENTATION_MARKER_START} -->
+<!--
+********************************************************************************
+NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
+\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+DOCUMENTATION FOR USAGE INFORMATION:
+
+https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
+********************************************************************************
+-->
+
+## Data Model
+
+### Relationships
+
+The following relationships are created/mapped:
+
+| Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
+| --------------------- | --------------------- | --------------------- |
+| \`the_root\`            | **HAS**               | \`my_account\`          |
+| \`the_root\`            | **HAS**               | \`my_account_1\`        |
+| \`the_root\`            | **HAS**               | \`my_account_2\`        |
+
+<!--
+********************************************************************************
+END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
+********************************************************************************
+-->
+<!-- {J1_DOCUMENTATION_MARKER_END} -->"
+`;
+
 exports[`document handles duplicate entity _type ingested in multiple steps 1`] = `
 "# Integration with JupiterOne
 
