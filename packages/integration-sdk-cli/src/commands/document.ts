@@ -167,9 +167,18 @@ function generateRelationshipTableFromAllStepEntityMetadata(
   return generated;
 }
 
-function alphabetizeMetadataPropertyByTypeCompareFn(
-  a: StepEntityMetadata | StepRelationshipMetadata,
-  b: StepEntityMetadata | StepRelationshipMetadata,
+function alphabetizeEntityMetadataPropertyByTypeCompareFn(
+  a: StepEntityMetadata,
+  b: StepEntityMetadata,
+): number {
+  if (a.resourceName > b.resourceName) return 1;
+  if (a.resourceName < b.resourceName) return -1;
+  return 0;
+}
+
+function alphabetizeRelationshipMetadataPropertyByTypeCompareFn(
+  a: StepRelationshipMetadata,
+  b: StepRelationshipMetadata,
 ): number {
   if (a._type > b._type) return 1;
   if (a._type < b._type) return -1;
@@ -181,10 +190,10 @@ function alphabetizeMetadataProperties(
 ): StepGraphObjectMetadataProperties {
   return {
     entities: metadata.entities.sort(
-      alphabetizeMetadataPropertyByTypeCompareFn,
+      alphabetizeEntityMetadataPropertyByTypeCompareFn,
     ),
     relationships: metadata.relationships.sort(
-      alphabetizeMetadataPropertyByTypeCompareFn,
+      alphabetizeRelationshipMetadataPropertyByTypeCompareFn,
     ),
   };
 }
