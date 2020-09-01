@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.2.0 - 2020-09-01
+
 ### Changed
 
 - [#321](https://github.com/JupiterOne/sdk/issues/321) -
