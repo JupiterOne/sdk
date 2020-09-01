@@ -360,6 +360,14 @@ describe('document', () => {
     await documentCommandSnapshotTest('docsInstanceDuplicateRelationshipTypes');
   });
 
+  test('alphabetizes "entities" metadata', async () => {
+    await documentCommandSnapshotTest('docsInstanceEntitiesAlphabetize');
+  });
+
+  test('alphabetizes "relationships" metadata', async () => {
+    await documentCommandSnapshotTest('docsInstanceRelationshipsAlphabetize');
+  });
+
   test('should allow passing a file path for the generated documentation', async () => {
     loadProjectStructure('docsInstanceCustomDocLoc');
 

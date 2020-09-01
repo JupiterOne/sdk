@@ -51,7 +51,9 @@ async function executeDocumentAction(
 
   log.info('\nConfiguration successfully loaded!\n');
 
-  const metadata = collectGraphObjectMetadataFromSteps(config.integrationSteps);
+  const metadata = alphabetizeMetadataProperties(
+    collectGraphObjectMetadataFromSteps(config.integrationSteps),
+  );
 
   if (!metadata.entities.length && !metadata.relationships.length) {
     log.info(
@@ -163,6 +165,37 @@ function generateRelationshipTableFromAllStepEntityMetadata(
   ]);
 
   return generated;
+}
+
+function alphabetizeEntityMetadataPropertyByTypeCompareFn(
+  a: StepEntityMetadata,
+  b: StepEntityMetadata,
+): number {
+  if (a.resourceName > b.resourceName) return 1;
+  if (a.resourceName < b.resourceName) return -1;
+  return 0;
+}
+
+function alphabetizeRelationshipMetadataPropertyByTypeCompareFn(
+  a: StepRelationshipMetadata,
+  b: StepRelationshipMetadata,
+): number {
+  if (a._type > b._type) return 1;
+  if (a._type < b._type) return -1;
+  return 0;
+}
+
+function alphabetizeMetadataProperties(
+  metadata: StepGraphObjectMetadataProperties,
+): StepGraphObjectMetadataProperties {
+  return {
+    entities: metadata.entities.sort(
+      alphabetizeEntityMetadataPropertyByTypeCompareFn,
+    ),
+    relationships: metadata.relationships.sort(
+      alphabetizeRelationshipMetadataPropertyByTypeCompareFn,
+    ),
+  };
 }
 
 function collectGraphObjectMetadataFromSteps(

@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- [#321](https://github.com/JupiterOne/sdk/issues/321) -
+  `j1-integration document` output in alphabetical order by entity metadata
+  `resourceName` property and relationship metadata `_type` property.
+
 ## 3.1.0 - 2020-08-26
 
 ### Changed
@@ -19,7 +25,8 @@ and this project adheres to
 
 ### Fixed
 
-- [#301](https://github.com/JupiterOne/sdk/issues/301) - Fix test `findEntity` for initialized entities in a `MockJobState`.
+- [#301](https://github.com/JupiterOne/sdk/issues/301) - Fix test `findEntity`
+  for initialized entities in a `MockJobState`.
 
 ## 3.0.0 - 2020-08-24
 
