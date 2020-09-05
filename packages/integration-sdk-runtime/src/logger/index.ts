@@ -11,19 +11,22 @@ import {
   IntegrationInstanceConfigFieldMap,
   IntegrationInvocationConfig,
   IntegrationLogger as IntegrationLoggerType,
-  IntegrationProviderAuthenticationError,
-  IntegrationProviderAuthorizationError,
   IntegrationStepExecutionContext,
-  IntegrationValidationError,
   InvocationConfig,
+  isProviderAuthError,
   Metric,
-  PROVIDER_AUTH_ERROR_DESCRIPTION,
+  shouldReportErrorToOperator,
   StepExecutionContext,
   StepMetadata,
   SynchronizationJob,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
 } from '@jupiterone/integration-sdk-core';
+
+export const PROVIDER_AUTH_ERROR_HELP =
+  ' Failed to access provider resource.' +
+  ' This integration is likely misconfigured or has insufficient permissions required to access the resource.' +
+  " Please ensure your integration's configuration settings are set up correctly.";
 
 // eslint-disable-next-line
 const bunyanFormat = require('bunyan-format');
@@ -158,6 +161,24 @@ export class IntegrationLogger extends EventEmitter
     this._errorSet = input.errorSet;
   }
 
+  /**
+   * Answers `true` when the err has been reported to the logger instance
+   * through these functions:
+   *
+   * * warn(err, ...)
+   * * error(err, ...)
+   *
+   * This can be used by outer `try/catch` blocks to avoid logging the same
+   * error twice:
+   *
+   * ```js
+   * if (!logger.isHandledError(err)) {
+   *   logger.error(err);
+   * }
+   * ```
+   *
+   * @param err a caught Error
+   */
   isHandledError(err: Error) {
     return this._errorSet.has(err);
   }
@@ -279,10 +300,10 @@ export class IntegrationLogger extends EventEmitter
       `Error occurred while validating integration configuration.`,
     );
 
-    if (isUserConfigError(err)) {
-      this.warn({ errorId, err }, description);
-    } else {
+    if (shouldReportErrorToOperator(err)) {
       this.error({ errorId, err }, description);
+    } else {
+      this.warn({ errorId, err }, description);
     }
 
     this.publishEvent({ name, description });
@@ -366,7 +387,7 @@ export function createErrorEventDescription(
   if (isProviderAuthError(err)) {
     // add additional instructions to the displayed message
     // if we know that this is an auth error
-    message += PROVIDER_AUTH_ERROR_DESCRIPTION;
+    message += PROVIDER_AUTH_ERROR_HELP;
   }
 
   const nameValuePairs: NameValuePair[] = [
@@ -391,26 +412,4 @@ export function createErrorEventDescription(
     errorId,
     description: `${message} (${errorDetails})`,
   };
-}
-
-type UserConfigError =
-  | IntegrationValidationError
-  | IntegrationProviderAuthenticationError;
-
-export function isUserConfigError(err: Error): err is UserConfigError {
-  return (
-    err instanceof IntegrationValidationError ||
-    err instanceof IntegrationProviderAuthenticationError
-  );
-}
-
-type ProviderAuthError =
-  | IntegrationProviderAuthorizationError
-  | IntegrationProviderAuthenticationError;
-
-export function isProviderAuthError(err: Error): err is ProviderAuthError {
-  return (
-    err instanceof IntegrationProviderAuthorizationError ||
-    err instanceof IntegrationProviderAuthenticationError
-  );
 }

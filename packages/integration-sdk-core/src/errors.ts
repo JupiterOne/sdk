@@ -2,11 +2,6 @@ export const UNEXPECTED_ERROR_CODE = 'UNEXPECTED_ERROR';
 export const UNEXPECTED_ERROR_REASON =
   'Unexpected error occurred executing integration! Please contact us in Slack or at https://support.jupiterone.io if the problem continues to occur.';
 
-export const PROVIDER_AUTH_ERROR_DESCRIPTION =
-  ' Failed to access provider resource.' +
-  ' This integration is likely misconfigured or has insufficient permissions required to access the resource.' +
-  " Please ensure your integration's configuration settings are set up correctly.";
-
 export interface IntegrationErrorOptions {
   message: string;
 
@@ -19,7 +14,6 @@ export interface IntegrationErrorOptions {
 
   /**
    * An optional flag used to mark the error as fatal. A fatal error will stop
-   *
    * execution of the entire integration.
    */
   fatal?: boolean;
@@ -166,6 +160,8 @@ export class IntegrationMissingKeyError extends IntegrationError {
  * An error that may be thrown by an integration during `validateInvocation`,
  * used to communicate something the user should see that can help them fix a
  * configuration problem.
+ *
+ * An alert SHOULD NOT be delivered to operators when this error is thrown.
  */
 export class IntegrationValidationError extends IntegrationError {
   constructor(message: string) {
@@ -181,6 +177,8 @@ export class IntegrationValidationError extends IntegrationError {
  * used to communicate a provider API authentication error the user should see
  * that can help them fix a configuration problem. This is a fatal error because
  * an integration cannot reach the provider.
+ *
+ * An alert SHOULD NOT be delivered to operators when this error is thrown.
  */
 export class IntegrationProviderAuthenticationError extends IntegrationError {
   constructor(options: {
@@ -210,8 +208,8 @@ export class IntegrationProviderAuthenticationError extends IntegrationError {
     super({
       ...options,
       code: 'PROVIDER_AUTHENTICATION_ERROR',
-      fatal: true,
       message: `Provider authentication failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
+      fatal: true,
     });
   }
 }
@@ -221,6 +219,8 @@ export class IntegrationProviderAuthenticationError extends IntegrationError {
  * with provider APIs, used to communicate an authenticated provider API client
  * resource access authorization error the user should see that can help them
  * fix a configuration problem.
+ *
+ * An alert SHOULD NOT be delivered to operators when this error is thrown.
  */
 export class IntegrationProviderAuthorizationError extends IntegrationError {
   constructor(options: {
@@ -256,8 +256,8 @@ export class IntegrationProviderAuthorizationError extends IntegrationError {
     super({
       ...options,
       code: 'PROVIDER_AUTHORIZATION_ERROR',
-      fatal: false,
       message: `Provider authorization failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
+      fatal: false,
     });
   }
 }
@@ -266,6 +266,9 @@ export class IntegrationProviderAuthorizationError extends IntegrationError {
  * An error that may be thrown by an integration during any step that interacts
  * with provider APIs, used to communicate an unexpected provider API error the
  * user should see that may help them obtain support from the provider.
+ *
+ * An alert SHOULD be delivered to operators when this error is thrown to allow
+ * for improving the integration's handling of provider API errors.
  */
 export class IntegrationProviderAPIError extends IntegrationError {
   constructor(options: {
@@ -294,8 +297,34 @@ export class IntegrationProviderAPIError extends IntegrationError {
     super({
       ...options,
       code: 'PROVIDER_API_ERROR',
-      fatal: false,
       message: `Provider API failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
+      fatal: false,
     });
   }
+}
+
+export type UserConfigError =
+  | IntegrationValidationError
+  | IntegrationProviderAuthenticationError;
+
+export function isUserConfigError(err: Error): err is UserConfigError {
+  return (
+    err instanceof IntegrationValidationError ||
+    err instanceof IntegrationProviderAuthenticationError
+  );
+}
+
+export type ProviderAuthError =
+  | IntegrationProviderAuthorizationError
+  | IntegrationProviderAuthenticationError;
+
+export function isProviderAuthError(err: Error): err is ProviderAuthError {
+  return (
+    err instanceof IntegrationProviderAuthorizationError ||
+    err instanceof IntegrationProviderAuthenticationError
+  );
+}
+
+export function shouldReportErrorToOperator(err: Error): boolean {
+  return !isUserConfigError(err) && !isProviderAuthError(err);
 }
