@@ -9,7 +9,6 @@ import {
   IntegrationProviderAuthorizationError,
   IntegrationStep,
   IntegrationValidationError,
-  PROVIDER_AUTH_ERROR_DESCRIPTION,
   SynchronizationJob,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
@@ -19,6 +18,7 @@ import {
   createErrorEventDescription,
   createIntegrationLogger,
   IntegrationLogger,
+  PROVIDER_AUTH_ERROR_HELP,
 } from '../../logger';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
@@ -394,7 +394,7 @@ describe('provider auth error details', () => {
         description: expect.stringMatching(
           new RegExp(
             '^Step "Mochi" failed to complete due to error.' +
-              PROVIDER_AUTH_ERROR_DESCRIPTION +
+              PROVIDER_AUTH_ERROR_HELP +
               ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
           ),
         ),
@@ -409,7 +409,7 @@ describe('provider auth error details', () => {
         description: expect.stringMatching(
           new RegExp(
             '^Error occurred while validating integration configuration.' +
-              PROVIDER_AUTH_ERROR_DESCRIPTION +
+              PROVIDER_AUTH_ERROR_HELP +
               ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
           ),
         ),
