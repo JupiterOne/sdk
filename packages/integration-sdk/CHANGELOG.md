@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- `j1-integration visualize-type` command generates metadata graph of types
+
 ### Changed
 
 - Introduced `shouldReportErrorToOperator` function for integration runtime

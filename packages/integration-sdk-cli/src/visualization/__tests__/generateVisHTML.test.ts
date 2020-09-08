@@ -1,4 +1,4 @@
-import { generateVisHTML, nothingToDisplayMessage } from '../generateVisHTML';
+import { generateVisHTML, nothingToDisplayMessage } from '../../utils/generateVisHTML';
 import { Node, Edge } from 'vis';
 
 const nodeDataSets: Node[] = [

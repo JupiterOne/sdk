@@ -1,0 +1,145 @@
+import * as log from '../log';
+import * as path from 'path';
+import { createCommand } from 'commander';
+import {
+  StepGraphObjectMetadataProperties, StepEntityMetadata, StepRelationshipMetadata,
+} from '@jupiterone/integration-sdk-core';
+import { promises as fs } from 'fs';
+import { getDefaultTypesFilePath, executeTypesAction, TypesCommandArgs } from './types';
+import { generateVisHTML } from '../utils/generateVisHTML';
+import { Node, Edge } from 'vis';
+
+interface VisualizeTypesCommandArgs extends TypesCommandArgs{
+  graphFilePath: string;
+  type: string[];
+}
+
+// coercion function to collect multiple values for a flag
+const collector = (value: string, arr: string[]) => {
+  arr.push(...value.split(','));
+  return arr;
+};
+
+export function visualizeTypes() {
+  return createCommand('visualize-types')
+    .description('Generates a graph of types metadata for all steps')
+    .option(
+      '-p, --project-path <directory>',
+      'Absolute file path to the integration project directory. Defaults to the current working directory.',
+      process.cwd(),
+    )
+    .option(
+      '-g, --graph-file-path <path>',
+      'Absolute file path to the HTML file that should be created/overwritten. Defaults to {CWD}/.j1-integration/types-graph/index.html.',
+    )
+    .option(
+      '-t, --types-file-path <path>',
+      'Absolute file path to the JSON file that should be created/overwritten. Defaults to {CWD}/docs/types.json.',    
+    )
+    .option(
+      '-y, --type <string>',
+      'J1 type(s) to visualize, comma separated if multiple',
+      collector,
+      [],
+    )
+    .action(executeVisualizeTypesAction);
+}
+
+async function executeVisualizeTypesAction(
+  options: VisualizeTypesCommandArgs,
+): Promise<void> {
+  const { projectPath } = options;
+  const types = options.type.length ? undefined : options.type;
+  const graphFilePath =
+    options.graphFilePath ||
+    getDefaultTypesGraphFilePath(projectPath);
+  const typesFilePath = 
+    options.typesFilePath || 
+    getDefaultTypesFilePath(projectPath);
+
+  await executeTypesAction({
+    projectPath,
+    typesFilePath,
+  });
+  
+  log.info('\nLoading types metadata file...\n');
+  const metadataString = await fs.readFile(typesFilePath, {
+    encoding: 'utf-8',
+  });
+
+  const metadata: StepGraphObjectMetadataProperties = JSON.parse(metadataString);
+
+  if (!metadata.entities.length && !metadata.relationships.length) {
+    log.info(
+      'No entities or relationships found to generate types graph for. Exiting.',
+    );
+    return;
+  }
+
+  log.info('\nGenerating local graph from types metadata...\n');
+
+  const edges = getEdgesFromStepRelationshipMetadata(metadata.relationships, { types });
+  const nodes = getNodesFromStepEntityMetadata(metadata.entities, { types, edges });
+  
+
+  const visHtml = generateVisHTML(
+    nodes,
+    edges,
+  )
+
+  await fs.mkdir(path.dirname(graphFilePath), { recursive: true });
+  await fs.writeFile(graphFilePath, visHtml, 'utf-8')
+
+  log.info(`Visualize metadata graph here: ${graphFilePath}`);
+}
+
+function getDefaultTypesGraphFilePath(
+  projectSourceDirectory: string,
+): string {
+  return path.join(projectSourceDirectory, '.j1-integration/types-graph/index.html');
+}
+
+function getNodesFromStepEntityMetadata(
+  entities: StepEntityMetadata[],
+  options?: {
+    types?: string[],
+    edges?: Edge[],
+  }
+): Node[] {
+  let targetTypes: Set<string> | undefined = undefined;
+  if (options?.types !== undefined && options.edges !== undefined) {
+    targetTypes = new Set();
+    for (const edge of options.edges) {
+      targetTypes.add(edge.from as string);
+      targetTypes.add(edge.to as string);
+    }
+    return entities.filter((e) => targetTypes?.has(e._type))
+      .map((e) => ({
+        id: e._type,
+        label: `${e.resourceName}\n${e._type}\n${e._class}`,
+      }));
+  } else {
+    return entities.map((e) => ({
+      id: e._type,
+      label: `${e.resourceName}\n${e._type}\n${e._class}`,
+    }));
+  }
+}
+
+function getEdgesFromStepRelationshipMetadata(
+  relationships: StepRelationshipMetadata[], 
+  options?: { 
+    types?: string[],
+  }
+): Edge[] {
+  return relationships.filter((r) => {
+    if (options?.types !== undefined) {
+      return options.types.includes(r.sourceType) || options.types.includes(r.targetType);
+    }
+    return true;
+  }).map((r) => ({
+    from: r.sourceType,
+    to: r.targetType,
+    label: r._class,
+  }));
+}

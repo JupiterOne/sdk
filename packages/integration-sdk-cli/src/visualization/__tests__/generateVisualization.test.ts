@@ -12,7 +12,7 @@ import {
 import { IntegrationData } from '../types/IntegrationData';
 import * as log from '../../log';
 
-import { nothingToDisplayMessage } from '../generateVisHTML';
+import { nothingToDisplayMessage } from '../../utils/generateVisHTML';
 import { generateVisualization } from '../generateVisualization';
 
 jest.mock('fs');
