@@ -14,26 +14,6 @@ const fs = nodeFs.promises;
 
 jest.mock('../log');
 
-function mockWriteTypesJson(): jest.SpyInstance {
-  let fileContents: string;
-
-  const writeFileSpy = jest
-    .spyOn(fs, 'writeFile')
-    .mockImplementation(async (filename, contents) => {
-      if (filename.toString().endsWith('types.json')) {
-        fileContents = (contents as string);
-        jest
-          .spyOn(fs, 'readFile')
-          .mockImplementationOnce(async (_) => {
-            return Promise.resolve(fileContents);
-          });
-      }
-      return Promise.resolve();
-    });
-
-    return writeFileSpy;
-}
-
 function getDocumentationFilePath(fixtureName: string) {
   return path.join(getProjectDirectoryPath(fixtureName), 'docs/jupiterone.md');
 }
@@ -41,12 +21,14 @@ function getDocumentationFilePath(fixtureName: string) {
 async function documentCommandSnapshotTest(fixtureName: string) {
   loadProjectStructure(fixtureName);
 
-  const writeFileSpy = mockWriteTypesJson();
+  const writeFileSpy = jest
+    .spyOn(fs, 'writeFile')
+    .mockResolvedValueOnce(Promise.resolve());
 
   await createCli().parseAsync(['node', 'j1-integration', 'document']);
 
-  expect(writeFileSpy).toHaveBeenCalledTimes(2);
-  expect(writeFileSpy).toHaveBeenLastCalledWith(
+  expect(writeFileSpy).toHaveBeenCalledTimes(1);
+  expect(writeFileSpy).toHaveBeenCalledWith(
     getDocumentationFilePath(fixtureName),
     expect.any(String),
     {
@@ -54,7 +36,7 @@ async function documentCommandSnapshotTest(fixtureName: string) {
     },
   );
 
-  expect(writeFileSpy.mock.calls[1][1]).toMatchSnapshot();
+  expect(writeFileSpy.mock.calls[0][1]).toMatchSnapshot();
 }
 
 afterEach(() => {
@@ -389,7 +371,9 @@ describe('document', () => {
   test('should allow passing a file path for the generated documentation', async () => {
     loadProjectStructure('docsInstanceCustomDocLoc');
 
-    const writeFileSpy = mockWriteTypesJson();
+    const writeFileSpy = jest
+      .spyOn(fs, 'writeFile')
+      .mockResolvedValueOnce(Promise.resolve());
 
     const customDocumentationFilePath = path.join(
       getProjectDirectoryPath('docsInstanceCustomDocLoc'),
@@ -404,8 +388,8 @@ describe('document', () => {
       customDocumentationFilePath,
     ]);
 
-    expect(writeFileSpy).toHaveBeenCalledTimes(2);
-    expect(writeFileSpy).toHaveBeenLastCalledWith(
+    expect(writeFileSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSpy).toHaveBeenCalledWith(
       customDocumentationFilePath,
       expect.any(String),
       {
@@ -413,16 +397,18 @@ describe('document', () => {
       },
     );
 
-    expect(writeFileSpy.mock.calls[1][1]).toMatchSnapshot();
+    expect(writeFileSpy.mock.calls[0][1]).toMatchSnapshot();
   });
 
-  test('loads the integration without entities or relationships and does not write a jupiterone.md file', async () => {
+  test('loads the integration without entities or relationships and does not write a file', async () => {
     loadProjectStructure('docsInstanceNoEntitiesNoRelationships');
 
-    const writeFileSpy = mockWriteTypesJson();
+    const writeFileSpy = jest
+      .spyOn(fs, 'writeFile')
+      .mockResolvedValueOnce(Promise.resolve());
 
     await createCli().parseAsync(['node', 'j1-integration', 'document']);
-    expect(writeFileSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSpy).toHaveBeenCalledTimes(0);
     expect(log.info).toHaveBeenCalledWith(
       `No entities or relationships found to generate documentation for. Exiting.`,
     );
@@ -431,7 +417,9 @@ describe('document', () => {
   test('should throw error when an existing doc does not exist', async () => {
     loadProjectStructure('docsWithoutExistingDoc');
 
-    const writeFileSpy = mockWriteTypesJson();
+    const writeFileSpy = jest
+      .spyOn(fs, 'writeFile')
+      .mockResolvedValueOnce(Promise.resolve());
 
     const documentationFilePath = getDocumentationFilePath(
       'docsWithoutExistingDoc',
@@ -446,6 +434,6 @@ describe('document', () => {
     expect(log.error).toHaveBeenCalledWith(
       `Error loading documentation file from path (path=${documentationFilePath}, err=${expectedErrorMessageThrown})`,
     );
-    expect(writeFileSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSpy).toHaveBeenCalledTimes(0);
   });
 });

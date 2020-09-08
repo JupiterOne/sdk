@@ -7,7 +7,10 @@ import {
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { promises as fs } from 'fs';
-import { getDefaultTypesFilePath, executeTypesAction, TypesCommandArgs } from './types';
+import {
+  getSortedJupiterOneTypes,
+  TypesCommandArgs,
+} from '../utils/getSortedJupiterOneTypes';
 
 const table = require('markdown-table');
 
@@ -31,10 +34,6 @@ export function document() {
       '-f, --documentation-file-path <path>',
       'Absolute file path to the Markdown file that should be created/updated. Defaults to {CWD}/docs/jupiterone.md.',
     )
-    .option(
-      '-t, --types-file-path <path>',
-      'Absolute file path to the JSON file that should be created/overwritten. Defaults to {CWD}/docs/types.json.',    
-    )
     .action(executeDocumentAction);
 }
 
@@ -45,21 +44,10 @@ async function executeDocumentAction(
   const documentationFilePath =
     options.documentationFilePath ||
     getDefaultDocumentationFilePath(projectPath);
-  const typesFilePath = 
-    options.typesFilePath || 
-    getDefaultTypesFilePath(projectPath);
 
-  await executeTypesAction({
+  const metadata = await getSortedJupiterOneTypes({
     projectPath,
-    typesFilePath,
   });
-  
-  log.info('\nLoading types metadata file...\n');
-  const metadataString = await fs.readFile(typesFilePath, {
-    encoding: 'utf-8',
-  });
-
-  const metadata: StepGraphObjectMetadataProperties = JSON.parse(metadataString);
 
   if (!metadata.entities.length && !metadata.relationships.length) {
     log.info(

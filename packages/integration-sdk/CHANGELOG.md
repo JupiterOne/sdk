@@ -19,7 +19,6 @@ and this project adheres to
   environments to check whether an `Error` is of a type that need not be alerted
   to deployment operators. All `Error`s other than those only an end user can
   resolve should be reported.
-- `j1-integration document` command creates an intermediate file `types.json`
 
 ## 3.2.0 - 2020-09-01
 

@@ -1,8 +1,6 @@
-import * as log from '../log';
 import { loadConfig } from '../config';
 import * as path from 'path';
 import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
-import { createCommand } from 'commander';
 import {
   IntegrationStepExecutionContext,
   Step,
@@ -10,52 +8,21 @@ import {
   StepEntityMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
-import { promises as fs } from 'fs';
 
 export interface TypesCommandArgs {
   projectPath: string;
-  typesFilePath: string;
 }
 
-export function types() {
-  return createCommand('types')
-    .description('Collects types metadata for all steps')
-    .option(
-      '-p, --project-path <directory>',
-      'Absolute file path to the integration project directory. Defaults to the current working directory.',
-      process.cwd(),
-    )
-    .option(
-      '-t, --types-file-path <path>',
-      'Absolute file path to the JSON file that should be created/overwritten. Defaults to {CWD}/docs/types.json.',    
-    )
-    .action(executeTypesAction);
-}
-
-export async function executeTypesAction(
+export async function getSortedJupiterOneTypes(
   options: TypesCommandArgs,
-): Promise<void> {
+): Promise<StepGraphObjectMetadataProperties> {
   const { projectPath } = options;
-  const typesFilePath =
-    options.typesFilePath ||
-    getDefaultTypesFilePath(projectPath);
 
-  log.info('\nFetching metadata types from steps...\n');
   const config = await loadConfig(path.join(projectPath, 'src'));
 
-  log.info('\nConfiguration successfully loaded!\n');
-
-  const metadata = alphabetizeMetadataProperties(
+  return alphabetizeMetadataProperties(
     collectGraphObjectMetadataFromSteps(config.integrationSteps),
   );
-
-  const metadataString = JSON.stringify(metadata, undefined, 2);
-
-  await fs.writeFile(typesFilePath, metadataString, {
-    encoding: 'utf-8',
-  });
-
-  log.info('Successfully generated types metadata file!');
 }
 
 export function getDefaultTypesFilePath(
