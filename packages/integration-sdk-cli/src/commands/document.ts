@@ -1,16 +1,13 @@
 import * as log from '../log';
-import { loadConfig } from '../config';
 import * as path from 'path';
-import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 import { createCommand } from 'commander';
 import {
-  IntegrationStepExecutionContext,
-  Step,
   StepGraphObjectMetadataProperties,
   StepEntityMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { promises as fs } from 'fs';
+import { getDefaultTypesFilePath, executeTypesAction, TypesCommandArgs } from './types';
 
 const table = require('markdown-table');
 
@@ -18,8 +15,7 @@ const J1_DOCUMENTATION_MARKER_START =
   '<!-- {J1_DOCUMENTATION_MARKER_START} -->';
 const J1_DOCUMENTATION_MARKER_END = '<!-- {J1_DOCUMENTATION_MARKER_END} -->';
 
-interface DocumentCommandArgs {
-  projectPath: string;
+interface DocumentCommandArgs extends TypesCommandArgs {
   documentationFilePath: string;
 }
 
@@ -32,8 +28,12 @@ export function document() {
       process.cwd(),
     )
     .option(
-      '-f, --documentation-file-path <directory>',
+      '-f, --documentation-file-path <path>',
       'Absolute file path to the Markdown file that should be created/updated. Defaults to {CWD}/docs/jupiterone.md.',
+    )
+    .option(
+      '-t, --types-file-path <path>',
+      'Absolute file path to the JSON file that should be created/overwritten. Defaults to {CWD}/docs/types.json.',    
     )
     .action(executeDocumentAction);
 }
@@ -45,15 +45,21 @@ async function executeDocumentAction(
   const documentationFilePath =
     options.documentationFilePath ||
     getDefaultDocumentationFilePath(projectPath);
+  const typesFilePath = 
+    options.typesFilePath || 
+    getDefaultTypesFilePath(projectPath);
 
-  log.info('\nBeginning documentation from steps...\n');
-  const config = await loadConfig(path.join(projectPath, 'src'));
+  await executeTypesAction({
+    projectPath,
+    typesFilePath,
+  });
+  
+  log.info('\nLoading types metadata file...\n');
+  const metadataString = await fs.readFile(typesFilePath, {
+    encoding: 'utf-8',
+  });
 
-  log.info('\nConfiguration successfully loaded!\n');
-
-  const metadata = alphabetizeMetadataProperties(
-    collectGraphObjectMetadataFromSteps(config.integrationSteps),
-  );
+  const metadata: StepGraphObjectMetadataProperties = JSON.parse(metadataString);
 
   if (!metadata.entities.length && !metadata.relationships.length) {
     log.info(
@@ -114,21 +120,6 @@ function getDefaultDocumentationFilePath(
   return path.join(projectSourceDirectory, 'docs/jupiterone.md');
 }
 
-function integrationStepsToMap(
-  integrationSteps: Step<IntegrationStepExecutionContext<object>>[],
-): Map<string, Step<IntegrationStepExecutionContext<object>>> {
-  const integrationStepMap = new Map<
-    string,
-    Step<IntegrationStepExecutionContext<object>>
-  >();
-
-  for (const step of integrationSteps) {
-    integrationStepMap.set(step.id, step);
-  }
-
-  return integrationStepMap;
-}
-
 function buildEntityClassDocumentationValue(_class: string | string[]): string {
   if (typeof _class === 'string') {
     return `\`${_class}\``;
@@ -165,80 +156,6 @@ function generateRelationshipTableFromAllStepEntityMetadata(
   ]);
 
   return generated;
-}
-
-function alphabetizeEntityMetadataPropertyByTypeCompareFn(
-  a: StepEntityMetadata,
-  b: StepEntityMetadata,
-): number {
-  if (a.resourceName > b.resourceName) return 1;
-  if (a.resourceName < b.resourceName) return -1;
-  return 0;
-}
-
-function alphabetizeRelationshipMetadataPropertyByTypeCompareFn(
-  a: StepRelationshipMetadata,
-  b: StepRelationshipMetadata,
-): number {
-  if (a._type > b._type) return 1;
-  if (a._type < b._type) return -1;
-  return 0;
-}
-
-function alphabetizeMetadataProperties(
-  metadata: StepGraphObjectMetadataProperties,
-): StepGraphObjectMetadataProperties {
-  return {
-    entities: metadata.entities.sort(
-      alphabetizeEntityMetadataPropertyByTypeCompareFn,
-    ),
-    relationships: metadata.relationships.sort(
-      alphabetizeRelationshipMetadataPropertyByTypeCompareFn,
-    ),
-  };
-}
-
-function collectGraphObjectMetadataFromSteps(
-  steps: Step<IntegrationStepExecutionContext<object>>[],
-): StepGraphObjectMetadataProperties {
-  const orderedStepNames = buildStepDependencyGraph(steps).overallOrder();
-  const integrationStepMap = integrationStepsToMap(steps);
-
-  const metadata: StepGraphObjectMetadataProperties = {
-    entities: [],
-    relationships: [],
-  };
-
-  // There could be multiple steps that ingest the same entity/relationship
-  // `_type`, so we need to deduplicate the data.
-  const entityTypeSet = new Set<string>();
-  const relationshipTypeSet = new Set<string>();
-
-  for (const stepName of orderedStepNames) {
-    const step = integrationStepMap.get(stepName) as Step<
-      IntegrationStepExecutionContext<object>
-    >;
-
-    for (const e of step.entities) {
-      if (entityTypeSet.has(e._type)) {
-        continue;
-      }
-
-      entityTypeSet.add(e._type);
-      metadata.entities.push(e);
-    }
-
-    for (const r of step.relationships) {
-      if (relationshipTypeSet.has(r._type)) {
-        continue;
-      }
-
-      relationshipTypeSet.add(r._type);
-      metadata.relationships.push(r);
-    }
-  }
-
-  return metadata;
 }
 
 function generateGraphObjectDocumentationFromStepsMetadata(
