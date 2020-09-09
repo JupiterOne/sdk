@@ -14,7 +14,8 @@ This SDK supports building JupiterOne integrations using either JavaScript or
 TypeScript.
 
 The execution process expects the integration to produce an object conforming to
-the [`IntegrationInvocationConfig`](/packages/integration-sdk-core/src/types/config.ts)
+the
+[`IntegrationInvocationConfig`](/packages/integration-sdk-core/src/types/config.ts)
 interface.
 
 This includes configuration fields required to run the integration, a function
@@ -196,9 +197,9 @@ determine how updates and deletes should be applied.
 Optionally, a `step` may contain a `dependsOn` list of step IDs that need to
 execute before the step can run. This field will be used to determine whether
 previous work has failed to complete. The synchronization process will treat the
-data retrieved in the step as a partial dataset. See the [Failure
-handling](#failure-handling) section below for more information on partial
-datasets.
+data retrieved in the step as a partial dataset. See the
+[Failure handling](#failure-handling) section below for more information on
+partial datasets.
 
 ### How integrations are executed
 
@@ -306,8 +307,8 @@ Example usage:
 const entity = await jobState.findEntity('myentitykey');
 ```
 
-More details about how the framework uses `jobState` is detailed in the [Data
-collection](#data-collection) section below.
+More details about how the framework uses `jobState` is detailed in the
+[Data collection](#data-collection) section below.
 
 ### Additional utilities
 
@@ -680,10 +681,10 @@ The `executionContext` that is provided in the `executionHandler` step exposes a
 `jobState` utility that can be used to collect entity and relationship data via
 `addEntities` and `addRelationships` functions. The `jobState` utility will
 automatically flush the data to disk as a certain threshold of entities and
-relationships is met. The data flushed to disk are grouped in folders that are based
-on the step that was run. Entities and relationships will also be grouped by the
-`_type` and linked into separate directories to provide faster look ups. These
-directories will be used by the `getEntity`, `iterateEntities`, and
+relationships is met. The data flushed to disk are grouped in folders that are
+based on the step that was run. Entities and relationships will also be grouped
+by the `_type` and linked into separate directories to provide faster look ups.
+These directories will be used by the `getEntity`, `iterateEntities`, and
 `iterateRelationships` functions to provide faster lookups.
 
 From our experience, integrations most commonly query collected data from
@@ -944,9 +945,9 @@ the following order relative to the current working directory:
 3. `src/index.ts`
 
 Data will be written to disk under a generated `.j1-integration` directory
-(described in [this section](#data-collection). A JupiterOne API key or set
-of credentials do not have to be supplied since the JupiterOne synchronization
-API will not be hit. An exception to this is when the `--instance` option is
+(described in [this section](#data-collection). A JupiterOne API key or set of
+credentials do not have to be supplied since the JupiterOne synchronization API
+will not be hit. An exception to this is when the `--instance` option is
 provided. (see `Options` below).
 
 To assist with making the integrations easier to develop, a mock integration
@@ -1128,7 +1129,7 @@ the
 `https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/events`
 API.
 
-##### `j1-integration visualize`
+#### `j1-integration visualize`
 
 The `j1-integration visualize` command reads JSON files from the
 `.j1-integrations/graph` directory and generates a visualization of the data
@@ -1169,6 +1170,32 @@ files:
 }
 ```
 
+#### `j1-integration visualize-types`
+
+```
+Usage: j1-integration visualize-types [options]
+
+Generates a graph of types metadata for all steps.
+
+Options:
+  -p, --project-path <directory>
+    Absolute file path to the integration project directory. Defaults to the
+    current working directory.
+
+  -o, --output-file <directory>
+    Absolute file path to the HTML file that should be created/overridden.
+    Defaults to {CWD}/.j1-integration/types-graph/index.html.
+
+  -t, --type <string>
+    J1 type(s) to visualize, comma separated if multiple.
+
+  -h, --help
+    Display help for command.
+```
+
+`j1-integration visualize-types` generates a (visjs)(http://www.visjs.org) graph
+based on the metadata defined in each step.
+
 #### `j1-integration document`
 
 Usage:
@@ -1183,7 +1210,7 @@ Options:
     Absolute file path to the integration project directory. Defaults to the
     current working directory.
 
-  -f, --documentation-file-path <directory>
+  -o, --output-file <directory>
     Absolute file path to the Markdown file that should be created/updated.
     Defaults to {CWD}/docs/jupiterone.md.
 
