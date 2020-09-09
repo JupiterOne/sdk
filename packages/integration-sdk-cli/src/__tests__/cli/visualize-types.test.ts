@@ -8,6 +8,8 @@ import { createCli } from '../..';
 import * as nodeFs from 'fs';
 const fs = nodeFs.promises;
 
+jest.mock('../../log');
+
 function getVisualizeTypesFilePath(fixtureName: string) {
   return path.join(
     getProjectDirectoryPath(fixtureName),
