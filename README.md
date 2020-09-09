@@ -61,5 +61,22 @@ Steps to automatically build and link:
   integration project. You can now use the integration SDK CLI in the other
   project and it will use the latest code on your filesystem.
 
-[1]: https://support.jupiterone.io/hc/en-us/articles/360022722094-JupiterOne-Platform-API
+### Versioning this project
+
+To version all packages in this project and tag the repo with a new version
+number, run the following (where `major.minor.patch` is the version you expect
+to move to):
+
+```shell
+git checkout -b release-<major>.<minor>.<patch>
+git push -u origin release-<major>.<minor>.<patch>
+yarn lerna version {major, minor, patch}
+```
+
+Note the `git checkout`/`git push` is required because Lerna will expect that
+you've already created a remote branch before bumping, tagging, and pushing the
+local changes to remote.
+
+[1]:
+  https://support.jupiterone.io/hc/en-us/articles/360022722094-JupiterOne-Platform-API
 [2]: https://github.com/JupiterOne/jupiterone-client-nodejs
