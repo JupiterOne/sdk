@@ -14,7 +14,7 @@ import { generateVisHTML } from '../utils/generateVisHTML';
 import { Node, Edge } from 'vis';
 
 interface VisualizeTypesCommandArgs extends TypesCommandArgs {
-  graphFilePath: string;
+  outputFile: string;
   type: string[];
 }
 
@@ -29,16 +29,16 @@ export function visualizeTypes() {
     .description('Generates a graph of types metadata for all steps')
     .option(
       '-p, --project-path <directory>',
-      'Absolute file path to the integration project directory. Defaults to the current working directory.',
+      'Absolute path to the integration project directory. Defaults to the current working directory.',
       process.cwd(),
     )
     .option(
-      '-g, --graph-file-path <path>',
-      'Absolute file path to the HTML file that should be created/overwritten. Defaults to {CWD}/.j1-integration/types-graph/index.html.',
+      '-o, --output-file <path>',
+      'Absolute path to the HTML file that should be created/overwritten. Defaults to {CWD}/.j1-integration/types-graph/index.html.',
     )
     .option(
-      '-y, --type <string>',
-      'J1 type(s) to visualize, comma separated if multiple',
+      '-t, --type <string>',
+      'J1 type(s) to visualize, comma separated if multiple.',
       collector,
       [],
     )
@@ -51,8 +51,9 @@ async function executeVisualizeTypesAction(
   const { projectPath } = options;
   const types = options.type.length === 0 ? undefined : options.type;
   const graphFilePath =
-    options.graphFilePath || getDefaultTypesGraphFilePath(projectPath);
+    options.outputFile || getDefaultTypesGraphFilePath(projectPath);
 
+  log.info('\nCollecting metadata types from steps...\n');
   const metadata = await getSortedJupiterOneTypes({
     projectPath,
   });

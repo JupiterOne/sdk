@@ -19,7 +19,7 @@ const J1_DOCUMENTATION_MARKER_START =
 const J1_DOCUMENTATION_MARKER_END = '<!-- {J1_DOCUMENTATION_MARKER_END} -->';
 
 interface DocumentCommandArgs extends TypesCommandArgs {
-  documentationFilePath: string;
+  outputFile: string;
 }
 
 export function document() {
@@ -27,12 +27,12 @@ export function document() {
     .description('Generates documentation for all steps')
     .option(
       '-p, --project-path <directory>',
-      'Absolute file path to the integration project directory. Defaults to the current working directory.',
+      'Absolute path to the integration project directory. Defaults to the current working directory.',
       process.cwd(),
     )
     .option(
-      '-f, --documentation-file-path <path>',
-      'Absolute file path to the Markdown file that should be created/updated. Defaults to {CWD}/docs/jupiterone.md.',
+      '-o, --output-file <path>',
+      'Absolute path to the Markdown file that should be created/updated. Defaults to {CWD}/docs/jupiterone.md.',
     )
     .action(executeDocumentAction);
 }
@@ -42,9 +42,9 @@ async function executeDocumentAction(
 ): Promise<void> {
   const { projectPath } = options;
   const documentationFilePath =
-    options.documentationFilePath ||
-    getDefaultDocumentationFilePath(projectPath);
+    options.outputFile || getDefaultDocumentationFilePath(projectPath);
 
+  log.info('\nCollecting metadata types from steps...\n');
   const metadata = await getSortedJupiterOneTypes({
     projectPath,
   });
