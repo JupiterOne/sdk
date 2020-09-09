@@ -49,7 +49,7 @@ async function executeVisualizeTypesAction(
   options: VisualizeTypesCommandArgs,
 ): Promise<void> {
   const { projectPath } = options;
-  const types = options.type.length ? undefined : options.type;
+  const types = options.type.length === 0 ? undefined : options.type;
   const graphFilePath =
     options.graphFilePath || getDefaultTypesGraphFilePath(projectPath);
 
@@ -96,9 +96,8 @@ function getNodesFromStepEntityMetadata(
     edges?: Edge[];
   },
 ): Node[] {
-  let targetTypes: Set<string> | undefined = undefined;
   if (options?.types !== undefined && options.edges !== undefined) {
-    targetTypes = new Set();
+    const targetTypes = new Set<string>();
     for (const edge of options.edges) {
       targetTypes.add(edge.from as string);
       targetTypes.add(edge.to as string);
