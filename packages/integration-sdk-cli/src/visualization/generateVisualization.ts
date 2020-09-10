@@ -2,7 +2,7 @@ import path from 'path';
 import { writeFileToPath } from '@jupiterone/integration-sdk-runtime';
 
 import { retrieveIntegrationData } from './retrieveIntegrationData';
-import { generateVisHTML } from './generateVisHTML';
+import { generateVisHTML } from '../utils/generateVisHTML';
 import { Edge } from 'vis';
 import globby from 'globby';
 import upath from 'upath';

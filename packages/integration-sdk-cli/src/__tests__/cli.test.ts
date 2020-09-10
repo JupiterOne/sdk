@@ -384,7 +384,7 @@ describe('document', () => {
       'node',
       'j1-integration',
       'document',
-      '-f',
+      '-o',
       customDocumentationFilePath,
     ]);
 
