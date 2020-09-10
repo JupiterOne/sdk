@@ -1193,7 +1193,7 @@ Options:
     Display help for command.
 ```
 
-`j1-integration visualize-types` generates a (visjs)(http://www.visjs.org) graph
+`j1-integration visualize-types` generates a [visjs](http://www.visjs.org) graph
 based on the metadata defined in each step.
 
 #### `j1-integration document`
