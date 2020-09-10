@@ -86,6 +86,19 @@ describe('#toMatchGraphObjectSchema', () => {
     expect(result.message()).toEqual('Success!');
   });
 
+  test('should match class schema with no custom schema', () => {
+    const result = toMatchGraphObjectSchema(generateCollectedEntity(), {
+      _class: 'Service',
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+
+    expect(result.message()).toEqual('Success!');
+  });
+
   test('should match custom entity schema with array of classes', () => {
     const result = toMatchGraphObjectSchema(generateCollectedEntity(), {
       _class: ['Service'],

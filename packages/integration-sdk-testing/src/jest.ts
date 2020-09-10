@@ -172,7 +172,7 @@ export interface ToMatchGraphObjectSchemaParams {
   /**
    * The schema that should be used to validate the input data against
    */
-  schema: GraphObjectSchema;
+  schema?: GraphObjectSchema;
 }
 
 export function toMatchGraphObjectSchema<T extends Entity>(
@@ -187,6 +187,7 @@ export function toMatchGraphObjectSchema<T extends Entity>(
   // a new object of the `IntegrationSchema`.
   const dataModelIntegrationSchema = dataModel.IntegrationSchema;
   _class = Array.isArray(_class) ? _class : [_class];
+  schema = schema || {};
 
   let schemas: GraphObjectSchema[] = [];
 
