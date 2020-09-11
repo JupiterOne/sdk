@@ -15,8 +15,8 @@ and this project adheres to
   environments to check whether an `Error` is of a type that need not be alerted
   to deployment operators. All `Error`s other than those only an end user can
   resolve should be reported.
-- Made `ToMatchGraphObjectSchemaParams.schema` property optional in jest
-  matcher.
+- [#333](https://github.com/JupiterOne/sdk/issues/333) - Made
+  `ToMatchGraphObjectSchemaParams.schema` property optional in jest matcher.
 
 ## 3.2.0 - 2020-09-01
 
