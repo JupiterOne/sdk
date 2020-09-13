@@ -1,7 +1,9 @@
 import {
   Entity,
-  createDirectRelationship,
 } from '@jupiterone/integration-sdk-core';
+import {
+  createDirectRelationship
+} from '@jupiterone/integration-sdk-core/src';
 import { RelationshipClass } from '@jupiterone/data-model';
 
 interface CreateRelationshipParams {

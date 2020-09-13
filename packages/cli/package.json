@@ -19,7 +19,9 @@
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
-    "prepack": "yarn build:dist"
+    "build": "yarn build:dist",
+    "prepack": "yarn build:dist",
+    "test": "jest"
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^3.2.1",
