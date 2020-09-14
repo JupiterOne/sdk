@@ -125,8 +125,14 @@ type TargetEntity = TargetEntityProperties & {
 /**
  * Allows assignment of any additional properties without being forced to use
  * specific types where that isn't helpful.
+ *
+ * The persister does not allow Object or Array properties.
  */
-type AdditionalRelationshipProperties = { [key: string]: any };
+type AdditionalRelationshipProperties = {
+  _type?: string;
+  _key?: string;
+  [key: string]: string | boolean | number | null | undefined;
+};
 
 function createInvalidateRelationshipClassError(_class: string) {
   return new IntegrationError({

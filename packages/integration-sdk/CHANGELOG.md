@@ -21,6 +21,8 @@ and this project adheres to
   resolve should be reported.
 - [#333](https://github.com/JupiterOne/sdk/issues/333) - Made
   `ToMatchGraphObjectSchemaParams.schema` property optional in jest matcher.
+- Changed index signature of `AdditionalRelationshipProperties` to not allow
+  Array or Object types.
 
 ## 3.2.0 - 2020-09-01
 
