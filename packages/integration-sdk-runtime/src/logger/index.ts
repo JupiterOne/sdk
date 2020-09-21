@@ -21,6 +21,7 @@ import {
   SynchronizationJob,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
+  IntegrationInstanceConfig,
 } from '@jupiterone/integration-sdk-core';
 
 export const PROVIDER_AUTH_ERROR_HELP =
@@ -117,9 +118,9 @@ export function createIntegrationLogger({
   });
 }
 
-function createInstanceConfigSerializer(
-  fields?: IntegrationInstanceConfigFieldMap,
-) {
+function createInstanceConfigSerializer<
+  TConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig
+>(fields?: IntegrationInstanceConfigFieldMap<TConfig>) {
   return (config: any) => {
     if (!config) {
       return config;

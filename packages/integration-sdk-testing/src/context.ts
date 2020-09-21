@@ -22,7 +22,7 @@ export type CreateMockExecutionContextOptions<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 > =
   | CreateMockExecutionContextOptionsWithInstanceConfig<TConfig>
-  | CreateMockExecutionContextOptionsWithInstanceConfigFields;
+  | CreateMockExecutionContextOptionsWithInstanceConfigFields<TConfig>;
 
 interface CreateMockExecutionContextOptionsWithInstanceConfig<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
@@ -30,15 +30,17 @@ interface CreateMockExecutionContextOptionsWithInstanceConfig<
   instanceConfig: TConfig;
 }
 
-interface CreateMockExecutionContextOptionsWithInstanceConfigFields {
-  instanceConfigFields: IntegrationInstanceConfigFieldMap;
+interface CreateMockExecutionContextOptionsWithInstanceConfigFields<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> {
+  instanceConfigFields: IntegrationInstanceConfigFieldMap<TConfig>;
 }
 
 export function createMockExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 >(
   options: CreateMockExecutionContextOptions<TConfig> = {
-    instanceConfigFields: {},
+    instanceConfigFields: {} as IntegrationInstanceConfigFieldMap<TConfig>,
   },
 ): IntegrationExecutionContext<TConfig> {
   const logger = createMockIntegrationLogger();
@@ -59,7 +61,7 @@ export function createMockExecutionContext<
     const { instanceConfigFields } = options;
     try {
       instance.config = loadConfigFromEnvironmentVariables(
-        instanceConfigFields,
+        options.instanceConfigFields,
       );
     } catch (err) {
       // failed to load configuration, not end of the world
@@ -102,7 +104,7 @@ export function createMockStepExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 >(
   options: CreateMockStepExecutionContextOptions<TConfig> = {
-    instanceConfigFields: {},
+    instanceConfigFields: {} as IntegrationInstanceConfigFieldMap<TConfig>,
   },
 ): MockIntegrationStepExecutionContext<TConfig> {
   return {
@@ -113,7 +115,7 @@ export function createMockStepExecutionContext<
 
 function generateInstanceConfig<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
->(configFields: IntegrationInstanceConfigFieldMap): TConfig {
+>(configFields: IntegrationInstanceConfigFieldMap<TConfig>): TConfig {
   return Object.entries(configFields).reduce(
     (acc: IntegrationInstance['config'], [field, config]) => {
       acc[field] = getInstanceConfigValueFromType(config);

@@ -3,7 +3,10 @@ import path from 'path';
 import { vol } from 'memfs';
 
 import { loadConfigFromEnvironmentVariables } from '../config';
-import { IntegrationInstanceConfigFieldMap } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationInstanceConfigFieldMap,
+  IntegrationInstanceConfigField,
+} from '@jupiterone/integration-sdk-core';
 
 jest.mock('fs');
 
@@ -20,7 +23,10 @@ afterEach(() => {
 });
 
 test('loads config fields from environment variables', () => {
-  const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<Record<
+    'stringVariable' | 'booleanVariable',
+    IntegrationInstanceConfigField
+  >> = {
     stringVariable: {
       type: 'string',
     },
@@ -38,7 +44,10 @@ test('loads config fields from environment variables', () => {
 });
 
 test('throws error if expected environment is not set for config field', () => {
-  const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<Record<
+    'mySuperAwesomeEnvironmentVariable',
+    IntegrationInstanceConfigField
+  >> = {
     mySuperAwesomeEnvironmentVariable: {
       type: 'string',
     },
@@ -53,7 +62,10 @@ test('throws error if expected environment is not set for config field', () => {
 
 test('throws error if expected environment boolean field does not match "true" or "false"', () => {
   process.env.BOOLEAN_VARIABLE = 'mochi';
-  const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<Record<
+    'booleanVariable',
+    IntegrationInstanceConfigField
+  >> = {
     booleanVariable: {
       type: 'boolean',
     },
@@ -71,7 +83,10 @@ test('loads environment variables from .env', () => {
     [path.join(process.cwd(), '.env')]: 'MY_ENV_VAR=mochi',
   });
 
-  const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<Record<
+    'myEnvVar',
+    IntegrationInstanceConfigField
+  >> = {
     myEnvVar: {
       type: 'string',
     },

@@ -24,7 +24,7 @@ export interface IntegrationInvocationConfig<
     IntegrationExecutionContext<TConfig>,
     IntegrationStepExecutionContext<TConfig>
   > {
-  instanceConfigFields?: IntegrationInstanceConfigFieldMap;
+  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
 }
 
 export interface IntegrationInstanceConfigField {
@@ -32,7 +32,6 @@ export interface IntegrationInstanceConfigField {
   mask?: boolean;
 }
 
-export type IntegrationInstanceConfigFieldMap = Record<
-  string,
-  IntegrationInstanceConfigField
->;
+export type IntegrationInstanceConfigFieldMap<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> = Record<keyof TConfig, IntegrationInstanceConfigField>;
