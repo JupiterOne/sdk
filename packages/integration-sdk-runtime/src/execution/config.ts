@@ -16,7 +16,7 @@ const dotenvExpand = require('dotenv-expand');
  */
 export function loadConfigFromEnvironmentVariables<
   TConfig extends IntegrationInstanceConfig
->(configMap: IntegrationInstanceConfigFieldMap): TConfig {
+>(configMap: IntegrationInstanceConfigFieldMap<TConfig>): TConfig {
   // pull in environment variables from .env file if available
   dotenvExpand(dotenv.config());
 

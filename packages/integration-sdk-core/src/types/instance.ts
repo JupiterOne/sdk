@@ -1,4 +1,4 @@
-export type IntegrationInstanceConfig = object;
+export type IntegrationInstanceConfig = Record<string, any>;
 
 /**
  * A stored user configuration for executing the integration defined by
