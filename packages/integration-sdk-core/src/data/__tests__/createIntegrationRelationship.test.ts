@@ -103,13 +103,13 @@ describe('DirectRelationshipLiteralOptions', () => {
 });
 
 describe('MappedRelationshipOptions', () => {
-  const entityA: Entity = {
+  const entityA = {
     _type: 'a_entity',
     _class: 'A',
     _key: 'a',
   };
 
-  const entityB: Entity = {
+  const entityB = {
     _type: 'b_entity',
     _class: 'B',
     _key: 'b',

@@ -1,5 +1,30 @@
 import { PersistedObject } from './persistedObject';
 
+export type PrimitiveEntity = EntityCoreProperties &
+  PrimitiveEntityAdditionalProperties;
+
+type PrimitiveEntityAdditionalProperties = Record<
+  string,
+  PrimitiveEntityPropertyValue
+> & {
+  /**
+   * The natural identifier of the entity as provided by the data source API.
+   * Many APIs answer resources that each have an `id` property that should be
+   * transferred to this entity property.
+   */
+  id?: string;
+};
+
+type PrimitiveEntityPropertyValue =
+  | Array<string | number | boolean>
+  | string
+  | string[]
+  | number
+  | number[]
+  | boolean
+  | undefined
+  | null;
+
 export type Entity = EntityCoreProperties &
   RawDataTracking &
   EntityAdditionalProperties;
@@ -18,16 +43,7 @@ type EntityAdditionalProperties = Record<string, EntityPropertyValue> & {
   id?: string;
 };
 
-type EntityPropertyValue =
-  | Array<string | number | boolean>
-  | string
-  | string[]
-  | number
-  | number[]
-  | boolean
-  | undefined
-  | null
-  | EntityRawData[];
+type EntityPropertyValue = PrimitiveEntityPropertyValue | EntityRawData[];
 
 export interface RawDataTracking {
   /**

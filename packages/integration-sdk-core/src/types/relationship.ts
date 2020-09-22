@@ -1,5 +1,5 @@
 import { PersistedObject } from './persistedObject';
-import { Entity } from './entity';
+import { PrimitiveEntity } from './entity';
 
 export type Relationship = ExplicitRelationship | MappedRelationship;
 
@@ -33,7 +33,11 @@ type RelationshipPropertyValue =
   | RelationshipMapping;
 
 export type TargetFilterKey = string | string[];
-export type TargetEntityProperties = Partial<Entity>;
+
+/** According to Persister, must be one of
+ * string | string[] | number | number[] | boolean | boolean[]
+ */
+export type TargetEntityProperties = Partial<PrimitiveEntity>;
 
 /**
  * Relationship direction.
