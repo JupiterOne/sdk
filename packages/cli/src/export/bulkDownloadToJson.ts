@@ -7,7 +7,7 @@ import { ensureDirectoryExists, writeFileToPath } from "../fileSystem";
 import path from "path";
 import { sanitizeContent } from "./util";
 
-const J1_ENDPOINT = getApiBaseUrl();
+const J1_ENDPOINT = getApiBaseUrl({ dev: !!process.env.JUPITERONE_DEV });
 
 interface BulkEntitiesData {
   items: Entity[],
@@ -37,6 +37,8 @@ export type BulkDownloadParams = {
   progress: (totalDownloaded: number) => void
 }
 
+export const ASSET_DOWNLOAD_LIMIT = 4000;
+
 export async function bulkDownloadToJson({ storageDirectory, assetType, apiKey, includeDeleted, progress }: BulkDownloadParams) {
   let endCursor: string | undefined;
   let assetCount = 0;
@@ -46,8 +48,25 @@ export async function bulkDownloadToJson({ storageDirectory, assetType, apiKey, 
   const assetPath = path.join(storageDirectory, 'json', assetType);
   await ensureDirectoryExists(assetPath);
 
+  let limit = ASSET_DOWNLOAD_LIMIT;
+  let tooLarge = false;
   do {
-    const { data } = await apiClient.get<BulkEntitiesData | BulkRelationshipsData>(`/${assetType}?includeDeleted=${includeDeleted}${endCursor ? '&cursor=' + endCursor : ''}`);
+    let data: any;
+    try {
+      const response = await apiClient.get<BulkEntitiesData | BulkRelationshipsData>(`/${assetType}?limit=${limit}&includeDeleted=${includeDeleted}${endCursor ? '&cursor=' + endCursor : ''}`);
+      data = response.data
+      limit = ASSET_DOWNLOAD_LIMIT;
+      tooLarge = false;
+    } catch (e) {
+      if (e.response?.status === 422) {
+        limit /= 2;
+        tooLarge = true;
+        continue;
+      }
+      else {
+        throw e;
+      }
+    }
 
     await exportAssetGroupToJson(assetPath, data.items);
 
@@ -55,5 +74,5 @@ export async function bulkDownloadToJson({ storageDirectory, assetType, apiKey, 
     assetCount += data.items.length;
 
     progress(assetCount);
-  } while (endCursor)
+  } while (endCursor || tooLarge)
 }

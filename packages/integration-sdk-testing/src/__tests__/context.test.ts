@@ -29,7 +29,7 @@ interface Config {
   myTypelessConfig: string;
 }
 
-const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+const instanceConfigFields: IntegrationInstanceConfigFieldMap<Config> = {
   myBooleanConfig: {
     type: 'boolean',
   },
