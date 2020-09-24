@@ -40,7 +40,10 @@ interface ExecuteIntegrationOptions {
  * Starts execution of an integration instance generated from local environment
  * variables.
  */
-export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
+export function executeIntegrationLocally(
+  config: IntegrationInvocationConfig,
+  options?: { enableSchemaValidation?: boolean },
+) {
   return executeIntegrationInstance(
     createIntegrationLogger({
       name: 'Local',
@@ -49,7 +52,12 @@ export function executeIntegrationLocally(config: IntegrationInvocationConfig) {
     }),
     createIntegrationInstanceForLocalExecution(config),
     config,
-    { enableSchemaValidation: true },
+    {
+      enableSchemaValidation:
+        options?.enableSchemaValidation !== undefined
+          ? options.enableSchemaValidation
+          : true,
+    },
   );
 }
 

@@ -85,6 +85,62 @@ describe('collect', () => {
     });
   });
 
+  describe('schema validation', () => {
+    beforeEach(() => {
+      loadProjectStructure('instanceWithNonValidatingSteps');
+      delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
+    });
+
+    test('step should fail if enableSchemaValidation = true', async () => {
+      await createCli().parseAsync(['node', 'j1-integration', 'collect']);
+
+      expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+      expect(log.displayExecutionResults).toHaveBeenCalledWith({
+        integrationStepResults: [
+          {
+            id: 'fetch-users',
+            name: 'Fetch Users',
+            declaredTypes: ['my_user'],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['my_user'],
+          },
+        },
+      });
+    });
+
+    test('step should pass if enableSchemaValidation = false', async () => {
+      await createCli().parseAsync([
+        'node',
+        'j1-integration',
+        'collect',
+        '--disable-schema-validation',
+      ]);
+
+      expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+      expect(log.displayExecutionResults).toHaveBeenCalledWith({
+        integrationStepResults: [
+          {
+            id: 'fetch-users',
+            name: 'Fetch Users',
+            declaredTypes: ['my_user'],
+            encounteredTypes: ['my_user'],
+            status: StepResultStatus.SUCCESS,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: [],
+          },
+        },
+      });
+    });
+  });
+
   describe('-s or --step option', () => {
     test('will only run the steps provided if the -s / --steps option is passed in', async () => {
       await createCli().parseAsync([
