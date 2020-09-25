@@ -9,6 +9,11 @@ describe('data', () => {
     await expect(jobState.getData('my-key')).resolves.toEqual('whatever');
   });
 
+  test('initializes a job state object with data that can be gotten', async () => {
+    const jobState = createMockJobState({ setData: { 'my-key': 'whatever' } });
+    await expect(jobState.getData('my-key')).resolves.toEqual('whatever');
+  });
+
   test('replaces existing data', async () => {
     const jobState = createMockJobState();
     await jobState.setData('my-key', 'whatever');
@@ -71,7 +76,7 @@ describe('entities', () => {
   });
 
   test('findEntity returns initialized entity from jobState when _key matches', async () => {
-    const jobState = createMockJobState({entities: inputEntities});
+    const jobState = createMockJobState({ entities: inputEntities });
     const result = await jobState.findEntity('a');
     expect(result).toEqual(inputEntities[0]);
   });

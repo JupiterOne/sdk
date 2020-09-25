@@ -15,6 +15,7 @@ import {
 export interface CreateMockJobStateOptions {
   entities?: Entity[];
   relationships?: Relationship[];
+  setData?: { [key: string]: any };
 }
 
 /**
@@ -38,6 +39,7 @@ export interface MockJobState extends JobState {
 export function createMockJobState({
   entities: inputEntities = [],
   relationships: inputRelationships = [],
+  setData: inputData = {},
 }: CreateMockJobStateOptions = {}): MockJobState {
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
@@ -58,6 +60,8 @@ export function createMockJobState({
     });
     typeTracker.registerType(r._type as string);
   });
+
+  Object.keys(inputData).forEach((key) => dataStore.set(key, inputData[key]));
 
   const addEntities = async (newEntities: Entity[]): Promise<Entity[]> => {
     newEntities.forEach((e) => {

@@ -13,6 +13,7 @@ and this project adheres to
 
 - `j1-integration visualize-type` command generates metadata graph of types
 - Added `--disable-schema-validation` flag to `j1-integration collect` command.
+- Added optional `setData` input to `createMockJobState()` test util.
 
 ### Changed
 
