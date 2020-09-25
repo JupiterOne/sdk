@@ -12,6 +12,7 @@ and this project adheres to
 ### Added
 
 - `j1-integration visualize-type` command generates metadata graph of types
+- Added `--disable-schema-validation` flag to `j1-integration collect` command.
 
 ### Changed
 
