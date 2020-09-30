@@ -1,6 +1,6 @@
 import * as dataModel from '@jupiterone/data-model';
 import * as deepmerge from 'deepmerge';
-import { Entity } from '@jupiterone/integration-sdk-core';
+import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -8,6 +8,10 @@ declare global {
     interface Matchers<R> {
       toMatchGraphObjectSchema<T extends Entity>(
         params: ToMatchGraphObjectSchemaParams,
+      ): R;
+
+      toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
+        params: ToMatchRelationshipSchemaParams,
       ): R;
     }
   }
@@ -106,7 +110,7 @@ function dedupSchemaPropertyTypes(
   };
 }
 
-function generateEntitySchemaFromDataModelSchemas(
+function generateGraphObjectSchemaFromDataModelSchemas(
   schemas: GraphObjectSchema[],
 ) {
   const newSchemas: GraphObjectSchema[] = [];
@@ -207,7 +211,7 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     }
   }
 
-  const newEntitySchema: GraphObjectSchema = generateEntitySchemaFromDataModelSchemas(
+  const newEntitySchema: GraphObjectSchema = generateGraphObjectSchemaFromDataModelSchemas(
     [
       // Merging should have the highest-level schemas at the end of the array
       // so that they can override the parent classes
@@ -222,12 +226,68 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     };
   }
 
+  return toMatchSchema(received, newEntitySchema);
+}
+
+export interface ToMatchRelationshipSchemaParams {
+  /**
+   * The schema that should be used to validate the input data against
+   */
+  schema?: GraphObjectSchema;
+}
+
+export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
+  received: T | T[],
+  params?: ToMatchRelationshipSchemaParams,
+) {
+  const dataModelIntegrationSchema = dataModel.IntegrationSchema;
+  const schema = params?.schema || {};
+
+  const graphObjectSchemas = collectSchemasFromRef(
+    dataModelIntegrationSchema,
+    '#GraphObject',
+  );
+
+  const directRelationshipSchema = {
+    $schema: 'http://json-schema.org/draft-07/schema#',
+    $id: '#DirectRelationship',
+    description:
+      'An edge in the graph database that represents a Relationship. This reference schema defines common shared properties among most Entities.',
+    type: 'object',
+    allOf: [
+      {
+        $ref: '#GraphObject',
+      },
+      {
+        additionalProperties: {
+          type: ['boolean', 'integer', 'null', 'number', 'string'],
+        },
+      },
+    ],
+  };
+
+  return toMatchSchema(
+    received,
+    generateGraphObjectSchemaFromDataModelSchemas([
+      ...graphObjectSchemas.reverse(),
+      directRelationshipSchema,
+      schema,
+    ]),
+  );
+}
+
+function toMatchSchema<T extends Entity | ExplicitRelationship>(
+  received: T | T[],
+  schema: GraphObjectSchema,
+) {
+  const dataModelIntegrationSchema = dataModel.IntegrationSchema;
+
   received = Array.isArray(received) ? received : [received];
 
   for (let i = 0; i < received.length; i++) {
     const data = received[i];
 
-    if (dataModelIntegrationSchema.validate(newEntitySchema, data)) {
+    if (dataModelIntegrationSchema.validate(schema, data)) {
       continue;
     }
 
@@ -238,12 +298,38 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     );
   }
 
-  return {
-    message: () => 'Success!',
-    pass: true,
-  };
+  const hasDistinctKeysResult = toHaveDistinctKeys(received);
+
+  if (hasDistinctKeysResult.pass === true) {
+    return {
+      message: () => 'Success!',
+      pass: true,
+    };
+  } else {
+    return hasDistinctKeysResult;
+  }
+}
+
+function toHaveDistinctKeys(received: { _key: string }[]) {
+  const _keys = received.map((r) => r._key);
+  const pass = Array.isArray(_keys) && new Set(_keys).size === _keys.length;
+  if (pass) {
+    return {
+      message: () => `Object \`_key\` properties array is unique: [${_keys}]`,
+      pass: true,
+    };
+  } else {
+    return {
+      message: () =>
+        `Object \`_key\` properties array is not unique: [${_keys}]`,
+      pass: false,
+    };
+  }
 }
 
 export function registerMatchers(expect: jest.Expect) {
-  expect.extend({ toMatchGraphObjectSchema });
+  expect.extend({
+    toMatchGraphObjectSchema,
+    toMatchDirectRelationshipSchema,
+  });
 }
