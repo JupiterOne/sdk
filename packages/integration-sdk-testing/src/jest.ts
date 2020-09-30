@@ -298,24 +298,11 @@ function toMatchSchema<T extends Entity | ExplicitRelationship>(
     );
   }
 
-  const hasDistinctKeysResult = toHaveDistinctKeys(received);
+  const _keys = received.map((r) => r._key);
 
-  if (hasDistinctKeysResult.pass === true) {
+  if (areKeysDistinct(_keys)) {
     return {
       message: () => 'Success!',
-      pass: true,
-    };
-  } else {
-    return hasDistinctKeysResult;
-  }
-}
-
-function toHaveDistinctKeys(received: { _key: string }[]) {
-  const _keys = received.map((r) => r._key);
-  const pass = Array.isArray(_keys) && new Set(_keys).size === _keys.length;
-  if (pass) {
-    return {
-      message: () => `Object \`_key\` properties array is unique: [${_keys}]`,
       pass: true,
     };
   } else {
@@ -325,6 +312,10 @@ function toHaveDistinctKeys(received: { _key: string }[]) {
       pass: false,
     };
   }
+}
+
+function areKeysDistinct(_keys: string[]): boolean {
+  return Array.isArray(_keys) && new Set(_keys).size === _keys.length;
 }
 
 export function registerMatchers(expect: jest.Expect) {
