@@ -1,77 +1,80 @@
-import { Entity } from '@jupiterone/integration-sdk-core';
+import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
 import {
   toMatchGraphObjectSchema,
+  toMatchDirectRelationshipSchema,
   GraphObjectSchema,
   registerMatchers,
 } from '../jest';
-
-function generateCollectedEntity(partial?: Partial<Entity>): Entity {
-  return {
-    name: 'appengine.googleapis.com',
-    _class: ['Service'],
-    _type: 'google_cloud_api_service',
-    _key:
-      'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
-    displayName: 'App Engine Admin API',
-    category: ['infrastructure'],
-    description: "Provisions and manages developers' App Engine applications.",
-    state: 'ENABLED',
-    enabled: true,
-    usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
-    _rawData: [
-      {
-        name: 'default',
-        rawData: {
-          name: 'projects/123/services/appengine.googleapis.com',
-          config: {
-            name: 'appengine.googleapis.com',
-            title: 'App Engine Admin API',
-            documentation: {
-              summary:
-                "Provisions and manages developers' App Engine applications.",
-            },
-            quota: {},
-            authentication: {},
-            usage: {
-              requirements: ['serviceusage.googleapis.com/tos/cloud'],
-            },
-          },
-          state: 'ENABLED',
-          parent: 'projects/123',
-        },
-      },
-    ],
-    ...partial,
-  };
-}
-
-function generateGraphObjectSchema(
-  partialProperties?: Record<string, any>,
-): GraphObjectSchema {
-  return {
-    additionalProperties: false,
-    properties: {
-      _type: { const: 'google_cloud_api_service' },
-      category: { const: ['infrastructure'] },
-      state: {
-        type: 'string',
-        enum: ['STATE_UNSPECIFIED', 'DISABLED', 'ENABLED'],
-      },
-      enabled: { type: 'boolean' },
-      usageRequirements: {
-        type: 'array',
-        items: { type: 'string' },
-      },
-      _rawData: {
-        type: 'array',
-        items: { type: 'object' },
-      },
-      ...partialProperties,
-    },
-  };
-}
+import { v4 as uuid } from 'uuid';
 
 describe('#toMatchGraphObjectSchema', () => {
+  function generateCollectedEntity(partial?: Partial<Entity>): Entity {
+    return {
+      name: 'appengine.googleapis.com',
+      _class: ['Service'],
+      _type: 'google_cloud_api_service',
+      _key:
+        'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+      displayName: 'App Engine Admin API',
+      category: ['infrastructure'],
+      description:
+        "Provisions and manages developers' App Engine applications.",
+      state: 'ENABLED',
+      enabled: true,
+      usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
+      _rawData: [
+        {
+          name: 'default',
+          rawData: {
+            name: 'projects/123/services/appengine.googleapis.com',
+            config: {
+              name: 'appengine.googleapis.com',
+              title: 'App Engine Admin API',
+              documentation: {
+                summary:
+                  "Provisions and manages developers' App Engine applications.",
+              },
+              quota: {},
+              authentication: {},
+              usage: {
+                requirements: ['serviceusage.googleapis.com/tos/cloud'],
+              },
+            },
+            state: 'ENABLED',
+            parent: 'projects/123',
+          },
+        },
+      ],
+      ...partial,
+    };
+  }
+
+  function generateGraphObjectSchema(
+    partialProperties?: Record<string, any>,
+  ): GraphObjectSchema {
+    return {
+      additionalProperties: false,
+      properties: {
+        _type: { const: 'google_cloud_api_service' },
+        category: { const: ['infrastructure'] },
+        state: {
+          type: 'string',
+          enum: ['STATE_UNSPECIFIED', 'DISABLED', 'ENABLED'],
+        },
+        enabled: { type: 'boolean' },
+        usageRequirements: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        _rawData: {
+          type: 'array',
+          items: { type: 'object' },
+        },
+        ...partialProperties,
+      },
+    };
+  }
+
   test('should match custom entity schema with single class', () => {
     const result = toMatchGraphObjectSchema(generateCollectedEntity(), {
       _class: 'Service',
@@ -229,7 +232,10 @@ describe('#toMatchGraphObjectSchema', () => {
 
   test('should match array of custom entities using schema', () => {
     const result = toMatchGraphObjectSchema(
-      [generateCollectedEntity(), generateCollectedEntity()],
+      [
+        generateCollectedEntity({ _key: uuid() }),
+        generateCollectedEntity({ _key: uuid() }),
+      ],
       {
         _class: ['Service'],
         schema: generateGraphObjectSchema(),
@@ -242,6 +248,28 @@ describe('#toMatchGraphObjectSchema', () => {
     });
 
     expect(result.message()).toEqual('Success!');
+  });
+
+  test('should fail if entities have non-unique keys', () => {
+    const result = toMatchGraphObjectSchema(
+      [
+        generateCollectedEntity({ _key: 'non-unique-key' }),
+        generateCollectedEntity({ _key: 'non-unique-key' }),
+      ],
+      {
+        _class: ['Service'],
+        schema: generateGraphObjectSchema(),
+      },
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toEqual(
+      'Object `_key` properties array is not unique: [non-unique-key,non-unique-key]',
+    );
   });
 
   test('should not pass if entity does not match schema', () => {
@@ -301,6 +329,127 @@ describe('#toMatchGraphObjectSchema', () => {
   });
 });
 
+describe('#toMatchDirectRelationshipSchema', () => {
+  function generateCollectedDirectRelationship(
+    partial?: Partial<ExplicitRelationship>,
+  ): ExplicitRelationship {
+    return {
+      _class: 'HAS',
+      _type: 'some_account_has_user',
+      _key: 'some-account-has-some-user',
+      _toEntityKey: 'to-some-entity',
+      _fromEntityKey: 'from-some-entity',
+      ...partial,
+    };
+  }
+
+  test('should pass for valid direct relationship', () => {
+    const result = toMatchDirectRelationshipSchema(
+      generateCollectedDirectRelationship({
+        string: 'abc',
+        number: 123,
+        boolean: true,
+        null: null,
+      }),
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+
+    expect(result.message()).toEqual('Success!');
+  });
+
+  test('should fail for relationship with duplicate keys', () => {
+    const result = toMatchDirectRelationshipSchema([
+      generateCollectedDirectRelationship({ _key: 'non-unique-key' }),
+      generateCollectedDirectRelationship({ _key: 'non-unique-key' }),
+    ]);
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toEqual(
+      'Object `_key` properties array is not unique: [non-unique-key,non-unique-key]',
+    );
+  });
+
+  test('should fail for relationship with array property', () => {
+    const result = toMatchDirectRelationshipSchema([
+      generateCollectedDirectRelationship({
+        someAdditionalProperty: ['arrays', 'are', 'invalid'] as any,
+      }),
+    ]);
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message())
+      .toEqual(`Error validating graph object against schema (data={
+  "_class": "HAS",
+  "_type": "some_account_has_user",
+  "_key": "some-account-has-some-user",
+  "_toEntityKey": "to-some-entity",
+  "_fromEntityKey": "from-some-entity",
+  "someAdditionalProperty": [
+    "arrays",
+    "are",
+    "invalid"
+  ]
+}, errors=[
+  {
+    "keyword": "type",
+    "dataPath": "['someAdditionalProperty']",
+    "schemaPath": "#/additionalProperties/type",
+    "params": {
+      "type": "boolean,integer,null,number,string"
+    },
+    "message": "should be boolean,integer,null,number,string"
+  }
+], index=0)`);
+  });
+
+  test('should fail for relationship with object property', () => {
+    const result = toMatchDirectRelationshipSchema([
+      generateCollectedDirectRelationship({
+        someAdditionalProperty: { objects: 'are-invalid' } as any,
+      }),
+    ]);
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message())
+      .toEqual(`Error validating graph object against schema (data={
+  "_class": "HAS",
+  "_type": "some_account_has_user",
+  "_key": "some-account-has-some-user",
+  "_toEntityKey": "to-some-entity",
+  "_fromEntityKey": "from-some-entity",
+  "someAdditionalProperty": {
+    "objects": "are-invalid"
+  }
+}, errors=[
+  {
+    "keyword": "type",
+    "dataPath": "['someAdditionalProperty']",
+    "schemaPath": "#/additionalProperties/type",
+    "params": {
+      "type": "boolean,integer,null,number,string"
+    },
+    "message": "should be boolean,integer,null,number,string"
+  }
+], index=0)`);
+  });
+});
+
 describe('#registerMatchers', () => {
   test('should register all test matchers', () => {
     const mockJestExtendFn = jest.fn();
@@ -313,6 +462,7 @@ describe('#registerMatchers', () => {
     expect(mockJestExtendFn).toHaveBeenCalledTimes(1);
     expect(mockJestExtendFn).toHaveBeenCalledWith({
       toMatchGraphObjectSchema,
+      toMatchDirectRelationshipSchema,
     });
   });
 });
