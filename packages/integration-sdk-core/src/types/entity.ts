@@ -7,16 +7,21 @@ type EntityIdProperty = {
   /**
    * The natural identifier of the entity as provided by the data source API.
    *
-   * Many APIs answer resources having a property representing the identify of
-   * the resource within the target system. This value should be transferred to
-   * the entity's `id` property.
+   * Many APIs answer resources having a property representing the identity of
+   * the resource within the data source system. This value should be
+   * transferred to the entity's `id` property.
    *
-   * In some cases an entity is known to a number of systems. The systems that
-   * do not own the entity will use mapped relationships and provide the `id`
-   * value they maintain for the resource. The mapping system will merge the
-   * values into a single Array.
+   * In some cases an entity is known to a number of systems. The integrations
+   * that do not own the entity will use mapped relationships and provide the
+   * `id` value the data source maintains for the resource. The mapper will
+   * merge the values into a single Array.
+   *
+   * An identity value that is maintained as a number must be converted to a
+   * string. It is advisable to store the value in an additional property, such
+   * as `<resource>Id`, where `<resource>` reflects the type of resource
+   * represented by the entity (i.e. `domainId`, `userId`, etc.)
    */
-  id?: string | number | (string | number)[];
+  id?: string | string[];
 };
 
 type PrimitiveEntityAdditionalProperties = Record<

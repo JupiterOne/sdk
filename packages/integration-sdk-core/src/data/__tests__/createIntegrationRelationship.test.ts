@@ -258,7 +258,7 @@ describe('MappedRelationshipLiteralOptions', () => {
           targetEntity: {
             _key: 'b',
             _type: 'b_entity',
-            id: [123, 'abc'],
+            id: ['123', 'abc'],
           },
           targetFilterKeys: [['something']],
           sourceEntityKey: 'a',
@@ -270,7 +270,7 @@ describe('MappedRelationshipLiteralOptions', () => {
         ...expected._mapping,
         targetEntity: {
           ...expected._mapping.targetEntity,
-          id: [123, 'abc'],
+          id: ['123', 'abc'],
         },
       },
     });

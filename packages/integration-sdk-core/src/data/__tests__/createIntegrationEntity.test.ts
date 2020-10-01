@@ -84,7 +84,7 @@ describe('createIntegrationEntity', () => {
           },
           source: {
             ...networkSourceData,
-            [prop]: ['yodog', 1234],
+            [prop]: ['yodog', 'numbers'],
           },
         },
       });

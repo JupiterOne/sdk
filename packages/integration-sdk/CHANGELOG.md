@@ -15,10 +15,9 @@ and this project adheres to
 
 ### Changed
 
-- `PrimitiveEntity.id` & `Entity.id` is now
-  `string | number | (string|number)[]` in the `data-model` (see
-  [PR](https://github.com/JupiterOne/data-model/pull/44)). This is fully
-  backward compatible.
+- `Entity.id` is now `string | string[]` in the `data-model` (see
+  [PR](https://github.com/JupiterOne/data-model/pull/44)). Integrations may
+  enrich existing entities through mapped relationship `targetEntity.id` values.
 
 ## 3.3.0 - 2020-09-25
 
