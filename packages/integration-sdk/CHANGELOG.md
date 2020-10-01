@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Fixed unexpected behavior in `createIntegrationEntity()` when `status`
+  property is set to anything except `Online` or `Active`
+
 ## 3.5.0 - 2020-10-03
 
 ### Changed

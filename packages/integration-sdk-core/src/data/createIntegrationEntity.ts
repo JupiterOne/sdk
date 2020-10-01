@@ -164,7 +164,18 @@ function generateEntity({
   }
 
   if (entity.active === undefined && source.status) {
-    entity.active = source.status === 'Online' || source.status === 'Active';
+    const isActive = new RegExp('(?<!in)active|enabled|online', 'i').test(
+      source.status,
+    );
+    const isInactive = new RegExp('inactive|disabled|offline', 'i').test(
+      source.status,
+    );
+
+    entity.active = isActive
+      ? true // if
+      : isInactive
+      ? false // else if
+      : undefined; // else
   }
 
   // Remove transferred `source.tags` property from the entity. `tags` is in the
