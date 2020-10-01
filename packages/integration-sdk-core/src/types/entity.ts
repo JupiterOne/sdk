@@ -3,17 +3,27 @@ import { PersistedObject } from './persistedObject';
 export type PrimitiveEntity = EntityCoreProperties &
   PrimitiveEntityAdditionalProperties;
 
+type EntityIdProperty = {
+  /**
+   * The natural identifier of the entity as provided by the data source API.
+   *
+   * Many APIs answer resources having a property representing the identify of
+   * the resource within the target system. This value should be transferred to
+   * the entity's `id` property.
+   *
+   * In some cases an entity is known to a number of systems. The systems that
+   * do not own the entity will use mapped relationships and provide the `id`
+   * value they maintain for the resource. The mapping system will merge the
+   * values into a single Array.
+   */
+  id?: string | number | (string | number)[];
+};
+
 type PrimitiveEntityAdditionalProperties = Record<
   string,
   PrimitiveEntityPropertyValue
-> & {
-  /**
-   * The natural identifier of the entity as provided by the data source API.
-   * Many APIs answer resources that each have an `id` property that should be
-   * transferred to this entity property.
-   */
-  id?: string;
-};
+> &
+  EntityIdProperty;
 
 type PrimitiveEntityPropertyValue =
   | Array<string | number | boolean>
@@ -34,14 +44,8 @@ interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
   _class: string | string[];
 }
 
-type EntityAdditionalProperties = Record<string, EntityPropertyValue> & {
-  /**
-   * The natural identifier of the entity as provided by the data source API.
-   * Many APIs answer resources that each have an `id` property that should be
-   * transferred to this entity property.
-   */
-  id?: string;
-};
+type EntityAdditionalProperties = Record<string, EntityPropertyValue> &
+  EntityIdProperty;
 
 type EntityPropertyValue = PrimitiveEntityPropertyValue | EntityRawData[];
 

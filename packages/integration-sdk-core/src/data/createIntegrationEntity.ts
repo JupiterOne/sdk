@@ -191,12 +191,22 @@ function generateEntity({
   return entity;
 }
 
+/**
+ * Generates an entity `_key` value from the source data when possible or throws
+ * an error. It is expected that this won't be called when a `_key` is
+ * explicitly assigned.
+ *
+ * @param data any source data object
+ * @throws IntegrationError when there is no suitable value
+ */
 function generateEntityKey(data: any): string {
   const id = data.providerId || data.id;
-  if (!id) {
+  if (typeof id !== 'string') {
     throw new IntegrationError({
       code: 'INVALID_INPUT_TO_GENERATE_ENTITY_KEY',
-      message: 'Entity key generation requires one of data.{providerId,id}',
+      message: `Entity key generation requires one of data.{providerId,id} as type string, received ${JSON.stringify(
+        id,
+      )}`,
     });
   }
   return id;

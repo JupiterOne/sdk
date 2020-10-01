@@ -13,6 +13,13 @@ and this project adheres to
 
 - Added `toMatchDirectRelationshipSchema` matcher.
 
+### Changed
+
+- `PrimitiveEntity.id` & `Entity.id` is now
+  `string | number | (string|number)[]` in the `data-model` (see
+  [PR](https://github.com/JupiterOne/data-model/pull/44)). This is fully
+  backward compatible.
+
 ## 3.3.0 - 2020-09-25
 
 ### Added
