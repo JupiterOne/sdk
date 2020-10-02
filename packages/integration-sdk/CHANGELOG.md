@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.4.0 - 2020-10-01
+
 ### Added
 
 - Added `toMatchDirectRelationshipSchema` matcher.
