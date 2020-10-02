@@ -13,6 +13,13 @@ and this project adheres to
 
 - Added `toMatchDirectRelationshipSchema` matcher.
 
+### Changed
+
+- Upgrade to `@jupiterone/data-model@0.12.0`
+- `Entity.id` is now `string | string[]` in the `data-model` (see
+  [PR](https://github.com/JupiterOne/data-model/pull/44)). Integrations may
+  enrich existing entities through mapped relationship `targetEntity.id` values.
+
 ## 3.3.0 - 2020-09-25
 
 ### Added

@@ -1,3 +1,5 @@
+import { RelationshipClass } from '@jupiterone/data-model';
+
 import {
   Entity,
   MappedRelationship,
@@ -5,11 +7,10 @@ import {
   RelationshipDirection,
 } from '../../types';
 import {
-  generateRelationshipType,
   createDirectRelationship,
   createMappedRelationship,
+  generateRelationshipType,
 } from '../createIntegrationRelationship';
-import { RelationshipClass } from '@jupiterone/data-model';
 
 describe('DirectRelationshipOptions', () => {
   const entityA: Entity = {
@@ -246,6 +247,33 @@ describe('MappedRelationshipLiteralOptions', () => {
         },
       }),
     ).toEqual(expected);
+  });
+
+  test('id', () => {
+    expect(
+      createMappedRelationship({
+        _class: RelationshipClass.HAS,
+        _mapping: {
+          relationshipDirection: RelationshipDirection.REVERSE,
+          targetEntity: {
+            _key: 'b',
+            _type: 'b_entity',
+            id: ['123', 'abc'],
+          },
+          targetFilterKeys: [['something']],
+          sourceEntityKey: 'a',
+        },
+      }),
+    ).toEqual({
+      ...expected,
+      _mapping: {
+        ...expected._mapping,
+        targetEntity: {
+          ...expected._mapping.targetEntity,
+          id: ['123', 'abc'],
+        },
+      },
+    });
   });
 
   test('missing _type in targetEntity', () => {
