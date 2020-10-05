@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.5.1 - 2020-10-05
+
+### Changed
+
+- Update `@jupiterone/data-model`
+
 ### Fixed
 
 - Fixed unexpected behavior in `createIntegrationEntity()` when `status`
