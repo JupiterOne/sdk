@@ -9,6 +9,21 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Optional `InvocationConfig.getSyncMode(context)` to allow integrations to
+  control the synchronization mode. Previously, the default was to perform a
+  `DIFF` of the complete set. Now the option `CREATE_OR_UPDATE` will allow
+  integrations to only add data and never delete (useful in record collecting
+  integrations). This must be called before the syncronization job is started
+  since that API requires the value when the job is initialized.
+
+### Changed
+
+- The CLI `run` and `sync` commands will initialize the synchronization job
+  using the `InvocationConfig.getSyncMode(context)` when that function is
+  provided.
+
 ## 3.5.1 - 2020-10-05
 
 ### Changed

@@ -1,13 +1,16 @@
 import { createCommand } from 'commander';
 
-import * as log from '../log';
 import {
-  getApiKeyFromEnvironment,
-  getApiBaseUrl,
   createApiClientWithApiKey,
+  createIntegrationInstanceForLocalExecution,
   createIntegrationLogger,
+  getApiBaseUrl,
+  getApiKeyFromEnvironment,
   synchronizeCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
+
+import { loadConfig } from '../config';
+import * as log from '../log';
 
 export function sync() {
   return createCommand('sync')
@@ -35,10 +38,16 @@ export function sync() {
         pretty: true,
       });
 
+      const invocationConfig = await loadConfig();
+      const instance = createIntegrationInstanceForLocalExecution(
+        invocationConfig,
+      );
+
       const job = await synchronizeCollectedData({
         logger: logger.child({ integrationInstanceId }),
         apiClient,
         integrationInstanceId,
+        syncMode: await invocationConfig.getSyncMode?.({ logger, instance }),
       });
 
       log.displaySynchronizationResults(job);

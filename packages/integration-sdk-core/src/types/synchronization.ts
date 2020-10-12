@@ -1,3 +1,14 @@
+import { ExecutionContext } from "./context";
+
+export type GetSynchronizationModeFunction<T extends ExecutionContext> = (
+  context: T,
+) => SynchronizationMode | Promise<SynchronizationMode>;
+
+export enum SynchronizationMode {
+  DIFF = 'DIFF',
+  CREATE_OR_UPDATE = 'CREATE_OR_UPDATE',
+}
+
 export enum SynchronizationJobStatus {
   AWAITING_UPLOADS = 'AWAITING_UPLOADS',
   FINALIZE_PENDING = 'FINALIZE_PENDING',

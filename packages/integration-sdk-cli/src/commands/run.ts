@@ -1,29 +1,31 @@
 import { createCommand } from 'commander';
 
-import * as log from '../log';
+import { Metric } from '@jupiterone/integration-sdk-core';
 import {
-  getApiKeyFromEnvironment,
-  getApiBaseUrl,
-  createApiClientWithApiKey,
-  initiateSynchronization,
-  uploadCollectedData,
-  finalizeSynchronization,
   abortSynchronization,
+  createApiClientWithApiKey,
+  createEventPublishingQueue,
+  createIntegrationInstanceForLocalExecution,
   createIntegrationLogger,
   executeIntegrationInstance,
-  createIntegrationInstanceForLocalExecution,
-  createEventPublishingQueue,
+  finalizeSynchronization,
+  getApiBaseUrl,
+  getApiKeyFromEnvironment,
+  initiateSynchronization,
+  uploadCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
-import { Metric } from '@jupiterone/integration-sdk-core';
+import * as log from '../log';
 
 export function run() {
   return createCommand('run')
-    .description('Performs the collection and synchronization of ')
+    .description(
+      'Performs collection and synchronization of entities and relationships.',
+    )
     .requiredOption(
       '-i, --integrationInstanceId <id>',
-      'The id of the integration instance to associate uploaded entities and relationships with.',
+      'The integration instance ID to which uploaded entities and relationships belong (synchronization scope).',
     )
     .action(async (options) => {
       log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
@@ -45,10 +47,16 @@ export function run() {
         pretty: true,
       });
 
+      const invocationConfig = await loadConfig();
+      const instance = createIntegrationInstanceForLocalExecution(
+        invocationConfig,
+      );
+
       const synchronizationContext = await initiateSynchronization({
         logger,
         apiClient,
         integrationInstanceId,
+        syncMode: await invocationConfig.getSyncMode?.({ logger, instance }),
       });
 
       logger = synchronizationContext.logger;
@@ -56,18 +64,16 @@ export function run() {
       const eventPublishingQueue = createEventPublishingQueue(
         synchronizationContext,
       );
-      const metrics: Metric[] = [];
 
+      const metrics: Metric[] = [];
       logger
         .on('event', (event) => eventPublishingQueue.enqueue(event))
         .on('metric', (metric) => metrics.push(metric));
 
-      const invocationConfig = await loadConfig();
-
       try {
         const executionResults = await executeIntegrationInstance(
           logger,
-          createIntegrationInstanceForLocalExecution(invocationConfig),
+          instance,
           invocationConfig,
           {
             enableSchemaValidation: true,

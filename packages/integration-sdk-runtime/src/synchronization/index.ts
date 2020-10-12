@@ -1,29 +1,28 @@
-import path from 'path';
 import chunk from 'lodash/chunk';
 import pMap from 'p-map';
+import path from 'path';
 
 import {
-  PartialDatasets,
   Entity,
+  PartialDatasets,
   Relationship,
   SynchronizationJob,
+  SynchronizationMode,
 } from '@jupiterone/integration-sdk-core';
 
-import { IntegrationLogger } from '../logger';
-
+import { ApiClient } from '../api';
 import { ExecuteIntegrationResult } from '../execution';
-
 import {
   getRootStorageDirectory,
   readJsonFromPath,
   walkDirectory,
 } from '../fileSystem';
-import { synchronizationApiError } from './error';
-import { ApiClient } from '../api';
+import { IntegrationLogger } from '../logger';
 import { timeOperation } from '../metrics';
+import { synchronizationApiError } from './error';
+import { createEventPublishingQueue } from './events';
 
 export { synchronizationApiError };
-import { createEventPublishingQueue } from './events';
 export { createEventPublishingQueue } from './events';
 
 const UPLOAD_BATCH_SIZE = 250;
@@ -33,6 +32,7 @@ interface SynchronizeInput {
   logger: IntegrationLogger;
   apiClient: ApiClient;
   integrationInstanceId: string;
+  syncMode?: SynchronizationMode;
 }
 
 /**
@@ -88,6 +88,7 @@ export async function initiateSynchronization({
   logger,
   apiClient,
   integrationInstanceId,
+  syncMode,
 }: SynchronizeInput): Promise<SynchronizationJobContext> {
   logger.info('Initiating synchronization job...');
 
@@ -96,6 +97,7 @@ export async function initiateSynchronization({
     const response = await apiClient.post('/persister/synchronization/jobs', {
       source: 'integration-managed',
       integrationInstanceId,
+      syncMode,
     });
 
     job = response.data.job;

@@ -65,7 +65,7 @@ export function executeIntegrationLocally(
  * Starts execution of an integration instance.
  */
 export async function executeIntegrationInstance(
-  logger: IntegrationLogger | IntegrationLogger,
+  logger: IntegrationLogger,
   instance: IntegrationInstance,
   config: IntegrationInvocationConfig,
   options: ExecuteIntegrationOptions = {},

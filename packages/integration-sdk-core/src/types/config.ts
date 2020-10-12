@@ -1,18 +1,20 @@
-import { IntegrationInstanceConfig } from './instance';
-import { GetStepStartStatesFunction, Step } from './step';
-import { InvocationValidationFunction } from './validation';
 import {
   ExecutionContext,
   IntegrationExecutionContext,
-  StepExecutionContext,
   IntegrationStepExecutionContext,
+  StepExecutionContext,
 } from './context';
+import { IntegrationInstanceConfig } from './instance';
+import { GetStepStartStatesFunction, Step } from './step';
+import { GetSynchronizationModeFunction } from './synchronization';
+import { InvocationValidationFunction } from './validation';
 
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
 > {
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
+  getSyncMode?: GetSynchronizationModeFunction<TExecutionContext>;
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
   integrationSteps: Step<TStepExecutionContext>[];
 }
