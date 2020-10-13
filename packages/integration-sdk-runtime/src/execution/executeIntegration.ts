@@ -12,9 +12,10 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import {
-  getRootStorageDirectorySize,
   removeStorageDirectory,
   writeJsonToPath,
+  getRootStorageDirectorySize,
+  isRootStorageDirectoryPresent,
 } from '../fileSystem';
 import { createIntegrationLogger } from '../logger';
 import { timeOperation } from '../metrics';
@@ -101,6 +102,17 @@ export async function executeIntegrationInstance(
   });
 }
 
+function publishDiskUsageMetric<TExecutionContext extends ExecutionContext>(
+  context: TExecutionContext,
+  size: number,
+) {
+  context.logger.publishMetric({
+    name: 'disk-usage',
+    value: size,
+    unit: 'Bytes',
+  });
+}
+
 /**
  * Executes an integration and performs actions defined by the config
  * using context that was provided.
@@ -113,61 +125,88 @@ export async function executeWithContext<
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
   options: ExecuteWithContextOptions = {},
 ): Promise<ExecuteIntegrationResult> {
-  await removeStorageDirectory();
-
-  const { logger } = context;
-
-  try {
-    await config.validateInvocation?.(context);
-  } catch (err) {
-    logger.validationFailure(err);
-    throw err;
+  if (await isRootStorageDirectoryPresent()) {
+    const initialDiskUsageSize = await getRootStorageDirectorySize();
+    publishDiskUsageMetric(context, initialDiskUsageSize);
   }
 
-  const stepStartStates: StepStartStates =
-    (await config.getStepStartStates?.(context)) ??
-    getDefaultStepStartStates(config.integrationSteps);
+  let executionComplete = false;
 
-  validateStepStartStates(config.integrationSteps, stepStartStates);
+  const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
+  const diskUsagePublishInterval = setInterval(() => {
+    getRootStorageDirectorySize()
+      .then((size) => {
+        if (executionComplete) {
+          return;
+        }
 
-  const { graphObjectStore = new FileSystemGraphObjectStore() } = options;
+        publishDiskUsageMetric(context, size);
+      })
+      .catch((err) => {
+        if (executionComplete) {
+          return;
+        }
 
-  const integrationStepResults = await executeSteps({
-    executionContext: context,
-    integrationSteps: config.integrationSteps,
-    stepStartStates,
-    duplicateKeyTracker: new DuplicateKeyTracker(
-      config.normalizeGraphObjectKey,
-    ),
-    graphObjectStore,
-  });
+        context.logger.error({ err }, 'Error publishing disk-usage metric');
+      });
+  }, THIRTY_SECONDS_STORAGE_INTERVAL_MS);
 
-  const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
-    integrationStepResults,
-  );
+  try {
+    await removeStorageDirectory();
 
-  const summary: ExecuteIntegrationResult = {
-    integrationStepResults,
-    metadata: {
-      partialDatasets,
-    },
-  };
+    const { logger } = context;
 
-  await writeJsonToPath({
-    path: 'summary.json',
-    data: summary,
-  });
+    try {
+      await config.validateInvocation?.(context);
+    } catch (err) {
+      logger.validationFailure(err);
+      throw err;
+    }
 
-  context.logger.info(
-    { collectionResult: summary },
-    'Integration data collection has completed.',
-  );
+    const stepStartStates: StepStartStates =
+      (await config.getStepStartStates?.(context)) ??
+      getDefaultStepStartStates(config.integrationSteps);
 
-  context.logger.publishMetric({
-    name: 'disk-usage',
-    value: await getRootStorageDirectorySize(),
-    unit: 'Bytes',
-  });
+    validateStepStartStates(config.integrationSteps, stepStartStates);
 
-  return summary;
+    const { graphObjectStore = new FileSystemGraphObjectStore() } = options;
+
+    const integrationStepResults = await executeSteps({
+      executionContext: context,
+      integrationSteps: config.integrationSteps,
+      stepStartStates,
+      duplicateKeyTracker: new DuplicateKeyTracker(
+        config.normalizeGraphObjectKey,
+      ),
+      graphObjectStore,
+    });
+
+    const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
+      integrationStepResults,
+    );
+
+    const summary: ExecuteIntegrationResult = {
+      integrationStepResults,
+      metadata: {
+        partialDatasets,
+      },
+    };
+
+    await writeJsonToPath({
+      path: 'summary.json',
+      data: summary,
+    });
+
+    context.logger.info(
+      { collectionResult: summary },
+      'Integration data collection has completed.',
+    );
+
+    return summary;
+  } finally {
+    executionComplete = true;
+    clearInterval(diskUsagePublishInterval);
+    const initialDiskUsageSize = await getRootStorageDirectorySize();
+    publishDiskUsageMetric(context, initialDiskUsageSize);
+  }
 }
