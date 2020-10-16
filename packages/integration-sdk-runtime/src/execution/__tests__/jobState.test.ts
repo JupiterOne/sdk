@@ -8,15 +8,22 @@ import {
 import { v4 as uuid } from 'uuid';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
-import { Entity } from '@jupiterone/integration-sdk-core';
+import {
+  Entity,
+  KeyNormalizationFunction,
+} from '@jupiterone/integration-sdk-core';
 
 jest.mock('fs');
 
-function getMockCreateStepJobStateParams(): CreateStepJobStateParams {
+function getMockCreateStepJobStateParams(options?: {
+  keyNormalizationFunction?: KeyNormalizationFunction;
+}): CreateStepJobStateParams {
   return {
     stepId: uuid(),
     graphObjectStore: new FileSystemGraphObjectStore(),
-    duplicateKeyTracker: new DuplicateKeyTracker(),
+    duplicateKeyTracker: new DuplicateKeyTracker(
+      options?.keyNormalizationFunction,
+    ),
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
   };
@@ -77,6 +84,23 @@ describe('#findEntity', () => {
 
     await jobState.addEntity(entity);
     expect(await jobState.findEntity('a')).toStrictEqual(entity);
+  });
+
+  test('should find entity by _key with key normalization', async () => {
+    const params = getMockCreateStepJobStateParams({
+      keyNormalizationFunction: (_key) => _key.toLowerCase(),
+    });
+    const jobState = createStepJobState(params);
+    const entity: Entity = {
+      _type: 'a_entity',
+      _class: 'A',
+      _key: 'INCONSISTENT-casing',
+    };
+
+    await jobState.addEntity(entity);
+    expect(await jobState.findEntity('inconsistent-CASING')).toStrictEqual(
+      entity,
+    );
   });
 
   test('should return "null" if entity not found', async () => {

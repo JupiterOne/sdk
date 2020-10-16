@@ -5,6 +5,7 @@ import {
   IntegrationMissingKeyError,
   IntegrationDuplicateKeyError,
   GraphObjectLookupKey,
+  InvocationConfigOptions,
 } from '@jupiterone/integration-sdk-core';
 import {
   DuplicateKeyTracker,
@@ -16,6 +17,7 @@ export interface CreateMockJobStateOptions {
   entities?: Entity[];
   relationships?: Relationship[];
   setData?: { [key: string]: any };
+  invocationConfigOptions?: InvocationConfigOptions;
 }
 
 /**
@@ -40,23 +42,28 @@ export function createMockJobState({
   entities: inputEntities = [],
   relationships: inputRelationships = [],
   setData: inputData = {},
+  invocationConfigOptions,
 }: CreateMockJobStateOptions = {}): MockJobState {
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
 
-  const duplicateKeyTracker = new DuplicateKeyTracker();
+  const duplicateKeyTracker = new DuplicateKeyTracker(
+    invocationConfigOptions?.keyNormalizationFunction,
+  );
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
 
   inputEntities.forEach((e) => {
     duplicateKeyTracker.registerKey(e._key, {
       _type: e._type,
+      _key: e._key,
     });
     typeTracker.registerType(e._type);
   });
   inputRelationships.forEach((r) => {
     duplicateKeyTracker.registerKey(r._key as string, {
       _type: r._type,
+      _key: r._key,
     });
     typeTracker.registerType(r._type as string);
   });
@@ -67,6 +74,7 @@ export function createMockJobState({
     newEntities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key, {
         _type: e._type,
+        _key: e._key,
       });
       typeTracker.registerType(e._type);
     });
@@ -78,6 +86,7 @@ export function createMockJobState({
     newRelationships.forEach((r) => {
       duplicateKeyTracker.registerKey(r._key as string, {
         _type: r._type,
+        _key: r._key,
       });
       typeTracker.registerType(r._type as string);
     });
@@ -165,7 +174,7 @@ export function createMockJobState({
       }
 
       const entity = await getEntity({
-        _key,
+        _key: graphObjectMetadata._key,
         _type: graphObjectMetadata._type,
       });
 

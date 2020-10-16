@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- [#355](https://github.com/JupiterOne/sdk/issues/355) - Added
+  `keyNormalizationFunction` argument to normalize lookups in
+  `DuplicateKeyTracker`.
+
 ## 3.5.1 - 2020-10-05
 
 ### Changed

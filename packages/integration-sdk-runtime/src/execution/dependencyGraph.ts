@@ -15,6 +15,7 @@ import {
   StepStartStates,
   ExecutionContext,
   StepExecutionContext,
+  InvocationConfigOptions,
 } from '@jupiterone/integration-sdk-core';
 import { timeOperation } from '../metrics';
 
@@ -67,6 +68,7 @@ export function executeStepDependencyGraph<
   executionContext: TExecutionContext,
   inputGraph: DepGraph<Step<TStepExecutionContext>>,
   stepStartStates: StepStartStates,
+  invocationConfigOptions?: InvocationConfigOptions,
 ): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -79,7 +81,9 @@ export function executeStepDependencyGraph<
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
 
-  const duplicateKeyTracker = new DuplicateKeyTracker();
+  const duplicateKeyTracker = new DuplicateKeyTracker(
+    invocationConfigOptions?.keyNormalizationFunction,
+  );
   const graphObjectStore = new FileSystemGraphObjectStore();
 
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);

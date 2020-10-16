@@ -120,6 +120,7 @@ export async function executeWithContext<
     context,
     config.integrationSteps,
     stepStartStates,
+    config.invocationConfigOptions,
   );
 
   const partialDatasets = determinePartialDatasetsFromStepExecutionResults(

@@ -3,18 +3,20 @@ import {
   Entity,
   Relationship,
   JobState,
+  KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 
 import { FileSystemGraphObjectStore } from '../storage';
 
 export interface DuplicateKeyTrackerGraphObjectMetadata {
   _type: string;
+  _key: string;
 }
 
 /**
  * Contains a map of every graph object key to a specific set of metadata about
  * the graph object used for filtering. For example, we use the `_type` property
- * on graph objects as a method of filtering data down when interating entities
+ * on graph objects as a method of filtering data down when iterating entities
  * or relationships. We store the `_type` inside the metadata for a fast lookup
  * table.
  */
@@ -24,18 +26,25 @@ export class DuplicateKeyTracker {
     DuplicateKeyTrackerGraphObjectMetadata
   >();
 
+  private readonly normalizationFunction: KeyNormalizationFunction;
+
+  constructor(normalizationFunction?: KeyNormalizationFunction) {
+    this.normalizationFunction = normalizationFunction || ((_key) => _key);
+  }
+
   registerKey(_key: string, metadata: DuplicateKeyTrackerGraphObjectMetadata) {
-    if (this.graphObjectKeyMap.has(_key)) {
+    const normalizedKey = this.normalizationFunction(_key);
+    if (this.graphObjectKeyMap.has(normalizedKey)) {
       throw new IntegrationDuplicateKeyError(
         `Duplicate _key detected (_key=${_key})`,
       );
     }
 
-    this.graphObjectKeyMap.set(_key, metadata);
+    this.graphObjectKeyMap.set(normalizedKey, metadata);
   }
 
   getGraphObjectMetadata(_key: string) {
-    return this.graphObjectKeyMap.get(_key);
+    return this.graphObjectKeyMap.get(this.normalizationFunction(_key));
   }
 }
 
@@ -82,6 +91,7 @@ export function createStepJobState({
     entities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key, {
         _type: e._type,
+        _key: e._key,
       });
 
       typeTracker.registerType(e._type);
@@ -96,6 +106,7 @@ export function createStepJobState({
       // relationship types are not playing nicely
       duplicateKeyTracker.registerKey(r._key as string, {
         _type: r._type,
+        _key: r._key,
       });
       typeTracker.registerType(r._type as string);
     });
@@ -134,7 +145,7 @@ export function createStepJobState({
       }
 
       const entity = await graphObjectStore.getEntity({
-        _key,
+        _key: graphObjectMetadata._key,
         _type: graphObjectMetadata._type,
       });
 
