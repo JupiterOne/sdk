@@ -1,7 +1,7 @@
 {
   "name": "@jupiterone/integration-sdk-private-test-utils",
   "private": true,
-  "version": "3.5.1",
+  "version": "3.6.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,7 @@
     "node": "10.x || 12.x || 14.x"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^3.5.1",
+    "@jupiterone/integration-sdk-core": "^3.6.0",
     "lodash": "^4.17.15",
     "uuid": "^7.0.3"
   },
