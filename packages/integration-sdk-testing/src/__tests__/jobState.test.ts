@@ -83,9 +83,7 @@ describe('entities', () => {
 
   test('findEntity returns initialized entity from jobState when _key matches with key normalization', async () => {
     const jobState = createMockJobState({
-      invocationConfigOptions: {
-        keyNormalizationFunction: (_key) => _key.toLowerCase(),
-      },
+      normalizeGraphObjectKey: (_key) => _key.toLowerCase(),
     });
     const inputEntity = {
       _type: 'test',

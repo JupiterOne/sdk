@@ -14,7 +14,7 @@ import {
   StepStartStates,
   PartialDatasets,
   Step,
-  InvocationConfigOptions,
+  KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 
 export async function executeSteps<
@@ -24,14 +24,14 @@ export async function executeSteps<
   context: TExecutionContext,
   integrationSteps: Step<TStepExecutionContext>[],
   stepStartStates: StepStartStates,
-  invocationConfigOptions?: InvocationConfigOptions,
+  normalizeGraphObjectKey?: KeyNormalizationFunction,
 ): Promise<IntegrationStepResult[]> {
   const stepGraph = buildStepDependencyGraph(integrationSteps);
   return executeStepDependencyGraph(
     context,
     stepGraph,
     stepStartStates,
-    invocationConfigOptions,
+    normalizeGraphObjectKey,
   );
 }
 

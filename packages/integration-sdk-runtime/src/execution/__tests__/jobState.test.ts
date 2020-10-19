@@ -16,13 +16,13 @@ import {
 jest.mock('fs');
 
 function getMockCreateStepJobStateParams(options?: {
-  keyNormalizationFunction?: KeyNormalizationFunction;
+  normalizeGraphObjectKey?: KeyNormalizationFunction;
 }): CreateStepJobStateParams {
   return {
     stepId: uuid(),
     graphObjectStore: new FileSystemGraphObjectStore(),
     duplicateKeyTracker: new DuplicateKeyTracker(
-      options?.keyNormalizationFunction,
+      options?.normalizeGraphObjectKey,
     ),
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
@@ -88,7 +88,7 @@ describe('#findEntity', () => {
 
   test('should find entity by _key with key normalization', async () => {
     const params = getMockCreateStepJobStateParams({
-      keyNormalizationFunction: (_key) => _key.toLowerCase(),
+      normalizeGraphObjectKey: (_key) => _key.toLowerCase(),
     });
     const jobState = createStepJobState(params);
     const entity: Entity = {

@@ -5,7 +5,7 @@ import {
   IntegrationMissingKeyError,
   IntegrationDuplicateKeyError,
   GraphObjectLookupKey,
-  InvocationConfigOptions,
+  KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 import {
   DuplicateKeyTracker,
@@ -17,7 +17,7 @@ export interface CreateMockJobStateOptions {
   entities?: Entity[];
   relationships?: Relationship[];
   setData?: { [key: string]: any };
-  invocationConfigOptions?: InvocationConfigOptions;
+  normalizeGraphObjectKey?: KeyNormalizationFunction;
 }
 
 /**
@@ -42,14 +42,12 @@ export function createMockJobState({
   entities: inputEntities = [],
   relationships: inputRelationships = [],
   setData: inputData = {},
-  invocationConfigOptions,
+  normalizeGraphObjectKey,
 }: CreateMockJobStateOptions = {}): MockJobState {
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
 
-  const duplicateKeyTracker = new DuplicateKeyTracker(
-    invocationConfigOptions?.keyNormalizationFunction,
-  );
+  const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
 
