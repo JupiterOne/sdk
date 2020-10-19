@@ -307,7 +307,10 @@ describe('#toMatchGraphObjectSchema', () => {
         data,
         null,
         2,
-      )}, errors=${expectedSerialzedErrors}, index=0)`,
+      )}, errors=${expectedSerialzedErrors}, index=0)
+
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+`,
     );
   });
 
@@ -324,7 +327,10 @@ describe('#toMatchGraphObjectSchema', () => {
     });
 
     expect(result.message()).toEqual(
-      `Error loading schemas for class (err=Invalid _class passed in schema for "toMatchGraphObjectSchema" (_class=#INVALID_DATA_MODEL_CLASS))`,
+      `Error loading schemas for class (err=Invalid _class passed in schema for "toMatchGraphObjectSchema" (_class=#INVALID_DATA_MODEL_CLASS)
+
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+)`,
     );
   });
 });
@@ -411,7 +417,10 @@ describe('#toMatchDirectRelationshipSchema', () => {
     },
     "message": "should be boolean,integer,null,number,string"
   }
-], index=0)`);
+], index=0)
+
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+`);
   });
 
   test('should fail for relationship with object property', () => {
@@ -446,7 +455,10 @@ describe('#toMatchDirectRelationshipSchema', () => {
     },
     "message": "should be boolean,integer,null,number,string"
   }
-], index=0)`);
+], index=0)
+
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+`);
   });
 });
 

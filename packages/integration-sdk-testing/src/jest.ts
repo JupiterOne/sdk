@@ -17,6 +17,9 @@ declare global {
   }
 }
 
+const FIND_OUT_MORE =
+  '\n\nFind out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas\n';
+
 function createGraphObjectSchemaValidationError<T>(
   ajv: typeof dataModel.IntegrationSchema,
   data: T,
@@ -27,7 +30,7 @@ function createGraphObjectSchemaValidationError<T>(
 
   return {
     message: () =>
-      `Error validating graph object against schema (data=${serializedData}, errors=${serializedErrors}, index=${index})`,
+      `Error validating graph object against schema (data=${serializedData}, errors=${serializedErrors}, index=${index})${FIND_OUT_MORE}`,
     pass: false,
   };
 }
@@ -42,7 +45,7 @@ function collectSchemasFromRef(
 
   if (!dataModelClassSchema || !dataModelClassSchema.schema) {
     throw new Error(
-      `Invalid _class passed in schema for "toMatchGraphObjectSchema" (_class=${classSchemaRef})`,
+      `Invalid _class passed in schema for "toMatchGraphObjectSchema" (_class=${classSchemaRef})${FIND_OUT_MORE}`,
     );
   }
 
