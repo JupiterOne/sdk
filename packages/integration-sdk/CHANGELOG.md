@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- [#355](https://github.com/JupiterOne/sdk/issues/355) - Added
+  `normalizeGraphObjectKey` argument to normalize lookups in
+  `DuplicateKeyTracker`.
+- Print link to `data-model` when `toMatchGraphObjectSchema` jest matcher fails.
+
 ## 3.5.1 - 2020-10-05
 
 ### Changed

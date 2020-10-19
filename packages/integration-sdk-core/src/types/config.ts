@@ -8,6 +8,17 @@ import {
   IntegrationStepExecutionContext,
 } from './context';
 
+/**
+ * Normalization transform for tracking keys in an integration. Allows
+ * entities to be tracked and looked up using the provided transformation.
+ * One use case of this normalization function is to track duplicates
+ * among case-insensitive keys.
+ *
+ * Example:
+ *   (_key: string) => _key.toLowerCase()
+ */
+export type KeyNormalizationFunction = (_key: string) => string;
+
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
@@ -15,6 +26,7 @@ export interface InvocationConfig<
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
   integrationSteps: Step<TStepExecutionContext>[];
+  normalizeGraphObjectKey?: KeyNormalizationFunction;
 }
 
 export interface IntegrationInvocationConfig<

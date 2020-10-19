@@ -81,6 +81,20 @@ describe('entities', () => {
     expect(result).toEqual(inputEntities[0]);
   });
 
+  test('findEntity returns initialized entity from jobState when _key matches with key normalization', async () => {
+    const jobState = createMockJobState({
+      normalizeGraphObjectKey: (_key) => _key.toLowerCase(),
+    });
+    const inputEntity = {
+      _type: 'test',
+      _class: 'Resource',
+      _key: 'INCONSISTENT-casing',
+    };
+    await jobState.addEntities([inputEntity]);
+    const result = await jobState.findEntity('inconsistent-CASING');
+    expect(result).toEqual(inputEntity);
+  });
+
   test('findEntity returns null when entity cannot be found in jobState', async () => {
     const jobState = createMockJobState();
     expect(await jobState.findEntity('does-not-exist')).toEqual(null);
