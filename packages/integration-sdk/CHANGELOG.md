@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.6.0 - 2020-10-19
+
 ### Added
 
 - [#355](https://github.com/JupiterOne/sdk/issues/355) - Added
