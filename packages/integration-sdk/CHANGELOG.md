@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- [#362](https://github.com/JupiterOne/sdk/issues/362) - Added `onFailure`
+  callback to integration logger constructor.
+
 ## 3.6.0 - 2020-10-19
 
 ### Added

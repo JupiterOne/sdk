@@ -667,3 +667,68 @@ describe('#publishErrorEvent', () => {
     });
   });
 });
+
+describe('#handleFailure', () => {
+  test('should invoke callback on handleFailure', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const errorSpy = jest.spyOn(logger, 'error');
+    const publishEventSpy = jest.spyOn(logger, 'publishEvent');
+
+    const onFailureSpy = jest.fn();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'onFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.onFailure = onFailureSpy;
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'handleFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.handleFailure({
+      err: new Error(),
+      errorId: 'SOME_ERROR_ID',
+      eventName: 'SOME_EVENT',
+      description: 'an error :(',
+    });
+
+    expect(onFailureSpy).toHaveBeenCalledTimes(1);
+    expect(publishEventSpy).toHaveBeenCalledTimes(1);
+
+    // should call error
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should invoke callback on handleFailure', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const warnSpy = jest.spyOn(logger, 'warn');
+    const publishEventSpy = jest.spyOn(logger, 'publishEvent');
+
+    const onFailureSpy = jest.fn();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'onFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.onFailure = onFailureSpy;
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'handleFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.handleFailure({
+      err: new IntegrationValidationError(''),
+      errorId: 'SOME_ERROR_ID',
+      eventName: 'SOME_EVENT',
+      description: 'an error :(',
+    });
+
+    expect(onFailureSpy).toHaveBeenCalledTimes(1);
+    expect(publishEventSpy).toHaveBeenCalledTimes(1);
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+});

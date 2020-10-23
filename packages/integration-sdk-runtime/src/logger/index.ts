@@ -146,20 +146,31 @@ interface EventLookup {
   metric: Metric;
 }
 
+interface OnFailureOptions {
+  err: Error;
+}
+
+type OnFailureFunction = (options: OnFailureOptions) => void;
+
 interface IntegrationLoggerInput {
   logger: Logger;
   errorSet: Set<Error>;
+  onFailure?: OnFailureFunction;
 }
 
 export class IntegrationLogger extends EventEmitter
   implements IntegrationLoggerType {
   private _logger: Logger;
   private _errorSet: Set<Error>;
+  private onFailure: OnFailureFunction;
 
   constructor(input: IntegrationLoggerInput) {
     super();
     this._logger = input.logger;
     this._errorSet = input.errorSet;
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    this.onFailure = input.onFailure || (() => {});
   }
 
   /**
@@ -260,14 +271,12 @@ export class IntegrationLogger extends EventEmitter
   }
 
   stepFailure(step: StepMetadata, err: Error) {
-    const name = 'step_failure';
+    const eventName = 'step_failure';
     const { errorId, description } = createErrorEventDescription(
       err,
       `Step "${step.name}" failed to complete due to error.`,
     );
-
-    this.error({ errorId, err }, description);
-    this.publishEvent({ name, description });
+    this.handleFailure({ eventName, errorId, err, description });
   }
 
   synchronizationUploadStart(job: SynchronizationJob) {
@@ -295,19 +304,29 @@ export class IntegrationLogger extends EventEmitter
   }
 
   validationFailure(err: Error) {
-    const name = 'validation_failure';
+    const eventName = 'validation_failure';
     const { errorId, description } = createErrorEventDescription(
       err,
       `Error occurred while validating integration configuration.`,
     );
+    this.handleFailure({ eventName, errorId, err, description });
+  }
 
+  private handleFailure(options: {
+    eventName: string;
+    errorId: string;
+    err: Error;
+    description: string;
+  }) {
+    const { eventName, errorId, err, description } = options;
     if (shouldReportErrorToOperator(err)) {
       this.error({ errorId, err }, description);
     } else {
       this.warn({ errorId, err }, description);
     }
 
-    this.publishEvent({ name, description });
+    this.publishEvent({ name: eventName, description });
+    this.onFailure({ err });
   }
 
   publishMetric(metric: Omit<Metric, 'timestamp'>) {
