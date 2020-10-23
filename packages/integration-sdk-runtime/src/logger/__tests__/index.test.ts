@@ -268,20 +268,8 @@ describe('step event publishing', () => {
     logger.stepSuccess(step);
 
     expect(infoSpy).toHaveBeenCalledTimes(2);
-    expect(infoSpy).toHaveBeenNthCalledWith(
-      1,
-      {
-        step: step.id,
-      },
-      `Starting step "Mochi"...`,
-    );
-    expect(infoSpy).toHaveBeenNthCalledWith(
-      2,
-      {
-        step: step.id,
-      },
-      `Completed step "Mochi".`,
-    );
+    expect(infoSpy).toHaveBeenNthCalledWith(1, {}, `Starting step "Mochi"...`);
+    expect(infoSpy).toHaveBeenNthCalledWith(2, {}, `Completed step "Mochi".`);
 
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
@@ -292,7 +280,6 @@ describe('step event publishing', () => {
       {
         err: error,
         errorId: expect.any(String),
-        step: step.id,
       },
       expect.stringContaining(
         `Step "Mochi" failed to complete due to error. (errorCode="${error.code}"`,

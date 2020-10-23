@@ -248,14 +248,14 @@ export class IntegrationLogger extends EventEmitter
   stepStart(step: StepMetadata) {
     const name = 'step_start';
     const description = `Starting step "${step.name}"...`;
-    this.info({ step: step.id }, description);
+    this.info({}, description);
     this.publishEvent({ name, description });
   }
 
   stepSuccess(step: StepMetadata) {
     const name = 'step_end';
     const description = `Completed step "${step.name}".`;
-    this.info({ step: step.id }, description);
+    this.info({}, description);
     this.publishEvent({ name, description });
   }
 
@@ -266,7 +266,7 @@ export class IntegrationLogger extends EventEmitter
       `Step "${step.name}" failed to complete due to error.`,
     );
 
-    this.error({ errorId, err, step: step.id }, description);
+    this.error({ errorId, err }, description);
     this.publishEvent({ name, description });
   }
 
