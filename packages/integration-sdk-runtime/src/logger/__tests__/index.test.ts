@@ -669,20 +669,17 @@ describe('#publishErrorEvent', () => {
 });
 
 describe('#handleFailure', () => {
-  test('should invoke callback on handleFailure and call error on generic error', () => {
+  test('should invoke onFailure and publishEvent', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
     });
 
-    const errorSpy = jest.spyOn(logger, 'error');
-    const publishEventSpy = jest.spyOn(logger, 'publishEvent');
-
-    const onFailureSpy = jest.fn();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    // Property 'onFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
-    logger.onFailure = onFailureSpy;
+    // Argument of type '"onFailure"' is not assignable to parameter of type 'never'.ts(2769)
+    const onFailureSpy = jest.spyOn(logger, 'onFailure');
+    const publishEventSpy = jest.spyOn(logger, 'publishEvent');
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -696,25 +693,36 @@ describe('#handleFailure', () => {
 
     expect(onFailureSpy).toHaveBeenCalledTimes(1);
     expect(publishEventSpy).toHaveBeenCalledTimes(1);
+  });
 
-    // should call error
+  test('should log as error when error is meant to be handled by an operator', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const errorSpy = jest.spyOn(logger, 'error');
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'handleFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.handleFailure({
+      err: new Error(),
+      errorId: 'SOME_ERROR_ID',
+      eventName: 'step_failure',
+      description: 'an error :(',
+    });
+
     expect(errorSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('should invoke callback on handleFailure and call warn on validation error', () => {
+  test('should log as warn when error is meant to be handled by a user', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
     });
 
     const warnSpy = jest.spyOn(logger, 'warn');
-    const publishEventSpy = jest.spyOn(logger, 'publishEvent');
-
-    const onFailureSpy = jest.fn();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // Property 'onFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
-    logger.onFailure = onFailureSpy;
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -725,9 +733,6 @@ describe('#handleFailure', () => {
       eventName: 'step_failure',
       description: 'an error :(',
     });
-
-    expect(onFailureSpy).toHaveBeenCalledTimes(1);
-    expect(publishEventSpy).toHaveBeenCalledTimes(1);
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
   });
