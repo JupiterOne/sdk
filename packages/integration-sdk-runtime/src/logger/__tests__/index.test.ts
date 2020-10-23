@@ -268,8 +268,8 @@ describe('step event publishing', () => {
     logger.stepSuccess(step);
 
     expect(infoSpy).toHaveBeenCalledTimes(2);
-    expect(infoSpy).toHaveBeenNthCalledWith(1, {}, `Starting step "Mochi"...`);
-    expect(infoSpy).toHaveBeenNthCalledWith(2, {}, `Completed step "Mochi".`);
+    expect(infoSpy).toHaveBeenNthCalledWith(1, `Starting step "Mochi"...`);
+    expect(infoSpy).toHaveBeenNthCalledWith(2, `Completed step "Mochi".`);
 
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
@@ -669,7 +669,7 @@ describe('#publishErrorEvent', () => {
 });
 
 describe('#handleFailure', () => {
-  test('should invoke callback on handleFailure', () => {
+  test('should invoke callback on handleFailure and call error on generic error', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
@@ -690,7 +690,7 @@ describe('#handleFailure', () => {
     logger.handleFailure({
       err: new Error(),
       errorId: 'SOME_ERROR_ID',
-      eventName: 'SOME_EVENT',
+      eventName: 'step_failure',
       description: 'an error :(',
     });
 
@@ -701,7 +701,7 @@ describe('#handleFailure', () => {
     expect(errorSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('should invoke callback on handleFailure', () => {
+  test('should invoke callback on handleFailure and call warn on validation error', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
@@ -722,7 +722,7 @@ describe('#handleFailure', () => {
     logger.handleFailure({
       err: new IntegrationValidationError(''),
       errorId: 'SOME_ERROR_ID',
-      eventName: 'SOME_EVENT',
+      eventName: 'step_failure',
       description: 'an error :(',
     });
 
@@ -730,5 +730,40 @@ describe('#handleFailure', () => {
     expect(publishEventSpy).toHaveBeenCalledTimes(1);
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should invoke handleFailure on validationFailure', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Argument of type '"handleFailure"' is not assignable to parameter of type 'never'.ts(2769)
+    const handleFailureSpy = jest.spyOn(logger, 'handleFailure');
+
+    logger.validationFailure(new Error());
+
+    expect(handleFailureSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should invoke handleFailure on stepFailure', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Argument of type '"handleFailure"' is not assignable to parameter of type 'never'.ts(2769)
+    const handleFailureSpy = jest.spyOn(logger, 'handleFailure');
+
+    logger.stepFailure(
+      { id: 'step-id', name: 'step-name', entities: [], relationships: [] },
+      new Error(),
+    );
+
+    expect(handleFailureSpy).toHaveBeenCalledTimes(1);
   });
 });

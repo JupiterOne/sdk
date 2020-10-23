@@ -259,14 +259,14 @@ export class IntegrationLogger extends EventEmitter
   stepStart(step: StepMetadata) {
     const name = 'step_start';
     const description = `Starting step "${step.name}"...`;
-    this.info({}, description);
+    this.info(description);
     this.publishEvent({ name, description });
   }
 
   stepSuccess(step: StepMetadata) {
     const name = 'step_end';
     const description = `Completed step "${step.name}".`;
-    this.info({}, description);
+    this.info(description);
     this.publishEvent({ name, description });
   }
 
@@ -313,7 +313,7 @@ export class IntegrationLogger extends EventEmitter
   }
 
   private handleFailure(options: {
-    eventName: string;
+    eventName: 'validation_failure' | 'step_failure';
     errorId: string;
     err: Error;
     description: string;
