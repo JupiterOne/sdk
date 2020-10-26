@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 3.8.0 - 2020-10-26
+
+- Expose `onFaliure` callback in `createIntegrationLogger`
+
 ## 3.7.0 - 2020-10-23
 
 ### Added
