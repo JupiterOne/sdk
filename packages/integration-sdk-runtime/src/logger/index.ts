@@ -40,6 +40,7 @@ interface CreateLoggerInput<
   invocationConfig?: InvocationConfig<TExecutionContext, TStepExecutionContext>;
   pretty?: boolean;
   serializers?: Logger.Serializers;
+  onFailure?: OnFailureFunction;
 }
 
 interface CreateIntegrationLoggerInput
@@ -57,6 +58,7 @@ export function createLogger<
   name,
   pretty,
   serializers,
+  onFailure,
 }: CreateLoggerInput<
   TExecutionContext,
   TStepExecutionContext
@@ -84,6 +86,7 @@ export function createLogger<
   return new IntegrationLogger({
     logger,
     errorSet,
+    onFailure,
   });
 }
 
@@ -96,6 +99,7 @@ export function createIntegrationLogger({
   invocationConfig,
   pretty,
   serializers,
+  onFailure,
 }: CreateIntegrationLoggerInput): IntegrationLogger {
   const serializeInstanceConfig = createInstanceConfigSerializer(
     invocationConfig?.instanceConfigFields,
@@ -115,6 +119,7 @@ export function createIntegrationLogger({
       }),
       ...serializers,
     },
+    onFailure,
   });
 }
 
