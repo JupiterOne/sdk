@@ -268,20 +268,8 @@ describe('step event publishing', () => {
     logger.stepSuccess(step);
 
     expect(infoSpy).toHaveBeenCalledTimes(2);
-    expect(infoSpy).toHaveBeenNthCalledWith(
-      1,
-      {
-        step: step.id,
-      },
-      `Starting step "Mochi"...`,
-    );
-    expect(infoSpy).toHaveBeenNthCalledWith(
-      2,
-      {
-        step: step.id,
-      },
-      `Completed step "Mochi".`,
-    );
+    expect(infoSpy).toHaveBeenNthCalledWith(1, `Starting step "Mochi"...`);
+    expect(infoSpy).toHaveBeenNthCalledWith(2, `Completed step "Mochi".`);
 
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
@@ -292,7 +280,6 @@ describe('step event publishing', () => {
       {
         err: error,
         errorId: expect.any(String),
-        step: step.id,
       },
       expect.stringContaining(
         `Step "Mochi" failed to complete due to error. (errorCode="${error.code}"`,
@@ -678,5 +665,110 @@ describe('#publishErrorEvent', () => {
         ),
       ),
     });
+  });
+});
+
+describe('#handleFailure', () => {
+  test('should invoke onFailure and publishEvent', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Argument of type '"onFailure"' is not assignable to parameter of type 'never'.ts(2769)
+    const onFailureSpy = jest.spyOn(logger, 'onFailure');
+    const publishEventSpy = jest.spyOn(logger, 'publishEvent');
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'handleFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.handleFailure({
+      err: new Error(),
+      errorId: 'SOME_ERROR_ID',
+      eventName: 'step_failure',
+      description: 'an error :(',
+    });
+
+    expect(onFailureSpy).toHaveBeenCalledTimes(1);
+    expect(publishEventSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should log as error when error is meant to be handled by an operator', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const errorSpy = jest.spyOn(logger, 'error');
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'handleFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.handleFailure({
+      err: new Error(),
+      errorId: 'SOME_ERROR_ID',
+      eventName: 'step_failure',
+      description: 'an error :(',
+    });
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should log as warn when error is meant to be handled by a user', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const warnSpy = jest.spyOn(logger, 'warn');
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'handleFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    logger.handleFailure({
+      err: new IntegrationValidationError(''),
+      errorId: 'SOME_ERROR_ID',
+      eventName: 'step_failure',
+      description: 'an error :(',
+    });
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should invoke handleFailure on validationFailure', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Argument of type '"handleFailure"' is not assignable to parameter of type 'never'.ts(2769)
+    const handleFailureSpy = jest.spyOn(logger, 'handleFailure');
+
+    logger.validationFailure(new Error());
+
+    expect(handleFailureSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should invoke handleFailure on stepFailure', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Argument of type '"handleFailure"' is not assignable to parameter of type 'never'.ts(2769)
+    const handleFailureSpy = jest.spyOn(logger, 'handleFailure');
+
+    logger.stepFailure(
+      { id: 'step-id', name: 'step-name', entities: [], relationships: [] },
+      new Error(),
+    );
+
+    expect(handleFailureSpy).toHaveBeenCalledTimes(1);
   });
 });
