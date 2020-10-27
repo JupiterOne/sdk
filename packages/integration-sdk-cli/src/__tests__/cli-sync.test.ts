@@ -1,7 +1,6 @@
 import { Polly } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import FSPersister from '@pollyjs/persister-fs';
-import jwt from 'jsonwebtoken';
 
 import { loadProjectStructure } from '@jupiterone/integration-sdk-private-test-utils';
 import { SynchronizationJobStatus } from '@jupiterone/integration-sdk-core';
@@ -23,7 +22,8 @@ Polly.register(FSPersister);
 let polly: Polly;
 
 beforeEach(() => {
-  process.env.JUPITERONE_API_KEY = jwt.sign({ account: 'mochi' }, 'test');
+  process.env.JUPITERONE_API_KEY = 'testing-key';
+  process.env.JUPITERONE_ACCOUNT = 'mochi';
 
   polly = new Polly('sync-cli', {
     adapters: ['node-http'],

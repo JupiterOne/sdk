@@ -2,20 +2,21 @@ import { createCommand } from 'commander';
 import * as log from '../log';
 import path from 'path';
 import { importAssets } from '../import/importAssets';
-import { validateApiKey } from '../validateApiKey';
+import { validateOption } from '../validateOption';
 
 export interface ImportOptions {
   dataDir: string;
   includeEntities?: boolean;
   includeRelationships?: boolean;
   scope: string;
-  apiKey?: string;
+  account: string;
+  apiKey: string;
 }
 
 export function j1Import() {
   return createCommand('import')
     .description(
-      'Imports exported account entities/relationships into j1 account',
+      'Imports exported account entities/relationships into JupiterOne account',
     )
     .option(
       '-d --data-dir <relative_directory>',
@@ -25,6 +26,10 @@ export function j1Import() {
     .requiredOption(
       '--scope <scope>',
       'A unique id that identifies the synchronization job that will be importing your assets, use any id of your choosing.',
+    )
+    .option(
+      '--account <account>',
+      'The JupiterOne account you are importing entities/relationships into',
     )
     .option(
       '--api-key <key>',
@@ -41,8 +46,17 @@ export function j1Import() {
     .action(async (options: ImportOptions) => {
       log.info(`Importing entities into account...`);
       const storageDirectory = path.join(process.cwd(), options.dataDir);
-      const apiKey = validateApiKey(options.apiKey);
+      const apiKey = validateOption({
+        option: '--api-key',
+        value: options.apiKey,
+        defaultEnvironmentVariable: 'JUPITERONE_API_KEY',
+      });
+      const account = validateOption({
+        option: '--account',
+        value: options.account,
+        defaultEnvironmentVariable: 'JUPITERONE_ACCOUNT',
+      });
 
-      await importAssets({ ...options, storageDirectory, apiKey });
+      await importAssets({ ...options, storageDirectory, account, apiKey });
     });
 }
