@@ -194,13 +194,18 @@ test('should log error when export fails', async () => {
 
 test('should throw error when missing api key', async () => {
   await expect(
-    createCli().parseAsync(['node', 'j1', 'export']),
+    createCli().parseAsync([
+      'node',
+      'j1',
+      'export',
+      `--account=${TEST_ACCOUNT}`,
+    ]),
   ).rejects.toThrow(
     /Missing option! Set the JUPITERONE_API_KEY environment variable or supply the --api-key option./,
   );
 });
 
-test('should throw error when missing api key', async () => {
+test('should throw error when missing account', async () => {
   await expect(
     createCli().parseAsync([
       'node',

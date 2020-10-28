@@ -26,7 +26,7 @@ export function j1Export() {
     )
     .option(
       '--account <account>',
-      'The JupiterOne account you are importing entities/relationships into',
+      'The JupiterOne account you are exporting entities/relationships from',
     )
     .option(
       '--api-key <key>',
