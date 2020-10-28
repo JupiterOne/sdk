@@ -3,8 +3,9 @@ import { createCommand } from 'commander';
 import * as log from '../log';
 import {
   getApiKeyFromEnvironment,
+  getAccountFromEnvironment,
   getApiBaseUrl,
-  createApiClientWithApiKey,
+  createApiClient,
   initiateSynchronization,
   uploadCollectedData,
   finalizeSynchronization,
@@ -27,15 +28,20 @@ export function run() {
     )
     .action(async (options) => {
       log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
-      const apiKey = getApiKeyFromEnvironment();
+      const accessToken = getApiKeyFromEnvironment();
+
+      log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
+      const account = getAccountFromEnvironment();
+
       const apiBaseUrl = getApiBaseUrl({ dev: !!process.env.JUPITERONE_DEV });
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const startTime = Date.now();
 
-      const apiClient = createApiClientWithApiKey({
+      const apiClient = createApiClient({
         apiBaseUrl,
-        apiKey,
+        accessToken,
+        account,
       });
 
       const { integrationInstanceId } = options;

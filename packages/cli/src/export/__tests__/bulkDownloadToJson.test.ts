@@ -4,10 +4,14 @@ import axios, { AxiosInstance } from 'axios';
 import { v4 as uuid } from 'uuid';
 
 import * as fileSystem from '../../fileSystem';
-import { bulkDownloadToJson, BulkDownloadParams, ASSET_DOWNLOAD_LIMIT } from '../bulkDownloadToJson';
+import {
+  bulkDownloadToJson,
+  BulkDownloadParams,
+  ASSET_DOWNLOAD_LIMIT,
+} from '../bulkDownloadToJson';
 import { DEFAULT_EXPORT_DIRECTORY } from '../../commands';
 import { Entity } from '@jupiterone/integration-sdk-core';
-import { TEST_API_KEY } from '../../__tests__/utils';
+import { TEST_API_KEY, TEST_ACCOUNT } from '../../__tests__/utils';
 
 jest.mock('axios');
 jest.mock('@jupiterone/integration-sdk-runtime');
@@ -18,11 +22,12 @@ const mockedAxios = mocked<AxiosInstance>(axios, true);
 const mockedFileSystem = mocked(fileSystem, true);
 
 const options: BulkDownloadParams = {
+  account: TEST_ACCOUNT,
   apiKey: TEST_API_KEY,
-  assetType: "entities",
+  assetType: 'entities',
   includeDeleted: true,
   progress: jest.fn(),
-  storageDirectory: DEFAULT_EXPORT_DIRECTORY
+  storageDirectory: DEFAULT_EXPORT_DIRECTORY,
 };
 
 function createEntity(id: string, type: string): Entity {
@@ -32,13 +37,13 @@ function createEntity(id: string, type: string): Entity {
     _type: type,
     _rawData: [],
     displayName: `Entity ${id}`,
-    id
-  }
+    id,
+  };
 }
 
 beforeEach(() => {
-  mockedRuntime.createApiClientWithApiKey.mockReturnValue(axios);
-})
+  mockedRuntime.createApiClient.mockReturnValue(axios);
+});
 
 test('should write assets to json file', async () => {
   const entities: Entity[] = [
@@ -46,23 +51,28 @@ test('should write assets to json file', async () => {
     createEntity('2', 'test_1'),
     createEntity('3', 'test_2'),
     createEntity('4', 'test_2'),
-  ]
+  ];
   mockedAxios.get.mockResolvedValue({
-    data: { items: entities }
+    data: { items: entities },
   });
-  await bulkDownloadToJson(options)
-
+  await bulkDownloadToJson(options);
 
   expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-  expect(mockedAxios.get).toHaveBeenCalledWith(`/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true`);
+  expect(mockedAxios.get).toHaveBeenCalledWith(
+    `/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true`,
+  );
   expect(mockedFileSystem.writeFileToPath).toHaveBeenCalledTimes(2);
   expect(mockedFileSystem.writeFileToPath).toHaveBeenCalledWith({
-    filePath: expect.stringMatching(/\.j1.{1,2}export.{1,2}json.{1,2}entities.{1,2}test_1.*\.json/),
-    content: JSON.stringify([entities[0], entities[1]])
+    filePath: expect.stringMatching(
+      /\.j1.{1,2}export.{1,2}json.{1,2}entities.{1,2}test_1.*\.json/,
+    ),
+    content: JSON.stringify([entities[0], entities[1]]),
   });
   expect(mockedFileSystem.writeFileToPath).toHaveBeenCalledWith({
-    filePath: expect.stringMatching(/\.j1.{1,2}export.{1,2}json.{1,2}entities.{1,2}test_2.*\.json/),
-    content: JSON.stringify([entities[2], entities[3]])
+    filePath: expect.stringMatching(
+      /\.j1.{1,2}export.{1,2}json.{1,2}entities.{1,2}test_2.*\.json/,
+    ),
+    content: JSON.stringify([entities[2], entities[3]]),
   });
 });
 
@@ -78,7 +88,7 @@ test('should cursor over results from the api and track progress', async () => {
     .mockResolvedValueOnce({
       data: {
         items: [entities[0], entities[1]],
-        endCursor
+        endCursor,
       },
     })
     .mockResolvedValueOnce({
@@ -88,13 +98,16 @@ test('should cursor over results from the api and track progress', async () => {
   await bulkDownloadToJson(options);
 
   expect(mockedAxios.get).toHaveBeenCalledTimes(2);
-  expect(mockedAxios.get).toHaveBeenCalledWith(`/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true`);
-  expect(mockedAxios.get).toHaveBeenCalledWith(`/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true&cursor=${endCursor}`);
+  expect(mockedAxios.get).toHaveBeenCalledWith(
+    `/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true`,
+  );
+  expect(mockedAxios.get).toHaveBeenCalledWith(
+    `/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true&cursor=${endCursor}`,
+  );
   expect(options.progress).toHaveBeenCalledTimes(2);
   expect(options.progress).toHaveBeenCalledWith(2);
   expect(options.progress).toHaveBeenCalledWith(4);
 });
-
 
 test('should handle 422 large response body', async () => {
   const entities: Entity[] = [
@@ -107,13 +120,13 @@ test('should handle 422 large response body', async () => {
   mockedAxios.get
     .mockRejectedValueOnce({
       response: {
-        status: 422
-      }
+        status: 422,
+      },
     })
     .mockResolvedValueOnce({
       data: {
         items: [entities[0], entities[1]],
-        endCursor
+        endCursor,
       },
     })
     .mockResolvedValueOnce({
@@ -123,7 +136,13 @@ test('should handle 422 large response body', async () => {
   await bulkDownloadToJson(options);
 
   expect(mockedAxios.get).toHaveBeenCalledTimes(3);
-  expect(mockedAxios.get).toHaveBeenCalledWith(`/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true`);
-  expect(mockedAxios.get).toHaveBeenCalledWith(`/entities?limit=${ASSET_DOWNLOAD_LIMIT/2}&includeDeleted=true`);
-  expect(mockedAxios.get).toHaveBeenCalledWith(`/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true&cursor=${endCursor}`);
+  expect(mockedAxios.get).toHaveBeenCalledWith(
+    `/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true`,
+  );
+  expect(mockedAxios.get).toHaveBeenCalledWith(
+    `/entities?limit=${ASSET_DOWNLOAD_LIMIT / 2}&includeDeleted=true`,
+  );
+  expect(mockedAxios.get).toHaveBeenCalledWith(
+    `/entities?limit=${ASSET_DOWNLOAD_LIMIT}&includeDeleted=true&cursor=${endCursor}`,
+  );
 });

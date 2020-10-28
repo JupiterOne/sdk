@@ -9,9 +9,16 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Removed `createApiClientWithApiKey` helper from runtime package. You must use
+  `createApiClient` for compatibility with new service tokens.
+
 ## 3.8.0 - 2020-10-26
 
-- Expose `onFaliure` callback in `createIntegrationLogger`
+### Added
+
+- Expose `onFailure` callback in `createIntegrationLogger`
 
 ## 3.7.0 - 2020-10-23
 

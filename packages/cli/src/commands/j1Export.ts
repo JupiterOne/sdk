@@ -3,10 +3,11 @@ import path from 'path';
 
 import * as log from '../log';
 import exportAssets from '../export/exportAssets';
-import { validateApiKey } from '../validateApiKey';
+import { validateOption } from '../validateOption';
 
 export interface ExportOptions {
   dataDir: string;
+  account: string;
   apiKey: string;
   includeEntities: boolean;
   includeRelationships: boolean;
@@ -22,6 +23,10 @@ export function j1Export() {
       '-d, --data-dir <relative_directory>',
       'The directory where entities/relationships will be downloaded',
       DEFAULT_EXPORT_DIRECTORY,
+    )
+    .option(
+      '--account <account>',
+      'The JupiterOne account you are exporting entities/relationships from',
     )
     .option(
       '--api-key <key>',
@@ -43,8 +48,17 @@ export function j1Export() {
     .action(async (options: ExportOptions) => {
       log.info(`Starting export...`);
       const storageDirectory = path.join(process.cwd(), options.dataDir);
-      const apiKey = validateApiKey(options.apiKey);
+      const apiKey = validateOption({
+        option: '--api-key',
+        value: options.apiKey,
+        defaultEnvironmentVariable: 'JUPITERONE_API_KEY',
+      });
+      const account = validateOption({
+        option: '--account',
+        value: options.account,
+        defaultEnvironmentVariable: 'JUPITERONE_ACCOUNT',
+      });
 
-      await exportAssets({ ...options, storageDirectory, apiKey });
+      await exportAssets({ ...options, storageDirectory, account, apiKey });
     });
 }

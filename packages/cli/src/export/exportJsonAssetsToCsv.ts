@@ -3,42 +3,51 @@ import createSpinner from 'ora';
 import _ from 'lodash';
 import path from 'path';
 
-import { ExportAssetsParams as ExportAssetParams } from "./exportAssets";
-import { getJsonAssetsDirectory, getCsvAssetsDirectory, } from "../fileSystem";
+import { ExportAssetsParams as ExportAssetParams } from './exportAssets';
+import { getJsonAssetsDirectory, getCsvAssetsDirectory } from '../fileSystem';
 import { groupJsonAssetsByType } from './groupJsonAssetsByType';
 import * as log from '../log';
 import { writeAssetsToCsv } from './writeAssetsToCsv';
 
-type ExportAssetTypeParams = ExportJsonAssetParams & { type: 'entities' | 'relationships' };
+type ExportAssetTypeParams = ExportAssetParams & {
+  type: 'entities' | 'relationships';
+};
 
 export async function exportJsonAssetTypeToCsv(options: ExportAssetTypeParams) {
   const jsonAssetsDirectory = getJsonAssetsDirectory(options.storageDirectory);
-  const groupedAssetFiles = await groupJsonAssetsByType({ assetDirectory: `${jsonAssetsDirectory}/${options.type}` });
+  const groupedAssetFiles = await groupJsonAssetsByType({
+    assetDirectory: `${jsonAssetsDirectory}/${options.type}`,
+  });
 
-  const directory = path.join(getCsvAssetsDirectory(options.storageDirectory), options.type);
+  const directory = path.join(
+    getCsvAssetsDirectory(options.storageDirectory),
+    options.type,
+  );
   await writeAssetsToCsv({ groupedAssetFiles, directory });
 }
 
-type ExportJsonAssetParams = Omit<ExportAssetParams, 'includeDeleted'>;
-
-export async function exportJsonAssetsToCsv(options: ExportJsonAssetParams) {
+export async function exportJsonAssetsToCsv(options: ExportAssetParams) {
   const spinner = createSpinner('Exporting JSON Assets to CSV').start();
 
   try {
     const exports: Promise<void>[] = [];
 
     if (options.includeEntities) {
-      exports.push(exportJsonAssetTypeToCsv({
-        ...options,
-        type: 'entities'
-      }));
+      exports.push(
+        exportJsonAssetTypeToCsv({
+          ...options,
+          type: 'entities',
+        }),
+      );
     }
 
     if (options.includeRelationships) {
-      exports.push(exportJsonAssetTypeToCsv({
-        ...options,
-        type: 'relationships'
-      }));
+      exports.push(
+        exportJsonAssetTypeToCsv({
+          ...options,
+          type: 'relationships',
+        }),
+      );
     }
 
     await Promise.all(exports);

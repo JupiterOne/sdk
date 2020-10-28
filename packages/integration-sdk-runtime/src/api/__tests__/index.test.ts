@@ -1,18 +1,16 @@
 import { mocked } from 'ts-jest/utils';
 import Alpha from '@lifeomic/alpha';
-import jwt from 'jsonwebtoken';
 
 import {
   getApiBaseUrl,
   getApiKeyFromEnvironment,
-  createApiClientWithApiKey,
+  createApiClient,
+  getAccountFromEnvironment,
 } from '../index';
 
 jest.mock('@lifeomic/alpha');
-jest.mock('jsonwebtoken');
 
 const AlphaMock = mocked(Alpha);
-const decodeJwtMock = mocked(jwt.decode);
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {
@@ -55,51 +53,47 @@ describe('getApiKeyFromEnvironment', () => {
   });
 });
 
-describe('createApiClientWithApiKey', () => {
-  test('creates an api client with the Authorization and Lifeomic-Account header populated', () => {
-    const apiBaseUrl = getApiBaseUrl();
-
-    decodeJwtMock.mockReturnValue({
-      account: 'test-account',
-    });
-
-    const client = createApiClientWithApiKey({
-      apiBaseUrl,
-      apiKey: 'test-key',
-    });
-
-    expect(client).toBeInstanceOf(AlphaMock);
-
-    expect(AlphaMock).toHaveReturnedTimes(1);
-    expect(AlphaMock).toHaveBeenCalledWith({
-      baseURL: apiBaseUrl,
-      headers: {
-        Authorization: 'Bearer test-key',
-        'Content-Type': 'application/json',
-        'LifeOmic-Account': 'test-account',
-      },
-    });
+describe('getApiKeyFromEnvironment', () => {
+  beforeEach(() => {
+    process.env.JUPITERONE_ACCOUNT = 'test-account';
   });
 
-  test('throws error if api key is malformed', () => {
-    decodeJwtMock.mockImplementation(() => new Error('Failed to parse'));
-
-    expect(() =>
-      createApiClientWithApiKey({
-        apiBaseUrl: getApiBaseUrl(),
-        apiKey: 'test-key',
-      }),
-    ).toThrow(/Malformed API Key provided/);
+  afterEach(() => {
+    delete process.env.JUPITERONE_ACCOUNT;
   });
 
-  test('throws error if account cannot be derived from the api key', () => {
-    decodeJwtMock.mockReturnValue({});
+  test('returns JUPITERONE_ACCOUNT environment variable value', () => {
+    const account = getAccountFromEnvironment();
 
-    expect(() =>
-      createApiClientWithApiKey({
-        apiBaseUrl: getApiBaseUrl(),
-        apiKey: 'test-key',
-      }),
-    ).toThrow(/Malformed API Key provided/);
+    expect(account).toEqual('test-account');
+  });
+
+  test('throws error if JUPITERONE_ACCOUNT is not set', () => {
+    delete process.env.JUPITERONE_ACCOUNT;
+    expect(() => getAccountFromEnvironment()).toThrow(
+      /JUPITERONE_ACCOUNT environment variable must be set/,
+    );
+  });
+});
+
+test('createApiClient', () => {
+  const apiBaseUrl = getApiBaseUrl();
+
+  const client = createApiClient({
+    apiBaseUrl,
+    account: 'test-account',
+    accessToken: 'test-key',
+  });
+
+  expect(client).toBeInstanceOf(AlphaMock);
+
+  expect(AlphaMock).toHaveReturnedTimes(1);
+  expect(AlphaMock).toHaveBeenCalledWith({
+    baseURL: apiBaseUrl,
+    headers: {
+      Authorization: 'Bearer test-key',
+      'Content-Type': 'application/json',
+      'LifeOmic-Account': 'test-account',
+    },
   });
 });

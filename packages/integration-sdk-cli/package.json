@@ -40,7 +40,6 @@
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister": "^2.0.1",
     "@types/vis": "^4.21.20",
-    "jsonwebtoken": "^8.5.1",
     "memfs": "^3.2.0",
     "uuid": "^8.2.0"
   }

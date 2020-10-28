@@ -3,7 +3,7 @@ import { mocked } from 'ts-jest/utils';
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 
 import { createCli } from '..';
-import { TEST_API_KEY } from './utils';
+import { TEST_API_KEY, TEST_ACCOUNT } from './utils';
 import * as log from '../log';
 import { vol } from 'memfs';
 import { createEntity, createRelationship } from '../export/__tests__/utils';
@@ -15,7 +15,7 @@ jest.mock('fs');
 jest.mock('../log');
 
 const mockedAxios = mocked(axios, true);
-const mockedCreateApiClient = mocked(runtime.createApiClientWithApiKey, true);
+const mockedCreateApiClient = mocked(runtime.createApiClient, true);
 
 beforeEach(() => {
   mockedCreateApiClient.mockReturnValue(axios);
@@ -59,6 +59,7 @@ test('should export assets', async () => {
       'node',
       'j1',
       'export',
+      `--account=${TEST_ACCOUNT}`,
       `--api-key=${TEST_API_KEY}`,
     ]),
   ).resolves.toEqual(expect.anything());
@@ -110,6 +111,7 @@ test('should only export relationships when specified', async () => {
       'node',
       'j1',
       'export',
+      `--account=${TEST_ACCOUNT}`,
       `--api-key=${TEST_API_KEY}`,
       `--no-include-entities`,
     ]),
@@ -156,6 +158,7 @@ test('should only export entities when specified', async () => {
       'node',
       'j1',
       'export',
+      `--account=${TEST_ACCOUNT}`,
       `--api-key=${TEST_API_KEY}`,
       `--no-include-entities`,
     ]),
@@ -181,6 +184,7 @@ test('should log error when export fails', async () => {
       'node',
       'j1',
       'export',
+      `--account=${TEST_ACCOUNT}`,
       `--api-key=${TEST_API_KEY}`,
     ]),
   ).rejects.toThrow(error);
@@ -190,8 +194,26 @@ test('should log error when export fails', async () => {
 
 test('should throw error when missing api key', async () => {
   await expect(
-    createCli().parseAsync(['node', 'j1', 'export']),
+    createCli().parseAsync([
+      'node',
+      'j1',
+      'export',
+      `--account=${TEST_ACCOUNT}`,
+    ]),
   ).rejects.toThrow(
-    /Missing apiKey! Set the JUPITERONE_API_KEY environment variable or supply the --api-key option./,
+    /Missing option! Set the JUPITERONE_API_KEY environment variable or supply the --api-key option./,
+  );
+});
+
+test('should throw error when missing account', async () => {
+  await expect(
+    createCli().parseAsync([
+      'node',
+      'j1',
+      'export',
+      `--api-key=${TEST_API_KEY}`,
+    ]),
+  ).rejects.toThrow(
+    /Missing option! Set the JUPITERONE_ACCOUNT environment variable or supply the --account option./,
   );
 });

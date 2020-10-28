@@ -1,62 +1,21 @@
 import { AxiosInstance } from 'axios';
 import Alpha from '@lifeomic/alpha';
-import { malformedApiKeyError, apiKeyRequiredError } from './error';
+import { IntegrationError } from '@jupiterone/integration-sdk-core';
 
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 
-export type ApiClient = AxiosInstance;
+import {
+  IntegrationApiKeyRequiredError,
+  IntegrationAccountRequiredError,
+} from './error';
 
-const jwt = require('jsonwebtoken');
+export type ApiClient = AxiosInstance;
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
-}
-
-interface ApiKeyToken {
-  account: string;
-}
-
-interface CreateApiClientFromApiKeyInput {
-  apiBaseUrl: string;
-  apiKey: string;
-}
-
-/**
- * Creates an API client using an API key
- */
-export function createApiClientWithApiKey({
-  apiBaseUrl,
-  apiKey,
-}: CreateApiClientFromApiKeyInput) {
-  const account = extractAccountFromApiKey(apiKey);
-  return createApiClient({
-    apiBaseUrl,
-    account,
-    accessToken: apiKey,
-  });
-}
-
-/**
- * Extracts the account from the api key
- */
-function extractAccountFromApiKey(apiKey: string): string {
-  let token: ApiKeyToken;
-  try {
-    token = jwt.decode(apiKey);
-  } catch (err) {
-    throw malformedApiKeyError();
-  }
-
-  const { account } = token;
-
-  if (!account) {
-    throw malformedApiKeyError();
-  }
-
-  return account;
 }
 
 /**
@@ -100,14 +59,23 @@ export function getApiBaseUrl({ dev }: GetApiBaseUrlInput = { dev: false }) {
   return 'https://api.us.jupiterone.io';
 }
 
-export function getApiKeyFromEnvironment(): string {
+function getFromEnv(
+  variableName: string,
+  missingError: new () => IntegrationError,
+): string {
   dotenvExpand(dotenv.config());
 
-  const apiKey = process.env.JUPITERONE_API_KEY;
+  const value = process.env[variableName];
 
-  if (!apiKey) {
-    throw apiKeyRequiredError();
+  if (!value) {
+    throw new missingError();
   }
 
-  return apiKey;
+  return value;
 }
+
+export const getApiKeyFromEnvironment = () =>
+  getFromEnv('JUPITERONE_API_KEY', IntegrationApiKeyRequiredError);
+
+export const getAccountFromEnvironment = () =>
+  getFromEnv('JUPITERONE_ACCOUNT', IntegrationAccountRequiredError);
