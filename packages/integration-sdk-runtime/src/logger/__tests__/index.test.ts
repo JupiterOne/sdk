@@ -669,7 +669,7 @@ describe('#publishErrorEvent', () => {
 });
 
 describe('#handleFailure', () => {
-  test.only('should maintain onFailure implementation when calling logger.child()', () => {
+  test('should maintain onFailure implementation when calling logger.child()', () => {
     const onFailureSpy = jest.fn();
     const logger = createIntegrationLogger({
       name,
