@@ -669,16 +669,32 @@ describe('#publishErrorEvent', () => {
 });
 
 describe('#handleFailure', () => {
-  test('should invoke onFailure and publishEvent', () => {
+  test('should maintain onFailure implementation when calling logger.child()', () => {
+    const onFailureSpy = jest.fn();
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+      onFailure: onFailureSpy,
+    });
+
+    const childLogger = logger.child();
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    // Property 'onFailure' is private and only accessible within class 'IntegrationLogger'.ts(2341)
+    childLogger.onFailure({
+      err: new Error(),
+    });
+
+    expect(onFailureSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test('should invoke publishEvent', () => {
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
     });
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    // Argument of type '"onFailure"' is not assignable to parameter of type 'never'.ts(2769)
-    const onFailureSpy = jest.spyOn(logger, 'onFailure');
     const publishEventSpy = jest.spyOn(logger, 'publishEvent');
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -691,14 +707,15 @@ describe('#handleFailure', () => {
       description: 'an error :(',
     });
 
-    expect(onFailureSpy).toHaveBeenCalledTimes(1);
     expect(publishEventSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('should log as error when error is meant to be handled by an operator', () => {
+  test('should log as error and invoke onFailure when error is meant to be handled by an operator', () => {
+    const onFailureSpy = jest.fn();
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
+      onFailure: onFailureSpy,
     });
 
     const errorSpy = jest.spyOn(logger, 'error');
@@ -714,12 +731,15 @@ describe('#handleFailure', () => {
     });
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(onFailureSpy).toHaveBeenCalledTimes(1);
   });
 
-  test('should log as warn when error is meant to be handled by a user', () => {
+  test('should log as warn and NOT invoke onFailure callback when error is meant to be handled by a user', () => {
+    const onFailureSpy = jest.fn();
     const logger = createIntegrationLogger({
       name,
       invocationConfig,
+      onFailure: onFailureSpy,
     });
 
     const warnSpy = jest.spyOn(logger, 'warn');
@@ -735,6 +755,7 @@ describe('#handleFailure', () => {
     });
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(onFailureSpy).not.toHaveBeenCalled();
   });
 
   test('should invoke handleFailure on validationFailure', () => {

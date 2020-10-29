@@ -9,10 +9,16 @@ and this project adheres to
 
 ## Unreleased
 
+## 4.0.0 - 2020-10-29
+
 ### Changed
 
 - Removed `createApiClientWithApiKey` helper from runtime package. You must use
   `createApiClient` for compatibility with new service tokens.
+
+### Fixed
+
+- Pass `onFailure` function to children of `IntegrationLogger`
 
 ## 3.8.0 - 2020-10-26
 
