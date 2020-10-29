@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 4.0.0 - 2020-10-29
+
 ### Changed
 
 - Removed `createApiClientWithApiKey` helper from runtime package. You must use
