@@ -245,6 +245,7 @@ export class IntegrationLogger extends EventEmitter
     const childLogger = new IntegrationLogger({
       errorSet: this._errorSet,
       logger: this._logger.child(options, simple),
+      onFailure: this.onFailure,
     });
 
     // pass events to parent
@@ -326,12 +327,12 @@ export class IntegrationLogger extends EventEmitter
     const { eventName, errorId, err, description } = options;
     if (shouldReportErrorToOperator(err)) {
       this.error({ errorId, err }, description);
+      this.onFailure({ err });
     } else {
       this.warn({ errorId, err }, description);
     }
 
     this.publishEvent({ name: eventName, description });
-    this.onFailure({ err });
   }
 
   publishMetric(metric: Omit<Metric, 'timestamp'>) {
