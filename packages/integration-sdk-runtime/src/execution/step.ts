@@ -1,21 +1,21 @@
 import uniq from 'lodash/uniq';
 
 import {
+  ExecutionContext,
+  IntegrationStepResult,
+  InvocationConfig,
+  KeyNormalizationFunction,
+  PartialDatasets,
+  Step,
+  StepExecutionContext,
+  StepResultStatus,
+  StepStartStates,
+} from '@jupiterone/integration-sdk-core';
+
+import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from './dependencyGraph';
-
-import {
-  InvocationConfig,
-  ExecutionContext,
-  StepExecutionContext,
-  IntegrationStepResult,
-  StepResultStatus,
-  StepStartStates,
-  PartialDatasets,
-  Step,
-  KeyNormalizationFunction,
-} from '@jupiterone/integration-sdk-core';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
@@ -54,16 +54,22 @@ export function determinePartialDatasetsFromStepExecutionResults(
 ): PartialDatasets {
   return stepResults.reduce(
     (partialDatasets: PartialDatasets, stepResult: IntegrationStepResult) => {
+      const stepPartialDatasets: PartialDatasets = {
+        types: [],
+        ...stepResult.partialDatasets,
+      };
+
       if (
         stepResult.status === StepResultStatus.FAILURE ||
         stepResult.status ===
           StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
       ) {
-        partialDatasets.types = uniq(
-          partialDatasets.types.concat(stepResult.declaredTypes),
-        );
+        stepPartialDatasets.types.push(...stepResult.declaredTypes);
       }
-      return partialDatasets;
+
+      return {
+        types: uniq(partialDatasets.types.concat(stepPartialDatasets.types)),
+      };
     },
     { types: [] },
   );

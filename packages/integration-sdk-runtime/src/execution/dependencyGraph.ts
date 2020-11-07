@@ -90,7 +90,7 @@ export function executeStepDependencyGraph<
   function isStepEnabled(stepId: string) {
     return stepStartStates[stepId].disabled === false;
   }
-  StepResultStatus;
+
   /**
    * Updates the result of a step result with the provided satus
    */

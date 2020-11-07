@@ -1,10 +1,13 @@
+import { RelationshipClass } from '@jupiterone/data-model';
+
 import {
   ExecutionContext,
   IntegrationStepExecutionContext,
   StepExecutionContext,
 } from './context';
 import { IntegrationInstanceConfig } from './instance';
-import { RelationshipClass } from '@jupiterone/data-model';
+import { PartialDatasets } from './partialDatasets';
+
 export interface StepStartState {
   /**
    * Indicates the step is disabled and should not be
@@ -97,6 +100,21 @@ export interface StepGraphObjectMetadataProperties {
    * used to generate documentation.
    */
   relationships: StepRelationshipMetadata[];
+
+  /**
+   * Indicates the graph object types the step ingests that are always partial
+   * datasets.
+   *
+   * This is useful in steps that ingest an ever growing list of entities and
+   * their relationships, ensuring the synchronization system does not delete
+   * older data that will not be seen as ingestion progresses through the list
+   * over numerous executions. For example:
+   *
+   * * Vulnerability findings
+   * * SCM pull requests
+   * * Ticket systems
+   */
+  partialDatasets?: PartialDatasets[];
 }
 
 export type StepMetadata = StepGraphObjectMetadataProperties & {
