@@ -1,29 +1,31 @@
 import {
+  ExecutionContext,
   IntegrationInstance,
   IntegrationInvocationConfig,
-  IntegrationStepResult,
-  PartialDatasets,
-  InvocationConfig,
   IntegrationLogger,
-  ExecutionContext,
+  IntegrationStepResult,
+  InvocationConfig,
+  PartialDatasets,
   StepExecutionContext,
   StepStartStates,
 } from '@jupiterone/integration-sdk-core';
 
 import {
+  getRootStorageDirectorySize,
   removeStorageDirectory,
   writeJsonToPath,
-  getRootStorageDirectorySize,
 } from '../fileSystem';
-import { createIntegrationInstanceForLocalExecution } from './instance';
 import { createIntegrationLogger } from '../logger';
+import { timeOperation } from '../metrics';
+import { FileSystemGraphObjectStore } from '../storage';
+import { createIntegrationInstanceForLocalExecution } from './instance';
+import { DuplicateKeyTracker } from './jobState';
 import {
   determinePartialDatasetsFromStepExecutionResults,
   executeSteps,
   getDefaultStepStartStates,
 } from './step';
 import { validateStepStartStates } from './validation';
-import { timeOperation } from '../metrics';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -34,6 +36,7 @@ export interface ExecuteIntegrationResult {
 
 interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
+  performContinuousUploads?: boolean;
 }
 
 /**
@@ -42,7 +45,7 @@ interface ExecuteIntegrationOptions {
  */
 export function executeIntegrationLocally(
   config: IntegrationInvocationConfig,
-  options?: { enableSchemaValidation?: boolean },
+  options?: ExecuteIntegrationOptions,
 ) {
   return executeIntegrationInstance(
     createIntegrationLogger({
@@ -70,7 +73,7 @@ export async function executeIntegrationInstance(
   config: IntegrationInvocationConfig,
   options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
-  if (options.enableSchemaValidation) {
+  if (options.enableSchemaValidation === true) {
     process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
   }
 
@@ -116,12 +119,15 @@ export async function executeWithContext<
 
   validateStepStartStates(config.integrationSteps, stepStartStates);
 
-  const integrationStepResults = await executeSteps(
-    context,
-    config.integrationSteps,
+  const integrationStepResults = await executeSteps({
+    executionContext: context,
+    integrationSteps: config.integrationSteps,
     stepStartStates,
-    config.normalizeGraphObjectKey,
-  );
+    duplicateKeyTracker: new DuplicateKeyTracker(
+      config.normalizeGraphObjectKey,
+    ),
+    graphObjectStore: new FileSystemGraphObjectStore(),
+  });
 
   const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
     integrationStepResults,
