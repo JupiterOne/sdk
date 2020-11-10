@@ -1,18 +1,19 @@
-import pMap from 'p-map';
 import { Sema } from 'async-sema';
+import pMap from 'p-map';
 
 import {
   Entity,
-  Relationship,
   GraphObjectFilter,
   GraphObjectIteratee,
+  GraphObjectLookupKey,
   IntegrationDuplicateKeyError,
   IntegrationMissingKeyError,
-  GraphObjectLookupKey,
+  Relationship,
 } from '@jupiterone/integration-sdk-core';
 
-import { flushDataToDisk } from './flushDataToDisk';
+import { GraphObjectStore } from '../types';
 import { BucketMap } from './BucketMap';
+import { flushDataToDisk } from './flushDataToDisk';
 import {
   iterateEntityTypeIndex,
   iterateRelationshipTypeIndex,
@@ -24,7 +25,7 @@ export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subje
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
-export class FileSystemGraphObjectStore {
+export class FileSystemGraphObjectStore implements GraphObjectStore {
   semaphore: Sema;
   entityStorageMap: BucketMap<Entity>;
   relationshipStorageMap: BucketMap<Relationship>;
