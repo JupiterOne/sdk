@@ -21,7 +21,12 @@ import {
   StepResultStatus,
   IntegrationInvocationValidationFunction,
   IntegrationValidationError,
+  Entity,
+  Relationship,
+  createDirectRelationship,
+  RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
+import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
 
 jest.mock('fs');
 
@@ -723,6 +728,118 @@ describe('executeIntegrationInstance', () => {
       config.invocationConfig,
     );
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+  });
+
+  test('should allow passing custom graphObjectStore', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+              {
+                resourceName: 'The Test 1',
+                _type: 'test1',
+                _class: 'Test1',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              const fromEntity = await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const toEntity = await jobState.addEntity({
+                _key: 'test1',
+                _type: 'test1',
+                _class: 'Test1',
+              });
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: fromEntity,
+                  to: toEntity,
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    const graphObjectStore = new InMemoryGraphObjectStore();
+
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+      {
+        graphObjectStore,
+      },
+    );
+
+    const entities: Entity[] = [];
+    const relationships: Relationship[] = [];
+
+    await graphObjectStore.iterateEntities(
+      {
+        _type: 'test',
+      },
+      (e) => {
+        entities.push(e);
+      },
+    );
+
+    await graphObjectStore.iterateEntities(
+      {
+        _type: 'test1',
+      },
+      (e) => {
+        entities.push(e);
+      },
+    );
+
+    await graphObjectStore.iterateRelationships(
+      {
+        _type: 'test_has_test1',
+      },
+      (r) => {
+        relationships.push(r);
+      },
+    );
+
+    expect(entities).toEqual([
+      {
+        _key: 'test',
+        _type: 'test',
+        _class: 'Test',
+      },
+      {
+        _key: 'test1',
+        _type: 'test1',
+        _class: 'Test1',
+      },
+    ]);
+
+    expect(relationships).toEqual([
+      {
+        _key: 'test|has|test1',
+        _type: 'test_has_test1',
+        _class: 'HAS',
+        _fromEntityKey: 'test',
+        _toEntityKey: 'test1',
+        displayName: 'HAS',
+      },
+    ]);
   });
 });
 

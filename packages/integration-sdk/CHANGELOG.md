@@ -15,6 +15,8 @@ and this project adheres to
   `lastExecution` and `lastSuccessfulExecution`. Integrations may use this to
   limit data ingestion.
 
+- Allow `executeIntegrationInstance` to take a custom `GraphObjectStore`
+
 ### Changed
 
 - Refactored some tests

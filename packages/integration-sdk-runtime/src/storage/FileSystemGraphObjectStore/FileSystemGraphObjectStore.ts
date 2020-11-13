@@ -9,9 +9,9 @@ import {
   IntegrationDuplicateKeyError,
   IntegrationMissingKeyError,
   Relationship,
+  GraphObjectStore,
 } from '@jupiterone/integration-sdk-core';
 
-import { GraphObjectStore } from '../types';
 import { BucketMap } from './BucketMap';
 import { flushDataToDisk } from './flushDataToDisk';
 import {
