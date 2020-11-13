@@ -16,6 +16,8 @@ and this project adheres to
   limit data ingestion.
 
 - Allow `executeIntegrationInstance` to take a custom `GraphObjectStore`
+- Expose `BucketMap` and `FileSystemGraphObjectStore` from
+  `@jupiterone/integration-sdk-runtime`
 
 ### Changed
 
