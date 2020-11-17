@@ -1,5 +1,6 @@
 import {
   ExecutionContext,
+  ExecutionHistory,
   IntegrationInstance,
   IntegrationInvocationConfig,
   IntegrationLogger,
@@ -36,7 +37,7 @@ export interface ExecuteIntegrationResult {
 
 interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
-  performContinuousUploads?: boolean;
+  executionHistory?: ExecutionHistory;
 }
 
 /**
@@ -68,7 +69,7 @@ export function executeIntegrationLocally(
  * Starts execution of an integration instance.
  */
 export async function executeIntegrationInstance(
-  logger: IntegrationLogger | IntegrationLogger,
+  logger: IntegrationLogger,
   instance: IntegrationInstance,
   config: IntegrationInvocationConfig,
   options: ExecuteIntegrationOptions = {},
@@ -85,6 +86,7 @@ export async function executeIntegrationInstance(
         {
           instance,
           logger,
+          history: options.executionHistory,
         },
         config,
       ),

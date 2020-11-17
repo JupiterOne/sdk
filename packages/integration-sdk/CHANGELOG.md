@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- `ExecutionContext.history?: ExecutionHistory` provides information about the
+  `lastExecution` and `lastSuccessfulExecution`. Integrations may use this to
+  limit data ingestion.
+
 ## 4.0.1 - 2020-10-30
 
 - Upgrade `@jupiterone/data-model@^0.15.0`
