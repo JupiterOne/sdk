@@ -15,6 +15,10 @@ and this project adheres to
   `lastExecution` and `lastSuccessfulExecution`. Integrations may use this to
   limit data ingestion.
 
+- Allow `executeIntegrationInstance` to take a custom `GraphObjectStore`
+- Expose `BucketMap` and `FileSystemGraphObjectStore` from
+  `@jupiterone/integration-sdk-runtime`
+
 ### Changed
 
 - Refactored some tests

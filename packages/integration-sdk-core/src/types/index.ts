@@ -8,6 +8,7 @@ export * from './step';
 export * from './validation';
 export * from './synchronization';
 export * from './metric';
+export * from './storage';
 
 export * from './persistedObject';
 export * from './entity';
