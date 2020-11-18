@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 4.1.0 - 2020-11-18
+
 ### Added
 
 - `ExecutionContext.history?: ExecutionHistory` provides information about the
@@ -17,8 +19,9 @@ and this project adheres to
 - Allow `executeIntegrationInstance` to take a custom `GraphObjectStore`
 - Expose `BucketMap` and `FileSystemGraphObjectStore` from
   `@jupiterone/integration-sdk-runtime`
-- Steps may declare `partialDatasets` in their metadata to indicate that they
-  will never ingest a complete set of some `_type`s of entities/relationships.
+- Steps may declare that a type of graph object will be `partial` to indicate
+  that they will never ingest a complete set of some `_type`s of
+  entities/relationships.
 
 ### Changed
 
