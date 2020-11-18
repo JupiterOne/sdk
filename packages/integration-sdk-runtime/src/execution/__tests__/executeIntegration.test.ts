@@ -21,7 +21,12 @@ import {
   StepResultStatus,
   IntegrationInvocationValidationFunction,
   IntegrationValidationError,
+  Entity,
+  Relationship,
+  createDirectRelationship,
+  RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
+import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
 
 jest.mock('fs');
 
@@ -31,107 +36,143 @@ function sleep(ms: number) {
   });
 }
 
+export interface InstanceConfigurationData {
+  validateInvocation: IntegrationInvocationValidationFunction;
+  instance: IntegrationInstance;
+  invocationConfig: IntegrationInvocationConfig;
+  logger: IntegrationLogger;
+}
+
+function createInstanceConfiguration(
+  options?: Partial<InstanceConfigurationData>,
+): InstanceConfigurationData {
+  const validateInvocation: IntegrationInvocationValidationFunction =
+    options?.validateInvocation || jest.fn();
+
+  const invocationConfig: IntegrationInvocationConfig = {
+    validateInvocation,
+    integrationSteps: [],
+    ...options?.invocationConfig,
+  };
+
+  return {
+    validateInvocation,
+    invocationConfig,
+    instance: LOCAL_INTEGRATION_INSTANCE,
+    logger: createIntegrationLogger({
+      name: 'integration-name',
+      invocationConfig,
+    }),
+    ...options,
+  };
+}
+
 afterEach(() => {
   vol.reset();
   delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
 });
 
 describe('executeIntegrationInstance', () => {
-  let validateInvocation: IntegrationInvocationValidationFunction;
-  let instance: IntegrationInstance;
-  let invocationConfig: IntegrationInvocationConfig;
-  let logger: IntegrationLogger;
-
-  const execute = () =>
-    executeIntegrationInstance(logger, instance, invocationConfig);
-
-  beforeEach(() => {
-    validateInvocation = jest.fn();
-
-    instance = LOCAL_INTEGRATION_INSTANCE;
-
-    invocationConfig = {
-      validateInvocation,
-      integrationSteps: [],
-    };
-
-    logger = createIntegrationLogger({
-      name: 'integration-name',
-      invocationConfig,
-    });
-  });
-
   test('executes validateInvocation function if provided in config', async () => {
-    await execute();
+    const config = createInstanceConfiguration();
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
 
     const expectedContext: IntegrationExecutionContext = {
-      instance,
-      logger,
+      instance: config.instance,
+      logger: config.logger,
     };
 
-    expect(validateInvocation).toHaveBeenCalledWith(expectedContext);
+    expect(config.validateInvocation).toHaveBeenCalledWith(expectedContext);
   });
 
   test('logs validation error if validation fails', async () => {
     const error = new IntegrationValidationError(
       'Failed to auth with provider',
     );
-    invocationConfig.validateInvocation = jest.fn().mockRejectedValue(error);
 
-    const validationFailureSpy = jest.spyOn(logger, 'validationFailure');
+    const config = createInstanceConfiguration({
+      validateInvocation: jest.fn().mockRejectedValue(error),
+    });
 
-    await expect(execute()).rejects.toThrow(/Failed to auth with provider/);
+    const validationFailureSpy = jest.spyOn(config.logger, 'validationFailure');
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).rejects.toThrow(/Failed to auth with provider/);
 
     expect(validationFailureSpy).toHaveBeenCalledTimes(1);
     expect(validationFailureSpy).toHaveBeenCalledWith(error);
   });
 
   test('throws validation errors on invalid output of getStepStartStates', async () => {
-    invocationConfig.getStepStartStates = jest.fn().mockReturnValue({});
-    invocationConfig.integrationSteps = [
-      {
-        id: 'my-step',
-        name: 'My awesome step',
-        entities: [
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        getStepStartStates: jest.fn().mockReturnValue({}),
+        integrationSteps: [
           {
-            resourceName: 'The Test',
-            _type: 'test',
-            _class: 'Test',
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
           },
         ],
-        relationships: [],
-        executionHandler: jest.fn(),
       },
-    ];
-    const validationFailureSpy = jest.spyOn(logger, 'validationFailure');
+    });
 
-    await expect(execute()).rejects.toThrow(/Start states not found for/);
-
+    const validationFailureSpy = jest.spyOn(config.logger, 'validationFailure');
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).rejects.toThrow(/Start states not found for/);
     // This error is not one the user can fix, we just crash
     expect(validationFailureSpy).not.toHaveBeenCalled();
   });
 
   test('returns integration step results and metadata about partial datasets', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest.fn(),
-        },
-      ],
-    };
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
 
-    await expect(execute()).resolves.toEqual({
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
       integrationStepResults: [
         {
           id: 'my-step',
@@ -150,28 +191,32 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('publishes disk usage metric', async () => {
-    const publishMetricSpy = jest.spyOn(logger, 'publishMetric');
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
 
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest.fn(),
-        },
-      ],
-    };
-
-    await execute();
+    const publishMetricSpy = jest.spyOn(config.logger, 'publishMetric');
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
 
     expect(publishMetricSpy).toHaveBeenCalledWith({
       name: 'disk-usage',
@@ -181,28 +226,35 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('populates partialDatasets type for failed steps', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest
-            .fn()
-            .mockRejectedValue(new Error('something broke')),
-        },
-      ],
-    };
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something broke')),
+          },
+        ],
+      },
+    });
 
-    await expect(execute()).resolves.toEqual({
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
       integrationStepResults: [
         {
           id: 'my-step',
@@ -221,42 +273,49 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('includes types for partially successful steps steps in partial datasets', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_a',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest
-            .fn()
-            .mockRejectedValue(new Error('something broke')),
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_b',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          dependsOn: ['my-step-a'],
-          executionHandler: jest.fn(),
-        },
-      ],
-    };
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_a',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something broke')),
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_b',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            dependsOn: ['my-step-a'],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
 
-    await expect(execute()).resolves.toEqual({
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
       integrationStepResults: [
         {
           id: 'my-step-a',
@@ -283,45 +342,52 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('does not include partial data sets for disabled steps', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      getStepStartStates: () => ({
-        'my-step-b': { disabled: true },
-        'my-step-a': { disabled: false },
-      }),
-      integrationSteps: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_a',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest
-            .fn()
-            .mockRejectedValue(new Error('something broke')),
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_b',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest.fn(),
-        },
-      ],
-    };
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        getStepStartStates: () => ({
+          'my-step-b': { disabled: true },
+          'my-step-a': { disabled: false },
+        }),
+        integrationSteps: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_a',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something broke')),
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_b',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
 
-    await expect(execute()).resolves.toEqual({
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
       integrationStepResults: [
         {
           id: 'my-step-a',
@@ -347,49 +413,56 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('does not include partial data sets for disabled steps in async "getStepStartStates"', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      getStepStartStates: async () => {
-        await sleep(5);
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        getStepStartStates: async () => {
+          await sleep(5);
 
-        return {
-          'my-step-b': { disabled: true },
-          'my-step-a': { disabled: false },
-        };
+          return {
+            'my-step-b': { disabled: true },
+            'my-step-a': { disabled: false },
+          };
+        },
+        integrationSteps: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_a',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something broke')),
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_b',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+        ],
       },
-      integrationSteps: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_a',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest
-            .fn()
-            .mockRejectedValue(new Error('something broke')),
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_b',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest.fn(),
-        },
-      ],
-    };
+    });
 
-    await expect(execute()).resolves.toEqual({
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
       integrationStepResults: [
         {
           id: 'my-step-a',
@@ -426,32 +499,37 @@ describe('executeIntegrationInstance', () => {
       [previousContentFilePath]: '{ "entities": [] }',
     });
 
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test',
-              _class: 'Test',
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+              });
             },
-          ],
-          relationships: [],
-          async executionHandler({ jobState }) {
-            await jobState.addEntity({
-              _key: 'test',
-              _type: 'test',
-              _class: 'Test',
-            });
           },
-        },
-      ],
-    };
+        ],
+      },
+    });
 
-    await execute();
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
 
     // file should no longer exist
     await expect(fs.readFile(previousContentFilePath)).rejects.toThrow(
@@ -472,41 +550,42 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('writes results to summary.json in storage directory', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest.fn(),
-        },
-        {
-          id: 'my-step-2',
-          name: 'My awesome second step',
-          entities: [
-            {
-              resourceName: 'The Test',
-              _type: 'test_2',
-              _class: 'Test',
-            },
-          ],
-          relationships: [],
-          executionHandler: jest
-            .fn()
-            .mockRejectedValue(new Error('something went wrong')),
-        },
-      ],
-    };
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+          {
+            id: 'my-step-2',
+            name: 'My awesome second step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_2',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something went wrong')),
+          },
+        ],
+      },
+    });
 
-    const expectedResults = {
+    const expectedResults: ExecuteIntegrationResult = {
       integrationStepResults: [
         {
           id: 'my-step',
@@ -530,7 +609,13 @@ describe('executeIntegrationInstance', () => {
       },
     };
 
-    await expect(execute()).resolves.toEqual(expectedResults);
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual(expectedResults);
 
     const writtenSummary = await readJsonFromPath<ExecuteIntegrationResult>(
       path.resolve(getRootStorageDirectory(), 'summary.json'),
@@ -540,88 +625,221 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('throws error if duplicate key is found within same step', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'a',
-          name: 'a',
-          entities: [],
-          relationships: [],
-          async executionHandler({ jobState }) {
-            await jobState.addEntities([
-              {
-                _key: 'key_a',
-                _type: 'duplicate_entity',
-                _class: 'DuplicateEntity',
-              },
-              {
-                _key: 'key_a',
-                _type: 'duplicate_entity',
-                _class: 'DuplicateEntity',
-              },
-            ]);
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'a',
+            name: 'a',
+            entities: [],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntities([
+                {
+                  _key: 'key_a',
+                  _type: 'duplicate_entity',
+                  _class: 'DuplicateEntity',
+                },
+                {
+                  _key: 'key_a',
+                  _type: 'duplicate_entity',
+                  _class: 'DuplicateEntity',
+                },
+              ]);
+            },
           },
-        },
-      ],
-    };
+        ],
+      },
+    });
 
-    await expect(execute()).rejects.toThrow(
-      /Duplicate _key detected \(_key=key_a\)/,
-    );
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).rejects.toThrow(/Duplicate _key detected \(_key=key_a\)/);
   });
 
   test('throws error if duplicate key is found across steps', async () => {
-    invocationConfig = {
-      ...invocationConfig,
-      integrationSteps: [
-        {
-          id: 'a',
-          name: 'a',
-          entities: [],
-          relationships: [],
-          async executionHandler({ jobState }) {
-            await jobState.addEntity({
-              _key: 'key_a',
-              _type: 'duplicate_entity',
-              _class: 'DuplicateEntity',
-            });
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'a',
+            name: 'a',
+            entities: [],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'key_a',
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+              });
+            },
           },
-        },
-        {
-          id: 'b',
-          name: 'b',
-          entities: [],
-          relationships: [],
-          async executionHandler({ jobState }) {
-            await jobState.addEntity({
-              _key: 'key_a',
-              _type: 'duplicate_entity',
-              _class: 'DuplicateEntity',
-            });
+          {
+            id: 'b',
+            name: 'b',
+            entities: [],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'key_a',
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+              });
+            },
           },
-        },
-      ],
-    };
+        ],
+      },
+    });
 
-    await expect(execute()).rejects.toThrow(
-      /Duplicate _key detected \(_key=key_a\)/,
-    );
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).rejects.toThrow(/Duplicate _key detected \(_key=key_a\)/);
   });
 
   test('allows graph object schema validation to be enabled via options', async () => {
+    const config = createInstanceConfiguration();
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
 
-    await executeIntegrationInstance(logger, instance, invocationConfig, {
-      enableSchemaValidation: true,
-    });
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+      {
+        enableSchemaValidation: true,
+      },
+    );
 
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
   });
 
   test('does not turn on schema validation if enableSchemaValidation is not set', async () => {
-    await executeIntegrationInstance(logger, instance, invocationConfig);
+    const config = createInstanceConfiguration();
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+  });
+
+  test('should allow passing custom graphObjectStore', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+              {
+                resourceName: 'The Test 1',
+                _type: 'test1',
+                _class: 'Test1',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              const fromEntity = await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const toEntity = await jobState.addEntity({
+                _key: 'test1',
+                _type: 'test1',
+                _class: 'Test1',
+              });
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: fromEntity,
+                  to: toEntity,
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    const graphObjectStore = new InMemoryGraphObjectStore();
+
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+      {
+        graphObjectStore,
+      },
+    );
+
+    const entities: Entity[] = [];
+    const relationships: Relationship[] = [];
+
+    await graphObjectStore.iterateEntities(
+      {
+        _type: 'test',
+      },
+      (e) => {
+        entities.push(e);
+      },
+    );
+
+    await graphObjectStore.iterateEntities(
+      {
+        _type: 'test1',
+      },
+      (e) => {
+        entities.push(e);
+      },
+    );
+
+    await graphObjectStore.iterateRelationships(
+      {
+        _type: 'test_has_test1',
+      },
+      (r) => {
+        relationships.push(r);
+      },
+    );
+
+    expect(entities).toEqual([
+      {
+        _key: 'test',
+        _type: 'test',
+        _class: 'Test',
+      },
+      {
+        _key: 'test1',
+        _type: 'test1',
+        _class: 'Test1',
+      },
+    ]);
+
+    expect(relationships).toEqual([
+      {
+        _key: 'test|has|test1',
+        _type: 'test_has_test1',
+        _class: 'HAS',
+        _fromEntityKey: 'test',
+        _toEntityKey: 'test1',
+        displayName: 'HAS',
+      },
+    ]);
   });
 });
 

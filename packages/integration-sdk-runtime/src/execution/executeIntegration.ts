@@ -18,7 +18,7 @@ import {
 } from '../fileSystem';
 import { createIntegrationLogger } from '../logger';
 import { timeOperation } from '../metrics';
-import { FileSystemGraphObjectStore } from '../storage';
+import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 import { DuplicateKeyTracker } from './jobState';
 import {
@@ -38,6 +38,11 @@ export interface ExecuteIntegrationResult {
 interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   executionHistory?: ExecutionHistory;
+  graphObjectStore?: GraphObjectStore;
+}
+
+interface ExecuteWithContextOptions {
+  graphObjectStore?: GraphObjectStore;
 }
 
 /**
@@ -89,6 +94,9 @@ export async function executeIntegrationInstance(
           history: options.executionHistory,
         },
         config,
+        {
+          graphObjectStore: options.graphObjectStore,
+        },
       ),
   });
 }
@@ -103,6 +111,7 @@ export async function executeWithContext<
 >(
   context: TExecutionContext,
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
+  options: ExecuteWithContextOptions = {},
 ): Promise<ExecuteIntegrationResult> {
   await removeStorageDirectory();
 
@@ -121,6 +130,8 @@ export async function executeWithContext<
 
   validateStepStartStates(config.integrationSteps, stepStartStates);
 
+  const { graphObjectStore = new FileSystemGraphObjectStore() } = options;
+
   const integrationStepResults = await executeSteps({
     executionContext: context,
     integrationSteps: config.integrationSteps,
@@ -128,7 +139,7 @@ export async function executeWithContext<
     duplicateKeyTracker: new DuplicateKeyTracker(
       config.normalizeGraphObjectKey,
     ),
-    graphObjectStore: new FileSystemGraphObjectStore(),
+    graphObjectStore,
   });
 
   const partialDatasets = determinePartialDatasetsFromStepExecutionResults(

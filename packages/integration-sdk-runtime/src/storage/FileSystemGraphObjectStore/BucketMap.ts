@@ -6,7 +6,11 @@
  * and also tracks the total count of objects stored.
  */
 export class BucketMap<T = any> extends Map<string, T[]> {
-  totalItemCount = 0;
+  private internalTotalItemCount = 0;
+
+  get totalItemCount() {
+    return this.internalTotalItemCount;
+  }
 
   add(key: string, values: T[]) {
     const existingValues = this.get(key);
@@ -16,7 +20,7 @@ export class BucketMap<T = any> extends Map<string, T[]> {
   set(key: string, values: T[]) {
     const existingItemCount = this.get(key)?.length ?? 0;
     super.set(key, values);
-    this.totalItemCount += values.length - existingItemCount;
+    this.internalTotalItemCount += values.length - existingItemCount;
     return this;
   }
 
@@ -24,7 +28,7 @@ export class BucketMap<T = any> extends Map<string, T[]> {
     const existingItemCount = this.get(key)?.length ?? 0;
     const deleteResult = super.delete(key);
 
-    this.totalItemCount -= existingItemCount;
+    this.internalTotalItemCount -= existingItemCount;
 
     return deleteResult;
   }

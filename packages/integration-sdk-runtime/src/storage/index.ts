@@ -1,2 +1,2 @@
-export { GraphObjectStore } from './types';
+export { GraphObjectStore } from '@jupiterone/integration-sdk-core';
 export * from './FileSystemGraphObjectStore';
