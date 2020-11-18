@@ -64,8 +64,16 @@ export function determinePartialDatasetsFromStepExecutionResults(
     (partialDatasets: PartialDatasets, stepResult: IntegrationStepResult) => {
       const stepPartialDatasets: PartialDatasets = {
         types: [],
-        ...stepResult.partialDatasets,
       };
+
+      if (
+        stepResult.partialDatasets?.length &&
+        stepResult.status !== StepResultStatus.DISABLED
+      ) {
+        for (const dataset of stepResult.partialDatasets) {
+          stepPartialDatasets.types.push(...dataset.types);
+        }
+      }
 
       if (
         stepResult.status === StepResultStatus.FAILURE ||

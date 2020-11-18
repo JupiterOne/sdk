@@ -352,6 +352,7 @@ function buildStepResultsMap<
           dependsOn: step.dependsOn,
           declaredTypes: getDeclaredTypesInStep(step),
           encounteredTypes: [],
+          partialDatasets: step.partialDatasets,
           status:
             stepStartStates[step.id].disabled || hasDisabledDependencies
               ? StepResultStatus.DISABLED
