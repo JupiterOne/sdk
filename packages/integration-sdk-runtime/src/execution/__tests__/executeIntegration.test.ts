@@ -792,6 +792,99 @@ describe('executeIntegrationInstance', () => {
     expect(writtenSummary).toEqual(expectedResults);
   });
 
+  test('includes step partial datasets when all success', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_1',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+            partialDatasets: [
+              {
+                types: ['test_1b'],
+              },
+            ],
+          },
+          {
+            id: 'my-step-2',
+            name: 'My awesome second step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_2',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+            partialDatasets: [
+              {
+                types: ['test_2b'],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const expectedResults: ExecuteIntegrationResult = {
+      integrationStepResults: [
+        {
+          id: 'my-step',
+          name: 'My awesome step',
+          declaredTypes: ['test_1'],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+          partialDatasets: [
+            {
+              types: ['test_1b'],
+            },
+          ],
+        },
+        {
+          id: 'my-step-2',
+          name: 'My awesome second step',
+          declaredTypes: ['test_2'],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+          partialDatasets: [
+            {
+              types: ['test_2b'],
+            },
+          ],
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['test_1b', 'test_2b'],
+        },
+      },
+    };
+
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual(expectedResults);
+
+    const writtenSummary = await readJsonFromPath<ExecuteIntegrationResult>(
+      path.resolve(getRootStorageDirectory(), 'summary.json'),
+    );
+
+    expect(writtenSummary).toEqual(expectedResults);
+  });
+
   test('throws error if duplicate key is found within same step', async () => {
     const config = createInstanceConfiguration({
       invocationConfig: {
