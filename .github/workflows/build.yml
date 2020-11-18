@@ -57,7 +57,7 @@ jobs:
           if git describe --exact-match --match "@*.*.*" HEAD^2
           then
             echo "Found version commit tag. Publishing."
-            echo "::set-env name=publish::true"
+            echo "publish=true" >> $GITHUB_ENV
           else
             echo "Version commit tag not found. Not publishing."
           fi
