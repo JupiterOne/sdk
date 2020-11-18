@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Stop handling `IntegrationDuplicateKeyError` as fatal
+
 ## 4.1.0 - 2020-11-18
 
 ### Added
