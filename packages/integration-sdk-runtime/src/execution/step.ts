@@ -66,13 +66,8 @@ export function determinePartialDatasetsFromStepExecutionResults(
         types: [],
       };
 
-      if (
-        stepResult.partialDatasets?.length &&
-        stepResult.status !== StepResultStatus.DISABLED
-      ) {
-        for (const dataset of stepResult.partialDatasets) {
-          stepPartialDatasets.types.push(...dataset.types);
-        }
+      if (stepResult.status !== StepResultStatus.DISABLED) {
+        stepPartialDatasets.types.push(...stepResult.partialTypes);
       }
 
       if (

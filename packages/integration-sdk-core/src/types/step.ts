@@ -6,7 +6,6 @@ import {
   StepExecutionContext,
 } from './context';
 import { IntegrationInstanceConfig } from './instance';
-import { PartialDatasets } from './partialDatasets';
 
 export interface StepStartState {
   /**
@@ -52,14 +51,18 @@ export type IntegrationStepResult = Omit<
   status: StepResultStatus;
 
   /**
-   * Entity or relatioship types that were declared
-   * when the step was configured.
+   * Entity or relationship types declared by the step definition.
    */
   declaredTypes: string[];
 
   /**
-   * Entity or relationship types that were encountered during
-   * the step's execution.
+   * Entity or relationship types declared to be partial collections by the step
+   * definition.
+   */
+  partialTypes: string[];
+
+  /**
+   * Entity or relationship types encountered during step execution.
    */
   encounteredTypes: string[];
 };
@@ -70,6 +73,21 @@ export type IntegrationStep<
 
 export interface StepGraphObjectMetadata {
   _type: string;
+
+  /**
+   * Indicates the set of data represented by this `_type` should always be
+   * considered a partial dataset.
+   *
+   * This is useful in steps that ingest an ever growing collection of a type of
+   * data, ensuring the synchronization system does not delete older data that
+   * will not be seen as ingestion progresses through the collection over
+   * numerous executions. For example:
+   *
+   * * Vulnerability findings
+   * * SCM pull requests
+   * * Ticket systems
+   */
+  partial?: boolean;
 }
 
 export interface StepEntityMetadata extends StepGraphObjectMetadata {
@@ -100,21 +118,6 @@ export interface StepGraphObjectMetadataProperties {
    * used to generate documentation.
    */
   relationships: StepRelationshipMetadata[];
-
-  /**
-   * Indicates the graph object types the step ingests that are always partial
-   * datasets.
-   *
-   * This is useful in steps that ingest an ever growing list of entities and
-   * their relationships, ensuring the synchronization system does not delete
-   * older data that will not be seen as ingestion progresses through the list
-   * over numerous executions. For example:
-   *
-   * * Vulnerability findings
-   * * SCM pull requests
-   * * Ticket systems
-   */
-  partialDatasets?: PartialDatasets[];
 }
 
 export type StepMetadata = StepGraphObjectMetadataProperties & {
