@@ -178,6 +178,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step',
           name: 'My awesome step',
           declaredTypes: ['test'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
         },
@@ -260,6 +261,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step',
           name: 'My awesome step',
           declaredTypes: ['test'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.FAILURE,
         },
@@ -272,7 +274,7 @@ describe('executeIntegrationInstance', () => {
     });
   });
 
-  test('includes types for partially successful steps steps in partial datasets', async () => {
+  test('includes types for partially successful steps in partial datasets', async () => {
     const config = createInstanceConfiguration({
       invocationConfig: {
         integrationSteps: [
@@ -321,6 +323,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-a',
           name: 'My awesome step',
           declaredTypes: ['test_a'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.FAILURE,
         },
@@ -328,6 +331,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-b',
           name: 'My awesome step',
           declaredTypes: ['test_b'],
+          partialTypes: [],
           encounteredTypes: [],
           dependsOn: ['my-step-a'],
           status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
@@ -341,7 +345,161 @@ describe('executeIntegrationInstance', () => {
     });
   });
 
-  test('does not include partial data sets for disabled steps', async () => {
+  test('includes partialTypes declared in subsequent step meta data when dependency failure', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_a',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something broke')),
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_b',
+                _class: 'Test',
+              },
+              {
+                resourceName: 'The Test',
+                _type: 'test_b2',
+                _class: 'Test',
+                partial: true
+              },
+            ],
+            relationships: [],
+            dependsOn: ['my-step-a'],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
+
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
+      integrationStepResults: [
+        {
+          id: 'my-step-a',
+          name: 'My awesome step',
+          declaredTypes: ['test_a'],
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.FAILURE,
+        },
+        {
+          id: 'my-step-b',
+          name: 'My awesome step',
+          declaredTypes: ['test_b', 'test_b2'],
+          encounteredTypes: [],
+          partialTypes: ['test_b2'],
+          dependsOn: ['my-step-a'],
+          status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['test_a', 'test_b2', 'test_b'],
+        },
+      },
+    });
+  });
+
+  test('includes partialTypes declared in failing step meta data', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_a',
+                _class: 'Test',
+              },
+              {
+                resourceName: 'The Test',
+                _type: 'test_a2',
+                _class: 'Test',
+                partial: true,
+              },
+            ],
+            relationships: [],
+            executionHandler: jest
+              .fn()
+              .mockRejectedValue(new Error('something broke')),
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test_b',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            dependsOn: ['my-step-a'],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
+
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual({
+      integrationStepResults: [
+        {
+          id: 'my-step-a',
+          name: 'My awesome step',
+          declaredTypes: ['test_a', 'test_a2'],
+          partialTypes: ['test_a2'],
+          encounteredTypes: [],
+          status: StepResultStatus.FAILURE,
+        },
+        {
+          id: 'my-step-b',
+          name: 'My awesome step',
+          declaredTypes: ['test_b'],
+          partialTypes: [],
+          encounteredTypes: [],
+          dependsOn: ['my-step-a'],
+          status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['test_a2', 'test_a', 'test_b'],
+        },
+      },
+    });
+  });
+
+  test('does not include partialTypes for disabled steps', async () => {
     const config = createInstanceConfiguration({
       invocationConfig: {
         getStepStartStates: () => ({
@@ -372,6 +530,7 @@ describe('executeIntegrationInstance', () => {
                 resourceName: 'The Test',
                 _type: 'test_b',
                 _class: 'Test',
+                partial: true,
               },
             ],
             relationships: [],
@@ -393,6 +552,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-a',
           name: 'My awesome step',
           declaredTypes: ['test_a'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.FAILURE,
         },
@@ -400,6 +560,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-b',
           name: 'My awesome step',
           declaredTypes: ['test_b'],
+          partialTypes: ['test_b'],
           encounteredTypes: [],
           status: StepResultStatus.DISABLED,
         },
@@ -468,6 +629,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-a',
           name: 'My awesome step',
           declaredTypes: ['test_a'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.FAILURE,
         },
@@ -475,6 +637,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-b',
           name: 'My awesome step',
           declaredTypes: ['test_b'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.DISABLED,
         },
@@ -591,6 +754,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step',
           name: 'My awesome step',
           declaredTypes: ['test'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
         },
@@ -598,6 +762,7 @@ describe('executeIntegrationInstance', () => {
           id: 'my-step-2',
           name: 'My awesome second step',
           declaredTypes: ['test_2'],
+          partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.FAILURE,
         },
@@ -605,6 +770,102 @@ describe('executeIntegrationInstance', () => {
       metadata: {
         partialDatasets: {
           types: ['test_2'],
+        },
+      },
+    };
+
+    await expect(
+      executeIntegrationInstance(
+        config.logger,
+        config.instance,
+        config.invocationConfig,
+      ),
+    ).resolves.toEqual(expectedResults);
+
+    const writtenSummary = await readJsonFromPath<ExecuteIntegrationResult>(
+      path.resolve(getRootStorageDirectory(), 'summary.json'),
+    );
+
+    expect(writtenSummary).toEqual(expectedResults);
+  });
+
+  test('includes step partialTypes when all success', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'Resource 1A',
+                _type: 'test_1',
+                _class: 'Test',
+              },
+              {
+                resourceName: 'Resource 1B',
+                _type: 'test_1b',
+                _class: 'Test',
+                partial: true
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+          {
+            id: 'my-step-2',
+            name: 'My awesome second step',
+            entities: [
+              {
+                resourceName: 'Resource 2A',
+                _type: 'test_2',
+                _class: 'Test',
+              },
+              {
+                resourceName: 'Resource 2B',
+                _type: 'test_2b',
+                _class: 'Test',
+                partial: true,
+              },
+            ],
+            relationships: [
+              {
+                sourceType: 'Resource 1A',
+                targetType: 'Resource 2A',
+                _type: 'test_3',
+                _class: RelationshipClass.HAS,
+                partial: true,
+              },
+
+            ],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
+
+    const expectedResults: ExecuteIntegrationResult = {
+      integrationStepResults: [
+        {
+          id: 'my-step',
+          name: 'My awesome step',
+          declaredTypes: ['test_1', 'test_1b'],
+          partialTypes: ['test_1b'],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'my-step-2',
+          name: 'My awesome second step',
+          declaredTypes: ['test_2', 'test_2b', 'test_3'],
+          partialTypes: ['test_2b', 'test_3'],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['test_1b', 'test_2b', 'test_3'],
         },
       },
     };

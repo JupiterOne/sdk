@@ -62,16 +62,25 @@ export function determinePartialDatasetsFromStepExecutionResults(
 ): PartialDatasets {
   return stepResults.reduce(
     (partialDatasets: PartialDatasets, stepResult: IntegrationStepResult) => {
+      const stepPartialDatasets: PartialDatasets = {
+        types: [],
+      };
+
+      if (stepResult.status !== StepResultStatus.DISABLED) {
+        stepPartialDatasets.types.push(...stepResult.partialTypes);
+      }
+
       if (
         stepResult.status === StepResultStatus.FAILURE ||
         stepResult.status ===
           StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE
       ) {
-        partialDatasets.types = uniq(
-          partialDatasets.types.concat(stepResult.declaredTypes),
-        );
+        stepPartialDatasets.types.push(...stepResult.declaredTypes);
       }
-      return partialDatasets;
+
+      return {
+        types: uniq(partialDatasets.types.concat(stepPartialDatasets.types)),
+      };
     },
     { types: [] },
   );

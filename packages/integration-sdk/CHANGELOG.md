@@ -14,10 +14,11 @@ and this project adheres to
 - `ExecutionContext.history?: ExecutionHistory` provides information about the
   `lastExecution` and `lastSuccessfulExecution`. Integrations may use this to
   limit data ingestion.
-
 - Allow `executeIntegrationInstance` to take a custom `GraphObjectStore`
 - Expose `BucketMap` and `FileSystemGraphObjectStore` from
   `@jupiterone/integration-sdk-runtime`
+- Steps may declare `partialDatasets` in their metadata to indicate that they
+  will never ingest a complete set of some `_type`s of entities/relationships.
 
 ### Changed
 
