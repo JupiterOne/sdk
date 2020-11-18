@@ -1,12 +1,12 @@
 import {
-  IntegrationDuplicateKeyError,
   Entity,
-  Relationship,
+  IntegrationDuplicateKeyError,
   JobState,
   KeyNormalizationFunction,
+  Relationship,
 } from '@jupiterone/integration-sdk-core';
 
-import { FileSystemGraphObjectStore } from '../storage';
+import { GraphObjectStore } from '../storage';
 
 export interface DuplicateKeyTrackerGraphObjectMetadata {
   _type: string;
@@ -76,7 +76,7 @@ export interface CreateStepJobStateParams {
   stepId: string;
   duplicateKeyTracker: DuplicateKeyTracker;
   typeTracker: TypeTracker;
-  graphObjectStore: FileSystemGraphObjectStore;
+  graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
 }
 

@@ -1,23 +1,23 @@
 import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
-import { FileSystemGraphObjectStore } from '../storage';
+import {
+  ExecutionContext,
+  IntegrationStepResult,
+  Step,
+  StepExecutionContext,
+  StepResultStatus,
+  StepStartStates,
+} from '@jupiterone/integration-sdk-core';
+
+import { timeOperation } from '../metrics';
+import { GraphObjectStore } from '../storage';
 import {
   createStepJobState,
   DuplicateKeyTracker,
   MemoryDataStore,
   TypeTracker,
 } from './jobState';
-import {
-  Step,
-  IntegrationStepResult,
-  StepResultStatus,
-  StepStartStates,
-  ExecutionContext,
-  StepExecutionContext,
-  KeyNormalizationFunction,
-} from '@jupiterone/integration-sdk-core';
-import { timeOperation } from '../metrics';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -64,12 +64,19 @@ export function buildStepDependencyGraph<
 export function executeStepDependencyGraph<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
->(
-  executionContext: TExecutionContext,
-  inputGraph: DepGraph<Step<TStepExecutionContext>>,
-  stepStartStates: StepStartStates,
-  normalizeGraphObjectKey?: KeyNormalizationFunction,
-): Promise<IntegrationStepResult[]> {
+>({
+  executionContext,
+  inputGraph,
+  stepStartStates,
+  duplicateKeyTracker,
+  graphObjectStore,
+}: {
+  executionContext: TExecutionContext;
+  inputGraph: DepGraph<Step<TStepExecutionContext>>;
+  stepStartStates: StepStartStates;
+  duplicateKeyTracker: DuplicateKeyTracker;
+  graphObjectStore: GraphObjectStore;
+}): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
   //
@@ -80,9 +87,6 @@ export function executeStepDependencyGraph<
 
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
-
-  const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
-  const graphObjectStore = new FileSystemGraphObjectStore();
 
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
   const dataStore = new MemoryDataStore();
@@ -305,7 +309,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
   context: ExecutionContext;
   duplicateKeyTracker: DuplicateKeyTracker;
   typeTracker: TypeTracker;
-  graphObjectStore: FileSystemGraphObjectStore;
+  graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
 }): TStepExecutionContext {
   const stepExecutionContext: StepExecutionContext = {

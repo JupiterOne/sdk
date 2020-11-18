@@ -6,25 +6,29 @@ import waitForExpect from 'wait-for-expect';
 
 import {
   Entity,
-  Relationship,
   IntegrationError,
   IntegrationExecutionContext,
   IntegrationInstance,
+  IntegrationLogger,
   IntegrationStep,
   IntegrationStepExecutionContext,
-  IntegrationLogger,
-  StepResultStatus,
   JobState,
+  Relationship,
+  StepResultStatus,
+  StepStartStates,
 } from '@jupiterone/integration-sdk-core';
+
+import {
+  createIntegrationLogger,
+  IntegrationLogger as IntegrationLoggerImpl,
+} from '../../logger';
+import { FileSystemGraphObjectStore } from '../../storage';
 import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from '../dependencyGraph';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
-import {
-  createIntegrationLogger,
-  IntegrationLogger as IntegrationLoggerImpl,
-} from '../../logger';
+import { DuplicateKeyTracker } from '../jobState';
 import { getDefaultStepStartStates } from '../step';
 
 jest.mock('fs');
@@ -120,6 +124,19 @@ describe('buildStepDependencyGraph', () => {
 });
 
 describe('executeStepDependencyGraph', () => {
+  async function executeSteps(
+    steps: IntegrationStep[],
+    stepStartStates: StepStartStates = getDefaultStepStartStates(steps),
+  ) {
+    return executeStepDependencyGraph({
+      executionContext,
+      inputGraph: buildStepDependencyGraph(steps),
+      stepStartStates,
+      duplicateKeyTracker: new DuplicateKeyTracker(),
+      graphObjectStore: new FileSystemGraphObjectStore(),
+    });
+  }
+
   test('executionHandler should have access to "jobState", "logger", and "instance" objects', async () => {
     let jobState: JobState;
     let instance: IntegrationInstance<{}>;
@@ -133,7 +150,7 @@ describe('executeStepDependencyGraph', () => {
       },
     );
 
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -141,14 +158,7 @@ describe('executeStepDependencyGraph', () => {
         relationships: [],
         executionHandler: executionHandlerSpy,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(executionHandlerSpy).toHaveBeenCalledTimes(1);
 
@@ -183,7 +193,9 @@ describe('executeStepDependencyGraph', () => {
 
     const spyC = jest.fn();
 
-    const steps: IntegrationStep[] = [
+    // NOTE: This is intentionally not awaiting because the `spyB` function
+    // never resolves.
+    void executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -224,17 +236,7 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['a', 'b'],
         executionHandler: spyC,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    // NOTE: This is intentionally not awaiting because the `spyB` function
-    // never resolves.
-    void executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     await waitForExpect(() => {
       expect(spyA).toHaveBeenCalledTimes(1);
@@ -253,7 +255,12 @@ describe('executeStepDependencyGraph', () => {
     const workingDirectory = `/test`;
     jest.spyOn(process, 'cwd').mockReturnValue(workingDirectory);
 
-    const steps: IntegrationStep[] = [
+    const warnSpy = jest.spyOn(executionContext.logger, 'warn');
+    jest
+      .spyOn(executionContext.logger, 'child')
+      .mockReturnValue(executionContext.logger);
+
+    const result = await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -275,19 +282,7 @@ describe('executeStepDependencyGraph', () => {
           ]);
         },
       },
-    ];
-
-    const warnSpy = jest.spyOn(executionContext.logger, 'warn');
-    jest
-      .spyOn(executionContext.logger, 'child')
-      .mockReturnValue(executionContext.logger);
-
-    const graph = buildStepDependencyGraph(steps);
-    const result = await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(result).toEqual([
       {
@@ -392,12 +387,7 @@ describe('executeStepDependencyGraph', () => {
       },
     ];
 
-    const graph = buildStepDependencyGraph(steps);
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    await executeSteps(steps);
 
     const stepToDataMap = {
       [steps[0].id]: {
@@ -430,7 +420,7 @@ describe('executeStepDependencyGraph', () => {
   test('should perform a flush of the jobState after a step was executed', async () => {
     let jobStateFlushSpy;
 
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -440,14 +430,7 @@ describe('executeStepDependencyGraph', () => {
           jobStateFlushSpy = jest.spyOn(jobState, 'flush');
         },
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(jobStateFlushSpy).toHaveBeenCalledTimes(1);
   });
@@ -469,7 +452,7 @@ describe('executeStepDependencyGraph', () => {
      * In this situation, 'a' is the leaf node
      * 'b' depends on 'a',
      */
-    const steps: IntegrationStep[] = [
+    const executionPromise = executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -485,15 +468,7 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['a'],
         executionHandler: spyB,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    const executionPromise = executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     // wait for spyA to have been called
     await waitForExpect(() => {
@@ -538,14 +513,8 @@ describe('executeStepDependencyGraph', () => {
     const steps = testData.map((d) => d.step);
     const spies = testData.map((d) => d.spy);
 
-    const graph = buildStepDependencyGraph(steps);
-
     let executionComplete = false;
-    const executionPromise = executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    ).then(() => {
+    const executionPromise = executeSteps(steps).then(() => {
       executionComplete = true;
     });
 
@@ -575,7 +544,7 @@ describe('executeStepDependencyGraph', () => {
      * 'b' depends on 'a',
      * 'c' depends on 'b'
      */
-    const steps: IntegrationStep[] = [
+    const result = await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -599,15 +568,8 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['b'],
         executionHandler: spyC,
       },
-    ];
+    ]);
 
-    const graph = buildStepDependencyGraph(steps);
-
-    const result = await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
     expect(result).toEqual([
       {
         id: 'a',
@@ -657,7 +619,7 @@ describe('executeStepDependencyGraph', () => {
      * 'b' depends on 'a',
      * 'c' depends on 'b'
      */
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -668,15 +630,7 @@ describe('executeStepDependencyGraph', () => {
           throw error;
         },
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(errorLogSpy).toHaveBeenCalledTimes(1);
     expect(errorLogSpy).toHaveBeenCalledWith(
@@ -702,7 +656,7 @@ describe('executeStepDependencyGraph', () => {
      * 'b' depends on 'a',
      * 'c' depends on 'b'
      */
-    const steps: IntegrationStep[] = [
+    const result = await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -726,15 +680,8 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['b'],
         executionHandler: spyC,
       },
-    ];
+    ]);
 
-    const graph = buildStepDependencyGraph(steps);
-
-    const result = await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
     expect(result).toEqual([
       {
         id: 'a',
@@ -782,7 +729,7 @@ describe('executeStepDependencyGraph', () => {
      * 'b' depends on 'a',
      * 'c' depends on 'b'
      */
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -806,15 +753,7 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['b'],
         executionHandler: spyC,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -840,7 +779,7 @@ describe('executeStepDependencyGraph', () => {
      * In this situation, 'a' and 'b' are leaf nodes
      * 'c' depends on 'a' and 'b'
      */
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -871,15 +810,7 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['c'],
         executionHandler: spyD,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -909,7 +840,7 @@ describe('executeStepDependencyGraph', () => {
      * 'c' depends on 'a',
      * 'd' depends on 'e', 'c', and 'b'
      */
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -947,15 +878,7 @@ describe('executeStepDependencyGraph', () => {
         relationships: [],
         executionHandler: spyE,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -986,7 +909,7 @@ describe('executeStepDependencyGraph', () => {
      * 'd' depends on 'b'
      * 'e' depends on 'c' and 'd'
      */
-    const steps: IntegrationStep[] = [
+    await executeSteps([
       {
         id: 'a',
         name: 'a',
@@ -1025,15 +948,7 @@ describe('executeStepDependencyGraph', () => {
         dependsOn: ['c', 'd'],
         executionHandler: spyE,
       },
-    ];
-
-    const graph = buildStepDependencyGraph(steps);
-
-    await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      getDefaultStepStartStates(steps),
-    );
+    ]);
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);
@@ -1063,17 +978,12 @@ describe('executeStepDependencyGraph', () => {
       },
     ];
 
-    const graph = buildStepDependencyGraph(steps);
     const stepStartStates = getDefaultStepStartStates(steps);
     stepStartStates['a'] = {
       disabled: true,
     };
 
-    const result = await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      stepStartStates,
-    );
+    const result = await executeSteps(steps, stepStartStates);
 
     expect(spyA).toHaveBeenCalledTimes(0);
 
@@ -1146,17 +1056,12 @@ describe('executeStepDependencyGraph', () => {
       },
     ];
 
-    const graph = buildStepDependencyGraph(steps);
     const stepStartStates = getDefaultStepStartStates(steps);
     stepStartStates['b'] = {
       disabled: true,
     };
 
-    const results = await executeStepDependencyGraph(
-      executionContext,
-      graph,
-      stepStartStates,
-    );
+    const results = await executeSteps(steps, stepStartStates);
 
     expect(results).toEqual(
       expect.arrayContaining([

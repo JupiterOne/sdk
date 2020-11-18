@@ -4,7 +4,6 @@ import {
   ExecutionContext,
   IntegrationStepResult,
   InvocationConfig,
-  KeyNormalizationFunction,
   PartialDatasets,
   Step,
   StepExecutionContext,
@@ -12,27 +11,36 @@ import {
   StepStartStates,
 } from '@jupiterone/integration-sdk-core';
 
+import { GraphObjectStore } from '../storage';
 import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from './dependencyGraph';
+import { DuplicateKeyTracker } from './jobState';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
->(
-  context: TExecutionContext,
-  integrationSteps: Step<TStepExecutionContext>[],
-  stepStartStates: StepStartStates,
-  normalizeGraphObjectKey?: KeyNormalizationFunction,
-): Promise<IntegrationStepResult[]> {
-  const stepGraph = buildStepDependencyGraph(integrationSteps);
-  return executeStepDependencyGraph(
-    context,
-    stepGraph,
+>({
+  executionContext,
+  integrationSteps,
+  stepStartStates,
+  duplicateKeyTracker,
+  graphObjectStore,
+}: {
+  executionContext: TExecutionContext;
+  integrationSteps: Step<TStepExecutionContext>[];
+  stepStartStates: StepStartStates;
+  duplicateKeyTracker: DuplicateKeyTracker;
+  graphObjectStore: GraphObjectStore;
+}): Promise<IntegrationStepResult[]> {
+  return executeStepDependencyGraph({
+    executionContext,
+    inputGraph: buildStepDependencyGraph(integrationSteps),
     stepStartStates,
-    normalizeGraphObjectKey,
-  );
+    duplicateKeyTracker,
+    graphObjectStore,
+  });
 }
 
 export function getDefaultStepStartStates<
