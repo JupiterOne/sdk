@@ -15,6 +15,10 @@ and this project adheres to
   `lastExecution` and `lastSuccessfulExecution`. Integrations may use this to
   limit data ingestion.
 
+### Changed
+
+- Refactored some tests
+
 ## 4.0.1 - 2020-10-30
 
 - Upgrade `@jupiterone/data-model@^0.15.0`
