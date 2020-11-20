@@ -892,7 +892,7 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'a',
             name: 'a',
-            entities: [],
+            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntities([
@@ -913,13 +913,24 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).rejects.toThrow(/Duplicate _key detected \(_key=key_a\)/);
+    const response = await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
+    expect(response).toMatchObject({
+      integrationStepResults: [
+        {
+          encounteredTypes: ['duplicate_entity'],
+          status: 'failure',
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['duplicate_entity'],
+        }
+      }
+    });
   });
 
   test('throws error if duplicate key is found across steps', async () => {
@@ -929,7 +940,7 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'a',
             name: 'a',
-            entities: [],
+            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntity({
@@ -942,7 +953,7 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'b',
             name: 'b',
-            entities: [],
+            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntity({
@@ -956,13 +967,30 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).rejects.toThrow(/Duplicate _key detected \(_key=key_a\)/);
+    const response = await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
+    expect(response).toMatchObject({
+      integrationStepResults: [
+        {
+          id: 'a',
+          encounteredTypes: ['duplicate_entity'],
+          status: 'success',
+        },
+        {
+          id: 'b',
+          encounteredTypes: [],
+          status: 'failure',
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: ['duplicate_entity'],
+        }
+      }
+    });
   });
 
   test('allows graph object schema validation to be enabled via options', async () => {
