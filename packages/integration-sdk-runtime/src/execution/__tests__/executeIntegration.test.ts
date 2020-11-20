@@ -892,7 +892,7 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'a',
             name: 'a',
-            entities: [],
+            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntities([
@@ -927,7 +927,7 @@ describe('executeIntegrationInstance', () => {
       ],
       metadata: {
         partialDatasets: {
-          types: [],
+          types: ['duplicate_entity'],
         }
       }
     });
@@ -940,7 +940,7 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'a',
             name: 'a',
-            entities: [],
+            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntity({
@@ -953,7 +953,7 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'b',
             name: 'b',
-            entities: [],
+            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntity({
@@ -987,7 +987,7 @@ describe('executeIntegrationInstance', () => {
       ],
       metadata: {
         partialDatasets: {
-          types: [],
+          types: ['duplicate_entity'],
         }
       }
     });
