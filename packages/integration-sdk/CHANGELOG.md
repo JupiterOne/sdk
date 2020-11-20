@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Specifying the `INTEGRATION_FILE_COMPRESSION_ENABLED` environment variable
+  will now compress local integration graph object files with Brotli compression
+  on writes and decompress on reads.
+
 ### Changed
 
 - Stop handling `IntegrationDuplicateKeyError` as fatal. Previously, this type of error would terminate the integration completely and no data would be ingested. Now, the step that raises this error will not complete, but all other steps will complete and partial datasets will be processed.

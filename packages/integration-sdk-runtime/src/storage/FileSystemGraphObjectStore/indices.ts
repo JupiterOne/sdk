@@ -4,8 +4,12 @@ import {
   GraphObjectIteratee,
   IntegrationError,
 } from '@jupiterone/integration-sdk-core';
-
-import { walkDirectory, WalkDirectoryIterateeInput } from '../../fileSystem';
+import { FlushedEntityData, FlushedRelationshipData } from '../types';
+import {
+  readJsonFromPath,
+  walkDirectory,
+  WalkDirectoryIterateeInput,
+} from '../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
 
@@ -26,7 +30,7 @@ export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   await walkDirectory({
     path,
     iteratee: async (input) => {
-      const object = parseData(input);
+      const object = await readGraphObjectFile<FlushedEntityData>(input);
       if (isObjectFlushedEntityData(object)) {
         for (const entity of object.entities as T[]) {
           await iteratee(entity);
@@ -47,7 +51,7 @@ export async function iterateRelationshipTypeIndex<
   await walkDirectory({
     path,
     iteratee: async (input) => {
-      const object = parseData(input);
+      const object = await readGraphObjectFile<FlushedRelationshipData>(input);
       if (isObjectFlushedRelationshipData(object)) {
         for (const relationship of object.relationships as T[]) {
           await iteratee(relationship);
@@ -57,27 +61,23 @@ export async function iterateRelationshipTypeIndex<
   });
 }
 
-function parseData({ filePath, data }: WalkDirectoryIterateeInput): object {
+export async function readGraphObjectFile<T>({
+  filePath,
+}: WalkDirectoryIterateeInput): Promise<T> {
   try {
-    return JSON.parse(data);
+    const fileData = await readJsonFromPath<T>(filePath);
+    return fileData;
   } catch (err) {
     throw new IntegrationError({
-      code: 'INVALID_DATA_JSON',
-      message: `Failed to parse JSON in '${filePath}'`,
+      code: 'INVALID_FILE_DATA',
+      message: `Failed to read integration file at '${filePath}'`,
+      cause: err,
     });
   }
 }
 
-interface FlushedEntityData {
-  entities: Entity[];
-}
-
 function isObjectFlushedEntityData(object: any): object is FlushedEntityData {
   return Array.isArray(object?.entities);
-}
-
-interface FlushedRelationshipData {
-  relationships: Relationship[];
 }
 
 function isObjectFlushedRelationshipData(

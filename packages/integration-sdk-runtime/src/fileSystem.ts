@@ -4,12 +4,16 @@
  * This module exports utilities for writing data
  * relative to the .j1-integration root storage directoryPath.
  */
-import * as nodeFs from 'fs';
-const fs = nodeFs.promises;
+import { promises as fs } from 'fs';
 import path from 'path';
 
 import rimraf from 'rimraf';
 import getFolderSize from 'get-folder-size';
+import * as zlib from 'zlib';
+import { promisify } from 'util';
+
+const brotliCompress = promisify(zlib.brotliCompress);
+const brotliDecompress = promisify(zlib.brotliDecompress);
 
 export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
 
@@ -55,6 +59,10 @@ interface WriteContentToPathInput {
   content: string;
 }
 
+export function isCompressionEnabled() {
+  return !!process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+}
+
 export async function writeFileToPath({
   path: relativePath,
   content,
@@ -63,12 +71,28 @@ export async function writeFileToPath({
   const fullPath = path.resolve(directory, relativePath);
 
   await ensurePathCanBeWrittenTo(fullPath);
-  await fs.writeFile(fullPath, content, 'utf8');
+
+  if (isCompressionEnabled()) {
+    await fs.writeFile(fullPath, await brotliCompress(content), 'utf8');
+  } else {
+    await fs.writeFile(fullPath, content, 'utf8');
+  }
 }
 
 export async function readJsonFromPath<T>(path: string) {
-  const entityJson = await fs.readFile(path, 'utf8');
-  return JSON.parse(entityJson) as T;
+  let fileStr: string;
+
+  if (isCompressionEnabled()) {
+    // Specifying 'utf-8' as the second argument to `readFile` will cause the
+    // Brotli decompression to fail. We should specify the encoding in the
+    // call to Buffer.toString(...) instead.
+    const file = await fs.readFile(path);
+    fileStr = (await brotliDecompress(file)).toString('utf-8');
+  } else {
+    fileStr = await fs.readFile(path, 'utf8');
+  }
+
+  return JSON.parse(fileStr) as T;
 }
 
 interface SymlinkInput {
@@ -93,7 +117,6 @@ export async function symlink({ sourcePath, destinationPath }: SymlinkInput) {
 
 export interface WalkDirectoryIterateeInput {
   filePath: string;
-  data: string;
 }
 
 type WalkDirectoryIteratee = (
@@ -106,8 +129,8 @@ interface WalkDirectoryInput {
 }
 
 /**
- * Function for recursively walking through a directory
- * and reading the data from each file.
+ * Function for recursively walking through a directory and calling back with
+ * every file path
  */
 export async function walkDirectory({
   path: relativePath,
@@ -124,8 +147,7 @@ export async function walkDirectory({
   const files = await fs.readdir(fullPath);
 
   const onFile = async (filePath: string) => {
-    const data = await fs.readFile(filePath, 'utf8');
-    await iteratee({ filePath, data });
+    await iteratee({ filePath });
   };
 
   const handleFilePath = async (filePath: string) => {

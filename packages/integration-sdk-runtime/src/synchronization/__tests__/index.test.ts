@@ -27,6 +27,7 @@ import { getRootStorageDirectory, readJsonFromPath } from '../../fileSystem';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 
 afterEach(() => {
+  delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
   restoreProjectStructure();
 });
 
@@ -75,8 +76,78 @@ describe('initiateSynchronization', () => {
 });
 
 describe('uploadCollectedData', () => {
+  beforeEach(() => {
+    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+  });
+
   test('crawls through files and uploads the data', async () => {
     loadProjectStructure('synchronization');
+
+    const job = generateSynchronizationJob();
+    const context = createTestContext();
+    const { apiClient } = context;
+
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const loggerUploadStartSpy = jest
+      .spyOn(context.logger, 'synchronizationUploadStart')
+      .mockImplementation(noop);
+    const loggerUploadEndSpy = jest
+      .spyOn(context.logger, 'synchronizationUploadEnd')
+      .mockImplementation(noop);
+
+    await uploadCollectedData({
+      ...context,
+      job,
+    });
+
+    expect(loggerUploadStartSpy).toHaveBeenCalledTimes(1);
+    expect(loggerUploadStartSpy).toHaveBeenCalledWith(job);
+
+    expect(loggerUploadEndSpy).toHaveBeenCalledTimes(1);
+    expect(loggerUploadEndSpy).toHaveBeenCalledWith(job);
+
+    expect(postSpy).toHaveBeenCalledTimes(4);
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/entities`,
+      {
+        entities: times(3, (index) =>
+          expect.objectContaining({ _key: `entity-${index + 1}` }),
+        ),
+      },
+    );
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/entities`,
+      {
+        entities: times(3, (index) =>
+          expect.objectContaining({ _key: `entity-${index + 4}` }),
+        ),
+      },
+    );
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/relationships`,
+      {
+        relationships: times(2, (index) =>
+          expect.objectContaining({ _key: `relationship-${index + 1}` }),
+        ),
+      },
+    );
+    expect(postSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}/relationships`,
+      {
+        relationships: [expect.objectContaining({ _key: `relationship-3` })],
+      },
+    );
+  });
+
+  test('should decompress data if INTEGRATION_FILE_COMPRESSION_ENABLED is set', async () => {
+    process.env.INTEGRATION_FILE_COMPRESSION_ENABLED = '1';
+
+    loadProjectStructure('synchronization-compressed');
 
     const job = generateSynchronizationJob();
     const context = createTestContext();
