@@ -32,3 +32,14 @@ export interface GraphObjectStore {
 
   flush(): Promise<void>;
 }
+
+export interface FlushedEntityData {
+  entities: Entity[];
+}
+
+export interface FlushedRelationshipData {
+  relationships: Relationship[];
+}
+
+export type FlushedGraphObjectData = FlushedEntityData &
+  FlushedRelationshipData;

@@ -2,7 +2,11 @@ import { promises as fs } from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
-import { getRootStorageDirectory, readJsonFromPath } from '../../fileSystem';
+import {
+  getRootStorageDirectory,
+  readJsonFromPath,
+  walkDirectory,
+} from '../../fileSystem';
 import {
   executeIntegrationInstance,
   executeIntegrationLocally,
@@ -27,6 +31,11 @@ import {
   RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
+import * as zlib from 'zlib';
+import { promisify } from 'util';
+import { FlushedGraphObjectData } from '../../storage/types';
+
+const brotliDecompress = promisify(zlib.brotliDecompress);
 
 jest.mock('fs');
 
@@ -73,6 +82,10 @@ afterEach(() => {
 });
 
 describe('executeIntegrationInstance', () => {
+  beforeEach(() => {
+    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+  });
+
   test('executes validateInvocation function if provided in config', async () => {
     const config = createInstanceConfiguration();
     await executeIntegrationInstance(
@@ -189,6 +202,115 @@ describe('executeIntegrationInstance', () => {
         },
       },
     });
+  });
+
+  test('compresses files when INTEGRATION_FILE_COMPRESSION_ENABLED is set', async () => {
+    process.env.INTEGRATION_FILE_COMPRESSION_ENABLED = '1';
+
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              const fromEntity = await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const toEntity = await jobState.addEntity({
+                _key: 'test1',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: fromEntity,
+                  to: toEntity,
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    await executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+    );
+
+    interface FlushedGraphObjectDataWithFilePath
+      extends FlushedGraphObjectData {
+      filePath;
+    }
+
+    const flushedGraphData: FlushedGraphObjectDataWithFilePath[] = [];
+
+    await walkDirectory({
+      path: path.join(getRootStorageDirectory(), 'graph'),
+      iteratee: async ({ filePath }) => {
+        const fileData = await fs.readFile(filePath);
+        const decompressed = (await brotliDecompress(fileData)).toString(
+          'utf-8',
+        );
+        flushedGraphData.push({
+          ...JSON.parse(decompressed),
+          filePath,
+        });
+      },
+    });
+
+    const sortedFlushedGraphData = flushedGraphData
+      .sort((a, b) => {
+        return a.filePath > b.filePath ? 1 : -1;
+      })
+      .map((flushed) => {
+        delete flushed.filePath;
+        return flushed;
+      });
+
+    expect(sortedFlushedGraphData).toEqual([
+      {
+        entities: [
+          {
+            _key: 'test',
+            _type: 'test',
+            _class: 'Test',
+          },
+          {
+            _key: 'test1',
+            _type: 'test',
+            _class: 'Test',
+          },
+        ],
+      },
+      {
+        relationships: [
+          {
+            _key: 'test|has|test1',
+            _type: 'test_has_',
+            _class: 'HAS',
+            _fromEntityKey: 'test',
+            _toEntityKey: 'test1',
+            displayName: 'HAS',
+          },
+        ],
+      },
+    ]);
   });
 
   test('publishes disk usage metric', async () => {
@@ -377,7 +499,7 @@ describe('executeIntegrationInstance', () => {
                 resourceName: 'The Test',
                 _type: 'test_b2',
                 _class: 'Test',
-                partial: true
+                partial: true,
               },
             ],
             relationships: [],
@@ -806,7 +928,7 @@ describe('executeIntegrationInstance', () => {
                 resourceName: 'Resource 1B',
                 _type: 'test_1b',
                 _class: 'Test',
-                partial: true
+                partial: true,
               },
             ],
             relationships: [],
@@ -836,7 +958,6 @@ describe('executeIntegrationInstance', () => {
                 _class: RelationshipClass.HAS,
                 partial: true,
               },
-
             ],
             executionHandler: jest.fn(),
           },
@@ -1133,6 +1254,10 @@ describe('executeIntegrationInstance', () => {
 });
 
 describe('executeIntegrationLocally', () => {
+  beforeEach(() => {
+    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+  });
+
   test('provides generated logger and instance', async () => {
     const validateInvocation = jest.fn();
 

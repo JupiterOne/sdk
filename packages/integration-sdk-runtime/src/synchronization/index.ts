@@ -21,6 +21,8 @@ import {
 import { synchronizationApiError } from './error';
 import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
+import { readGraphObjectFile } from '../storage/FileSystemGraphObjectStore/indices';
+import { FlushedGraphObjectData } from '../storage/types';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
@@ -178,8 +180,10 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
     operation: () =>
       walkDirectory({
         path: 'graph',
-        async iteratee({ data }) {
-          const parsedData = JSON.parse(data);
+        async iteratee({ filePath }) {
+          const parsedData = await readGraphObjectFile<FlushedGraphObjectData>({
+            filePath,
+          });
 
           try {
             if (Array.isArray(parsedData.entities)) {
