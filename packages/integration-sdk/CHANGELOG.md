@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 4.2.0 - 2020-11-21
+
 ### Added
 
 - Specifying the `INTEGRATION_FILE_COMPRESSION_ENABLED` environment variable
@@ -17,7 +19,10 @@ and this project adheres to
 
 ### Changed
 
-- Stop handling `IntegrationDuplicateKeyError` as fatal. Previously, this type of error would terminate the integration completely and no data would be ingested. Now, the step that raises this error will not complete, but all other steps will complete and partial datasets will be processed.
+- Stop handling `IntegrationDuplicateKeyError` as fatal. Previously, this type
+  of error would terminate the integration completely and no data would be
+  ingested. Now, the step that raises this error will not complete, but all
+  other steps will complete and partial datasets will be processed.
 
 - Publish integration disk size event on interval
 
