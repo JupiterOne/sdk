@@ -2,11 +2,7 @@ import { promises as fs } from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
 
-import {
-  getRootStorageDirectory,
-  readJsonFromPath,
-  walkDirectory,
-} from '../../fileSystem';
+import * as integrationFileSystem from '../../fileSystem';
 import {
   executeIntegrationInstance,
   executeIntegrationLocally,
@@ -84,6 +80,9 @@ afterEach(() => {
 describe('executeIntegrationInstance', () => {
   beforeEach(() => {
     delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+    jest
+      .spyOn(integrationFileSystem, 'getRootStorageDirectorySize')
+      .mockResolvedValue(Promise.resolve(1000));
   });
 
   test('executes validateInvocation function if provided in config', async () => {
@@ -260,8 +259,8 @@ describe('executeIntegrationInstance', () => {
 
     const flushedGraphData: FlushedGraphObjectDataWithFilePath[] = [];
 
-    await walkDirectory({
-      path: path.join(getRootStorageDirectory(), 'graph'),
+    await integrationFileSystem.walkDirectory({
+      path: path.join(integrationFileSystem.getRootStorageDirectory(), 'graph'),
       iteratee: async ({ filePath }) => {
         const fileData = await fs.readFile(filePath);
         const decompressed = (await brotliDecompress(fileData)).toString(
@@ -774,7 +773,7 @@ describe('executeIntegrationInstance', () => {
 
   test('clears out the storage directory prior to performing collection', async () => {
     const previousContentFilePath = path.resolve(
-      getRootStorageDirectory(),
+      integrationFileSystem.getRootStorageDirectory(),
       'graph',
       'my-test',
       'someFile.json',
@@ -822,7 +821,7 @@ describe('executeIntegrationInstance', () => {
     );
 
     // should still have written data to disk
-    const files = await fs.readdir(getRootStorageDirectory());
+    const files = await fs.readdir(integrationFileSystem.getRootStorageDirectory());
     expect(files).toHaveLength(3);
     expect(files).toEqual(
       expect.arrayContaining(['graph', 'index', 'summary.json']),
@@ -904,8 +903,8 @@ describe('executeIntegrationInstance', () => {
       ),
     ).resolves.toEqual(expectedResults);
 
-    const writtenSummary = await readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(getRootStorageDirectory(), 'summary.json'),
+    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
+      path.resolve(integrationFileSystem.getRootStorageDirectory(), 'summary.json'),
     );
 
     expect(writtenSummary).toEqual(expectedResults);
@@ -999,8 +998,8 @@ describe('executeIntegrationInstance', () => {
       ),
     ).resolves.toEqual(expectedResults);
 
-    const writtenSummary = await readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(getRootStorageDirectory(), 'summary.json'),
+    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
+      path.resolve(integrationFileSystem.getRootStorageDirectory(), 'summary.json'),
     );
 
     expect(writtenSummary).toEqual(expectedResults);

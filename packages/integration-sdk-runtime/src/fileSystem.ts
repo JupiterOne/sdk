@@ -175,6 +175,11 @@ export async function walkDirectory({
   }
 }
 
+export function isRootStorageDirectoryPresent(): Promise<boolean> {
+  const rootStorageDir = getRootStorageDirectory();
+  return isDirectoryPresent(rootStorageDir);
+}
+
 /**
  * Wipes the storage directory clean
  */

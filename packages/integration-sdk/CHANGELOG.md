@@ -19,6 +19,8 @@ and this project adheres to
 
 - Stop handling `IntegrationDuplicateKeyError` as fatal. Previously, this type of error would terminate the integration completely and no data would be ingested. Now, the step that raises this error will not complete, but all other steps will complete and partial datasets will be processed.
 
+- Publish integration disk size event on interval
+
 ## 4.1.0 - 2020-11-18
 
 ### Added
