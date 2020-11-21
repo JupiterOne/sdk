@@ -79,7 +79,7 @@ test('aborts synchronization job if an error occurs', async () => {
   });
 });
 
-test.skip('does not log errors that have been previously logged', async () => {
+test('does not log errors that have been previously logged', async () => {
   const job = generateSynchronizationJob();
 
   setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });

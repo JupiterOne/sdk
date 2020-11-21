@@ -46,6 +46,8 @@ interface ExecuteWithContextOptions {
   graphObjectStore?: GraphObjectStore;
 }
 
+const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
+
 /**
  * Starts execution of an integration instance generated from local environment
  * variables.
@@ -113,6 +115,17 @@ function publishDiskUsageMetric<TExecutionContext extends ExecutionContext>(
   });
 }
 
+async function tryPublishDiskUsageMetric<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+>(context: TExecutionContext) {
+  if (!(await isRootStorageDirectoryPresent())) {
+    return;
+  }
+
+  publishDiskUsageMetric(context, await getRootStorageDirectorySize());
+}
+
 /**
  * Executes an integration and performs actions defined by the config
  * using context that was provided.
@@ -125,35 +138,13 @@ export async function executeWithContext<
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
   options: ExecuteWithContextOptions = {},
 ): Promise<ExecuteIntegrationResult> {
-  if (await isRootStorageDirectoryPresent()) {
-    const initialDiskUsageSize = await getRootStorageDirectorySize();
-    publishDiskUsageMetric(context, initialDiskUsageSize);
-  }
+  await tryPublishDiskUsageMetric(context);
 
+  let diskUsagePublishInterval: NodeJS.Timeout | undefined;
   let executionComplete = false;
-
-  const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
-  const diskUsagePublishInterval = setInterval(() => {
-    getRootStorageDirectorySize()
-      .then((size) => {
-        if (executionComplete) {
-          return;
-        }
-
-        publishDiskUsageMetric(context, size);
-      })
-      .catch((err) => {
-        if (executionComplete) {
-          return;
-        }
-
-        context.logger.error({ err }, 'Error publishing disk-usage metric');
-      });
-  }, THIRTY_SECONDS_STORAGE_INTERVAL_MS);
 
   try {
     await removeStorageDirectory();
-
     const { logger } = context;
 
     try {
@@ -168,6 +159,28 @@ export async function executeWithContext<
       getDefaultStepStartStates(config.integrationSteps);
 
     validateStepStartStates(config.integrationSteps, stepStartStates);
+
+    diskUsagePublishInterval = setInterval(() => {
+      isRootStorageDirectoryPresent()
+        .then((present) => {
+          if (!present) return;
+
+          return getRootStorageDirectorySize().then((size) => {
+            if (executionComplete) {
+              return;
+            }
+
+            publishDiskUsageMetric(context, size);
+          });
+        })
+        .catch((err) => {
+          if (executionComplete) {
+            return;
+          }
+
+          context.logger.error({ err }, 'Error publishing disk-usage metric');
+        });
+    }, THIRTY_SECONDS_STORAGE_INTERVAL_MS);
 
     const { graphObjectStore = new FileSystemGraphObjectStore() } = options;
 
@@ -205,8 +218,11 @@ export async function executeWithContext<
     return summary;
   } finally {
     executionComplete = true;
-    clearInterval(diskUsagePublishInterval);
-    const initialDiskUsageSize = await getRootStorageDirectorySize();
-    publishDiskUsageMetric(context, initialDiskUsageSize);
+
+    if (diskUsagePublishInterval) {
+      clearInterval(diskUsagePublishInterval);
+    }
+
+    await tryPublishDiskUsageMetric(context);
   }
 }
