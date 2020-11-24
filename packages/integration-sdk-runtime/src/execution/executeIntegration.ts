@@ -28,6 +28,7 @@ import {
   getDefaultStepStartStates,
 } from './step';
 import { validateStepStartStates } from './validation';
+import { isCompressionEnabled } from '../fileSystem';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -116,8 +117,7 @@ function publishDiskUsageMetric<TExecutionContext extends ExecutionContext>(
 }
 
 async function tryPublishDiskUsageMetric<
-  TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TExecutionContext extends ExecutionContext
 >(context: TExecutionContext) {
   if (!(await isRootStorageDirectoryPresent())) {
     return;
@@ -138,6 +138,15 @@ export async function executeWithContext<
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
   options: ExecuteWithContextOptions = {},
 ): Promise<ExecuteIntegrationResult> {
+  const { logger } = context;
+
+  logger.info(
+    {
+      compressionEnabled: isCompressionEnabled(),
+    },
+    'Starting execution with config...',
+  );
+
   await tryPublishDiskUsageMetric(context);
 
   let diskUsagePublishInterval: NodeJS.Timeout | undefined;
@@ -145,7 +154,6 @@ export async function executeWithContext<
 
   try {
     await removeStorageDirectory();
-    const { logger } = context;
 
     try {
       await config.validateInvocation?.(context);

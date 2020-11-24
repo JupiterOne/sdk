@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 4.3.0 - 2020-11-24
+
+### Added
+
+- Log whether compression is enabled or not at beginning of execution
+
 ## 4.2.0 - 2020-11-21
 
 ### Added
