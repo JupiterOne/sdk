@@ -1,12 +1,12 @@
 import { createCommand } from 'commander';
 
 import {
-  prepareLocalStepCollection,
   executeIntegrationLocally,
+  prepareLocalStepCollection,
 } from '@jupiterone/integration-sdk-runtime';
 
-import * as log from '../log';
 import { loadConfig } from '../config';
+import * as log from '../log';
 
 // coercion function to collect multiple values for a flag
 const collector = (value: string, arr: string[]) => {
@@ -30,9 +30,17 @@ export function collect() {
       const enableSchemaValidation = !options.disableSchemaValidation;
       const config = prepareLocalStepCollection(await loadConfig(), options);
       log.info('\nConfiguration loaded! Running integration...\n');
-      const results = await executeIntegrationLocally(config, {
-        enableSchemaValidation,
-      });
+      const results = await executeIntegrationLocally(
+        config,
+        {
+          current: {
+            startedOn: Date.now(),
+          },
+        },
+        {
+          enableSchemaValidation,
+        },
+      );
       log.displayExecutionResults(results);
     });
 }

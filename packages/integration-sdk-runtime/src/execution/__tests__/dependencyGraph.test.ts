@@ -43,6 +43,11 @@ const executionContext: IntegrationExecutionContext = {
     },
   }),
   instance: LOCAL_INTEGRATION_INSTANCE,
+  executionHistory: {
+    current: {
+      startedOn: Date.now(),
+    },
+  },
 };
 
 describe('buildStepDependencyGraph', () => {

@@ -8,13 +8,14 @@ export type Execution = {
 };
 
 export type ExecutionHistory = {
-  lastExecution: Execution;
-  lastSuccessfulExecution?: Execution;
+  current: Execution;
+  previous?: Execution;
+  lastSuccessful?: Execution;
 };
 
 export interface ExecutionContext {
   logger: IntegrationLogger;
-  history?: ExecutionHistory;
+  executionHistory: ExecutionHistory;
 }
 
 /**
