@@ -1,23 +1,23 @@
 import { createCommand } from 'commander';
 
-import * as log from '../log';
+import { Metric } from '@jupiterone/integration-sdk-core';
 import {
-  getApiKeyFromEnvironment,
-  getAccountFromEnvironment,
-  getApiBaseUrl,
-  createApiClient,
-  initiateSynchronization,
-  uploadCollectedData,
-  finalizeSynchronization,
   abortSynchronization,
+  createApiClient,
+  createEventPublishingQueue,
+  createIntegrationInstanceForLocalExecution,
   createIntegrationLogger,
   executeIntegrationInstance,
-  createIntegrationInstanceForLocalExecution,
-  createEventPublishingQueue,
+  finalizeSynchronization,
+  getAccountFromEnvironment,
+  getApiBaseUrl,
+  getApiKeyFromEnvironment,
+  initiateSynchronization,
+  uploadCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
-import { Metric } from '@jupiterone/integration-sdk-core';
+import * as log from '../log';
 
 export function run() {
   return createCommand('run')
@@ -75,6 +75,11 @@ export function run() {
           logger,
           createIntegrationInstanceForLocalExecution(invocationConfig),
           invocationConfig,
+          {
+            current: {
+              startedOn: startTime,
+            },
+          },
           {
             enableSchemaValidation: true,
           },

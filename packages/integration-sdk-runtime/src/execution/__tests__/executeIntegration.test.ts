@@ -1,35 +1,37 @@
 import { promises as fs } from 'fs';
 import { vol } from 'memfs';
 import path from 'path';
+import { promisify } from 'util';
+import * as zlib from 'zlib';
+
+import {
+  createDirectRelationship,
+  Entity,
+  IntegrationExecutionContext,
+  IntegrationInstance,
+  IntegrationInvocationConfig,
+  IntegrationInvocationValidationFunction,
+  IntegrationLogger,
+  IntegrationValidationError,
+  Relationship,
+  RelationshipClass,
+  StepResultStatus,
+} from '@jupiterone/integration-sdk-core';
+import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
 
 import * as integrationFileSystem from '../../fileSystem';
-import {
-  executeIntegrationInstance,
-  executeIntegrationLocally,
-  ExecuteIntegrationResult,
-} from '../executeIntegration';
-import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import {
   createIntegrationLogger,
   IntegrationLogger as IntegrationLoggerImpl,
 } from '../../logger';
-import {
-  IntegrationLogger,
-  IntegrationExecutionContext,
-  IntegrationInstance,
-  IntegrationInvocationConfig,
-  StepResultStatus,
-  IntegrationInvocationValidationFunction,
-  IntegrationValidationError,
-  Entity,
-  Relationship,
-  createDirectRelationship,
-  RelationshipClass,
-} from '@jupiterone/integration-sdk-core';
-import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
-import * as zlib from 'zlib';
-import { promisify } from 'util';
 import { FlushedGraphObjectData } from '../../storage/types';
+import {
+  executeIntegrationInstance,
+  executeIntegrationLocally,
+  ExecuteIntegrationOptions,
+  ExecuteIntegrationResult,
+} from '../executeIntegration';
+import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
@@ -78,6 +80,25 @@ afterEach(() => {
 });
 
 describe('executeIntegrationInstance', () => {
+  const executionStartedOn = Date.now();
+
+  async function executeIntegrationInstanceWithConfig(
+    config: InstanceConfigurationData,
+    options: ExecuteIntegrationOptions = {},
+  ) {
+    return executeIntegrationInstance(
+      config.logger,
+      config.instance,
+      config.invocationConfig,
+      {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
+      options,
+    );
+  }
+
   beforeEach(() => {
     delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
     jest
@@ -87,15 +108,16 @@ describe('executeIntegrationInstance', () => {
 
   test('executes validateInvocation function if provided in config', async () => {
     const config = createInstanceConfiguration();
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    await executeIntegrationInstanceWithConfig(config);
 
     const expectedContext: IntegrationExecutionContext = {
       instance: config.instance,
       logger: config.logger,
+      executionHistory: {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
     };
 
     expect(config.validateInvocation).toHaveBeenCalledWith(expectedContext);
@@ -111,13 +133,9 @@ describe('executeIntegrationInstance', () => {
     });
 
     const validationFailureSpy = jest.spyOn(config.logger, 'validationFailure');
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).rejects.toThrow(/Failed to auth with provider/);
+    await expect(executeIntegrationInstanceWithConfig(config)).rejects.toThrow(
+      /Failed to auth with provider/,
+    );
 
     expect(validationFailureSpy).toHaveBeenCalledTimes(1);
     expect(validationFailureSpy).toHaveBeenCalledWith(error);
@@ -146,13 +164,9 @@ describe('executeIntegrationInstance', () => {
     });
 
     const validationFailureSpy = jest.spyOn(config.logger, 'validationFailure');
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).rejects.toThrow(/Start states not found for/);
+    await expect(executeIntegrationInstanceWithConfig(config)).rejects.toThrow(
+      /Start states not found for/,
+    );
     // This error is not one the user can fix, we just crash
     expect(validationFailureSpy).not.toHaveBeenCalled();
   });
@@ -178,29 +192,25 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          declaredTypes: ['test'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.SUCCESS,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: [],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            declaredTypes: ['test'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.SUCCESS,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: [],
+          },
         },
       },
-    });
+    );
   });
 
   test('compresses files when INTEGRATION_FILE_COMPRESSION_ENABLED is set', async () => {
@@ -246,11 +256,7 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    await executeIntegrationInstanceWithConfig(config);
 
     interface FlushedGraphObjectDataWithFilePath
       extends FlushedGraphObjectData {
@@ -334,11 +340,7 @@ describe('executeIntegrationInstance', () => {
     });
 
     const publishMetricSpy = jest.spyOn(config.logger, 'publishMetric');
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    await executeIntegrationInstanceWithConfig(config);
 
     expect(publishMetricSpy).toHaveBeenCalledWith({
       name: 'disk-usage',
@@ -370,29 +372,25 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step',
-          name: 'My awesome step',
-          declaredTypes: ['test'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.FAILURE,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: ['test'],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            declaredTypes: ['test'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['test'],
+          },
         },
       },
-    });
+    );
   });
 
   test('includes types for partially successful steps in partial datasets', async () => {
@@ -432,38 +430,34 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          declaredTypes: ['test_a'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.FAILURE,
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          declaredTypes: ['test_b'],
-          partialTypes: [],
-          encounteredTypes: [],
-          dependsOn: ['my-step-a'],
-          status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: ['test_a', 'test_b'],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            declaredTypes: ['test_a'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            declaredTypes: ['test_b'],
+            partialTypes: [],
+            encounteredTypes: [],
+            dependsOn: ['my-step-a'],
+            status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['test_a', 'test_b'],
+          },
         },
       },
-    });
+    );
   });
 
   test('includes partialTypes declared in subsequent step meta data when dependency failure', async () => {
@@ -509,38 +503,34 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          declaredTypes: ['test_a'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.FAILURE,
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          declaredTypes: ['test_b', 'test_b2'],
-          encounteredTypes: [],
-          partialTypes: ['test_b2'],
-          dependsOn: ['my-step-a'],
-          status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: ['test_a', 'test_b2', 'test_b'],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            declaredTypes: ['test_a'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            declaredTypes: ['test_b', 'test_b2'],
+            encounteredTypes: [],
+            partialTypes: ['test_b2'],
+            dependsOn: ['my-step-a'],
+            status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['test_a', 'test_b2', 'test_b'],
+          },
         },
       },
-    });
+    );
   });
 
   test('includes partialTypes declared in failing step meta data', async () => {
@@ -586,38 +576,34 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          declaredTypes: ['test_a', 'test_a2'],
-          partialTypes: ['test_a2'],
-          encounteredTypes: [],
-          status: StepResultStatus.FAILURE,
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          declaredTypes: ['test_b'],
-          partialTypes: [],
-          encounteredTypes: [],
-          dependsOn: ['my-step-a'],
-          status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: ['test_a2', 'test_a', 'test_b'],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            declaredTypes: ['test_a', 'test_a2'],
+            partialTypes: ['test_a2'],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            declaredTypes: ['test_b'],
+            partialTypes: [],
+            encounteredTypes: [],
+            dependsOn: ['my-step-a'],
+            status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['test_a2', 'test_a', 'test_b'],
+          },
         },
       },
-    });
+    );
   });
 
   test('does not include partialTypes for disabled steps', async () => {
@@ -661,37 +647,33 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          declaredTypes: ['test_a'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.FAILURE,
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          declaredTypes: ['test_b'],
-          partialTypes: ['test_b'],
-          encounteredTypes: [],
-          status: StepResultStatus.DISABLED,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: ['test_a'],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            declaredTypes: ['test_a'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            declaredTypes: ['test_b'],
+            partialTypes: ['test_b'],
+            encounteredTypes: [],
+            status: StepResultStatus.DISABLED,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['test_a'],
+          },
         },
       },
-    });
+    );
   });
 
   test('does not include partial data sets for disabled steps in async "getStepStartStates"', async () => {
@@ -738,37 +720,33 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual({
-      integrationStepResults: [
-        {
-          id: 'my-step-a',
-          name: 'My awesome step',
-          declaredTypes: ['test_a'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.FAILURE,
-        },
-        {
-          id: 'my-step-b',
-          name: 'My awesome step',
-          declaredTypes: ['test_b'],
-          partialTypes: [],
-          encounteredTypes: [],
-          status: StepResultStatus.DISABLED,
-        },
-      ],
-      metadata: {
-        partialDatasets: {
-          types: ['test_a'],
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-step-a',
+            name: 'My awesome step',
+            declaredTypes: ['test_a'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.FAILURE,
+          },
+          {
+            id: 'my-step-b',
+            name: 'My awesome step',
+            declaredTypes: ['test_b'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.DISABLED,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: ['test_a'],
+          },
         },
       },
-    });
+    );
   });
 
   test('clears out the storage directory prior to performing collection', async () => {
@@ -809,11 +787,7 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    await executeIntegrationInstanceWithConfig(config);
 
     // file should no longer exist
     await expect(fs.readFile(previousContentFilePath)).rejects.toThrow(
@@ -821,7 +795,9 @@ describe('executeIntegrationInstance', () => {
     );
 
     // should still have written data to disk
-    const files = await fs.readdir(integrationFileSystem.getRootStorageDirectory());
+    const files = await fs.readdir(
+      integrationFileSystem.getRootStorageDirectory(),
+    );
     expect(files).toHaveLength(3);
     expect(files).toEqual(
       expect.arrayContaining(['graph', 'index', 'summary.json']),
@@ -895,16 +871,17 @@ describe('executeIntegrationInstance', () => {
       },
     };
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual(expectedResults);
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      expectedResults,
+    );
 
-    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(integrationFileSystem.getRootStorageDirectory(), 'summary.json'),
+    const writtenSummary = await integrationFileSystem.readJsonFromPath<
+      ExecuteIntegrationResult
+    >(
+      path.resolve(
+        integrationFileSystem.getRootStorageDirectory(),
+        'summary.json',
+      ),
     );
 
     expect(writtenSummary).toEqual(expectedResults);
@@ -990,16 +967,17 @@ describe('executeIntegrationInstance', () => {
       },
     };
 
-    await expect(
-      executeIntegrationInstance(
-        config.logger,
-        config.instance,
-        config.invocationConfig,
-      ),
-    ).resolves.toEqual(expectedResults);
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      expectedResults,
+    );
 
-    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(integrationFileSystem.getRootStorageDirectory(), 'summary.json'),
+    const writtenSummary = await integrationFileSystem.readJsonFromPath<
+      ExecuteIntegrationResult
+    >(
+      path.resolve(
+        integrationFileSystem.getRootStorageDirectory(),
+        'summary.json',
+      ),
     );
 
     expect(writtenSummary).toEqual(expectedResults);
@@ -1012,7 +990,13 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'a',
             name: 'a',
-            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
+            entities: [
+              {
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+                resourceName: '',
+              },
+            ],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntities([
@@ -1033,11 +1017,7 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    const response = await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    const response = await executeIntegrationInstanceWithConfig(config);
     expect(response).toMatchObject({
       integrationStepResults: [
         {
@@ -1048,8 +1028,8 @@ describe('executeIntegrationInstance', () => {
       metadata: {
         partialDatasets: {
           types: ['duplicate_entity'],
-        }
-      }
+        },
+      },
     });
   });
 
@@ -1060,7 +1040,13 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'a',
             name: 'a',
-            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
+            entities: [
+              {
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+                resourceName: '',
+              },
+            ],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntity({
@@ -1073,7 +1059,13 @@ describe('executeIntegrationInstance', () => {
           {
             id: 'b',
             name: 'b',
-            entities: [{ _type: 'duplicate_entity', _class: 'DuplicateEntity', resourceName: ''}],
+            entities: [
+              {
+                _type: 'duplicate_entity',
+                _class: 'DuplicateEntity',
+                resourceName: '',
+              },
+            ],
             relationships: [],
             async executionHandler({ jobState }) {
               await jobState.addEntity({
@@ -1087,11 +1079,7 @@ describe('executeIntegrationInstance', () => {
       },
     });
 
-    const response = await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    const response = await executeIntegrationInstanceWithConfig(config);
     expect(response).toMatchObject({
       integrationStepResults: [
         {
@@ -1108,8 +1096,8 @@ describe('executeIntegrationInstance', () => {
       metadata: {
         partialDatasets: {
           types: ['duplicate_entity'],
-        }
-      }
+        },
+      },
     });
   });
 
@@ -1117,25 +1105,16 @@ describe('executeIntegrationInstance', () => {
     const config = createInstanceConfiguration();
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
 
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-      {
-        enableSchemaValidation: true,
-      },
-    );
+    await executeIntegrationInstanceWithConfig(config, {
+      enableSchemaValidation: true,
+    });
 
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
   });
 
   test('does not turn on schema validation if enableSchemaValidation is not set', async () => {
     const config = createInstanceConfiguration();
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-    );
+    await executeIntegrationInstanceWithConfig(config);
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
   });
 
@@ -1187,14 +1166,9 @@ describe('executeIntegrationInstance', () => {
 
     const graphObjectStore = new InMemoryGraphObjectStore();
 
-    await executeIntegrationInstance(
-      config.logger,
-      config.instance,
-      config.invocationConfig,
-      {
-        graphObjectStore,
-      },
-    );
+    await executeIntegrationInstanceWithConfig(config, {
+      graphObjectStore,
+    });
 
     const entities: Entity[] = [];
     const relationships: Relationship[] = [];
@@ -1253,6 +1227,8 @@ describe('executeIntegrationInstance', () => {
 });
 
 describe('executeIntegrationLocally', () => {
+  const executionStartedOn = Date.now();
+
   beforeEach(() => {
     delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
   });
@@ -1260,14 +1236,26 @@ describe('executeIntegrationLocally', () => {
   test('provides generated logger and instance', async () => {
     const validateInvocation = jest.fn();
 
-    await executeIntegrationLocally({
-      validateInvocation,
-      integrationSteps: [],
-    });
+    await executeIntegrationLocally(
+      {
+        validateInvocation,
+        integrationSteps: [],
+      },
+      {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
+    );
 
     const expectedContext: IntegrationExecutionContext = {
       instance: LOCAL_INTEGRATION_INSTANCE,
       logger: expect.any(IntegrationLoggerImpl),
+      executionHistory: {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
     };
 
     expect(validateInvocation).toHaveBeenCalledWith(expectedContext);
@@ -1278,10 +1266,17 @@ describe('executeIntegrationLocally', () => {
 
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
 
-    await executeIntegrationLocally({
-      validateInvocation,
-      integrationSteps: [],
-    });
+    await executeIntegrationLocally(
+      {
+        validateInvocation,
+        integrationSteps: [],
+      },
+      {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
+    );
 
     expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
   });

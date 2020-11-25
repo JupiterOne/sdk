@@ -1,14 +1,15 @@
 import {
+  ExecutionHistory,
+  IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInstanceConfig,
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
   IntegrationStepExecutionContext,
-  IntegrationExecutionContext,
 } from '@jupiterone/integration-sdk-core';
 import {
-  LOCAL_INTEGRATION_INSTANCE,
   loadConfigFromEnvironmentVariables,
+  LOCAL_INTEGRATION_INSTANCE,
 } from '@jupiterone/integration-sdk-runtime';
 
 import {
@@ -28,12 +29,14 @@ interface CreateMockExecutionContextOptionsWithInstanceConfig<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 > {
   instanceConfig: TConfig;
+  executionHistory?: ExecutionHistory;
 }
 
 interface CreateMockExecutionContextOptionsWithInstanceConfigFields<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 > {
   instanceConfigFields: IntegrationInstanceConfigFieldMap<TConfig>;
+  executionHistory?: ExecutionHistory;
 }
 
 export function createMockExecutionContext<
@@ -79,6 +82,11 @@ export function createMockExecutionContext<
   return {
     logger,
     instance,
+    executionHistory: options.executionHistory || {
+      current: {
+        startedOn: Date.now(),
+      },
+    },
   };
 }
 

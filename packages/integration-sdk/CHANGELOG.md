@@ -9,6 +9,24 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.0.0 - 2020-11-24
+
+### Added
+
+- `ExecutionContext.executionHistory` is always provided to integrations
+- `ExecutionHistory.current: Execution` to provide information about the current
+  execution.
+
+### Changed
+
+- `ExecutionHistory` properties have been renamed as part of adding
+  `current: Execution`, to avoid duplication in the naming: `lastExecution` ->
+  `previous`, `lastSuccessfulExecution` -> `lastSuccessful`.
+- BREAKING: `executeIntegrationInstance` now requires an `ExecutionHistory`
+  argument containing the `current: Execution`.
+- BREAKING: `executeWithContext(context: ExecutionContext, ...)` now requires
+  that `ExecutionContext.executionHistory` is provided.
+
 ## 4.3.0 - 2020-11-24
 
 ### Added

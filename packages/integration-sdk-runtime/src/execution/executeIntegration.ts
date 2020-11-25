@@ -12,10 +12,11 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import {
+  getRootStorageDirectorySize,
+  isCompressionEnabled,
+  isRootStorageDirectoryPresent,
   removeStorageDirectory,
   writeJsonToPath,
-  getRootStorageDirectorySize,
-  isRootStorageDirectoryPresent,
 } from '../fileSystem';
 import { createIntegrationLogger } from '../logger';
 import { timeOperation } from '../metrics';
@@ -28,7 +29,6 @@ import {
   getDefaultStepStartStates,
 } from './step';
 import { validateStepStartStates } from './validation';
-import { isCompressionEnabled } from '../fileSystem';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -37,9 +37,8 @@ export interface ExecuteIntegrationResult {
   };
 }
 
-interface ExecuteIntegrationOptions {
+export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
-  executionHistory?: ExecutionHistory;
   graphObjectStore?: GraphObjectStore;
 }
 
@@ -55,6 +54,7 @@ const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
  */
 export function executeIntegrationLocally(
   config: IntegrationInvocationConfig,
+  executionHistory: ExecutionHistory,
   options?: ExecuteIntegrationOptions,
 ) {
   return executeIntegrationInstance(
@@ -65,7 +65,9 @@ export function executeIntegrationLocally(
     }),
     createIntegrationInstanceForLocalExecution(config),
     config,
+    executionHistory,
     {
+      ...options,
       enableSchemaValidation:
         options?.enableSchemaValidation !== undefined
           ? options.enableSchemaValidation
@@ -81,6 +83,7 @@ export async function executeIntegrationInstance(
   logger: IntegrationLogger,
   instance: IntegrationInstance,
   config: IntegrationInvocationConfig,
+  executionHistory: ExecutionHistory,
   options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
   if (options.enableSchemaValidation === true) {
@@ -95,7 +98,7 @@ export async function executeIntegrationInstance(
         {
           instance,
           logger,
-          history: options.executionHistory,
+          executionHistory,
         },
         config,
         {
