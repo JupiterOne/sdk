@@ -44,7 +44,8 @@ async function executeIntegrationInstanceWithMultipleResolves() {
   });
   unregisterIntegrationLoggerEventEmitters(() => logger);
   expect(loggerErrorCalledWith.length).toBe(1);
-  expect(loggerErrorCalledWith[0][0]).toBe(err);
+  expect(loggerErrorCalledWith[0][0].err).toBe(err);
+  expect(loggerErrorCalledWith[0][0].event).toBe('multipleResolves');
 }
 
 module.exports = { executeIntegrationInstanceWithMultipleResolves };
