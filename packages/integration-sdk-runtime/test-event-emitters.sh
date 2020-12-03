@@ -1,0 +1,1 @@
+yarn build:dist && node ./testEventEmitters.js

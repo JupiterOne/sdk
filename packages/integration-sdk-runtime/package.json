@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "jest",
+    "test:event-emitters": "./test-event-emitters.sh",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"

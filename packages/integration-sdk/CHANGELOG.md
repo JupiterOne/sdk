@@ -9,6 +9,20 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `registerEventEmitters` and `unregisterEventEmitters` exports from the
+  runtime package. These functions will register a common set of event emitters
+  that handle out-of-band errors that can be thrown in integration steps, such
+  as `unhandledRejection` and `multipleResolves`. These emitters should be added
+  to any deployment projects that invoke `executeIntegrationInstance`.
+  Developers should instrument these event emitters as early as possible in the
+  node process.
+- Added `registerIntegrationLoggerEventEmitters` and
+  `unregisterIntegrationLoggerEventEmitters` as convenience functions, since
+  JupiterOne infrastructure will handle these event emitter failures by calling
+  `logger.error()`.
+
 ## 5.0.0 - 2020-11-24
 
 ### Added
