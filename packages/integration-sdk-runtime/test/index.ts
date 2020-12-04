@@ -1,14 +1,14 @@
-require('./test/mocks/mockWriteJsonToPath');
+require('./mocks/mockWriteJsonToPath');
 
 import { 
   executeIntegrationInstanceWithUnhandledRejection 
-} from './test/unhandledRejection';
+} from './unhandledRejection';
 import {
   executeIntegrationInstanceWithMultipleResolves,
-} from './test/multipleResolves';
+} from './multipleResolves';
 import {
   executeIntegrationInstanceWithLateRegisteredLogger,
-} from './test/lateLoggerRegistration';
+} from './lateLoggerRegistration';
 
 const eventEmitterTests = {
   unhandledRejection: executeIntegrationInstanceWithUnhandledRejection,

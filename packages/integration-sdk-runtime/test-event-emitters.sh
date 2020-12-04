@@ -1,1 +1,0 @@
-yarn ts-node ./testEventEmitters.ts
