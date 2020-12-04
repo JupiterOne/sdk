@@ -1,21 +1,22 @@
-const {
+import {
   executeIntegrationInstance,
   registerIntegrationLoggerEventEmitters,
   unregisterIntegrationLoggerEventEmitters,
-} = require('../dist/src');
-const {
+} from '../src';
+import {
   LOCAL_INTEGRATION_INSTANCE,
   createMockIntegrationLogger,
-} = require('./util/fixtures');
-const { expect } = require('./util/expect');
+  LOCAL_EXECUTION_HISTORY,
+} from './util/fixtures';
+import { expect } from './util/expect'
 
 function throwsUnhandledRejection() {
-  return async () => {
+  return () => {
     async function throwsException() {
       await Promise.resolve();
       throw new Error();
     }
-    throwsException();
+    void throwsException();
   };
 }
 
@@ -25,7 +26,7 @@ function throwsUnhandledRejection() {
  * will overwrite the `logger` variable a bit later, once the `IntegrationLogger` has
  * been constructed.
  */
-async function executeIntegrationInstanceWithLateRegisteredLogger() {
+export async function executeIntegrationInstanceWithLateRegisteredLogger() {
   // call registerIntegrationLoggerEventEmitters when logger is an early/undesirable version
   let wasPseudoLoggerCalled = false;
   const pseudoLogger = {
@@ -33,7 +34,7 @@ async function executeIntegrationInstanceWithLateRegisteredLogger() {
       wasPseudoLoggerCalled = true;
     },
   };
-  let logger = pseudoLogger;
+  let logger: any = pseudoLogger;
   registerIntegrationLoggerEventEmitters(() => logger);
 
   // later in execution, reset logger to the desirable version.
@@ -55,10 +56,8 @@ async function executeIntegrationInstanceWithLateRegisteredLogger() {
         executionHandler: throwsUnhandledRejection(),
       },
     ],
-  });
+  }, LOCAL_EXECUTION_HISTORY);
   unregisterIntegrationLoggerEventEmitters(() => logger);
   expect(wasPseudoLoggerCalled).toBe(false);
   expect(wasIntegrationLoggerCalled).toBe(true);
 }
-
-module.exports = { executeIntegrationInstanceWithLateRegisteredLogger };

@@ -1,1 +1,1 @@
-yarn build:dist && node ./testEventEmitters.js
+yarn ts-node ./testEventEmitters.ts

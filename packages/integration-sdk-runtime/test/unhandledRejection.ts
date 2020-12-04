@@ -1,32 +1,34 @@
-const {
+import { 
   executeIntegrationInstance,
   registerIntegrationLoggerEventEmitters,
   unregisterIntegrationLoggerEventEmitters,
-} = require('../dist/src');
-const {
+} from '../src';
+import {
   LOCAL_INTEGRATION_INSTANCE,
   createMockIntegrationLogger,
-} = require('./util/fixtures');
-const { expect } = require('./util/expect');
+  LOCAL_EXECUTION_HISTORY,
+} from './util/fixtures';
+import {
+  expect
+} from './util/expect';
 
 function callbackThrowsUnhandledRejection(err) {
-  return async () => {
+  return () => {
     async function throwsException() {
       await Promise.resolve();
       throw err;
     }
-    throwsException();
+    void throwsException();
   };
 }
 
-async function executeIntegrationInstanceWithUnhandledRejection() {
+export async function executeIntegrationInstanceWithUnhandledRejection() {
   const err = new Error();
-  let logger;
-  const loggerErrorCalledWith = [];
+  const loggerErrorCalledWith: any[] = [];
   function loggerError(...params) {
     loggerErrorCalledWith.push([...params]);
   }
-  logger = createMockIntegrationLogger({ error: loggerError });
+  const logger = createMockIntegrationLogger({ error: loggerError });
   registerIntegrationLoggerEventEmitters(() => logger);
   await executeIntegrationInstance(logger, LOCAL_INTEGRATION_INSTANCE, {
     integrationSteps: [
@@ -38,11 +40,9 @@ async function executeIntegrationInstanceWithUnhandledRejection() {
         executionHandler: callbackThrowsUnhandledRejection(err),
       },
     ],
-  });
+  }, LOCAL_EXECUTION_HISTORY);
   unregisterIntegrationLoggerEventEmitters(() => logger);
   expect(loggerErrorCalledWith.length).toBe(1);
   expect(loggerErrorCalledWith[0][0].err).toBe(err);
   expect(loggerErrorCalledWith[0][0].event).toBe('unhandledRejection');
 }
-
-module.exports = { executeIntegrationInstanceWithUnhandledRejection };

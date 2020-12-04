@@ -46,6 +46,7 @@
     "@types/uuid": "^7.0.2",
     "get-port": "^5.1.1",
     "memfs": "^3.2.0",
+    "ts-node": "^9.1.0",
     "wait-for-expect": "^3.0.2"
   }
 }

@@ -1,4 +1,6 @@
-const LOCAL_INTEGRATION_INSTANCE = {
+import { ExecutionHistory, IntegrationInstance } from "@jupiterone/integration-sdk-core/src";
+
+export const LOCAL_INTEGRATION_INSTANCE: IntegrationInstance = {
   id: 'local-integration-instance',
   accountId: 'Your account',
   name: 'Local Integration',
@@ -7,9 +9,16 @@ const LOCAL_INTEGRATION_INSTANCE = {
   config: {},
 };
 
+export const LOCAL_EXECUTION_HISTORY: ExecutionHistory = {
+  current: {
+    startedOn: 0,
+  },
+};
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
 
-function createMockIntegrationLogger(overrides) {
+export function createMockIntegrationLogger(overrides) {
   return {
     trace: noop,
     debug: noop,
@@ -31,8 +40,3 @@ function createMockIntegrationLogger(overrides) {
     ...overrides,
   };
 }
-
-module.exports = {
-  LOCAL_INTEGRATION_INSTANCE,
-  createMockIntegrationLogger,
-};

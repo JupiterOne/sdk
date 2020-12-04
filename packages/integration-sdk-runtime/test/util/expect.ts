@@ -1,4 +1,4 @@
-function expect(result) {
+export function expect(result) {
   return {
     toBe: (expected) => {
       if (result != expected) {
@@ -11,5 +11,3 @@ function expect(result) {
     },
   };
 }
-
-module.exports = { expect };
