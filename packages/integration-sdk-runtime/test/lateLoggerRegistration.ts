@@ -11,13 +11,11 @@ import {
 import { expect } from './util/expect'
 
 function throwsUnhandledRejection() {
-  return () => {
-    async function throwsException() {
-      await Promise.resolve();
-      throw new Error();
-    }
-    void throwsException();
-  };
+  async function throwsException() {
+    await Promise.resolve();
+    throw new Error();
+  }
+  void throwsException();
 }
 
 /**
@@ -53,7 +51,7 @@ export async function executeIntegrationInstanceWithLateRegisteredLogger() {
         name: '',
         entities: [],
         relationships: [],
-        executionHandler: throwsUnhandledRejection(),
+        executionHandler: throwsUnhandledRejection,
       },
     ],
   }, LOCAL_EXECUTION_HISTORY);
