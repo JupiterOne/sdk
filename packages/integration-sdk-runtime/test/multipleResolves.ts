@@ -33,7 +33,7 @@ export async function executeIntegrationInstanceWithMultipleResolves() {
     loggerErrorCalledWith.push([...params]);
   }
   const logger = createMockIntegrationLogger({ error: loggerError });
-  registerIntegrationLoggerEventEmitters(() => logger);
+  const registeredEventEmitters = registerIntegrationLoggerEventEmitters(() => logger);
   await executeIntegrationInstance(logger, LOCAL_INTEGRATION_INSTANCE, {
     integrationSteps: [
       {
@@ -45,7 +45,7 @@ export async function executeIntegrationInstanceWithMultipleResolves() {
       },
     ],
   }, LOCAL_EXECUTION_HISTORY);
-  unregisterIntegrationLoggerEventEmitters(() => logger);
+  unregisterIntegrationLoggerEventEmitters(registeredEventEmitters);
   expect(loggerErrorCalledWith.length).toBe(1);
   expect(loggerErrorCalledWith[0][0].err).toBe(err);
   expect(loggerErrorCalledWith[0][0].event).toBe('multipleResolves');

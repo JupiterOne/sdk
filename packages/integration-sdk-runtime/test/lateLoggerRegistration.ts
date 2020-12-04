@@ -35,7 +35,7 @@ export async function executeIntegrationInstanceWithLateRegisteredLogger() {
     },
   };
   let logger: any = pseudoLogger;
-  registerIntegrationLoggerEventEmitters(() => logger);
+  const registeredEventEmitters = registerIntegrationLoggerEventEmitters(() => logger);
 
   // later in execution, reset logger to the desirable version.
   let wasIntegrationLoggerCalled = false;
@@ -57,7 +57,7 @@ export async function executeIntegrationInstanceWithLateRegisteredLogger() {
       },
     ],
   }, LOCAL_EXECUTION_HISTORY);
-  unregisterIntegrationLoggerEventEmitters(() => logger);
+  unregisterIntegrationLoggerEventEmitters(registeredEventEmitters);
   expect(wasPseudoLoggerCalled).toBe(false);
   expect(wasIntegrationLoggerCalled).toBe(true);
 }

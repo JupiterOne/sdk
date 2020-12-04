@@ -4,27 +4,39 @@ type EventType = 'multipleResolves'|'unhandledRejection'|'uncaughtException';
 
 type LifecycleErrorCallback = (err: Error, event: EventType) => void;
 
-function multipleResolveListener(callback: LifecycleErrorCallback) {
-  // conforms to type MultipleResolveListener, see node_modules/@types/node/globals.d.ts
-  return (type: 'resolve' | 'reject', promise: Promise<any>, value: any) => {
+// conforms to type MultipleResolveListener, see node_modules/@types/node/globals.d.ts
+type MultipleResolveListener = (type: 'resolve'|'reject', promise: Promise<any>, value: any) => void;
+
+function createMultipleResolveListener(callback: LifecycleErrorCallback): MultipleResolveListener {
+  return (type, promise, value) => {
     if (type === 'reject') {
       callback(value, 'multipleResolves');
     }
   };
 }
 
-function unhandledRejectionListener(callback: LifecycleErrorCallback) {
-  // conforms to type UnhandledRejectionListener, see node_modules/@types/node/globals.d.ts
-  return (reason: {} | null | undefined, promise: Promise<any>) => {
+// conforms to type UnhandledRejectionListener, see node_modules/@types/node/globals.d.ts
+type UnhandledRejectionListener = (reason: {} | null | undefined, promise: Promise<any>) => void;
+
+function createUnhandledRejectionListener(callback: LifecycleErrorCallback): UnhandledRejectionListener {
+  return (reason, promise) => {
     callback(reason as Error, 'unhandledRejection');
   };
 }
 
-function uncaughtExceptionListener(callback: LifecycleErrorCallback) {
-  // conforms to type UncaughtExceptionListener, see node_modules/@types/node/globals.d.ts
-  return (error: Error) => {
+// conforms to type UncaughtExceptionListener, see node_modules/@types/node/globals.d.ts
+type UncaughtExceptionListener = (error: Error) => void;
+
+function createUncaughtExceptionListener(callback: LifecycleErrorCallback): UncaughtExceptionListener {
+  return (error) => {
     callback(error, 'uncaughtException');
   };
+}
+
+interface RegisteredEventEmitters {
+  multipleResolveListener: MultipleResolveListener;
+  unhandledRejectionListener: UnhandledRejectionListener;
+  uncaughtExceptionListener: UncaughtExceptionListener;
 }
 
 /**
@@ -34,29 +46,44 @@ function uncaughtExceptionListener(callback: LifecycleErrorCallback) {
  * as possible in the node process in order to handle any instrumentation exceptions.
  *
  * Before exiting the node process, unregister these event emitters using `unregisterEventEmitters`
+ * 
+ * @param callback
+ * @returns {RegisteredEventEmitters} Pass these listeners into `unregisterEventEmitters`
  */
-export function registerEventEmitters(callback: LifecycleErrorCallback) {
-  process.on('multipleResolves', multipleResolveListener(callback));
-  process.on('unhandledRejection', unhandledRejectionListener(callback));
-  process.on('uncaughtException', uncaughtExceptionListener(callback));
+export function registerEventEmitters(callback: LifecycleErrorCallback): RegisteredEventEmitters {
+  const multipleResolveListener = createMultipleResolveListener(callback);
+  process.on('multipleResolves', multipleResolveListener);
+  const unhandledRejectionListener = createUnhandledRejectionListener(callback);
+  process.on('unhandledRejection', unhandledRejectionListener);
+  const uncaughtExceptionListener = createUncaughtExceptionListener(callback);
+  process.on('uncaughtException', uncaughtExceptionListener);
+  return {
+    multipleResolveListener,
+    unhandledRejectionListener,
+    uncaughtExceptionListener,
+  };
 }
 
 /**
  * Call this function before exiting the node process when using `registerEventEmitters`
  */
-export function unregisterEventEmitters(callback: LifecycleErrorCallback) {
+export function unregisterEventEmitters({
+  multipleResolveListener,
+  unhandledRejectionListener,
+  uncaughtExceptionListener,
+}: RegisteredEventEmitters) {
   process.nextTick(() => {
     process.removeListener(
       'multipleResolves',
-      multipleResolveListener(callback),
+      multipleResolveListener,
     );
     process.removeListener(
       'unhandledRejection',
-      unhandledRejectionListener(callback),
+      unhandledRejectionListener,
     );
     process.removeListener(
       'uncaughtException',
-      uncaughtExceptionListener(callback),
+      uncaughtExceptionListener,
     );
   });
 }
@@ -77,15 +104,14 @@ function integrationLoggerEventEmitterCallback(
  */
 export function registerIntegrationLoggerEventEmitters(
   getLogger: () => Pick<IntegrationLogger, 'error'>,
-) {
-  registerEventEmitters(integrationLoggerEventEmitterCallback(getLogger));
+): RegisteredEventEmitters {
+  return registerEventEmitters(integrationLoggerEventEmitterCallback(getLogger));
 }
 
 /**
  * Call this function before exiting the node process when using `registerIntegrationLoggerEventEmitters`
+ * 
+ * This function is an alias for `unregisterEventEmitters`, useful for maintaining consistency in 
+ * `register*` / `unregister*` functions in calling code.
  */
-export function unregisterIntegrationLoggerEventEmitters(
-  getLogger: () => Pick<IntegrationLogger, 'error'>,
-) {
-  unregisterEventEmitters(integrationLoggerEventEmitterCallback(getLogger));
-}
+export const unregisterIntegrationLoggerEventEmitters = unregisterEventEmitters;
