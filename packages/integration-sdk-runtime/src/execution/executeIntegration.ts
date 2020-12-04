@@ -18,7 +18,11 @@ import {
   removeStorageDirectory,
   writeJsonToPath,
 } from '../fileSystem';
-import { createIntegrationLogger } from '../logger';
+import {
+  createIntegrationLogger,
+  registerIntegrationLoggerEventHandlers,
+  unregisterIntegrationLoggerEventHandlers,
+} from '../logger';
 import { timeOperation } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
@@ -52,17 +56,21 @@ const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
  * Starts execution of an integration instance generated from local environment
  * variables.
  */
-export function executeIntegrationLocally(
+export async function executeIntegrationLocally(
   config: IntegrationInvocationConfig,
   executionHistory: ExecutionHistory,
   options?: ExecuteIntegrationOptions,
 ) {
-  return executeIntegrationInstance(
-    createIntegrationLogger({
-      name: 'Local',
-      invocationConfig: config,
-      pretty: true,
-    }),
+  const logger = createIntegrationLogger({
+    name: 'Local',
+    invocationConfig: config,
+    pretty: true,
+  });
+  const registeredEventListeners = registerIntegrationLoggerEventHandlers(
+    () => logger,
+  );
+  const result = await executeIntegrationInstance(
+    logger,
     createIntegrationInstanceForLocalExecution(config),
     config,
     executionHistory,
@@ -74,6 +82,8 @@ export function executeIntegrationLocally(
           : true,
     },
   );
+  unregisterIntegrationLoggerEventHandlers(registeredEventListeners);
+  return result;
 }
 
 /**
