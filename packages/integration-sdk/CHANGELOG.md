@@ -22,8 +22,10 @@ and this project adheres to
   `unregisterIntegrationLoggerEventHandlers` as convenience functions, since
   JupiterOne infrastructure will handle these event emitter failures by calling
   `logger.error()`.
-- Added `registerEventEmitters` to `executeIntegrationLocally`, so that events
+- Added `registerEventHandlers` to `executeIntegrationLocally`, so that events
   are caught when running `yarn j1-integration collect`.
+- Made `registerIntegrationEventHandlers` call the integration logger
+  `onFailure` function.
 
 ## 5.0.0 - 2020-11-24
 
