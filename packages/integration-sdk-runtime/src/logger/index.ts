@@ -169,7 +169,7 @@ export class IntegrationLogger extends EventEmitter
   implements IntegrationLoggerType {
   private _logger: Logger;
   private _errorSet: Set<Error>;
-  private onFailure: OnFailureFunction;
+  readonly onFailure: OnFailureFunction;
 
   constructor(input: IntegrationLoggerInput) {
     super();

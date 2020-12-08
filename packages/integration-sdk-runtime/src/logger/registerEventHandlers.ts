@@ -1,13 +1,22 @@
 import { IntegrationLogger } from '.';
 
-type EventType = 'multipleResolves'|'unhandledRejection'|'uncaughtException';
+type EventType =
+  | 'multipleResolves'
+  | 'unhandledRejection'
+  | 'uncaughtException';
 
 type LifecycleErrorCallback = (err: Error, event: EventType) => void;
 
 // conforms to type MultipleResolveListener, see node_modules/@types/node/globals.d.ts
-type MultipleResolveListener = (type: 'resolve'|'reject', promise: Promise<any>, value: any) => void;
+type MultipleResolveListener = (
+  type: 'resolve' | 'reject',
+  promise: Promise<any>,
+  value: any,
+) => void;
 
-function createMultipleResolveListener(callback: LifecycleErrorCallback): MultipleResolveListener {
+function createMultipleResolveListener(
+  callback: LifecycleErrorCallback,
+): MultipleResolveListener {
   return (type, promise, value) => {
     if (type === 'reject') {
       callback(value, 'multipleResolves');
@@ -16,9 +25,14 @@ function createMultipleResolveListener(callback: LifecycleErrorCallback): Multip
 }
 
 // conforms to type UnhandledRejectionListener, see node_modules/@types/node/globals.d.ts
-type UnhandledRejectionListener = (reason: {} | null | undefined, promise: Promise<any>) => void;
+type UnhandledRejectionListener = (
+  reason: {} | null | undefined,
+  promise: Promise<any>,
+) => void;
 
-function createUnhandledRejectionListener(callback: LifecycleErrorCallback): UnhandledRejectionListener {
+function createUnhandledRejectionListener(
+  callback: LifecycleErrorCallback,
+): UnhandledRejectionListener {
   return (reason, promise) => {
     callback(reason as Error, 'unhandledRejection');
   };
@@ -27,7 +41,9 @@ function createUnhandledRejectionListener(callback: LifecycleErrorCallback): Unh
 // conforms to type UncaughtExceptionListener, see node_modules/@types/node/globals.d.ts
 type UncaughtExceptionListener = (error: Error) => void;
 
-function createUncaughtExceptionListener(callback: LifecycleErrorCallback): UncaughtExceptionListener {
+function createUncaughtExceptionListener(
+  callback: LifecycleErrorCallback,
+): UncaughtExceptionListener {
   return (error) => {
     callback(error, 'uncaughtException');
   };
@@ -73,25 +89,27 @@ export function unregisterEventHandlers({
   uncaughtExceptionListener,
 }: RegisteredEventListeners) {
   process.nextTick(() => {
-    process.removeListener(
-      'multipleResolves',
-      multipleResolveListener,
-    );
-    process.removeListener(
-      'unhandledRejection',
-      unhandledRejectionListener,
-    );
-    process.removeListener(
-      'uncaughtException',
-      uncaughtExceptionListener,
-    );
+    process.removeListener('multipleResolves', multipleResolveListener);
+    process.removeListener('unhandledRejection', unhandledRejectionListener);
+    process.removeListener('uncaughtException', uncaughtExceptionListener);
   });
 }
 
+interface ErrorLogger {
+  error: IntegrationLogger['error'];
+  onFailure?: IntegrationLogger['onFailure'];
+}
+
 function integrationLoggerEventHandlerCallback(
-  getLogger: () => Pick<IntegrationLogger, 'error'>,
+  getErrorLogger: () => ErrorLogger,
 ): LifecycleErrorCallback {
-  return (err, event) => getLogger().error({ err, event });
+  return (err, event) => {
+    const logger = getErrorLogger();
+    logger.error({ err, event });
+    if (logger.onFailure) {
+      logger.onFailure({ err });
+    }
+  };
 }
 
 /**
@@ -103,9 +121,9 @@ function integrationLoggerEventHandlerCallback(
  * `unregisterIntegrationLoggerEventHandlers`
  */
 export function registerIntegrationLoggerEventHandlers(
-  getLogger: () => Pick<IntegrationLogger, 'error'>,
+  getErrorLogger: () => ErrorLogger,
 ): RegisteredEventListeners {
-  return registerEventHandlers(integrationLoggerEventHandlerCallback(getLogger));
+  return registerEventHandlers(integrationLoggerEventHandlerCallback(getErrorLogger));
 }
 
 /**
