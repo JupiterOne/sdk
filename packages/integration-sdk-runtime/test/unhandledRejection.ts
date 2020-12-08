@@ -1,7 +1,7 @@
 import { 
   executeIntegrationInstance,
-  registerIntegrationLoggerEventEmitters,
-  unregisterIntegrationLoggerEventEmitters,
+  registerIntegrationLoggerEventHandlers,
+  unregisterIntegrationLoggerEventHandlers,
 } from '../src';
 import {
   LOCAL_INTEGRATION_INSTANCE,
@@ -29,7 +29,7 @@ export async function executeIntegrationInstanceWithUnhandledRejection() {
     loggerErrorCalledWith.push([...params]);
   }
   const logger = createMockIntegrationLogger({ error: loggerError });
-  const registeredEventEmitters = registerIntegrationLoggerEventEmitters(() => logger);
+  const registeredEventHandlers = registerIntegrationLoggerEventHandlers(() => logger);
   await executeIntegrationInstance(logger, LOCAL_INTEGRATION_INSTANCE, {
     integrationSteps: [
       {
@@ -41,7 +41,7 @@ export async function executeIntegrationInstanceWithUnhandledRejection() {
       },
     ],
   }, LOCAL_EXECUTION_HISTORY);
-  unregisterIntegrationLoggerEventEmitters(registeredEventEmitters);
+  unregisterIntegrationLoggerEventHandlers(registeredEventHandlers);
   expect(loggerErrorCalledWith.length).toBe(1);
   expect(loggerErrorCalledWith[0][0].err).toBe(err);
   expect(loggerErrorCalledWith[0][0].event).toBe('unhandledRejection');

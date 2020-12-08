@@ -11,13 +11,13 @@ import {
 } from './lateLoggerRegistration';
 import {
   executeIntegrationInstanceWithUnregisteredEventEmitter,
-} from './unregisterEventEmitters';
+} from './unregisterEventHandlers';
 
 const eventEmitterTests = {
   unhandledRejection: executeIntegrationInstanceWithUnhandledRejection,
   multipleResolves: executeIntegrationInstanceWithMultipleResolves,
   lateRegisteredLogger: executeIntegrationInstanceWithLateRegisteredLogger,
-  unregisterEventEmitters: executeIntegrationInstanceWithUnregisteredEventEmitter,
+  unregisterEventHandlers: executeIntegrationInstanceWithUnregisteredEventEmitter,
 };
 
 void (async () => {

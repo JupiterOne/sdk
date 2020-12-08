@@ -24,7 +24,7 @@ import {
   IntegrationInstanceConfig,
 } from '@jupiterone/integration-sdk-core';
 
-export * from './registerEventEmitters';
+export * from './registerEventHandlers';
 
 export const PROVIDER_AUTH_ERROR_HELP =
   ' Failed to access provider resource.' +

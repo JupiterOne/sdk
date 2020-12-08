@@ -33,7 +33,7 @@ function createUncaughtExceptionListener(callback: LifecycleErrorCallback): Unca
   };
 }
 
-interface RegisteredEventEmitters {
+interface RegisteredEventListeners {
   multipleResolveListener: MultipleResolveListener;
   unhandledRejectionListener: UnhandledRejectionListener;
   uncaughtExceptionListener: UncaughtExceptionListener;
@@ -45,12 +45,12 @@ interface RegisteredEventEmitters {
  * to catch and handle events emitted from an integration. This emitter should be instrumented as early
  * as possible in the node process in order to handle any instrumentation exceptions.
  *
- * Before exiting the node process, unregister these event emitters using `unregisterEventEmitters`
+ * Before exiting the node process, unregister these event handlers using `unregisterEventHandlers`
  * 
  * @param callback
- * @returns {RegisteredEventEmitters} Pass these listeners into `unregisterEventEmitters`
+ * @returns {RegisteredEventListeners} Pass these listeners into `unregisterEventHandlers`
  */
-export function registerEventEmitters(callback: LifecycleErrorCallback): RegisteredEventEmitters {
+export function registerEventHandlers(callback: LifecycleErrorCallback): RegisteredEventListeners {
   const multipleResolveListener = createMultipleResolveListener(callback);
   process.on('multipleResolves', multipleResolveListener);
   const unhandledRejectionListener = createUnhandledRejectionListener(callback);
@@ -65,13 +65,13 @@ export function registerEventEmitters(callback: LifecycleErrorCallback): Registe
 }
 
 /**
- * Call this function before exiting the node process when using `registerEventEmitters`
+ * Call this function before exiting the node process when using `registerEventHandlers`
  */
-export function unregisterEventEmitters({
+export function unregisterEventHandlers({
   multipleResolveListener,
   unhandledRejectionListener,
   uncaughtExceptionListener,
-}: RegisteredEventEmitters) {
+}: RegisteredEventListeners) {
   process.nextTick(() => {
     process.removeListener(
       'multipleResolves',
@@ -88,7 +88,7 @@ export function unregisterEventEmitters({
   });
 }
 
-function integrationLoggerEventEmitterCallback(
+function integrationLoggerEventHandlerCallback(
   getLogger: () => Pick<IntegrationLogger, 'error'>,
 ): LifecycleErrorCallback {
   return (err, event) => getLogger().error({ err, event });
@@ -96,22 +96,24 @@ function integrationLoggerEventEmitterCallback(
 
 /**
  * Most often, unhandled rejections should be handled using logger.error().
- * As a convenience, registerIntegrationLoggerEventEmitters passes logger.error() as the callback
- * to registerEventEmitters.
+ * As a convenience, registerIntegrationLoggerEventHandlers passes logger.error() as the callback
+ * to registerEventHandlers.
  *
- * Before exiting the node process, unregister these event emitters using
- * `unregisterIntegrationLoggerEventEmitters`
+ * Before exiting the node process, unregister these event handlers using
+ * `unregisterIntegrationLoggerEventHandlers`
  */
-export function registerIntegrationLoggerEventEmitters(
+export function registerIntegrationLoggerEventHandlers(
   getLogger: () => Pick<IntegrationLogger, 'error'>,
-): RegisteredEventEmitters {
-  return registerEventEmitters(integrationLoggerEventEmitterCallback(getLogger));
+): RegisteredEventListeners {
+  return registerEventHandlers(integrationLoggerEventHandlerCallback(getLogger));
 }
 
 /**
- * Call this function before exiting the node process when using `registerIntegrationLoggerEventEmitters`
+ * Call this function before exiting the node process when using `registerIntegrationLoggerEventHandlers`
  * 
- * This function is an alias for `unregisterEventEmitters`, useful for maintaining consistency in 
+ * This function is an alias for `unregisterEventHandlers`, useful for maintaining consistency in 
  * `register*` / `unregister*` functions in calling code.
+ * 
+ * @see unregisterEventHandlers
  */
-export const unregisterIntegrationLoggerEventEmitters = unregisterEventEmitters;
+export const unregisterIntegrationLoggerEventHandlers = unregisterEventHandlers;

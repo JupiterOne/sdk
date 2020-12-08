@@ -1,7 +1,7 @@
 import {
   executeIntegrationInstance,
-  registerIntegrationLoggerEventEmitters,
-  unregisterIntegrationLoggerEventEmitters,
+  registerIntegrationLoggerEventHandlers,
+  unregisterIntegrationLoggerEventHandlers,
 } from '../src';
 import {
   LOCAL_INTEGRATION_INSTANCE,
@@ -27,15 +27,15 @@ function throwsUnhandledRejection() {
  * been constructed.
  */
 export async function executeIntegrationInstanceWithLateRegisteredLogger() {
-  // call registerIntegrationLoggerEventEmitters when logger is an early/undesirable version
+  // call registerIntegrationLoggerEventHandlers when logger is an early/undesirable version
   let wasPseudoLoggerCalled = false;
   const pseudoLogger = {
     error: () => {
       wasPseudoLoggerCalled = true;
     },
-  };
+  };registerIntegrationLoggerEventHandlers
   let logger: any = pseudoLogger;
-  const registeredEventEmitters = registerIntegrationLoggerEventEmitters(() => logger);
+  const registeredEventHandlers = registerIntegrationLoggerEventHandlers(() => logger);
 
   // later in execution, reset logger to the desirable version.
   let wasIntegrationLoggerCalled = false;
@@ -57,7 +57,7 @@ export async function executeIntegrationInstanceWithLateRegisteredLogger() {
       },
     ],
   }, LOCAL_EXECUTION_HISTORY);
-  unregisterIntegrationLoggerEventEmitters(registeredEventEmitters);
+  unregisterIntegrationLoggerEventHandlers(registeredEventHandlers);
   expect(wasPseudoLoggerCalled).toBe(false);
   expect(wasIntegrationLoggerCalled).toBe(true);
 }

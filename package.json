@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --cache .",
-    "test": "jest && yarn --cwd ./packages/integration-sdk-runtime test:event-emitters",
+    "test": "jest && yarn --cwd ./packages/integration-sdk-runtime test:event-handlers",
     "test:ci": "yarn lint && yarn build --force && yarn test",
     "build": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing",
     "build:dist": "lerna run build:dist",
