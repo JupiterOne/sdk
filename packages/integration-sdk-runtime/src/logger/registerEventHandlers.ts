@@ -95,16 +95,16 @@ export function unregisterEventHandlers({
   });
 }
 
-interface MinimalLogger {
+interface ErrorLogger {
   error: IntegrationLogger['error'];
   onFailure?: IntegrationLogger['onFailure'];
 }
 
 function integrationLoggerEventHandlerCallback(
-  getLogger: () => MinimalLogger,
+  getErrorLogger: () => ErrorLogger,
 ): LifecycleErrorCallback {
   return (err, event) => {
-    const logger = getLogger();
+    const logger = getErrorLogger();
     logger.error({ err, event });
     if (logger.onFailure) {
       logger.onFailure({ err });
@@ -121,9 +121,9 @@ function integrationLoggerEventHandlerCallback(
  * `unregisterIntegrationLoggerEventHandlers`
  */
 export function registerIntegrationLoggerEventHandlers(
-  getLogger: () => MinimalLogger,
+  getErrorLogger: () => ErrorLogger,
 ): RegisteredEventListeners {
-  return registerEventHandlers(integrationLoggerEventHandlerCallback(getLogger));
+  return registerEventHandlers(integrationLoggerEventHandlerCallback(getErrorLogger));
 }
 
 /**
