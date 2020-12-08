@@ -11,7 +11,7 @@ import {
 } from './util/fixtures'
 import { expect } from './util/expect';
 
-function callbackThrowsMultipleResoles(err) {
+function callbackThrowsMultipleResolves(err) {
   return async () => {
     await Promise.all([
       (async () => {
@@ -41,7 +41,7 @@ export async function executeIntegrationInstanceWithMultipleResolves() {
         name: '',
         entities: [],
         relationships: [],
-        executionHandler: callbackThrowsMultipleResoles(err),
+        executionHandler: callbackThrowsMultipleResolves(err),
       },
     ],
   }, LOCAL_EXECUTION_HISTORY);
