@@ -26,7 +26,7 @@ function throwsUnhandledRejection() {
  * The console _will_ print out an `UnhandledPromiseRejectionWarning`, which is expected, 
  * since we have unregistered the function that would otherwise handle this error.
  */
-export async function executeIntegrationInstanceWithUnregisteredEventEmitter() {
+export async function executeIntegrationInstanceWithUnregisteredEventHandlers() {
   let wasLoggerErrorCalled = false;
   const logger = createMockIntegrationLogger({
     error: () => {

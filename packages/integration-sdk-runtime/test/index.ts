@@ -10,14 +10,14 @@ import {
   executeIntegrationInstanceWithLateRegisteredLogger,
 } from './lateLoggerRegistration';
 import {
-  executeIntegrationInstanceWithUnregisteredEventEmitter,
+  executeIntegrationInstanceWithUnregisteredEventHandlers,
 } from './unregisterEventHandlers';
 
 const eventEmitterTests = {
   unhandledRejection: executeIntegrationInstanceWithUnhandledRejection,
   multipleResolves: executeIntegrationInstanceWithMultipleResolves,
   lateRegisteredLogger: executeIntegrationInstanceWithLateRegisteredLogger,
-  unregisterEventHandlers: executeIntegrationInstanceWithUnregisteredEventEmitter,
+  unregisterEventHandlers: executeIntegrationInstanceWithUnregisteredEventHandlers,
 };
 
 void (async () => {
