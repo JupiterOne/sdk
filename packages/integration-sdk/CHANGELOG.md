@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.1.0 - 2020-12-08
+
 ### Added
 
 - Added `registerEventHandlers` and `unregisterEventHandlers` exports from the
@@ -26,6 +28,11 @@ and this project adheres to
   are caught when running `yarn j1-integration collect`.
 - Made `registerIntegrationEventHandlers` call the integration logger
   `onFailure` function.
+
+### Changed
+
+- Increase concurrency on integration data uploads
+- Implement retry logic around integration data uploads
 
 ## 5.0.0 - 2020-11-24
 

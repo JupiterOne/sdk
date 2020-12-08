@@ -103,6 +103,70 @@ test('uploads relationship data in batches of 250', async () => {
   );
 });
 
+test('should retry a failed upload', async () => {
+  const { job, logger, apiClient } = createTestContext();
+
+  const loggerWarnSpy = jest.spyOn(logger, 'warn');
+
+  const data = times(
+    510,
+    (i): Entity => ({
+      _key: `entity:${i}`,
+      _type: 'resource',
+      _class: 'Resource',
+    }),
+  );
+
+  const expectedError = new Error('expected error');
+
+  const postSpy = jest
+    .spyOn(apiClient, 'post')
+    .mockRejectedValueOnce(expectedError)
+    .mockImplementation(noop as any);
+
+  await uploadData(
+    {
+      job,
+      logger,
+      apiClient,
+    },
+    'entities',
+    data,
+  );
+
+  expect(postSpy).toHaveBeenCalledTimes(4);
+
+  expect(postSpy).toHaveBeenCalledWith(
+    `/persister/synchronization/jobs/${job.id}/entities`,
+    {
+      entities: data.slice(0, 250),
+    },
+  );
+
+  expect(postSpy).toHaveBeenCalledWith(
+    `/persister/synchronization/jobs/${job.id}/entities`,
+    {
+      entities: data.slice(250, 500),
+    },
+  );
+
+  expect(postSpy).toHaveBeenCalledWith(
+    `/persister/synchronization/jobs/${job.id}/entities`,
+    {
+      entities: data.slice(500, 510),
+    },
+  );
+
+  expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
+  expect(loggerWarnSpy).toHaveBeenCalledWith(
+    {
+      attemptNum: 0,
+      err: expectedError,
+    },
+    'Failed to upload integration data chunk (will retry)',
+  );
+});
+
 function createTestContext() {
   const job = generateSynchronizationJob();
 

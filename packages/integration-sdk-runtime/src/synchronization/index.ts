@@ -23,13 +23,15 @@ import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
 import { readGraphObjectFile } from '../storage/FileSystemGraphObjectStore/indices';
 import { FlushedGraphObjectData } from '../storage/types';
+import { retry } from '@lifeomic/attempt';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
+import { AxiosInstance } from 'axios';
 export { createEventPublishingQueue } from './events';
 
 const UPLOAD_BATCH_SIZE = 250;
-const UPLOAD_CONCURRENCY = 2;
+const UPLOAD_CONCURRENCY = 6;
 
 interface SynchronizeInput {
   logger: IntegrationLogger;
@@ -215,8 +217,48 @@ interface UploadDataLookup {
   relationships: Relationship;
 }
 
+interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
+  logger: IntegrationLogger;
+  apiClient: AxiosInstance;
+  jobId: string;
+  type: K;
+  batch: T[K][];
+}
+
+async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
+  logger,
+  apiClient,
+  jobId,
+  type,
+  batch,
+}: UploadDataChunkParams<T, K>) {
+  await retry(
+    async () => {
+      await apiClient.post(`/persister/synchronization/jobs/${jobId}/${type}`, {
+        [type]: batch,
+      });
+    },
+    {
+      maxAttempts: 5,
+      delay: 200,
+      factor: 1.05,
+      handleError(err, attemptContext) {
+        if (attemptContext.attemptsRemaining) {
+          logger.warn(
+            {
+              err,
+              attemptNum: attemptContext.attemptNum,
+            },
+            'Failed to upload integration data chunk (will retry)',
+          );
+        }
+      },
+    },
+  );
+}
+
 export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
-  { job, apiClient }: SynchronizationJobContext,
+  { job, apiClient, logger }: SynchronizationJobContext,
   type: K,
   data: T[K][],
 ) {
@@ -225,10 +267,13 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
     batches,
     async (batch: T[K][]) => {
       if (batch.length) {
-        await apiClient.post(
-          `/persister/synchronization/jobs/${job.id}/${type}`,
-          { [type]: batch },
-        );
+        await uploadDataChunk({
+          apiClient,
+          logger,
+          jobId: job.id,
+          type,
+          batch,
+        });
       }
     },
     { concurrency: UPLOAD_CONCURRENCY },
