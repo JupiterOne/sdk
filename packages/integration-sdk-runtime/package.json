@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "jest",
+    "test:event-handlers": "ts-node ./test/index.ts",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"
@@ -45,6 +46,7 @@
     "@types/uuid": "^7.0.2",
     "get-port": "^5.1.1",
     "memfs": "^3.2.0",
+    "ts-node": "^9.1.0",
     "wait-for-expect": "^3.0.2"
   }
 }

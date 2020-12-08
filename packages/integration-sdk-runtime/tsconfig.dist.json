@@ -4,6 +4,8 @@
     "sourceMap": true
   },
   "exclude": [
+    "**/test/*",
+    "./jest.setup.ts",
     "**/dist/*",
     "**/*.test.ts",
     "**/__tests__/**/*.ts",
