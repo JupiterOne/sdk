@@ -8,10 +8,10 @@ import {
 
 import * as log from './log';
 
-export class IntegrationInvocationConfigNotFoundError extends IntegrationError {
+export class IntegrationInvocationConfigLoadError extends IntegrationError {
   constructor(message: string) {
     super({
-      code: 'INVOCATION_CONFIG_NOT_FOUND',
+      code: 'INVOCATION_CONFIG_LOAD_ERROR',
       message,
     });
   }
@@ -42,8 +42,8 @@ export function loadInvocationConfig(
   try {
     integrationModule = require(path.resolve(projectSourceDirectory, 'index'));
   } catch (err) {
-    throw new IntegrationInvocationConfigNotFoundError(
-      'Integration invocation configuration not found. Configuration should be exported as "invocationConfig" from "src/index".',
+    throw new IntegrationInvocationConfigLoadError(
+      'Error loading integration invocation configuration. Ensure "invocationConfig" is exported from "src/index". Additional details: ' + err,
     );
   }
 
