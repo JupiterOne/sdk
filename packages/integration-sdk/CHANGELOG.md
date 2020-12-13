@@ -9,6 +9,23 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- OPTIMIZATION: Buffer entities and relationships in memory and allow for fast
+  lookups. This change allows us to skip flushing to disk anytime there is a
+  call to `findEntity`, `iterateEntities` or `iterateRelationships`.
+
+- Allow `FileSystemGraphObjectStore` to specify `graphObjectBufferThreshold`,
+  which defines the maximum number of graph objects that the graph object store
+  can buffer into memory before flushing to disk. Machines with more memory
+  should consider increasing this value as the default is 500.
+
+### Removed
+
+- BREAKING: Remove `BucketMap` as it's no longer used in the
+  `FileSystemGraphObjectStore`. `BucketMap` was exposed externally, but should
+  not be used externally either.
+
 ## 5.1.0 - 2020-12-08
 
 ### Added

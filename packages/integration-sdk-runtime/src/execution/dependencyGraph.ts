@@ -284,7 +284,6 @@ export function executeStepDependencyGraph<
         status = StepResultStatus.FAILURE;
       }
 
-      await context.jobState.flush();
       updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
@@ -294,6 +293,7 @@ export function executeStepDependencyGraph<
 
     void promiseQueue
       .onIdle()
+      .then(() => graphObjectStore.flush())
       .then(() => resolve([...stepResultsMap.values()]))
       .catch(reject);
   });

@@ -6,6 +6,7 @@ import waitForExpect from 'wait-for-expect';
 
 import {
   Entity,
+  GraphObjectStore,
   IntegrationError,
   IntegrationExecutionContext,
   IntegrationInstance,
@@ -132,13 +133,14 @@ describe('executeStepDependencyGraph', () => {
   async function executeSteps(
     steps: IntegrationStep[],
     stepStartStates: StepStartStates = getDefaultStepStartStates(steps),
+    graphObjectStore: GraphObjectStore = new FileSystemGraphObjectStore(),
   ) {
     return executeStepDependencyGraph({
       executionContext,
       inputGraph: buildStepDependencyGraph(steps),
       stepStartStates,
       duplicateKeyTracker: new DuplicateKeyTracker(),
-      graphObjectStore: new FileSystemGraphObjectStore(),
+      graphObjectStore,
     });
   }
 
@@ -423,20 +425,27 @@ describe('executeStepDependencyGraph', () => {
     }
   });
 
-  test('should perform a flush of the jobState after a step was executed', async () => {
-    let jobStateFlushSpy;
-
-    await executeSteps([
+  test('should perform a flush of the jobState after execution completed', async () => {
+    const steps: IntegrationStep[] = [
       {
         id: 'a',
         name: 'a',
         entities: [],
         relationships: [],
-        executionHandler: ({ jobState }) => {
-          jobStateFlushSpy = jest.spyOn(jobState, 'flush');
+        executionHandler: () => {
+          return Promise.resolve();
         },
       },
-    ]);
+    ];
+
+    const graphObjectStore = new FileSystemGraphObjectStore();
+    const jobStateFlushSpy = jest.spyOn(graphObjectStore, 'flush');
+
+    await executeSteps(
+      steps,
+      getDefaultStepStartStates(steps),
+      graphObjectStore,
+    );
 
     expect(jobStateFlushSpy).toHaveBeenCalledTimes(1);
   });

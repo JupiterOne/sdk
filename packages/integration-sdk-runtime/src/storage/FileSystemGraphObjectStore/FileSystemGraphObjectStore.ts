@@ -12,34 +12,49 @@ import {
   GraphObjectStore,
 } from '@jupiterone/integration-sdk-core';
 
-import { BucketMap } from './BucketMap';
 import { flushDataToDisk } from './flushDataToDisk';
 import {
   iterateEntityTypeIndex,
   iterateRelationshipTypeIndex,
 } from './indices';
+import { InMemoryGraphObjectStore } from '../memory';
 
-export const GRAPH_OBJECT_BUFFER_THRESHOLD = 500; // arbitrarily selected, subject to tuning
+export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
-export class FileSystemGraphObjectStore implements GraphObjectStore {
-  semaphore: Sema;
-  entityStorageMap: BucketMap<Entity>;
-  relationshipStorageMap: BucketMap<Relationship>;
+export interface FileSystemGraphObjectStoreParams {
+  /**
+   * The maximum number of graph objects that this store can buffer in memory
+   * before writing to disk. Machines with more memory should consider bumping
+   * this value up.
+   *
+   * Default: 500
+   */
+  graphObjectBufferThreshold: number;
+}
 
-  constructor() {
-    this.entityStorageMap = new BucketMap();
-    this.relationshipStorageMap = new BucketMap();
+export class FileSystemGraphObjectStore implements GraphObjectStore {
+  private readonly semaphore: Sema;
+  private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
+  private readonly graphObjectBufferThreshold: number;
+
+  constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
+    this.graphObjectBufferThreshold =
+      params?.graphObjectBufferThreshold ||
+      DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
   }
 
   async addEntities(storageDirectoryPath: string, newEntities: Entity[]) {
-    this.entityStorageMap.add(storageDirectoryPath, newEntities);
+    this.localGraphObjectStore.addEntities(storageDirectoryPath, newEntities);
 
-    if (this.entityStorageMap.totalItemCount >= GRAPH_OBJECT_BUFFER_THRESHOLD) {
+    if (
+      this.localGraphObjectStore.getTotalEntityItemCount() >=
+      this.graphObjectBufferThreshold
+    ) {
       await this.flushEntitiesToDisk();
     }
   }
@@ -48,18 +63,27 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     storageDirectoryPath: string,
     newRelationships: Relationship[],
   ) {
-    this.relationshipStorageMap.add(storageDirectoryPath, newRelationships);
+    this.localGraphObjectStore.addRelationships(
+      storageDirectoryPath,
+      newRelationships,
+    );
 
     if (
-      this.relationshipStorageMap.totalItemCount >=
-      GRAPH_OBJECT_BUFFER_THRESHOLD
+      this.localGraphObjectStore.getTotalRelationshipItemCount() >=
+      this.graphObjectBufferThreshold
     ) {
       await this.flushRelationshipsToDisk();
     }
   }
 
   async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
-    await this.flushEntitiesToDisk();
+    const bufferedEntity = this.localGraphObjectStore.findEntity(_key);
+
+    if (bufferedEntity) {
+      // This entity has not yet been flushed to disk
+      return bufferedEntity;
+    }
+
     const entities: Entity[] = [];
 
     await this.iterateEntities({ _type }, async (e) => {
@@ -87,7 +111,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
   ) {
-    await this.flushEntitiesToDisk();
+    await this.localGraphObjectStore.iterateEntities(filter, iteratee);
 
     await iterateEntityTypeIndex({
       type: filter._type,
@@ -99,7 +123,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
   ) {
-    await this.flushRelationshipsToDisk();
+    await this.localGraphObjectStore.iterateRelationships(filter, iteratee);
 
     await iterateRelationshipTypeIndex({
       type: filter._type,
@@ -116,32 +140,35 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async flushEntitiesToDisk() {
     await this.lockOperation(() =>
-      pMap([...this.entityStorageMap.keys()], (storageDirectoryPath) => {
-        const entities = this.entityStorageMap.get(storageDirectoryPath) ?? [];
-        this.entityStorageMap.delete(storageDirectoryPath);
+      pMap(
+        this.localGraphObjectStore.collectEntitiesByStep(),
+        async ([stepId, entities]) => {
+          await flushDataToDisk({
+            storageDirectoryPath: stepId,
+            collectionType: 'entities',
+            data: entities,
+          });
 
-        return flushDataToDisk({
-          storageDirectoryPath,
-          collectionType: 'entities',
-          data: entities,
-        });
-      }),
+          this.localGraphObjectStore.flushEntities(entities);
+        },
+      ),
     );
   }
 
   async flushRelationshipsToDisk() {
     await this.lockOperation(() =>
-      pMap([...this.relationshipStorageMap.keys()], (storageDirectoryPath) => {
-        const relationships =
-          this.relationshipStorageMap.get(storageDirectoryPath) ?? [];
-        this.relationshipStorageMap.delete(storageDirectoryPath);
+      pMap(
+        this.localGraphObjectStore.collectRelationshipsByStep(),
+        async ([stepId, relationships]) => {
+          await flushDataToDisk({
+            storageDirectoryPath: stepId,
+            collectionType: 'relationships',
+            data: relationships,
+          });
 
-        return flushDataToDisk({
-          storageDirectoryPath,
-          collectionType: 'relationships',
-          data: relationships,
-        });
-      }),
+          this.localGraphObjectStore.flushRelationships(relationships);
+        },
+      ),
     );
   }
 
@@ -166,7 +193,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
    * and prematurely end, causing the next step to start up before the
    * data it depends on is present on disk.
    */
-  async lockOperation(operation: () => Promise<any>) {
+  private async lockOperation<T>(operation: () => Promise<T>) {
     await this.semaphore.acquire();
     try {
       await operation();
