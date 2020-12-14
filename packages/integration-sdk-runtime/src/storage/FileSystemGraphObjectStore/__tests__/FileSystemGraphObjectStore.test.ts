@@ -10,6 +10,7 @@ import { getRootStorageDirectory } from '../../../fileSystem';
 import {
   FileSystemGraphObjectStore,
   DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD,
+  FileSystemGraphObjectStoreParams,
 } from '../FileSystemGraphObjectStore';
 
 import { generateEntity, generateRelationship } from './util/graphObjects';
@@ -244,7 +245,7 @@ describe('addRelationships', () => {
 });
 
 describe('getEntity', () => {
-  test('should flush buffered entities and get an entity by "_type" and "_key"', async () => {
+  test('should find buffered entities and get an entity by "_type" and "_key"', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const _type = uuid();
@@ -259,14 +260,26 @@ describe('getEntity', () => {
     ]);
 
     const entity = await store.getEntity({ _key, _type });
-    // expect(store.entityStorageMap.totalItemCount).toEqual(0);
-
     expect(entity).toEqual(matchingEntity);
+  });
+
+  test('should find non-buffered entities and get an entity by "_type" and "_key"', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 2,
+    });
+
+    const _type = uuid();
+
+    const entities = times(2, () => generateEntity({ _type }));
+    await store.addEntities(storageDirectoryPath, entities);
+
+    const entity = await store.getEntity({ _key: entities[1]._key, _type });
+    expect(entity).toEqual(entities[1]);
   });
 });
 
 describe('iterateEntities', () => {
-  test('should flush buffered entities and iterate the entity "_type" index stored on disk', async () => {
+  test('should find buffered & non-buffered entities and iterate the entity "_type" index stored on disk', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const matchingType = uuid();
@@ -283,15 +296,26 @@ describe('iterateEntities', () => {
       ...matchingEntities,
     ]);
 
-    const collectedEntities: Entity[] = [];
+    await store.flushEntitiesToDisk();
+
+    const bufferedEntity = generateEntity({ _type: matchingType });
+    await store.addEntities(storageDirectoryPath, [bufferedEntity]);
+
+    const collectedEntities = new Map<string, Entity>();
     const collectEntity = (e: Entity) => {
-      collectedEntities.push(e);
+      if (collectedEntities.has(e._key)) {
+        throw new Error(
+          `duplicate entity _key found in iterateEntities (_key=${e._key})`,
+        );
+      }
+      collectedEntities.set(e._key, e);
     };
 
     await store.iterateEntities({ _type: matchingType }, collectEntity);
-    // expect(store.entityStorageMap.totalItemCount).toEqual(0);
-
-    expect(collectedEntities).toEqual(matchingEntities);
+    expect(Array.from(collectedEntities.values())).toEqual([
+      bufferedEntity,
+      ...matchingEntities,
+    ]);
   });
 
   test('should allow extended types to be iterated', async () => {
@@ -328,7 +352,7 @@ describe('iterateEntities', () => {
 });
 
 describe('iterateRelationships', () => {
-  test('should flush buffered relationshipos and iterate the relationship "_type" index stored on disk', async () => {
+  test('should find buffered & non-buffered relationshipos and iterate the relationship "_type" index stored on disk', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
     const matchingType = uuid();
@@ -346,18 +370,27 @@ describe('iterateRelationships', () => {
     ]);
     await store.flush();
 
-    const collectedRelationships: Relationship[] = [];
+    const bufferedRelationship = generateRelationship({ _type: matchingType });
+    await store.addRelationships(storageDirectoryPath, [bufferedRelationship]);
+
+    const collectedRelationships = new Map<string, Relationship>();
     const collectRelationship = (r: Relationship) => {
-      collectedRelationships.push(r);
+      if (collectedRelationships.has(r._key)) {
+        throw new Error(
+          `duplicate relationship_key found in iterateRelationships (_key=${r._key})`,
+        );
+      }
+      collectedRelationships.set(r._key, r);
     };
 
     await store.iterateRelationships(
       { _type: matchingType },
       collectRelationship,
     );
-    // expect(store.relationshipStorageMap.totalItemCount).toEqual(0);
-
-    expect(collectedRelationships).toEqual(matchingRelationships);
+    expect(Array.from(collectedRelationships.values())).toEqual([
+      bufferedRelationship,
+      ...matchingRelationships,
+    ]);
   });
 
   test('should allow extended types to be iterated', async () => {
@@ -393,9 +426,9 @@ describe('iterateRelationships', () => {
   });
 });
 
-function setupFileSystemObjectStore() {
+function setupFileSystemObjectStore(params?: FileSystemGraphObjectStoreParams) {
   const storageDirectoryPath = uuid();
-  const store = new FileSystemGraphObjectStore();
+  const store = new FileSystemGraphObjectStore(params);
 
   return {
     storageDirectoryPath,
