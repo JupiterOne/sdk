@@ -48,20 +48,25 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
   }
 
-  async addEntities(storageDirectoryPath: string, newEntities: Entity[]) {
+  async addEntities(
+    storageDirectoryPath: string,
+    newEntities: Entity[],
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+  ) {
     this.localGraphObjectStore.addEntities(storageDirectoryPath, newEntities);
 
     if (
       this.localGraphObjectStore.getTotalEntityItemCount() >=
       this.graphObjectBufferThreshold
     ) {
-      await this.flushEntitiesToDisk();
+      await this.flushEntitiesToDisk(onEntitiesFlushed);
     }
   }
 
   async addRelationships(
     storageDirectoryPath: string,
     newRelationships: Relationship[],
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
     this.localGraphObjectStore.addRelationships(
       storageDirectoryPath,
@@ -72,7 +77,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       this.localGraphObjectStore.getTotalRelationshipItemCount() >=
       this.graphObjectBufferThreshold
     ) {
-      await this.flushRelationshipsToDisk();
+      await this.flushRelationshipsToDisk(onRelationshipsFlushed);
     }
   }
 
@@ -131,14 +136,19 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     });
   }
 
-  async flush() {
+  async flush(
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+  ) {
     await Promise.all([
-      this.flushEntitiesToDisk(),
-      this.flushRelationshipsToDisk(),
+      this.flushEntitiesToDisk(onEntitiesFlushed),
+      this.flushRelationshipsToDisk(onRelationshipsFlushed),
     ]);
   }
 
-  async flushEntitiesToDisk() {
+  async flushEntitiesToDisk(
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+  ) {
     await this.lockOperation(() =>
       pMap(
         this.localGraphObjectStore.collectEntitiesByStep(),
@@ -150,12 +160,18 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           });
 
           this.localGraphObjectStore.flushEntities(entities);
+
+          if (onEntitiesFlushed) {
+            await onEntitiesFlushed(entities);
+          }
         },
       ),
     );
   }
 
-  async flushRelationshipsToDisk() {
+  async flushRelationshipsToDisk(
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+  ) {
     await this.lockOperation(() =>
       pMap(
         this.localGraphObjectStore.collectRelationshipsByStep(),
@@ -167,6 +183,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           });
 
           this.localGraphObjectStore.flushRelationships(relationships);
+
+          if (onRelationshipsFlushed) {
+            await onRelationshipsFlushed(relationships);
+          }
         },
       ),
     );

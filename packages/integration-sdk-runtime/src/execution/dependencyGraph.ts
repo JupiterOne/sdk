@@ -18,6 +18,7 @@ import {
   MemoryDataStore,
   TypeTracker,
 } from './jobState';
+import { StepGraphObjectDataUploader } from './uploader';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -70,12 +71,14 @@ export function executeStepDependencyGraph<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  uploader,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  uploader?: StepGraphObjectDataUploader;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -255,6 +258,7 @@ export function executeStepDependencyGraph<
         graphObjectStore,
         dataStore,
         stepId,
+        uploader,
       });
 
       const { logger } = context;
@@ -284,6 +288,12 @@ export function executeStepDependencyGraph<
         status = StepResultStatus.FAILURE;
       }
 
+      await context.jobState.flush();
+
+      if (context.jobState.waitUntilUploadsComplete) {
+        await context.jobState.waitUntilUploadsComplete();
+      }
+
       updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
@@ -293,7 +303,6 @@ export function executeStepDependencyGraph<
 
     void promiseQueue
       .onIdle()
-      .then(() => graphObjectStore.flush())
       .then(() => resolve([...stepResultsMap.values()]))
       .catch(reject);
   });
@@ -306,6 +315,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
   typeTracker,
   graphObjectStore,
   dataStore,
+  uploader,
 }: {
   stepId: string;
   context: ExecutionContext;
@@ -313,6 +323,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
   typeTracker: TypeTracker;
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
+  uploader?: StepGraphObjectDataUploader;
 }): TStepExecutionContext {
   const stepExecutionContext: StepExecutionContext = {
     ...context,
@@ -325,6 +336,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
       typeTracker,
       graphObjectStore,
       dataStore,
+      uploader,
     }),
   };
 

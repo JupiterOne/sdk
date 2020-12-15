@@ -13,11 +13,14 @@ import {
   getApiBaseUrl,
   getApiKeyFromEnvironment,
   initiateSynchronization,
-  uploadCollectedData,
+  // uploadCollectedData
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
 import * as log from '../log';
+import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
+
+const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
 export function run() {
   return createCommand('run')
@@ -70,6 +73,11 @@ export function run() {
 
       const invocationConfig = await loadConfig();
 
+      const uploader = createPersisterApiStepGraphObjectDataUploader({
+        synchronizationJobContext: synchronizationContext,
+        uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
+      });
+
       try {
         const executionResults = await executeIntegrationInstance(
           logger,
@@ -82,14 +90,13 @@ export function run() {
           },
           {
             enableSchemaValidation: true,
+            uploader,
           },
         );
 
         await eventPublishingQueue.onIdle();
 
         log.displayExecutionResults(executionResults);
-
-        await uploadCollectedData(synchronizationContext);
 
         const synchronizationResult = await finalizeSynchronization({
           ...synchronizationContext,

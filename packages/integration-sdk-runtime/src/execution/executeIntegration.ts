@@ -32,6 +32,7 @@ import {
   executeSteps,
   getDefaultStepStartStates,
 } from './step';
+import { StepGraphObjectDataUploader } from './uploader';
 import { validateStepStartStates } from './validation';
 
 export interface ExecuteIntegrationResult {
@@ -44,10 +45,12 @@ export interface ExecuteIntegrationResult {
 export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
+  uploader?: StepGraphObjectDataUploader;
 }
 
-interface ExecuteWithContextOptions {
+export interface ExecuteWithContextOptions {
   graphObjectStore?: GraphObjectStore;
+  uploader?: StepGraphObjectDataUploader;
 }
 
 const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
@@ -111,9 +114,7 @@ export async function executeIntegrationInstance(
           executionHistory,
         },
         config,
-        {
-          graphObjectStore: options.graphObjectStore,
-        },
+        options,
       ),
   });
 }
@@ -203,7 +204,10 @@ export async function executeWithContext<
         });
     }, THIRTY_SECONDS_STORAGE_INTERVAL_MS);
 
-    const { graphObjectStore = new FileSystemGraphObjectStore() } = options;
+    const {
+      graphObjectStore = new FileSystemGraphObjectStore(),
+      uploader,
+    } = options;
 
     const integrationStepResults = await executeSteps({
       executionContext: context,
@@ -213,6 +217,7 @@ export async function executeWithContext<
         config.normalizeGraphObjectKey,
       ),
       graphObjectStore,
+      uploader,
     });
 
     const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
