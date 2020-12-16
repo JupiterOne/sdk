@@ -10,7 +10,7 @@ import flatten from 'lodash/flatten';
 
 import { getRootStorageDirectory } from '../../../fileSystem';
 import { flushDataToDisk } from '../flushDataToDisk';
-import { generateEntity } from './util/graphObjects';
+import { createTestEntity } from '@jupiterone/integration-sdk-private-test-utils';
 
 jest.mock('fs');
 
@@ -18,9 +18,9 @@ afterEach(() => vol.reset());
 
 test('should group objects by "_type" and write them to separate files', async () => {
   const testEntityData = {
-    A: times(25, () => generateEntity({ _type: 'A' })),
-    B: times(25, () => generateEntity({ _type: 'B' })),
-    C: times(25, () => generateEntity({ _type: 'C' })),
+    A: times(25, () => createTestEntity({ _type: 'A' })),
+    B: times(25, () => createTestEntity({ _type: 'B' })),
+    C: times(25, () => createTestEntity({ _type: 'C' })),
   };
 
   const allEntities = randomizeOrder(flatten(Object.values(testEntityData)));

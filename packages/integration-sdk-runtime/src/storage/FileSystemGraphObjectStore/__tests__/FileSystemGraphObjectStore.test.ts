@@ -13,7 +13,10 @@ import {
   FileSystemGraphObjectStoreParams,
 } from '../FileSystemGraphObjectStore';
 
-import { generateEntity, generateRelationship } from './util/graphObjects';
+import {
+  createTestEntity,
+  createTestRelationship,
+} from '@jupiterone/integration-sdk-private-test-utils';
 
 import {
   Entity,
@@ -33,7 +36,7 @@ describe('flushEntitiesToDisk', () => {
   test('should write entities to the graph directory and symlink files to the index directory', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const entityType = uuid();
-    const entities = times(25, () => generateEntity({ _type: entityType }));
+    const entities = times(25, () => createTestEntity({ _type: entityType }));
     await store.addEntities(storageDirectoryPath, entities);
 
     await store.flushEntitiesToDisk();
@@ -75,7 +78,7 @@ describe('flushRelationshipsToDisk', () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const relationshipType = uuid();
     const relationships = times(25, () =>
-      generateRelationship({ _type: relationshipType }),
+      createTestRelationship({ _type: relationshipType }),
     );
     await store.addRelationships(storageDirectoryPath, relationships);
 
@@ -118,9 +121,9 @@ describe('flushRelationshipsToDisk', () => {
 describe('flush', () => {
   test('should flush both entities and relationships to disk', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
-    await store.addEntities(storageDirectoryPath, [generateEntity()]);
+    await store.addEntities(storageDirectoryPath, [createTestEntity()]);
     await store.addRelationships(storageDirectoryPath, [
-      generateRelationship(),
+      createTestRelationship(),
     ]);
 
     const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
@@ -137,7 +140,7 @@ describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const entities = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
-      generateEntity(),
+      createTestEntity(),
     );
 
     const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
@@ -147,7 +150,7 @@ describe('addEntities', () => {
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(0);
 
     // adding an additional entity should trigger the flushing
-    await store.addEntities(storageDirectoryPath, [generateEntity()]);
+    await store.addEntities(storageDirectoryPath, [createTestEntity()]);
     expect(flushEntitiesSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -185,7 +188,7 @@ describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const relationships = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
-      generateRelationship(),
+      createTestRelationship(),
     );
 
     const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
@@ -196,7 +199,7 @@ describe('addRelationships', () => {
 
     // adding an additional relationship should trigger the flushing
     await store.addRelationships(storageDirectoryPath, [
-      generateRelationship(),
+      createTestRelationship(),
     ]);
     expect(flushRelationshipsSpy).toHaveBeenCalledTimes(1);
   });
@@ -251,8 +254,8 @@ describe('getEntity', () => {
     const _type = uuid();
     const _key = uuid();
 
-    const nonMatchingEntities = times(25, () => generateEntity({ _type }));
-    const matchingEntity = generateEntity({ _type, _key });
+    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+    const matchingEntity = createTestEntity({ _type, _key });
 
     await store.addEntities(storageDirectoryPath, [
       ...nonMatchingEntities,
@@ -270,7 +273,7 @@ describe('getEntity', () => {
 
     const _type = uuid();
 
-    const entities = times(2, () => generateEntity({ _type }));
+    const entities = times(2, () => createTestEntity({ _type }));
     await store.addEntities(storageDirectoryPath, entities);
 
     const entity = await store.getEntity({ _key: entities[1]._key, _type });
@@ -285,10 +288,10 @@ describe('iterateEntities', () => {
     const matchingType = uuid();
 
     const nonMatchingEntities = times(25, () =>
-      generateEntity({ _type: uuid() }),
+      createTestEntity({ _type: uuid() }),
     );
     const matchingEntities = times(25, () =>
-      generateEntity({ _type: matchingType }),
+      createTestEntity({ _type: matchingType }),
     );
 
     await store.addEntities(storageDirectoryPath, [
@@ -298,7 +301,7 @@ describe('iterateEntities', () => {
 
     await store.flushEntitiesToDisk();
 
-    const bufferedEntity = generateEntity({ _type: matchingType });
+    const bufferedEntity = createTestEntity({ _type: matchingType });
     await store.addEntities(storageDirectoryPath, [bufferedEntity]);
 
     const collectedEntities = new Map<string, Entity>();
@@ -326,7 +329,7 @@ describe('iterateEntities', () => {
     type TestEntity = Entity & { randomField: string };
 
     const entities = times(25, () =>
-      generateEntity({ _type: entityType, randomField: 'field' }),
+      createTestEntity({ _type: entityType, randomField: 'field' }),
     );
 
     await store.addEntities(storageDirectoryPath, entities);
@@ -358,10 +361,10 @@ describe('iterateRelationships', () => {
     const matchingType = uuid();
 
     const nonMatchingRelationships = times(25, () =>
-      generateRelationship({ _type: uuid() }),
+      createTestRelationship({ _type: uuid() }),
     );
     const matchingRelationships = times(25, () =>
-      generateRelationship({ _type: matchingType }),
+      createTestRelationship({ _type: matchingType }),
     );
 
     await store.addRelationships(storageDirectoryPath, [
@@ -370,7 +373,9 @@ describe('iterateRelationships', () => {
     ]);
     await store.flush();
 
-    const bufferedRelationship = generateRelationship({ _type: matchingType });
+    const bufferedRelationship = createTestRelationship({
+      _type: matchingType,
+    });
     await store.addRelationships(storageDirectoryPath, [bufferedRelationship]);
 
     const collectedRelationships = new Map<string, Relationship>();
@@ -401,7 +406,7 @@ describe('iterateRelationships', () => {
     type TestRelationship = Relationship & { randomField: string };
 
     const relationships = times(25, () =>
-      generateRelationship({ _type: relationshipType, randomField: 'field' }),
+      createTestRelationship({ _type: relationshipType, randomField: 'field' }),
     );
 
     await store.addRelationships(storageDirectoryPath, relationships);
@@ -435,9 +440,9 @@ describe('flush callbacks', () => {
     let flushedEntitiesCollected: Entity[] = [];
     let addEntitiesFlushCalledTimes = 0;
 
-    const e1 = generateEntity();
-    const e2 = generateEntity();
-    const e3 = generateEntity();
+    const e1 = createTestEntity();
+    const e2 = createTestEntity();
+    const e3 = createTestEntity();
 
     await store.addEntities(storageDirectoryPath, [e1], async (entities) => {
       // Should not call first time because `graphObjectBufferThreshold` = 2
@@ -469,9 +474,9 @@ describe('flush callbacks', () => {
     let flushedRelationshipsCollected: Relationship[] = [];
     let addRelationshipsFlushCalledTimes = 0;
 
-    const r1 = generateRelationship();
-    const r2 = generateRelationship();
-    const r3 = generateRelationship();
+    const r1 = createTestRelationship();
+    const r2 = createTestRelationship();
+    const r3 = createTestRelationship();
 
     await store.addRelationships(
       storageDirectoryPath,
@@ -511,7 +516,7 @@ describe('flush callbacks', () => {
     let flushedEntitiesCollected: Entity[] = [];
     let addEntitiesFlushCalledTimes = 0;
 
-    const entities = times(3, () => generateEntity());
+    const entities = times(3, () => createTestEntity());
 
     async function onEntitiesFlushed(entities) {
       addEntitiesFlushCalledTimes++;
@@ -538,7 +543,7 @@ describe('flush callbacks', () => {
     let flushedRelationshipsCollected: Relationship[] = [];
     let addRelationshipsFlushedCalledTimes = 0;
 
-    const relationships = times(3, () => generateRelationship());
+    const relationships = times(3, () => createTestRelationship());
 
     async function onRelationshipsFlushed(relationships) {
       addRelationshipsFlushedCalledTimes++;
@@ -574,8 +579,8 @@ describe('flush callbacks', () => {
     let flushedEntitiesCollected: Entity[] = [];
     let addEntitiesFlushCalledTimes = 0;
 
-    const entities = times(3, () => generateEntity());
-    const relationships = times(3, () => generateRelationship());
+    const entities = times(3, () => createTestEntity());
+    const relationships = times(3, () => createTestRelationship());
 
     async function onEntitiesFlushed(entities) {
       addEntitiesFlushCalledTimes++;

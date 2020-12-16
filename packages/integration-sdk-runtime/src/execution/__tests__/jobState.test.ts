@@ -8,25 +8,27 @@ import {
 import { v4 as uuid } from 'uuid';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
-import {
-  Entity,
-  KeyNormalizationFunction,
-} from '@jupiterone/integration-sdk-core';
+import { Entity } from '@jupiterone/integration-sdk-core';
 
 jest.mock('fs');
 
-function getMockCreateStepJobStateParams(options?: {
-  normalizeGraphObjectKey?: KeyNormalizationFunction;
-}): CreateStepJobStateParams {
+function getMockCreateStepJobStateParams(
+  partial?: Partial<CreateStepJobStateParams>,
+): CreateStepJobStateParams {
   return {
     stepId: uuid(),
     graphObjectStore: new FileSystemGraphObjectStore(),
-    duplicateKeyTracker: new DuplicateKeyTracker(
-      options?.normalizeGraphObjectKey,
-    ),
+    duplicateKeyTracker: new DuplicateKeyTracker(),
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
+    ...partial,
   };
+}
+
+function createTestStepJobStateState(
+  params?: Partial<CreateStepJobStateParams>,
+) {
+  return createStepJobState(getMockCreateStepJobStateParams(params));
 }
 
 describe('#createStepJobState', () => {
@@ -35,8 +37,7 @@ describe('#createStepJobState', () => {
   });
 
   test('should allow creating job state and adding a single entity with "addEntity"', async () => {
-    const params = getMockCreateStepJobStateParams();
-    const jobState = createStepJobState(params);
+    const jobState = createTestStepJobStateState();
     const entity: Entity = {
       _type: 'a_entity',
       _class: 'A',
@@ -48,8 +49,7 @@ describe('#createStepJobState', () => {
   });
 
   test('should allow creating job state and adding a multiple entities with "addEntities"', async () => {
-    const params = getMockCreateStepJobStateParams();
-    const jobState = createStepJobState(params);
+    const jobState = createTestStepJobStateState();
     const entities: Entity[] = [
       {
         _type: 'a_entity',
@@ -74,8 +74,7 @@ describe('#findEntity', () => {
   });
 
   test('should find entity by _key', async () => {
-    const params = getMockCreateStepJobStateParams();
-    const jobState = createStepJobState(params);
+    const jobState = createTestStepJobStateState();
     const entity: Entity = {
       _type: 'a_entity',
       _class: 'A',
@@ -87,10 +86,12 @@ describe('#findEntity', () => {
   });
 
   test('should find entity by _key with key normalization', async () => {
-    const params = getMockCreateStepJobStateParams({
-      normalizeGraphObjectKey: (_key) => _key.toLowerCase(),
+    const jobState = createTestStepJobStateState({
+      duplicateKeyTracker: new DuplicateKeyTracker((_key) =>
+        _key.toLowerCase(),
+      ),
     });
-    const jobState = createStepJobState(params);
+
     const entity: Entity = {
       _type: 'a_entity',
       _class: 'A',
