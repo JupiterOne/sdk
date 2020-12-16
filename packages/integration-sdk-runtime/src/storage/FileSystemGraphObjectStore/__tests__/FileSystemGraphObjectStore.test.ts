@@ -426,6 +426,186 @@ describe('iterateRelationships', () => {
   });
 });
 
+describe('flush callbacks', () => {
+  test('#addEntity should call flush callback when buffer threshold reached', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 2,
+    });
+
+    let flushedEntitiesCollected: Entity[] = [];
+    let addEntitiesFlushCalledTimes = 0;
+
+    const e1 = generateEntity();
+    const e2 = generateEntity();
+    const e3 = generateEntity();
+
+    await store.addEntities(storageDirectoryPath, [e1], async (entities) => {
+      // Should not call first time because `graphObjectBufferThreshold` = 2
+      addEntitiesFlushCalledTimes++;
+      flushedEntitiesCollected = flushedEntitiesCollected.concat(entities);
+      return Promise.resolve();
+    });
+
+    await store.addEntities(
+      storageDirectoryPath,
+      [e2, e3],
+      async (entities) => {
+        // Should not call first time because `graphObjectBufferThreshold` = 2
+        addEntitiesFlushCalledTimes++;
+        flushedEntitiesCollected = flushedEntitiesCollected.concat(entities);
+        return Promise.resolve();
+      },
+    );
+
+    expect(addEntitiesFlushCalledTimes).toEqual(1);
+    expect(flushedEntitiesCollected).toEqual([e1, e2, e3]);
+  });
+
+  test('#addRelationships should call flush callback when buffer threshold reached', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 2,
+    });
+
+    let flushedRelationshipsCollected: Relationship[] = [];
+    let addRelationshipsFlushCalledTimes = 0;
+
+    const r1 = generateRelationship();
+    const r2 = generateRelationship();
+    const r3 = generateRelationship();
+
+    await store.addRelationships(
+      storageDirectoryPath,
+      [r1],
+      async (relationships) => {
+        // Should not call first time because `graphObjectBufferThreshold` = 2
+        addRelationshipsFlushCalledTimes++;
+        flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
+          relationships,
+        );
+        return Promise.resolve();
+      },
+    );
+
+    await store.addRelationships(
+      storageDirectoryPath,
+      [r2, r3],
+      async (relationships) => {
+        // Should not call first time because `graphObjectBufferThreshold` = 2
+        addRelationshipsFlushCalledTimes++;
+        flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
+          relationships,
+        );
+        return Promise.resolve();
+      },
+    );
+
+    expect(addRelationshipsFlushCalledTimes).toEqual(1);
+    expect(flushedRelationshipsCollected).toEqual([r1, r2, r3]);
+  });
+
+  test('#flushEntitiesToDisk should call flush callback when buffer threshold reached', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 10,
+    });
+
+    let flushedEntitiesCollected: Entity[] = [];
+    let addEntitiesFlushCalledTimes = 0;
+
+    const entities = times(3, () => generateEntity());
+
+    async function onEntitiesFlushed(entities) {
+      addEntitiesFlushCalledTimes++;
+      flushedEntitiesCollected = flushedEntitiesCollected.concat(entities);
+      return Promise.resolve();
+    }
+
+    await store.addEntities(storageDirectoryPath, entities, onEntitiesFlushed);
+
+    expect(addEntitiesFlushCalledTimes).toEqual(0);
+    expect(flushedEntitiesCollected).toEqual([]);
+
+    await store.flushEntitiesToDisk(onEntitiesFlushed);
+
+    expect(addEntitiesFlushCalledTimes).toEqual(1);
+    expect(flushedEntitiesCollected).toEqual(entities);
+  });
+
+  test('#flushRelationshipsToDisk should call flush callback when buffer threshold reached', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 10,
+    });
+
+    let flushedRelationshipsCollected: Relationship[] = [];
+    let addRelationshipsFlushedCalledTimes = 0;
+
+    const relationships = times(3, () => generateRelationship());
+
+    async function onRelationshipsFlushed(relationships) {
+      addRelationshipsFlushedCalledTimes++;
+      flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
+        relationships,
+      );
+      return Promise.resolve();
+    }
+
+    await store.addRelationships(
+      storageDirectoryPath,
+      relationships,
+      onRelationshipsFlushed,
+    );
+
+    expect(addRelationshipsFlushedCalledTimes).toEqual(0);
+    expect(flushedRelationshipsCollected).toEqual([]);
+
+    await store.flushRelationshipsToDisk(onRelationshipsFlushed);
+
+    expect(addRelationshipsFlushedCalledTimes).toEqual(1);
+    expect(flushedRelationshipsCollected).toEqual(relationships);
+  });
+
+  test('#flush should call both entity and relationship flush callbacks when buffer threshold reached', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 10,
+    });
+
+    let flushedRelationshipsCollected: Relationship[] = [];
+    let addRelationshipsFlushedCalledTimes = 0;
+
+    let flushedEntitiesCollected: Entity[] = [];
+    let addEntitiesFlushCalledTimes = 0;
+
+    const entities = times(3, () => generateEntity());
+    const relationships = times(3, () => generateRelationship());
+
+    async function onEntitiesFlushed(entities) {
+      addEntitiesFlushCalledTimes++;
+      flushedEntitiesCollected = flushedEntitiesCollected.concat(entities);
+      return Promise.resolve();
+    }
+
+    async function onRelationshipsFlushed(relationships) {
+      addRelationshipsFlushedCalledTimes++;
+      flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
+        relationships,
+      );
+      return Promise.resolve();
+    }
+
+    await store.addRelationships(
+      storageDirectoryPath,
+      relationships,
+      onRelationshipsFlushed,
+    );
+    await store.addEntities(storageDirectoryPath, entities, onEntitiesFlushed);
+    await store.flush(onEntitiesFlushed, onRelationshipsFlushed);
+
+    expect(addEntitiesFlushCalledTimes).toEqual(1);
+    expect(addRelationshipsFlushedCalledTimes).toEqual(1);
+    expect(flushedEntitiesCollected).toEqual(entities);
+    expect(flushedRelationshipsCollected).toEqual(relationships);
+  });
+});
+
 function setupFileSystemObjectStore(params?: FileSystemGraphObjectStoreParams) {
   const storageDirectoryPath = uuid();
   const store = new FileSystemGraphObjectStore(params);
