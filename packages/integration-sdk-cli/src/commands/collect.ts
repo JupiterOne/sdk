@@ -2,6 +2,7 @@ import { createCommand } from 'commander';
 
 import {
   executeIntegrationLocally,
+  FileSystemGraphObjectStore,
   prepareLocalStepCollection,
 } from '@jupiterone/integration-sdk-runtime';
 
@@ -30,6 +31,11 @@ export function collect() {
       const enableSchemaValidation = !options.disableSchemaValidation;
       const config = prepareLocalStepCollection(await loadConfig(), options);
       log.info('\nConfiguration loaded! Running integration...\n');
+
+      const graphObjectStore = new FileSystemGraphObjectStore({
+        prettifyFiles: true,
+      });
+
       const results = await executeIntegrationLocally(
         config,
         {
@@ -39,6 +45,7 @@ export function collect() {
         },
         {
           enableSchemaValidation,
+          graphObjectStore,
         },
       );
       log.displayExecutionResults(results);
