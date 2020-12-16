@@ -134,7 +134,7 @@ describe('#findEntity', () => {
   });
 
   test('should return "null" if entity not found', async () => {
-    const jobState = createTestStepJobStateState();
+    const jobState = createTestStepJobState();
     expect(await jobState.findEntity('invalid-entity-key')).toEqual(null);
   });
 });
@@ -142,7 +142,7 @@ describe('#findEntity', () => {
 describe('upload callbacks', () => {
   test('#addEntities should call uploader enqueue on flushed', async () => {
     const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
-    const jobState = createTestStepJobStateState({
+    const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 2,
       }),
@@ -167,7 +167,7 @@ describe('upload callbacks', () => {
 
   test('#addRelationships should call uploader enqueue on flushed', async () => {
     const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
-    const jobState = createTestStepJobStateState({
+    const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 2,
       }),
@@ -192,7 +192,7 @@ describe('upload callbacks', () => {
 
   test('#flush should call uploader enqueue for entities and relationships', async () => {
     const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
-    const jobState = createTestStepJobStateState({
+    const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 5,
       }),
@@ -233,7 +233,7 @@ describe('upload callbacks', () => {
       },
     });
 
-    const jobState = createTestStepJobStateState({
+    const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 2,
       }),
