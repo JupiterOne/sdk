@@ -204,6 +204,8 @@ describe('upload callbacks', () => {
 
     await jobState.addRelationships([r1]);
     await jobState.addEntities([e1]);
+    expect(uploadCollector.graphObjectDataCollection).toEqual([]);
+
     await jobState.flush();
 
     const expectedUploaded: FlushedGraphObjectData[] = [
@@ -252,6 +254,7 @@ describe('upload callbacks', () => {
       );
     }
 
+    expect(graphObjectDataCollection).toEqual([]);
     await jobState.waitUntilUploadsComplete();
 
     const expectedUploaded: FlushedGraphObjectData[] = [
