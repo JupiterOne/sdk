@@ -35,6 +35,7 @@ export function getRootStorageDirectorySize(): Promise<number> {
 interface WriteDataToPathInput {
   path: string;
   data: object;
+  pretty?: boolean;
 }
 
 /**
@@ -47,10 +48,13 @@ interface WriteDataToPathInput {
 export async function writeJsonToPath({
   path: relativePath,
   data,
+  pretty = false,
 }: WriteDataToPathInput) {
+  const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+
   await writeFileToPath({
     path: relativePath,
-    content: JSON.stringify(data, null, 2),
+    content,
   });
 }
 
@@ -191,7 +195,7 @@ export async function removeStorageDirectory() {
 }
 
 function removeDirectory(directory: string) {
-  return new Promise((resolve, reject) =>
+  return new Promise<void>((resolve, reject) =>
     rimraf(directory, (err) => {
       if (err) {
         return reject(err);

@@ -170,6 +170,31 @@ async function getPartialDatasets() {
   return summary.metadata.partialDatasets;
 }
 
+export async function uploadGraphObjectData(
+  synchronizationJobContext: SynchronizationJobContext,
+  graphObjectData: FlushedGraphObjectData,
+) {
+  try {
+    if (Array.isArray(graphObjectData.entities)) {
+      await uploadData(
+        synchronizationJobContext,
+        'entities',
+        graphObjectData.entities,
+      );
+    }
+
+    if (Array.isArray(graphObjectData.relationships)) {
+      await uploadData(
+        synchronizationJobContext,
+        'relationships',
+        graphObjectData.relationships,
+      );
+    }
+  } catch (err) {
+    throw synchronizationApiError(err, 'Error uploading collected data');
+  }
+}
+
 /**
  * Uploads data collected by the integration into the
  */
@@ -183,28 +208,12 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
       walkDirectory({
         path: 'graph',
         async iteratee({ filePath }) {
-          const parsedData = await readGraphObjectFile<FlushedGraphObjectData>({
-            filePath,
-          });
-
-          try {
-            if (Array.isArray(parsedData.entities)) {
-              await uploadData(context, 'entities', parsedData.entities);
-            }
-
-            if (Array.isArray(parsedData.relationships)) {
-              await uploadData(
-                context,
-                'relationships',
-                parsedData.relationships,
-              );
-            }
-          } catch (err) {
-            throw synchronizationApiError(
-              err,
-              'Error uploading collected data',
-            );
-          }
+          await uploadGraphObjectData(
+            context,
+            await readGraphObjectFile<FlushedGraphObjectData>({
+              filePath,
+            }),
+          );
         },
       }),
   });

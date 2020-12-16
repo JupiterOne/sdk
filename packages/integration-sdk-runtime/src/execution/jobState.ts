@@ -7,6 +7,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import { GraphObjectStore } from '../storage';
+import { StepGraphObjectDataUploader } from './uploader';
 
 export interface DuplicateKeyTrackerGraphObjectMetadata {
   _type: string;
@@ -78,6 +79,7 @@ export interface CreateStepJobStateParams {
   typeTracker: TypeTracker;
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
+  uploader?: StepGraphObjectDataUploader;
 }
 
 export function createStepJobState({
@@ -86,6 +88,7 @@ export function createStepJobState({
   typeTracker,
   graphObjectStore,
   dataStore,
+  uploader,
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     entities.forEach((e) => {
@@ -97,7 +100,12 @@ export function createStepJobState({
       typeTracker.registerType(e._type);
     });
 
-    await graphObjectStore.addEntities(stepId, entities);
+    await graphObjectStore.addEntities(stepId, entities, async (entities) =>
+      uploader?.enqueue({
+        entities,
+        relationships: [],
+      }),
+    );
     return entities;
   };
 
@@ -111,7 +119,15 @@ export function createStepJobState({
       typeTracker.registerType(r._type as string);
     });
 
-    return graphObjectStore.addRelationships(stepId, relationships);
+    return graphObjectStore.addRelationships(
+      stepId,
+      relationships,
+      async (relationships) =>
+        uploader?.enqueue({
+          entities: [],
+          relationships,
+        }),
+    );
   };
 
   return {
@@ -158,6 +174,22 @@ export function createStepJobState({
     iterateRelationships: (filter, iteratee) =>
       graphObjectStore.iterateRelationships(filter, iteratee),
 
-    flush: () => graphObjectStore.flush(),
+    flush: () =>
+      graphObjectStore.flush(
+        async (entities) =>
+          uploader?.enqueue({
+            entities,
+            relationships: [],
+          }),
+        async (relationships) =>
+          uploader?.enqueue({
+            entities: [],
+            relationships,
+          }),
+      ),
+
+    async waitUntilUploadsComplete() {
+      await uploader?.waitUntilUploadsComplete();
+    },
   };
 }

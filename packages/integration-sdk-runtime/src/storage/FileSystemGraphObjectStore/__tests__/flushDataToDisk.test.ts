@@ -10,7 +10,7 @@ import flatten from 'lodash/flatten';
 
 import { getRootStorageDirectory } from '../../../fileSystem';
 import { flushDataToDisk } from '../flushDataToDisk';
-import { generateEntity } from './util/graphObjects';
+import { createTestEntity } from '@jupiterone/integration-sdk-private-test-utils';
 
 jest.mock('fs');
 
@@ -18,9 +18,9 @@ afterEach(() => vol.reset());
 
 test('should group objects by "_type" and write them to separate files', async () => {
   const testEntityData = {
-    A: times(25, () => generateEntity({ _type: 'A' })),
-    B: times(25, () => generateEntity({ _type: 'B' })),
-    C: times(25, () => generateEntity({ _type: 'C' })),
+    A: times(25, () => createTestEntity({ _type: 'A' })),
+    B: times(25, () => createTestEntity({ _type: 'B' })),
+    C: times(25, () => createTestEntity({ _type: 'C' })),
   };
 
   const allEntities = randomizeOrder(flatten(Object.values(testEntityData)));
@@ -68,6 +68,38 @@ test('should group objects by "_type" and write them to separate files', async (
       sortBy(testEntityData[entityType], '_key'),
     );
   });
+});
+
+test('should allow prettifying files', async () => {
+  const _type = uuid();
+  const entities = times(2, () => createTestEntity({ _type }));
+  const storageDirectoryPath = uuid();
+
+  await flushDataToDisk({
+    storageDirectoryPath,
+    collectionType: 'entities',
+    data: entities,
+    pretty: true,
+  });
+
+  const entitiesDirectory = path.join(
+    getRootStorageDirectory(),
+    'graph',
+    storageDirectoryPath,
+    'entities',
+  );
+
+  const entityFiles = await fs.readdir(entitiesDirectory);
+  expect(entityFiles).toHaveLength(1);
+
+  const fileData = await fs.readFile(
+    path.join(entitiesDirectory, entityFiles[0]),
+    {
+      encoding: 'utf-8',
+    },
+  );
+
+  expect(fileData).toEqual(JSON.stringify({ entities }, null, 2));
 });
 
 function randomizeOrder<T>(things: T[]): T[] {
