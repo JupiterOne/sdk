@@ -25,9 +25,7 @@ function getMockCreateStepJobStateParams(
   };
 }
 
-function createTestStepJobStateState(
-  params?: Partial<CreateStepJobStateParams>,
-) {
+function createTestStepJobState(params?: Partial<CreateStepJobStateParams>) {
   return createStepJobState(getMockCreateStepJobStateParams(params));
 }
 
@@ -37,7 +35,7 @@ describe('#createStepJobState', () => {
   });
 
   test('should allow creating job state and adding a single entity with "addEntity"', async () => {
-    const jobState = createTestStepJobStateState();
+    const jobState = createTestStepJobState();
     const entity: Entity = {
       _type: 'a_entity',
       _class: 'A',
@@ -49,7 +47,7 @@ describe('#createStepJobState', () => {
   });
 
   test('should allow creating job state and adding a multiple entities with "addEntities"', async () => {
-    const jobState = createTestStepJobStateState();
+    const jobState = createTestStepJobState();
     const entities: Entity[] = [
       {
         _type: 'a_entity',
@@ -74,7 +72,7 @@ describe('#findEntity', () => {
   });
 
   test('should find entity by _key', async () => {
-    const jobState = createTestStepJobStateState();
+    const jobState = createTestStepJobState();
     const entity: Entity = {
       _type: 'a_entity',
       _class: 'A',
@@ -86,7 +84,7 @@ describe('#findEntity', () => {
   });
 
   test('should find entity by _key with key normalization', async () => {
-    const jobState = createTestStepJobStateState({
+    const jobState = createTestStepJobState({
       duplicateKeyTracker: new DuplicateKeyTracker((_key) =>
         _key.toLowerCase(),
       ),
