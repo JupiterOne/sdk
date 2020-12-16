@@ -173,7 +173,16 @@ export class InMemoryGraphObjectStore {
     for (const entity of entities) {
       this.entityKeyToEntityMap.delete(entity._key);
       const entityTypeKeysMap = this.entityTypeToKeysMap.get(entity._type);
-      entityTypeKeysMap?.delete(entity._key);
+
+      if (!entityTypeKeysMap) {
+        // NOTE: This should never happen. It's an indicator that there is a
+        // bug in keeping our two maps in syc.
+        throw new Error(
+          `Could not delete entity from type keys map (_key=${entity._key}, _type=${entity._type})`,
+        );
+      }
+
+      entityTypeKeysMap.delete(entity._key);
     }
   }
 
@@ -190,7 +199,16 @@ export class InMemoryGraphObjectStore {
       const relationshipTypeKeysMap = this.relationshipTypeToKeysMap.get(
         relationship._type,
       );
-      relationshipTypeKeysMap?.delete(relationship._key);
+
+      if (!relationshipTypeKeysMap) {
+        // NOTE: This should never happen. It's an indicator that there is a
+        // bug in keeping our two maps in syc.
+        throw new Error(
+          `Could not delete relationship from type keys map (_key=${relationship._key}, _type=${relationship._type})`,
+        );
+      }
+
+      relationshipTypeKeysMap.delete(relationship._key);
     }
   }
 
