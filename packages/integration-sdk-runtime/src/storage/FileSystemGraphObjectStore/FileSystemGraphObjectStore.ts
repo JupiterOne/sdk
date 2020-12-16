@@ -33,19 +33,26 @@ export interface FileSystemGraphObjectStoreParams {
    *
    * Default: 500
    */
-  graphObjectBufferThreshold: number;
+  graphObjectBufferThreshold?: number;
+
+  /**
+   * Whether the files that are written to disk should be minified or not
+   */
+  prettyFile?: boolean;
 }
 
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
   private readonly graphObjectBufferThreshold: number;
+  private readonly prettyFile: boolean;
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
     this.graphObjectBufferThreshold =
       params?.graphObjectBufferThreshold ||
       DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
+    this.prettyFile = params?.prettyFile || false;
   }
 
   async addEntities(
@@ -157,6 +164,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
             storageDirectoryPath: stepId,
             collectionType: 'entities',
             data: entities,
+            pretty: this.prettyFile,
           });
 
           this.localGraphObjectStore.flushEntities(entities);
@@ -180,6 +188,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
             storageDirectoryPath: stepId,
             collectionType: 'relationships',
             data: relationships,
+            pretty: this.prettyFile,
           });
 
           this.localGraphObjectStore.flushRelationships(relationships);

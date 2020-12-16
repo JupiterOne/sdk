@@ -429,7 +429,7 @@ describe('executeStepDependencyGraph', () => {
 
       // each step should have just generated one file
       const writtenData = await fs.readFile(`${directory}/${files[0]}`, 'utf8');
-      expect(writtenData).toEqual(JSON.stringify({ [type]: data }, null, 2));
+      expect(writtenData).toEqual(JSON.stringify({ [type]: data }));
     }
   });
 

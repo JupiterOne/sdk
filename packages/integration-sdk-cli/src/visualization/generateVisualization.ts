@@ -27,9 +27,11 @@ export async function generateVisualization(
     log.warn(`Unable to find any files under path: ${resolvedIntegrationPath}`);
   }
 
-  const { entities, relationships, mappedRelationships } = await retrieveIntegrationData(
-    entitiesAndRelationshipPaths,
-  );
+  const {
+    entities,
+    relationships,
+    mappedRelationships,
+  } = await retrieveIntegrationData(entitiesAndRelationshipPaths);
 
   const nodeDataSets = entities.map((entity) => ({
     id: getNodeIdFromEntity(entity, []),
@@ -45,10 +47,10 @@ export async function generateVisualization(
   );
 
   const {
-    mappedRelationshipEdges, 
+    mappedRelationshipEdges,
     mappedRelationshipNodes,
   } = createMappedRelationshipNodesAndEdges({
-    mappedRelationships, 
+    mappedRelationships,
     explicitEntities: entities,
   });
 
@@ -56,7 +58,10 @@ export async function generateVisualization(
 
   await writeFileToPath({
     path: htmlFileLocation,
-    content: generateVisHTML([...nodeDataSets, ...mappedRelationshipNodes], [...explicitEdgeDataSets, ...mappedRelationshipEdges]),
+    content: generateVisHTML(
+      [...nodeDataSets, ...mappedRelationshipNodes],
+      [...explicitEdgeDataSets, ...mappedRelationshipEdges],
+    ),
   });
 
   return htmlFileLocation;

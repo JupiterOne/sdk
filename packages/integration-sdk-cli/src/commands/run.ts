@@ -8,6 +8,7 @@ import {
   createIntegrationInstanceForLocalExecution,
   createIntegrationLogger,
   executeIntegrationInstance,
+  FileSystemGraphObjectStore,
   finalizeSynchronization,
   getAccountFromEnvironment,
   getApiBaseUrl,
@@ -72,6 +73,10 @@ export function run() {
 
       const invocationConfig = await loadConfig();
 
+      const graphObjectStore = new FileSystemGraphObjectStore({
+        prettyFile: true,
+      });
+
       try {
         const executionResults = await executeIntegrationInstance(
           logger,
@@ -84,6 +89,7 @@ export function run() {
           },
           {
             enableSchemaValidation: true,
+            graphObjectStore,
             createStepGraphObjectDataUploader(stepId) {
               return createPersisterApiStepGraphObjectDataUploader({
                 stepId,
