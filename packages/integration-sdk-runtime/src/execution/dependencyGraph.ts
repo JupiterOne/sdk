@@ -300,7 +300,15 @@ export function executeStepDependencyGraph<
       await context.jobState.flush();
 
       if (context.jobState.waitUntilUploadsComplete) {
-        await context.jobState.waitUntilUploadsComplete();
+        try {
+          // Failing to upload all integration data should not be considered a
+          // fatal failure. We just want to make this step as a partial success
+          // and move on with our lives!
+          await context.jobState.waitUntilUploadsComplete();
+        } catch (err) {
+          context.logger.stepFailure(step, err);
+          status = StepResultStatus.FAILURE;
+        }
       }
 
       updateStepResultStatus(stepId, status, typeTracker);
