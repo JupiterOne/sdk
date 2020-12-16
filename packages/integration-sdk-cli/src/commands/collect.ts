@@ -33,7 +33,7 @@ export function collect() {
       log.info('\nConfiguration loaded! Running integration...\n');
 
       const graphObjectStore = new FileSystemGraphObjectStore({
-        prettyFile: true,
+        prettifyFiles: true,
       });
 
       const results = await executeIntegrationLocally(

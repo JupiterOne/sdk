@@ -74,7 +74,7 @@ export function run() {
       const invocationConfig = await loadConfig();
 
       const graphObjectStore = new FileSystemGraphObjectStore({
-        prettyFile: true,
+        prettifyFiles: true,
       });
 
       try {
