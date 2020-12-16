@@ -17,7 +17,7 @@ import {
   executeStepDependencyGraph,
 } from './dependencyGraph';
 import { DuplicateKeyTracker } from './jobState';
-import { StepGraphObjectDataUploader } from './uploader';
+import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
@@ -28,14 +28,14 @@ export async function executeSteps<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
-  uploader,
+  createStepGraphObjectDataUploader,
 }: {
   executionContext: TExecutionContext;
   integrationSteps: Step<TStepExecutionContext>[];
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
-  uploader?: StepGraphObjectDataUploader;
+  createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }): Promise<IntegrationStepResult[]> {
   return executeStepDependencyGraph({
     executionContext,
@@ -43,7 +43,7 @@ export async function executeSteps<
     stepStartStates,
     duplicateKeyTracker,
     graphObjectStore,
-    uploader,
+    createStepGraphObjectDataUploader,
   });
 }
 

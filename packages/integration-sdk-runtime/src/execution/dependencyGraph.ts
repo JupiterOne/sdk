@@ -18,7 +18,10 @@ import {
   MemoryDataStore,
   TypeTracker,
 } from './jobState';
-import { StepGraphObjectDataUploader } from './uploader';
+import {
+  StepGraphObjectDataUploader,
+  CreateStepGraphObjectDataUploaderFunction,
+} from './uploader';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -71,14 +74,14 @@ export function executeStepDependencyGraph<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
-  uploader,
+  createStepGraphObjectDataUploader,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
-  uploader?: StepGraphObjectDataUploader;
+  createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -250,6 +253,12 @@ export function executeStepDependencyGraph<
     async function executeStep(step: Step<TStepExecutionContext>) {
       const { id: stepId } = step;
       const typeTracker = new TypeTracker();
+
+      let uploader: StepGraphObjectDataUploader | undefined;
+
+      if (createStepGraphObjectDataUploader) {
+        uploader = createStepGraphObjectDataUploader(stepId);
+      }
 
       const context = buildStepContext<TStepExecutionContext>({
         context: executionContext,

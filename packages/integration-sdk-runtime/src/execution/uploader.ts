@@ -7,18 +7,27 @@ import {
 } from '../synchronization';
 
 export interface StepGraphObjectDataUploader {
+  stepId: string;
   enqueue: (graphObjectData: FlushedGraphObjectData) => Promise<void>;
   waitUntilUploadsComplete: () => Promise<void>;
 }
 
+export type CreateStepGraphObjectDataUploaderFunction = (
+  stepId: string,
+) => StepGraphObjectDataUploader;
+
 export interface CreateQueuedStepGraphObjectDataUploaderParams {
+  stepId: string;
   uploadConcurrency: number;
   upload: (graphObjectData: FlushedGraphObjectData) => Promise<void>;
+  onThrottleEnqueue?: () => void;
 }
 
 export function createQueuedStepGraphObjectDataUploader({
+  stepId,
   uploadConcurrency,
   upload,
+  onThrottleEnqueue,
 }: CreateQueuedStepGraphObjectDataUploaderParams): StepGraphObjectDataUploader {
   const queue = new PQueue({
     concurrency: uploadConcurrency,
@@ -27,6 +36,7 @@ export function createQueuedStepGraphObjectDataUploader({
   const uploadErrors: Error[] = [];
 
   return {
+    stepId,
     async enqueue(graphObjectData) {
       if (queue.isPaused) {
         // This step already failed an upload. We do not want to enqueue more
@@ -38,7 +48,15 @@ export function createQueuedStepGraphObjectDataUploader({
       // into memory inside of the queue. If the queue concurrency has been
       // reached, we wait for the queue to flush so that this step has the
       // opportunity to upload more data.
-      if (queue.size >= uploadConcurrency) {
+      if (
+        queue.pending >= uploadConcurrency ||
+        queue.size >= uploadConcurrency
+      ) {
+        if (onThrottleEnqueue) {
+          // Mainly just used for testing that our custom throttling works.
+          onThrottleEnqueue();
+        }
+
         await queue.onIdle();
       }
 
@@ -60,7 +78,7 @@ export function createQueuedStepGraphObjectDataUploader({
       if (uploadErrors.length) {
         throw new IntegrationError({
           code: 'UPLOAD_ERROR',
-          message: `Error(s) uploading graph object data (errorMessages=${uploadErrors.join(
+          message: `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=${uploadErrors.join(
             ',',
           )})`,
         });
@@ -72,23 +90,20 @@ export function createQueuedStepGraphObjectDataUploader({
 }
 
 export interface CreatePersisterApiStepGraphObjectDataUploaderParams {
+  stepId: string;
   synchronizationJobContext: SynchronizationJobContext;
   uploadConcurrency: number;
 }
 
 export function createPersisterApiStepGraphObjectDataUploader({
+  stepId,
   synchronizationJobContext,
   uploadConcurrency,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
   return createQueuedStepGraphObjectDataUploader({
+    stepId,
     uploadConcurrency,
     upload(graphObjectData) {
-      // TODO: Remove this log
-      synchronizationJobContext.logger.trace('Uploading graph objects', {
-        entities: graphObjectData.entities.length,
-        relationships: graphObjectData.relationships.length,
-      });
-
       return uploadGraphObjectData(synchronizationJobContext, graphObjectData);
     },
   });

@@ -73,11 +73,6 @@ export function run() {
 
       const invocationConfig = await loadConfig();
 
-      const uploader = createPersisterApiStepGraphObjectDataUploader({
-        synchronizationJobContext: synchronizationContext,
-        uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
-      });
-
       try {
         const executionResults = await executeIntegrationInstance(
           logger,
@@ -90,7 +85,13 @@ export function run() {
           },
           {
             enableSchemaValidation: true,
-            uploader,
+            createStepGraphObjectDataUploader(stepId) {
+              return createPersisterApiStepGraphObjectDataUploader({
+                stepId,
+                synchronizationJobContext: synchronizationContext,
+                uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
+              });
+            },
           },
         );
 
