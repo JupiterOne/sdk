@@ -503,7 +503,7 @@ describe('flush callbacks', () => {
     expect(flushedRelationshipsCollected).toEqual([r1, r2, r3]);
   });
 
-  test('#flushEntitiesToDisk should call flush callback when buffer threshold reached', async () => {
+  test('#flushEntitiesToDisk should call flush callback when flushEntitiesToDisk called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferThreshold: 10,
     });
@@ -530,7 +530,7 @@ describe('flush callbacks', () => {
     expect(flushedEntitiesCollected).toEqual(entities);
   });
 
-  test('#flushRelationshipsToDisk should call flush callback when buffer threshold reached', async () => {
+  test('#flushRelationshipsToDisk should call flush callback when flushRelationshipsToDisk called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferThreshold: 10,
     });
@@ -563,7 +563,7 @@ describe('flush callbacks', () => {
     expect(flushedRelationshipsCollected).toEqual(relationships);
   });
 
-  test('#flush should call both entity and relationship flush callbacks when buffer threshold reached', async () => {
+  test('#flush should call both entity and relationship flush callbacks when flush called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferThreshold: 10,
     });

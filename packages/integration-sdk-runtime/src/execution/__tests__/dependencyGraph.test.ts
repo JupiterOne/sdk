@@ -630,7 +630,7 @@ describe('executeStepDependencyGraph', () => {
     expect(spyB).toHaveBeenCalledBefore(spyC);
   });
 
-  test('should mark steps failed executionHandlers with status FAILURE a dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE when step upload fails', async () => {
+  test('should mark steps with failed executionHandlers with status FAILURE and dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE when step upload fails', async () => {
     const spyA = jest.fn();
     const spyB = jest.fn();
     const spyC = jest.fn();

@@ -13,7 +13,6 @@ import {
   getApiBaseUrl,
   getApiKeyFromEnvironment,
   initiateSynchronization,
-  // uploadCollectedData
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
