@@ -70,6 +70,38 @@ test('should group objects by "_type" and write them to separate files', async (
   });
 });
 
+test('should allow prettifying files', async () => {
+  const _type = uuid();
+  const entities = times(2, () => createTestEntity({ _type }));
+  const storageDirectoryPath = uuid();
+
+  await flushDataToDisk({
+    storageDirectoryPath,
+    collectionType: 'entities',
+    data: entities,
+    pretty: true,
+  });
+
+  const entitiesDirectory = path.join(
+    getRootStorageDirectory(),
+    'graph',
+    storageDirectoryPath,
+    'entities',
+  );
+
+  const entityFiles = await fs.readdir(entitiesDirectory);
+  expect(entityFiles).toHaveLength(1);
+
+  const fileData = await fs.readFile(
+    path.join(entitiesDirectory, entityFiles[0]),
+    {
+      encoding: 'utf-8',
+    },
+  );
+
+  expect(fileData).toEqual(JSON.stringify({ entities }, null, 2));
+});
+
 function randomizeOrder<T>(things: T[]): T[] {
   return sortBy(things, () => Math.random());
 }
