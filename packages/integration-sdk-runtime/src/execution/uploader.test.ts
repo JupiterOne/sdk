@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid';
 import { SynchronizationJobContext } from '../synchronization';
 import { createApiClient, getApiBaseUrl } from '../api';
 import { generateSynchronizationJob } from '../synchronization/__tests__/util/generateSynchronizationJob';
+import { createMockIntegrationLogger } from '../../test/util/fixtures';
 
 function createFlushedGraphObjectData(): FlushedGraphObjectData {
   return {
@@ -88,10 +89,10 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
 
     const flushed = await createFlushedDataAndWaitForUploads(uploader, 6);
     expect(uploaded).toEqual(flushed);
-    expect(throttleCount).toEqual(2);
+    expect(throttleCount).toEqual(1);
   });
 
-  test('should pause and clear queue if error occurs', async () => {
+  test('should allow enqueue after a failure', async () => {
     const uploaded: FlushedGraphObjectData[] = [];
     const stepId = uuid();
     const expectedErrorMessage = `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=Error: expected upload error)`;
@@ -116,18 +117,22 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
 
     const flushed = await createAndEnqueueUploads(uploader, 3);
 
-    await expect(uploader.waitUntilUploadsComplete()).rejects.toThrowError(
-      expectedErrorMessage,
-    );
-
-    const flushedAfterPause = createFlushedGraphObjectData();
-    await uploader.enqueue(flushedAfterPause);
+    // Ensure that the next enqueue happens _after_ a failure has occurred.
+    await sleep(300);
+    const flushedAfterFailure = createFlushedGraphObjectData();
+    await uploader.enqueue(flushedAfterFailure);
 
     await expect(uploader.waitUntilUploadsComplete()).rejects.toThrowError(
       expectedErrorMessage,
     );
 
-    expect(uploaded).toEqual([flushed[0]]);
+    // This should _not_ be actually processed by our queue. After the
+    // `waitUntilUploadsComplete` promise has settled, we do not allow additional
+    // tasks to be added to the queue.
+    const flushedAfterCompleted = createFlushedGraphObjectData();
+    await uploader.enqueue(flushedAfterCompleted);
+
+    expect(uploaded).toEqual([flushed[0], flushed[2], flushedAfterFailure]);
   });
 });
 
@@ -144,7 +149,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
-      logger: ({} as unknown) as any,
+      logger: createMockIntegrationLogger(),
       apiClient,
       job,
     };
