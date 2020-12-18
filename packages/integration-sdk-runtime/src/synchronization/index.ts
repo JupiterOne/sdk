@@ -176,6 +176,13 @@ export async function uploadGraphObjectData(
 ) {
   try {
     if (Array.isArray(graphObjectData.entities)) {
+      synchronizationJobContext.logger.info(
+        {
+          entities: graphObjectData.entities.length,
+        },
+        'Uploading entities',
+      );
+
       await uploadData(
         synchronizationJobContext,
         'entities',
@@ -184,6 +191,13 @@ export async function uploadGraphObjectData(
     }
 
     if (Array.isArray(graphObjectData.relationships)) {
+      synchronizationJobContext.logger.info(
+        {
+          relationships: graphObjectData.relationships.length,
+        },
+        'Uploading relationships',
+      );
+
       await uploadData(
         synchronizationJobContext,
         'relationships',
