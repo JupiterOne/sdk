@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.2.0 - 2020-12-18
+
 ### Changed
 
 - OPTIMIZATION: Buffer entities and relationships in memory and allow for fast
