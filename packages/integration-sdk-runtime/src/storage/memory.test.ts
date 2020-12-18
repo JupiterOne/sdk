@@ -1,34 +1,10 @@
-import {
-  Entity,
-  ExplicitRelationship,
-  Relationship,
-} from '@jupiterone/integration-sdk-core';
+import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from './memory';
 import { v4 as uuid } from 'uuid';
-
-function createTestEntity(partial?: Partial<Entity>): Entity {
-  return {
-    _key: uuid(),
-    _class: uuid(),
-    _type: uuid(),
-    [uuid()]: uuid(),
-    ...partial,
-  };
-}
-
-function createTestRelationship(
-  partial?: Partial<ExplicitRelationship>,
-): ExplicitRelationship {
-  return {
-    _key: uuid(),
-    _toEntityKey: uuid(),
-    _fromEntityKey: uuid(),
-    _class: uuid(),
-    _type: uuid(),
-    [uuid()]: uuid(),
-    ...partial,
-  };
-}
+import {
+  createTestEntity,
+  createTestRelationship,
+} from '@jupiterone/integration-sdk-private-test-utils';
 
 async function collectEntitiesByType(
   store: InMemoryGraphObjectStore,
