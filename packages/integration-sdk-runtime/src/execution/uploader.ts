@@ -55,7 +55,7 @@ export function createQueuedStepGraphObjectDataUploader({
       // than `onIdle` in this case because we really don't care whether all
       // promises have settled, we only care that additional work is not being
       // created and subsequently kicked off.
-      if (queue.size === maximumQueueSize) {
+      if (queue.size >= maximumQueueSize) {
         if (onThrottleEnqueue) {
           // Mainly just used for testing that our custom throttling works.
           onThrottleEnqueue();
