@@ -112,4 +112,10 @@ export interface JobState {
    * flushed to reduce memory consumption.
    */
   flush: () => Promise<void>;
+
+  /**
+   * A job state may be created with a graph object uploader. This function
+   * resolves when all uploads have been completed.
+   */
+  waitUntilUploadsComplete?: () => Promise<void>;
 }

@@ -8,16 +8,19 @@ import {
   createIntegrationInstanceForLocalExecution,
   createIntegrationLogger,
   executeIntegrationInstance,
+  FileSystemGraphObjectStore,
   finalizeSynchronization,
   getAccountFromEnvironment,
   getApiBaseUrl,
   getApiKeyFromEnvironment,
   initiateSynchronization,
-  uploadCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
 import * as log from '../log';
+import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
+
+const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
 export function run() {
   return createCommand('run')
@@ -70,6 +73,10 @@ export function run() {
 
       const invocationConfig = await loadConfig();
 
+      const graphObjectStore = new FileSystemGraphObjectStore({
+        prettifyFiles: true,
+      });
+
       try {
         const executionResults = await executeIntegrationInstance(
           logger,
@@ -82,14 +89,20 @@ export function run() {
           },
           {
             enableSchemaValidation: true,
+            graphObjectStore,
+            createStepGraphObjectDataUploader(stepId) {
+              return createPersisterApiStepGraphObjectDataUploader({
+                stepId,
+                synchronizationJobContext: synchronizationContext,
+                uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
+              });
+            },
           },
         );
 
         await eventPublishingQueue.onIdle();
 
         log.displayExecutionResults(executionResults);
-
-        await uploadCollectedData(synchronizationContext);
 
         const synchronizationResult = await finalizeSynchronization({
           ...synchronizationContext,

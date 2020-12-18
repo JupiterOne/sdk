@@ -18,6 +18,10 @@ import {
   MemoryDataStore,
   TypeTracker,
 } from './jobState';
+import {
+  StepGraphObjectDataUploader,
+  CreateStepGraphObjectDataUploaderFunction,
+} from './uploader';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -70,12 +74,14 @@ export function executeStepDependencyGraph<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  createStepGraphObjectDataUploader,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -248,6 +254,12 @@ export function executeStepDependencyGraph<
       const { id: stepId } = step;
       const typeTracker = new TypeTracker();
 
+      let uploader: StepGraphObjectDataUploader | undefined;
+
+      if (createStepGraphObjectDataUploader) {
+        uploader = createStepGraphObjectDataUploader(stepId);
+      }
+
       const context = buildStepContext<TStepExecutionContext>({
         context: executionContext,
         duplicateKeyTracker,
@@ -255,6 +267,7 @@ export function executeStepDependencyGraph<
         graphObjectStore,
         dataStore,
         stepId,
+        uploader,
       });
 
       const { logger } = context;
@@ -285,6 +298,19 @@ export function executeStepDependencyGraph<
       }
 
       await context.jobState.flush();
+
+      if (context.jobState.waitUntilUploadsComplete) {
+        try {
+          // Failing to upload all integration data should not be considered a
+          // fatal failure. We just want to make this step as a partial success
+          // and move on with our lives!
+          await context.jobState.waitUntilUploadsComplete();
+        } catch (err) {
+          context.logger.stepFailure(step, err);
+          status = StepResultStatus.FAILURE;
+        }
+      }
+
       updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
@@ -306,6 +332,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
   typeTracker,
   graphObjectStore,
   dataStore,
+  uploader,
 }: {
   stepId: string;
   context: ExecutionContext;
@@ -313,6 +340,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
   typeTracker: TypeTracker;
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
+  uploader?: StepGraphObjectDataUploader;
 }): TStepExecutionContext {
   const stepExecutionContext: StepExecutionContext = {
     ...context,
@@ -325,6 +353,7 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
       typeTracker,
       graphObjectStore,
       dataStore,
+      uploader,
     }),
   };
 

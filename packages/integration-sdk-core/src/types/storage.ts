@@ -11,11 +11,16 @@ import { Relationship } from './relationship';
  * integration execution.
  */
 export interface GraphObjectStore {
-  addEntities(stepId: string, newEntities: Entity[]): Promise<void>;
+  addEntities(
+    stepId: string,
+    newEntities: Entity[],
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+  ): Promise<void>;
 
   addRelationships(
     stepId: string,
     newRelationships: Relationship[],
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
 
   getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity>;
@@ -30,5 +35,8 @@ export interface GraphObjectStore {
     iteratee: GraphObjectIteratee<T>,
   ): Promise<void>;
 
-  flush(): Promise<void>;
+  flush(
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+  ): Promise<void>;
 }

@@ -6,6 +6,7 @@ import waitForExpect from 'wait-for-expect';
 
 import {
   Entity,
+  GraphObjectStore,
   IntegrationError,
   IntegrationExecutionContext,
   IntegrationInstance,
@@ -30,6 +31,12 @@ import {
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import { DuplicateKeyTracker } from '../jobState';
 import { getDefaultStepStartStates } from '../step';
+import {
+  CreateStepGraphObjectDataUploaderFunction,
+  StepGraphObjectDataUploader,
+} from '../uploader';
+import { FlushedGraphObjectData } from '../../storage/types';
+import { createTestEntity } from '@jupiterone/integration-sdk-private-test-utils';
 
 jest.mock('fs');
 
@@ -132,13 +139,16 @@ describe('executeStepDependencyGraph', () => {
   async function executeSteps(
     steps: IntegrationStep[],
     stepStartStates: StepStartStates = getDefaultStepStartStates(steps),
+    graphObjectStore: GraphObjectStore = new FileSystemGraphObjectStore(),
+    createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction,
   ) {
     return executeStepDependencyGraph({
       executionContext,
       inputGraph: buildStepDependencyGraph(steps),
       stepStartStates,
       duplicateKeyTracker: new DuplicateKeyTracker(),
-      graphObjectStore: new FileSystemGraphObjectStore(),
+      graphObjectStore,
+      createStepGraphObjectDataUploader,
     });
   }
 
@@ -419,24 +429,31 @@ describe('executeStepDependencyGraph', () => {
 
       // each step should have just generated one file
       const writtenData = await fs.readFile(`${directory}/${files[0]}`, 'utf8');
-      expect(writtenData).toEqual(JSON.stringify({ [type]: data }, null, 2));
+      expect(writtenData).toEqual(JSON.stringify({ [type]: data }));
     }
   });
 
-  test('should perform a flush of the jobState after a step was executed', async () => {
-    let jobStateFlushSpy;
-
-    await executeSteps([
+  test('should perform a flush of the jobState after execution completed', async () => {
+    const steps: IntegrationStep[] = [
       {
         id: 'a',
         name: 'a',
         entities: [],
         relationships: [],
-        executionHandler: ({ jobState }) => {
-          jobStateFlushSpy = jest.spyOn(jobState, 'flush');
+        executionHandler: () => {
+          return Promise.resolve();
         },
       },
-    ]);
+    ];
+
+    const graphObjectStore = new FileSystemGraphObjectStore();
+    const jobStateFlushSpy = jest.spyOn(graphObjectStore, 'flush');
+
+    await executeSteps(
+      steps,
+      getDefaultStepStartStates(steps),
+      graphObjectStore,
+    );
 
     expect(jobStateFlushSpy).toHaveBeenCalledTimes(1);
   });
@@ -600,6 +617,156 @@ describe('executeStepDependencyGraph', () => {
         declaredTypes: [],
         partialTypes: [],
         encounteredTypes: [],
+        dependsOn: ['b'],
+        status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+      },
+    ]);
+
+    expect(spyA).toHaveBeenCalledTimes(1);
+    expect(spyB).toHaveBeenCalledTimes(1);
+    expect(spyC).toHaveBeenCalledTimes(1);
+
+    expect(spyA).toHaveBeenCalledBefore(spyB);
+    expect(spyB).toHaveBeenCalledBefore(spyC);
+  });
+
+  test('should mark steps with failed executionHandlers with status FAILURE and dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE when step upload fails', async () => {
+    const spyA = jest.fn();
+    const spyB = jest.fn();
+    const spyC = jest.fn();
+
+    const eA = createTestEntity();
+    const eB = createTestEntity();
+    const eC = createTestEntity();
+
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        entities: [],
+        relationships: [],
+        async executionHandler({ jobState }) {
+          await jobState.addEntity(eA);
+          spyA();
+        },
+      },
+      {
+        id: 'b',
+        name: 'b',
+        entities: [],
+        relationships: [],
+        dependsOn: ['a'],
+        async executionHandler({ jobState }) {
+          await jobState.addEntity(eB);
+          spyB();
+        },
+      },
+      {
+        id: 'c',
+        name: 'c',
+        entities: [],
+        relationships: [],
+        dependsOn: ['b'],
+        async executionHandler({ jobState }) {
+          await jobState.addEntity(eC);
+          spyC();
+        },
+      },
+    ];
+
+    const stepStartStates = getDefaultStepStartStates(steps);
+    const graphObjectStore = new FileSystemGraphObjectStore();
+
+    function createPassingUploader(
+      stepId: string,
+      collector: FlushedGraphObjectData[],
+    ): StepGraphObjectDataUploader {
+      return {
+        stepId,
+        async enqueue(graphObjectData) {
+          collector.push(graphObjectData);
+          return Promise.resolve();
+        },
+        waitUntilUploadsComplete() {
+          return Promise.resolve();
+        },
+      };
+    }
+
+    function createFailingUploader(
+      stepId: string,
+    ): StepGraphObjectDataUploader {
+      return {
+        stepId,
+        async enqueue() {
+          return Promise.resolve();
+        },
+        waitUntilUploadsComplete() {
+          return Promise.reject(new Error('expected upload wait failure'));
+        },
+      };
+    }
+
+    const passingUploaderCollector: FlushedGraphObjectData[] = [];
+
+    /**
+     * Graph:
+     * a - b - c
+     *
+     * In this situation, 'a' is the leaf node
+     * 'b' depends on 'a',
+     * 'c' depends on 'b'
+     */
+    const result = await executeSteps(
+      steps,
+      stepStartStates,
+      graphObjectStore,
+      (stepId) => {
+        if (stepId === 'b') {
+          return createFailingUploader(stepId);
+        } else {
+          return createPassingUploader(stepId, passingUploaderCollector);
+        }
+      },
+    );
+
+    const expectedCollected: FlushedGraphObjectData[] = [
+      {
+        entities: [eA],
+        relationships: [],
+      },
+      {
+        entities: [eC],
+        relationships: [],
+      },
+    ];
+
+    expect(passingUploaderCollector).toEqual(expectedCollected);
+
+    expect(result).toEqual([
+      {
+        id: 'a',
+        name: 'a',
+        declaredTypes: [],
+        partialTypes: [],
+        encounteredTypes: [eA._type],
+        status: StepResultStatus.SUCCESS,
+      },
+      {
+        id: 'b',
+        name: 'b',
+        declaredTypes: [],
+        partialTypes: [],
+        encounteredTypes: [eB._type],
+        dependsOn: ['a'],
+        status: StepResultStatus.FAILURE,
+      },
+      {
+        id: 'c',
+        name: 'c',
+        declaredTypes: [],
+        partialTypes: [],
+        encounteredTypes: [eC._type],
         dependsOn: ['b'],
         status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
       },

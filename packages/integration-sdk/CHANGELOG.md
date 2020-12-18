@@ -9,6 +9,47 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.2.0 - 2020-12-18
+
+### Changed
+
+- OPTIMIZATION: Buffer entities and relationships in memory and allow for fast
+  lookups. This change allows us to skip flushing to disk anytime there is a
+  call to `findEntity`, `iterateEntities` or `iterateRelationships`.
+
+  See PR [#395](https://github.com/JupiterOne/sdk/pull/395)
+
+- OPTIMIZATION: Allow `FileSystemGraphObjectStore` to specify
+  `graphObjectBufferThreshold`, which defines the maximum number of graph
+  objects that the graph object store can buffer into memory before flushing to
+  disk. Machines with more memory should consider increasing this value as the
+  default is `500`.
+
+  See PR [#395](https://github.com/JupiterOne/sdk/pull/395)
+
+- OPTIMIZATION: Continuously upload integration data during collection phase.
+  Previously, our integrations had two primary phases. The first phase was the
+  collection phase, and the second phase was the upload phase. The integration
+  SDK now mixes these two phases and the integrations will upload the collected
+  data to JupiterOne during the integration execution step that it has been
+  collected in.
+
+  See PR [#396](https://github.com/JupiterOne/sdk/pull/396)
+
+- OPTIMIZATION: Reduce the size of the graph object files that are stored on
+  disk by default. Previously, all graph object files written to disk while
+  running the integration locally and running the integration in the managed
+  JupiterOne runtime, were created with whitespace. The file whitespace is now
+  only created when running the integration locally via the CLI commands.
+
+  See PR [#399](https://github.com/JupiterOne/sdk/pull/399)
+
+### Removed
+
+- Remove `BucketMap` as it's no longer used in the `FileSystemGraphObjectStore`.
+  `BucketMap` was technically exposed externally, but should not have been used
+  externally.
+
 ## 5.1.0 - 2020-12-08
 
 ### Added

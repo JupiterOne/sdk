@@ -16,6 +16,7 @@ interface FlushDataToDiskInput {
   storageDirectoryPath: string;
   collectionType: CollectionType;
   data: Entity[] | Relationship[];
+  pretty?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export async function flushDataToDisk({
   storageDirectoryPath,
   collectionType,
   data,
+  pretty,
 }: FlushDataToDiskInput) {
   // split the data by type first
   const groupedCollections = groupBy(data, '_type');
@@ -49,6 +51,7 @@ export async function flushDataToDisk({
         data: {
           [collectionType]: collection,
         },
+        pretty,
       });
 
       await symlink({
