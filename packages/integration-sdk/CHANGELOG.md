@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.2.1 - 2020-12-23
+
+### Fixed
+
+- Fixed issue where the SDK could upload empty entity and relationship graph
+  object files.
+
 ## 5.2.0 - 2020-12-18
 
 ### Changed
