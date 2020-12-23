@@ -175,7 +175,10 @@ export async function uploadGraphObjectData(
   graphObjectData: FlushedGraphObjectData,
 ) {
   try {
-    if (Array.isArray(graphObjectData.entities)) {
+    if (
+      Array.isArray(graphObjectData.entities) &&
+      graphObjectData.entities.length != 0
+    ) {
       synchronizationJobContext.logger.info(
         {
           entities: graphObjectData.entities.length,
@@ -190,7 +193,10 @@ export async function uploadGraphObjectData(
       );
     }
 
-    if (Array.isArray(graphObjectData.relationships)) {
+    if (
+      Array.isArray(graphObjectData.relationships) &&
+      graphObjectData.relationships.length != 0
+    ) {
       synchronizationJobContext.logger.info(
         {
           relationships: graphObjectData.relationships.length,

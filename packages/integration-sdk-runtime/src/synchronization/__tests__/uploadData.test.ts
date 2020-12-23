@@ -7,7 +7,7 @@ import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { getApiBaseUrl, createApiClient } from '../../api';
 import { createIntegrationLogger } from '../../logger';
 
-import { uploadData } from '../index';
+import { uploadData, uploadGraphObjectData } from '../index';
 
 test('uploads entity data in batches of 250', async () => {
   const { job, logger, apiClient } = createTestContext();
@@ -165,6 +165,25 @@ test('should retry a failed upload', async () => {
     },
     'Failed to upload integration data chunk (will retry)',
   );
+});
+
+test('should not upload with empty graph object arrays', async () => {
+  const { job, logger, apiClient } = createTestContext();
+  const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
+
+  await uploadGraphObjectData(
+    {
+      job,
+      logger,
+      apiClient,
+    },
+    {
+      entities: [],
+      relationships: [],
+    },
+  );
+
+  expect(postSpy).toHaveBeenCalledTimes(0);
 });
 
 function createTestContext() {
