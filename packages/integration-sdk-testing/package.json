@@ -32,8 +32,7 @@
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister": "^2.0.1",
-    "deepmerge": "^4.2.2",
-    "zlib": "^1.0.5"
+    "deepmerge": "^4.2.2"
   },
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^5.2.0",
