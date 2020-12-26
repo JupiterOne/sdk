@@ -10,6 +10,9 @@ import {
   IntegrationMissingKeyError,
   Relationship,
   GraphObjectStore,
+  GraphObjectIndexMetadata,
+  GetIndexMetadataForGraphObjectTypeParams,
+  IntegrationStep,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -26,6 +29,8 @@ export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
 export interface FileSystemGraphObjectStoreParams {
+  integrationSteps?: IntegrationStep[];
+
   /**
    * The maximum number of graph objects that this store can buffer in memory
    * before writing to disk. Machines with more memory should consider bumping
@@ -41,11 +46,67 @@ export interface FileSystemGraphObjectStoreParams {
   prettifyFiles?: boolean;
 }
 
+interface GraphObjectIndexMetadataMap {
+  /**
+   * Map of _type to GraphObjectIndexMetadata
+   */
+  entities: Map<string, GraphObjectIndexMetadata>;
+  /**
+   * Map of _type to GraphObjectIndexMetadata
+   */
+  relationships: Map<string, GraphObjectIndexMetadata>;
+}
+
+/**
+ * TODO: Write this comment to explain why the thing is the way it is
+ */
+function integrationStepsToGraphObjectIndexMetadataMap(
+  integrationSteps: IntegrationStep[],
+): Map<string, GraphObjectIndexMetadataMap> {
+  const stepIdToGraphObjectIndexMetadataMap = new Map<
+    string,
+    GraphObjectIndexMetadataMap
+  >();
+
+  for (const step of integrationSteps) {
+    const metadataMap: GraphObjectIndexMetadataMap = {
+      entities: new Map(),
+      relationships: new Map(),
+    };
+
+    for (const entityMetadata of step.entities) {
+      if (entityMetadata.indexMetadata) {
+        metadataMap.entities.set(
+          entityMetadata._type,
+          entityMetadata.indexMetadata,
+        );
+      }
+    }
+
+    for (const relationshipMetadata of step.relationships) {
+      if (relationshipMetadata.indexMetadata) {
+        metadataMap.relationships.set(
+          relationshipMetadata._type,
+          relationshipMetadata.indexMetadata,
+        );
+      }
+    }
+
+    stepIdToGraphObjectIndexMetadataMap.set(step.id, metadataMap);
+  }
+
+  return stepIdToGraphObjectIndexMetadataMap;
+}
+
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
   private readonly graphObjectBufferThreshold: number;
   private readonly prettifyFiles: boolean;
+  private readonly stepIdToGraphObjectIndexMetadataMap: Map<
+    string,
+    GraphObjectIndexMetadataMap
+  >;
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
@@ -53,14 +114,20 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       params?.graphObjectBufferThreshold ||
       DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
     this.prettifyFiles = params?.prettifyFiles || false;
+
+    if (params?.integrationSteps) {
+      this.stepIdToGraphObjectIndexMetadataMap = integrationStepsToGraphObjectIndexMetadataMap(
+        params.integrationSteps,
+      );
+    }
   }
 
   async addEntities(
-    storageDirectoryPath: string,
+    stepId: string,
     newEntities: Entity[],
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
-    this.localGraphObjectStore.addEntities(storageDirectoryPath, newEntities);
+    this.localGraphObjectStore.addEntities(stepId, newEntities);
 
     if (
       this.localGraphObjectStore.getTotalEntityItemCount() >=
@@ -71,14 +138,11 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   }
 
   async addRelationships(
-    storageDirectoryPath: string,
+    stepId: string,
     newRelationships: Relationship[],
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
-    this.localGraphObjectStore.addRelationships(
-      storageDirectoryPath,
-      newRelationships,
-    );
+    this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
     if (
       this.localGraphObjectStore.getTotalRelationshipItemCount() >=
@@ -160,12 +224,28 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       pMap(
         this.localGraphObjectStore.collectEntitiesByStep(),
         async ([stepId, entities]) => {
-          await flushDataToDisk({
-            storageDirectoryPath: stepId,
-            collectionType: 'entities',
-            data: entities,
-            pretty: this.prettifyFiles,
+          const indexable = entities.filter((e) => {
+            const indexMetadata = this.getIndexMetadataForGraphObjectType({
+              stepId,
+              _type: e._type,
+              graphObjectCollectionType: 'entities',
+            });
+
+            if (typeof indexMetadata === 'undefined') {
+              return true;
+            }
+
+            return indexMetadata.enabled === true;
           });
+
+          if (indexable.length) {
+            await flushDataToDisk({
+              storageDirectoryPath: stepId,
+              collectionType: 'entities',
+              data: indexable,
+              pretty: this.prettifyFiles,
+            });
+          }
 
           this.localGraphObjectStore.flushEntities(entities);
 
@@ -184,12 +264,28 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       pMap(
         this.localGraphObjectStore.collectRelationshipsByStep(),
         async ([stepId, relationships]) => {
-          await flushDataToDisk({
-            storageDirectoryPath: stepId,
-            collectionType: 'relationships',
-            data: relationships,
-            pretty: this.prettifyFiles,
+          const indexable = relationships.filter((r) => {
+            const indexMetadata = this.getIndexMetadataForGraphObjectType({
+              stepId,
+              _type: r._type,
+              graphObjectCollectionType: 'relationships',
+            });
+
+            if (typeof indexMetadata === 'undefined') {
+              return true;
+            }
+
+            return indexMetadata.enabled === true;
           });
+
+          if (indexable.length) {
+            await flushDataToDisk({
+              storageDirectoryPath: stepId,
+              collectionType: 'relationships',
+              data: indexable,
+              pretty: this.prettifyFiles,
+            });
+          }
 
           this.localGraphObjectStore.flushRelationships(relationships);
 
@@ -199,6 +295,21 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         },
       ),
     );
+  }
+
+  getIndexMetadataForGraphObjectType({
+    stepId,
+    _type,
+    graphObjectCollectionType,
+  }: GetIndexMetadataForGraphObjectTypeParams):
+    | GraphObjectIndexMetadata
+    | undefined {
+    if (!this.stepIdToGraphObjectIndexMetadataMap) {
+      return undefined;
+    }
+
+    const map = this.stepIdToGraphObjectIndexMetadataMap.get(stepId);
+    return map && map[graphObjectCollectionType].get(_type);
   }
 
   /**

@@ -23,10 +23,68 @@ import {
   Relationship,
   createIntegrationEntity,
   createDirectRelationship,
+  IntegrationStep,
 } from '@jupiterone/integration-sdk-core';
 import { RelationshipClass } from '@jupiterone/data-model';
+import { FlushedGraphObjectData } from '../../types';
+import sortBy from 'lodash/sortBy';
 
 jest.mock('fs');
+
+async function getStorageDirectoryDataForStep(
+  stepId: string,
+): Promise<FlushedGraphObjectData> {
+  const accumulatedWrittenStepData: FlushedGraphObjectData = {
+    entities: [],
+    relationships: [],
+  };
+
+  for (const collectionType of ['entities', 'relationships']) {
+    const collectionStorageDirPath = path.join(
+      getRootStorageDirectory(),
+      'graph',
+      stepId,
+      collectionType,
+    );
+
+    let storageDirectoryPathDataFiles: string[];
+
+    try {
+      storageDirectoryPathDataFiles = await fs.readdir(
+        collectionStorageDirPath,
+      );
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        continue;
+      }
+
+      throw err;
+    }
+
+    for (const fileName of storageDirectoryPathDataFiles) {
+      const writtenStepData = JSON.parse(
+        await fs.readFile(
+          path.join(collectionStorageDirPath, fileName),
+          'utf8',
+        ),
+      );
+
+      if (writtenStepData.entities) {
+        accumulatedWrittenStepData.entities = accumulatedWrittenStepData.entities.concat(
+          writtenStepData.entities,
+        );
+      }
+
+      if (writtenStepData.relationships) {
+        accumulatedWrittenStepData.relationships = accumulatedWrittenStepData.relationships.concat(
+          writtenStepData.relationships,
+        );
+      }
+    }
+  }
+
+  return accumulatedWrittenStepData;
+}
 
 afterEach(() => {
   vol.reset();
@@ -533,6 +591,213 @@ describe('flush callbacks', () => {
 
     expect(addEntitiesFlushCalledTimes).toEqual(1);
     expect(flushedEntitiesCollected).toEqual(entities);
+  });
+
+  test('#flushEntitiesToDisk should respect integration step index metadata when supplied', async () => {
+    const integrationStepId = uuid();
+
+    const integrationSteps: IntegrationStep[] = [
+      {
+        id: integrationStepId,
+        name: uuid(),
+        entities: [
+          {
+            resourceName: 'The Group',
+            _type: 'my_group',
+            _class: ['Group', 'Other'],
+            indexMetadata: {
+              enabled: true,
+            },
+          },
+          {
+            resourceName: 'The Group',
+            _type: 'my_other_group',
+            _class: ['Group', 'Other'],
+          },
+          {
+            resourceName: 'The Record',
+            _type: 'my_record',
+            _class: ['Record'],
+            indexMetadata: {
+              // Should not write this one to disk!
+              enabled: false,
+            },
+          },
+        ],
+        relationships: [
+          {
+            _type: 'my_group',
+            _class: RelationshipClass.HAS,
+            sourceType: 'the_root',
+            targetType: 'my_account',
+            indexMetadata: {
+              // Entities and relationships should be tracked by the graph
+              // object store separately. This relationship has the same _type,
+              // but it should not impact the indexed entity
+              enabled: false,
+            },
+          },
+        ],
+        executionHandler() {
+          return Promise.resolve();
+        },
+      },
+    ];
+
+    const { store } = setupFileSystemObjectStore({
+      integrationSteps,
+    });
+
+    let flushedEntitiesCollected: Entity[] = [];
+    let addEntitiesFlushCalledTimes = 0;
+
+    const entities: Entity[] = [
+      // Enabled
+      createTestEntity({ _type: 'my_group' }),
+      // Enabled
+      createTestEntity({ _type: 'my_group' }),
+      // Disabled
+      createTestEntity({ _type: 'my_record' }),
+      // Enabled
+      createTestEntity({ _type: 'my_other_group' }),
+      // Disabled
+      createTestEntity({ _type: 'my_record' }),
+    ];
+
+    async function onEntitiesFlushed(entities) {
+      addEntitiesFlushCalledTimes++;
+      flushedEntitiesCollected = flushedEntitiesCollected.concat(entities);
+      return Promise.resolve();
+    }
+
+    await store.addEntities(integrationStepId, entities, onEntitiesFlushed);
+    expect(addEntitiesFlushCalledTimes).toEqual(0);
+    expect(flushedEntitiesCollected).toEqual([]);
+
+    await store.flushEntitiesToDisk(onEntitiesFlushed);
+    expect(addEntitiesFlushCalledTimes).toEqual(1);
+
+    // This should include every entity. Even the ones that are not written to
+    // disk
+    expect(flushedEntitiesCollected).toEqual(entities);
+
+    const allWrittenStepData = await getStorageDirectoryDataForStep(
+      integrationStepId,
+    );
+    expect(allWrittenStepData.entities.length).toEqual(3);
+    expect(allWrittenStepData.relationships.length).toEqual(0);
+
+    expect(sortBy(allWrittenStepData.entities, '_key')).toEqual(
+      sortBy([entities[0], entities[1], entities[3]], '_key'),
+    );
+  });
+
+  test('#flushRelationshipsToDisk should respect integration step index metadata when supplied', async () => {
+    const integrationStepId = uuid();
+
+    const integrationSteps: IntegrationStep[] = [
+      {
+        id: integrationStepId,
+        name: uuid(),
+        entities: [
+          {
+            resourceName: 'The Group',
+            _type: 'my_group',
+            _class: ['Group', 'Other'],
+            indexMetadata: {
+              // Entities and relationships should be tracked by the graph
+              // object store separately. This entity has the same _type,
+              // but it should not impact the indexed relationship
+              enabled: false,
+            },
+          },
+        ],
+        relationships: [
+          {
+            _type: 'the_root_has_my_account',
+            _class: RelationshipClass.HAS,
+            sourceType: 'the_root',
+            targetType: 'my_account',
+            indexMetadata: {
+              enabled: true,
+            },
+          },
+          {
+            _type: 'the_test_has_the_test_2',
+            _class: RelationshipClass.HAS,
+            sourceType: 'the_test',
+            targetType: 'the_test_2',
+          },
+          {
+            _type: 'the_record_has_the_record_2',
+            _class: RelationshipClass.HAS,
+            sourceType: 'the_record',
+            targetType: 'the_record_2',
+            indexMetadata: {
+              // Should not write this one to disk!
+              enabled: false,
+            },
+          },
+        ],
+        executionHandler() {
+          return Promise.resolve();
+        },
+      },
+    ];
+
+    const { store } = setupFileSystemObjectStore({
+      integrationSteps,
+    });
+
+    let flushedRelationshipsCollected: Relationship[] = [];
+    let addRelationshipsFlushedCalledTimes = 0;
+
+    const relationships: Relationship[] = [
+      // Enabled
+      createTestRelationship({ _type: 'the_root_has_my_account' }),
+      // Enabled
+      createTestRelationship({ _type: 'the_root_has_my_account' }),
+      // Disabled
+      createTestRelationship({ _type: 'the_record_has_the_record_2' }),
+      // Enabled
+      createTestRelationship({ _type: 'the_test_has_the_test_2' }),
+      // Disabled
+      createTestRelationship({ _type: 'the_record_has_the_record_2' }),
+    ];
+
+    async function onRelationshipsFlushed(relationships) {
+      addRelationshipsFlushedCalledTimes++;
+      flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
+        relationships,
+      );
+      return Promise.resolve();
+    }
+
+    await store.addRelationships(
+      integrationStepId,
+      relationships,
+      onRelationshipsFlushed,
+    );
+
+    expect(addRelationshipsFlushedCalledTimes).toEqual(0);
+    expect(flushedRelationshipsCollected).toEqual([]);
+
+    await store.flushRelationshipsToDisk(onRelationshipsFlushed);
+    expect(addRelationshipsFlushedCalledTimes).toEqual(1);
+
+    // This should include every relationship. Even the ones that are not written to
+    // disk
+    expect(flushedRelationshipsCollected).toEqual(relationships);
+
+    const allWrittenStepData = await getStorageDirectoryDataForStep(
+      integrationStepId,
+    );
+    expect(allWrittenStepData.relationships.length).toEqual(3);
+    expect(allWrittenStepData.entities.length).toEqual(0);
+
+    expect(sortBy(allWrittenStepData.relationships, '_key')).toEqual(
+      sortBy([relationships[0], relationships[1], relationships[3]], '_key'),
+    );
   });
 
   test('#flushRelationshipsToDisk should call flush callback when flushRelationshipsToDisk called', async () => {

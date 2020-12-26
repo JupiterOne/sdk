@@ -71,6 +71,15 @@ export type IntegrationStep<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 > = StepMetadata & Step<IntegrationStepExecutionContext<TConfig>>;
 
+export interface GraphObjectIndexMetadata {
+  /**
+   * Whether the index of the graph object store is enabled or not. For example,
+   * in the case leveraging the `FileSystemGraphObjectStore`, this value
+   * determines whether we need to write the specific graph object to disk.
+   */
+  enabled: boolean;
+}
+
 export interface StepGraphObjectMetadata {
   _type: string;
 
@@ -88,6 +97,11 @@ export interface StepGraphObjectMetadata {
    * * Ticket systems
    */
   partial?: boolean;
+
+  /**
+   * Contains metadadata that can be leveraged inside of the graph object store
+   */
+  indexMetadata?: GraphObjectIndexMetadata;
 }
 
 export interface StepEntityMetadata extends StepGraphObjectMetadata {
