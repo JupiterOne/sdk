@@ -5,6 +5,13 @@ import {
   GraphObjectLookupKey,
 } from './jobState';
 import { Relationship } from './relationship';
+import { GraphObjectIndexMetadata } from '../types/step';
+
+export interface GetIndexMetadataForGraphObjectTypeParams {
+  stepId: string;
+  _type: string;
+  graphObjectCollectionType: 'entities' | 'relationships';
+}
 
 /**
  * Persists entities and relationships to a durable medium for the duration of
@@ -39,4 +46,8 @@ export interface GraphObjectStore {
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
+
+  getIndexMetadataForGraphObjectType?: (
+    params: GetIndexMetadataForGraphObjectTypeParams,
+  ) => GraphObjectIndexMetadata | undefined;
 }
