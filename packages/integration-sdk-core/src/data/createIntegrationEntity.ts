@@ -6,7 +6,7 @@ import {
 
 import { IntegrationError } from '../errors';
 import { Entity, EntityRawData, RawDataTracking } from '../types';
-import { getTime } from './converters';
+import { parseTimePropertyValue } from './converters';
 import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
@@ -157,10 +157,11 @@ function generateEntity({
 
   if (entity.createdOn === undefined) {
     entity.createdOn =
-      (source.createdAt && getTime(source.createdAt)) ||
-      (source.creationDate && getTime(source.creationDate)) ||
-      (source.creationTime && getTime(source.creationTime)) ||
-      (source.creationTimestamp && getTime(source.creationTimestamp));
+      (source.createdAt && parseTimePropertyValue(source.createdAt)) ||
+      (source.creationDate && parseTimePropertyValue(source.creationDate)) ||
+      (source.creationTime && parseTimePropertyValue(source.creationTime)) ||
+      (source.creationTimestamp &&
+        parseTimePropertyValue(source.creationTimestamp));
   }
 
   if (entity.active === undefined && source.status) {
@@ -223,6 +224,13 @@ function generateEntityKey(data: any): string {
   return id;
 }
 
+/**
+ * Answers a form of the provider data with only the properties supported by the
+ * data model schema.
+ *
+ * @param source resource data from the resource provider/external system
+ * @param _class entity `_class: string[]` value
+ */
 function whitelistedProviderData(
   source: ProviderSourceData,
   _class: string[],
@@ -240,15 +248,20 @@ function whitelistedProviderData(
   return whitelistedProviderData;
 }
 
-const schemaWhitelists = new Map<string[], string[]>();
+/**
+ * The whitelisted property names for unique combinations of `_class: Array`
+ * values seen so far in the program.
+ */
+export const schemaWhitelists = new Map<string, string[]>();
 
 /**
  * Answers all the property names defined by the schemas referenced in the set
  * of classes. Values are cached to avoid rebuilding, since there could be
  * thousands of entities constructed during a single execution.
  */
-function schemaWhitelistedPropertyNames(_class: string[]): string[] {
-  let properties = schemaWhitelists.get(_class);
+export function schemaWhitelistedPropertyNames(_class: string[]): string[] {
+  const whitelistKey = _class.join(',');
+  let properties = schemaWhitelists.get(whitelistKey);
   if (!properties) {
     properties = [];
     for (const c of _class) {
@@ -259,9 +272,11 @@ function schemaWhitelistedPropertyNames(_class: string[]): string[] {
           message: `Class '${c}' does not yet have a schema supported by the SDK!`,
         });
       }
-      properties.push(...schemaPropertyNames(schema));
+      for (const name of schemaPropertyNames(schema)) {
+        properties.push(name);
+      }
     }
-    schemaWhitelists.set(_class, properties);
+    schemaWhitelists.set(whitelistKey, properties);
   }
   return properties;
 }

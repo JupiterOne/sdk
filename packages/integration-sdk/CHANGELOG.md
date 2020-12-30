@@ -9,6 +9,46 @@ and this project adheres to
 
 ## Unreleased
 
+## Fixed
+
+- A `createIntegrationEntity` bug in transferring source properties into an
+  entity caused a memory leak.
+
+### 5.3.0 - 2020-12-27
+
+### Added
+
+- Support for omitting specific graph objects from file storage. Some entities
+  and relationships do not need to be stored on the file system at all. We only
+  need to store graph objects on the file system if we later intend to fetch the
+  data from the job state or iterate over the `_type`.
+
+  Usage in an integration step:
+
+  ```typescript
+  {
+    id: 'my-step',
+    name: 'My step',
+    entities: [
+      {
+        resourceName: 'The Record',
+        _type: 'my_record',
+        _class: ['Record'],
+        indexMetadata: {
+          // This _type will not be written to the file system
+          enabled: false,
+        },
+      },
+    ],
+    relationships: [],
+    async exeutionHandler() {
+      ...
+    }
+  }
+  ```
+
+  See PR [#404](https://github.com/JupiterOne/sdk/pull/404)
+
 ## 5.2.1 - 2020-12-23
 
 ### Fixed
