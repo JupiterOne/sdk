@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+## Fixed
+
+- A `createIntegrationEntity` bug in transferring source properties into an
+  entity caused a memory leak.
+
 ### 5.3.0 - 2020-12-27
 
 ### Added
