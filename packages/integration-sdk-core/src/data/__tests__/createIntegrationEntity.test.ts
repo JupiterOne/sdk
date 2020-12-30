@@ -1,7 +1,10 @@
 import { v4 as uuid } from 'uuid';
+
 import {
   createIntegrationEntity,
   IntegrationEntityData,
+  schemaWhitelistedPropertyNames,
+  schemaWhitelists,
 } from '../createIntegrationEntity';
 
 const networkSourceData = {
@@ -39,6 +42,36 @@ const entityData: IntegrationEntityData = {
   assign: networkAssigns,
   source: networkSourceData,
 };
+
+describe('schemaWhitelistedPropertyNames', () => {
+  test('answers only properies in schema', () => {
+    expect(schemaWhitelistedPropertyNames(['Network'])).toIncludeAllMembers([
+      'id',
+      'name',
+      'CIDR',
+      'public',
+    ]);
+  });
+
+  test('answers union of properies in both schemas', () => {
+    expect(
+      schemaWhitelistedPropertyNames(['Network', 'Host']),
+    ).toIncludeAllMembers(['id', 'name', 'CIDR', 'hostname', 'platform']);
+  });
+
+  test('does not duplicate entries in cache', () => {
+    schemaWhitelistedPropertyNames(['Network', 'Host']);
+    schemaWhitelistedPropertyNames(['Network', 'Host']);
+    let seenKey = false;
+    for (const key of schemaWhitelists.keys()) {
+      if (key === 'Network,Host') {
+        if (seenKey) fail('Duplicate key in cache');
+        else seenKey = true;
+      }
+    }
+    if (!seenKey) fail('Did not see expected key in cache at all');
+  });
+});
 
 describe('createIntegrationEntity', () => {
   test('combines source with assignments', () => {
