@@ -179,6 +179,10 @@ export function createMockJobState({
       return entity;
     },
 
+    hasKey: (_key: string) => {
+      return duplicateKeyTracker.hasKey(_key);
+    },
+
     iterateEntities,
 
     iterateRelationships: async <T extends Relationship = Relationship>(

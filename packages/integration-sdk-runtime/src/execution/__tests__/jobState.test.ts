@@ -139,6 +139,40 @@ describe('#findEntity', () => {
   });
 });
 
+describe('#hasKey', () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  test('answers false when no entity or relationship added', async () => {
+    const jobState = createTestStepJobState();
+    expect(await jobState.hasKey('a')).toBeFalse();
+  });
+
+  test('answers true when entity added', async () => {
+    const jobState = createTestStepJobState();
+    await jobState.addEntity(createTestEntity({ _key: 'a' }));
+    expect(await jobState.hasKey('a')).toBeTrue();
+  });
+
+  test('answers true when relationship added', async () => {
+    const jobState = createTestStepJobState();
+    await jobState.addRelationship(createTestRelationship({ _key: 'a' }));
+    expect(await jobState.hasKey('a')).toBeTrue();
+  });
+
+  test('key normalization', async () => {
+    const jobState = createTestStepJobState({
+      duplicateKeyTracker: new DuplicateKeyTracker((_key) =>
+        _key.toLowerCase(),
+      ),
+    });
+    await jobState.addEntity(createTestEntity({ _key: 'A' }));
+    expect(await jobState.hasKey('A')).toBeTrue();
+    expect(await jobState.hasKey('a')).toBeTrue();
+  });
+});
+
 describe('upload callbacks', () => {
   test('#addEntities should call uploader enqueue on flushed', async () => {
     const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
