@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+### 5.4.0 - 2020-12-31
+
 ## Added
 
 - `JobState.hasKey()` as an efficient means of determining whether an entity or
