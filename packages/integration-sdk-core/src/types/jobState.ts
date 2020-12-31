@@ -71,10 +71,23 @@ export interface JobState {
 
   /**
    * Finds an entity by `_key` and returns `null` if the entity does not exist.
-   * This function will also throw an error if multiple entities are found with
-   * the same `_key` value.
+   *
+   * @see hasKey when the entity is not needed to avoid unnecessary costs
+   * associated with loading the entity.
+   *
+   * @throws IntegrationDuplicateKeyError when multiple entities are found with
+   * the same `_key` value. Note however, there are mechanisms in place to
+   * prevent storing duplicates.
    */
   findEntity: (_key: string) => Promise<Entity | null>;
+
+  /**
+   * Answers `true` when an entity OR relationship having `_key` has been added.
+   *
+   * @see findEntity when the entity, if present, is needed (there is no need to
+   * use `hasKey` before `findEntity`).
+   */
+  hasKey: (_key: string) => boolean | Promise<boolean>;
 
   /**
    * Allows a step to iterate all entities collected into the job state, limited

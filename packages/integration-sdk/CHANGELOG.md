@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## Added
+
+- `JobState.hasKey()` as an efficient means of determining whether an entity or
+  relationship has been added. This allows integrations to avoid doing any of
+  their own key tracking.
+
 ## Fixed
 
 - A `createIntegrationEntity` bug in transferring source properties into an

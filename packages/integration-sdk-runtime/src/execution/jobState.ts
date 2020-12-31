@@ -47,6 +47,10 @@ export class DuplicateKeyTracker {
   getGraphObjectMetadata(_key: string) {
     return this.graphObjectKeyMap.get(this.normalizationFunction(_key));
   }
+
+  hasKey(_key: string) {
+    return this.graphObjectKeyMap.has(this.normalizationFunction(_key));
+  }
 }
 
 export class TypeTracker {
@@ -166,6 +170,10 @@ export function createStepJobState({
       });
 
       return entity;
+    },
+
+    hasKey: (_key: string) => {
+      return duplicateKeyTracker.hasKey(_key);
     },
 
     iterateEntities: (filter, iteratee) =>
