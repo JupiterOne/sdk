@@ -109,18 +109,24 @@ export interface CreatePersisterApiStepGraphObjectDataUploaderParams {
   stepId: string;
   synchronizationJobContext: SynchronizationJobContext;
   uploadConcurrency: number;
+  uploadBatchSize: number;
 }
 
 export function createPersisterApiStepGraphObjectDataUploader({
   stepId,
   synchronizationJobContext,
   uploadConcurrency,
+  uploadBatchSize,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
   return createQueuedStepGraphObjectDataUploader({
     stepId,
     uploadConcurrency,
     upload(graphObjectData) {
-      return uploadGraphObjectData(synchronizationJobContext, graphObjectData);
+      return uploadGraphObjectData(
+        synchronizationJobContext,
+        graphObjectData,
+        uploadBatchSize,
+      );
     },
   });
 }

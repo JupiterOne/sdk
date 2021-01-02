@@ -173,6 +173,7 @@ async function getPartialDatasets() {
 export async function uploadGraphObjectData(
   synchronizationJobContext: SynchronizationJobContext,
   graphObjectData: FlushedGraphObjectData,
+  uploadBatchSize?: number,
 ) {
   try {
     if (
@@ -183,13 +184,14 @@ export async function uploadGraphObjectData(
         {
           entities: graphObjectData.entities.length,
         },
-        'Uploading entities',
+        'Preparing batches of entities for upload',
       );
 
       await uploadData(
         synchronizationJobContext,
         'entities',
         graphObjectData.entities,
+        uploadBatchSize,
       );
     }
 
@@ -201,13 +203,14 @@ export async function uploadGraphObjectData(
         {
           relationships: graphObjectData.relationships.length,
         },
-        'Uploading relationships',
+        'Preparing batches of relationships for upload',
       );
 
       await uploadData(
         synchronizationJobContext,
         'relationships',
         graphObjectData.relationships,
+        uploadBatchSize,
       );
     }
   } catch (err) {
@@ -290,8 +293,9 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   { job, apiClient, logger }: SynchronizationJobContext,
   type: K,
   data: T[K][],
+  uploadBatchSize?: number,
 ) {
-  const batches = chunk(data, UPLOAD_BATCH_SIZE);
+  const batches = chunk(data, uploadBatchSize || UPLOAD_BATCH_SIZE);
   await pMap(
     batches,
     async (batch: T[K][]) => {
