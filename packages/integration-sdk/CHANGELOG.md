@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+### 5.5.0 - 2020-01-02
+
+## Added
+
+- Support for specifying the upload batch size via the `uploadBatchSize` in
+  `createPersisterApiStepGraphObjectDataUploader`.
+
 ### 5.4.0 - 2020-12-31
 
 ## Added
