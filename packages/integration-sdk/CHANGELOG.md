@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+## Changed
+
+- Skip logging warn message when a `CredentialsError` is received in graph
+  object uploads.
+
 ### 5.5.0 - 2020-01-02
 
 ## Added
