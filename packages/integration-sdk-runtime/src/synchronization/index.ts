@@ -275,7 +275,13 @@ async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
       delay: 200,
       factor: 1.05,
       handleError(err, attemptContext) {
-        if (attemptContext.attemptsRemaining) {
+        if (
+          attemptContext.attemptsRemaining &&
+          // There are sometimes intermittent credentials errors when running
+          // a managed integration on AWS Fargate. They consistently succeed
+          // with retry logic, so we don't want to log a warn.
+          err.code !== 'CredentialsError'
+        ) {
           logger.warn(
             {
               err,
