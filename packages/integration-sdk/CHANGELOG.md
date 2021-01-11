@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## Added
+
+- Whitespace trimming of integration config values.
+
 ## Changed
 
 - Skip logging warn message when a `CredentialsError` is received in graph
