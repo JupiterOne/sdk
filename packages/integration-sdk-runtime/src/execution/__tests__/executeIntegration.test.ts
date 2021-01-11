@@ -20,10 +20,7 @@ import {
 import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
 
 import * as integrationFileSystem from '../../fileSystem';
-import {
-  createIntegrationLogger,
-  IntegrationLogger as IntegrationLoggerImpl,
-} from '../../logger';
+import { IntegrationLogger as IntegrationLoggerImpl } from '../../logger';
 import { FlushedGraphObjectData } from '../../storage/types';
 import {
   executeIntegrationInstance,
@@ -32,13 +29,14 @@ import {
   ExecuteIntegrationResult,
 } from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
+import { createInstanceConfiguration } from './utils/createIntegrationConfig';
 
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
 jest.mock('fs');
 
 function sleep(ms: number) {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     setTimeout(() => resolve(), ms);
   });
 }
@@ -48,30 +46,6 @@ export interface InstanceConfigurationData {
   instance: IntegrationInstance;
   invocationConfig: IntegrationInvocationConfig;
   logger: IntegrationLogger;
-}
-
-function createInstanceConfiguration(
-  options?: Partial<InstanceConfigurationData>,
-): InstanceConfigurationData {
-  const validateInvocation: IntegrationInvocationValidationFunction =
-    options?.validateInvocation || jest.fn();
-
-  const invocationConfig: IntegrationInvocationConfig = {
-    validateInvocation,
-    integrationSteps: [],
-    ...options?.invocationConfig,
-  };
-
-  return {
-    validateInvocation,
-    invocationConfig,
-    instance: LOCAL_INTEGRATION_INSTANCE,
-    logger: createIntegrationLogger({
-      name: 'integration-name',
-      invocationConfig,
-    }),
-    ...options,
-  };
 }
 
 afterEach(() => {

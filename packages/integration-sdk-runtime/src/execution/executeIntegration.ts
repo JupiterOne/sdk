@@ -33,6 +33,8 @@ import {
   getDefaultStepStartStates,
 } from './step';
 import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
+import { getMaskedFields } from './utils/getMaskedFields';
+import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 
 export interface ExecuteIntegrationResult {
@@ -109,7 +111,7 @@ export async function executeIntegrationInstance(
     operation: () =>
       executeWithContext(
         {
-          instance,
+          instance: trimStringValues(instance, getMaskedFields(config)),
           logger,
           executionHistory,
         },
