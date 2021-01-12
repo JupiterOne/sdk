@@ -14,7 +14,7 @@ Integrating with JupiterOne may take one of these paths:
 1. A JavaScript program using the [JupiterOne Node.js client library][2] to
    query/create/update/delete entities and relationships
 1. A structured integration leveraging **this SDK** to dramatically simplify the
-   syncronization process, essential for any significant, ongoing integration
+   synchronization process, essential for any significant, ongoing integration
    effort
 
 The integration SDK structures an integration as a collection of simple, atomic
