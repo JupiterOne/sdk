@@ -4,7 +4,7 @@ A collection of packages supporting integrations with JupiterOne.
 
 ## Introduction
 
-Integrating with JupiterOne may take one these paths:
+Integrating with JupiterOne may take one of these paths:
 
 1. A command line script (sh, bash, zsh, etc.) using the [JupiterOne CLI
    tool][2] to easily query/create/update/delete entities and relationships in
