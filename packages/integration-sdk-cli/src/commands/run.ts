@@ -75,6 +75,7 @@ export function run() {
 
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,
+        integrationSteps: invocationConfig.integrationSteps,
       });
 
       try {
