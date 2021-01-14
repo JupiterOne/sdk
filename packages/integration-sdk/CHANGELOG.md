@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+### 5.6.0 - 2020-01-14
+
 ## Added
 
 - Whitespace trimming of integration config values.
