@@ -12,6 +12,7 @@ and this project adheres to
 ## Added
 
 - Whitespace trimming of integration config values.
+- Support for skipping writing graph object files when running CLI commands
 
 ## Changed
 
