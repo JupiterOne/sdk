@@ -34,6 +34,7 @@ export function collect() {
 
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,
+        integrationSteps: config.integrationSteps,
       });
 
       const results = await executeIntegrationLocally(
