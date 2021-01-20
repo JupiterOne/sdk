@@ -2,7 +2,7 @@ import { BigMap } from './bigMap';
 
 describe('#BigMap', () => {
   test('should insert data into default map if under maximum key space limit', () => {
-    const m = new BigMap<number>(5);
+    const m = new BigMap<string, number>(5);
     m.set('a', 1);
     expect(m.has('a')).toEqual(true);
     expect(m.get('a')).toEqual(1);
@@ -11,7 +11,7 @@ describe('#BigMap', () => {
 
   test('should create a new map when key space limit reached', () => {
     const maximumMapKeySpace = 5;
-    const m = new BigMap<number>(maximumMapKeySpace);
+    const m = new BigMap<string, number>(maximumMapKeySpace);
     const totalKeys = maximumMapKeySpace + 1;
 
     for (let i = 0; i < totalKeys; i++) {
@@ -26,12 +26,12 @@ describe('#BigMap', () => {
   });
 
   test('#get should return undefined if key not found', () => {
-    const m = new BigMap<number>(5);
+    const m = new BigMap<string, number>(5);
     expect(m.get('a')).toEqual(undefined);
   });
 
   test('#has should return false if key not found', () => {
-    const m = new BigMap<number>(5);
+    const m = new BigMap<string, number>(5);
     expect(m.has('a')).toEqual(false);
   });
 });

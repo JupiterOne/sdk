@@ -26,6 +26,7 @@ const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2000000;
  */
 export class DuplicateKeyTracker {
   private readonly graphObjectKeyMap: BigMap<
+    string,
     DuplicateKeyTrackerGraphObjectMetadata
   >;
   private readonly normalizationFunction: KeyNormalizationFunction;
@@ -33,9 +34,10 @@ export class DuplicateKeyTracker {
   constructor(normalizationFunction?: KeyNormalizationFunction) {
     this.normalizationFunction = normalizationFunction || ((_key) => _key);
 
-    this.graphObjectKeyMap = new BigMap<DuplicateKeyTrackerGraphObjectMetadata>(
-      DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE,
-    );
+    this.graphObjectKeyMap = new BigMap<
+      string,
+      DuplicateKeyTrackerGraphObjectMetadata
+    >(DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE);
   }
 
   registerKey(_key: string, metadata: DuplicateKeyTrackerGraphObjectMetadata) {

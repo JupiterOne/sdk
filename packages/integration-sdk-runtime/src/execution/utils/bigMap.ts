@@ -1,5 +1,5 @@
-export class BigMap<T> {
-  private maps: Map<string, T>[] = [new Map<string, T>()];
+export class BigMap<K, V> {
+  private maps: Map<K, V>[] = [new Map<K, V>()];
 
   readonly maximumMapKeySpace: number;
 
@@ -7,11 +7,11 @@ export class BigMap<T> {
     this.maximumMapKeySpace = maximumMapKeySpace;
   }
 
-  set(key: string, value: T): Map<string, T> {
+  set(key: K, value: V): Map<K, V> {
     const map = this.maps[this.maps.length - 1];
 
     if (map.size === this.maximumMapKeySpace) {
-      const newMap = new Map<string, T>();
+      const newMap = new Map<K, V>();
       const result = newMap.set(key, value);
       this.maps.push(newMap);
       return result;
@@ -20,11 +20,11 @@ export class BigMap<T> {
     }
   }
 
-  has(key: string) {
+  has(key: K) {
     return mapForKey(this.maps, key) !== undefined;
   }
 
-  get(key: string) {
+  get(key: K) {
     return valueForKey(this.maps, key);
   }
 
@@ -33,10 +33,7 @@ export class BigMap<T> {
   }
 }
 
-function mapForKey<T>(
-  maps: Map<string, T>[],
-  key: string,
-): Map<string, T> | undefined {
+function mapForKey<K, V>(maps: Map<K, V>[], key: K): Map<K, V> | undefined {
   for (let index = maps.length - 1; index >= 0; index--) {
     const map = maps[index];
 
@@ -46,7 +43,7 @@ function mapForKey<T>(
   }
 }
 
-function valueForKey<T>(maps: Map<string, T>[], key: string): T | undefined {
+function valueForKey<K, V>(maps: Map<K, V>[], key: K): V | undefined {
   for (let index = maps.length - 1; index >= 0; index--) {
     const map = maps[index];
     const value = map.get(key);
