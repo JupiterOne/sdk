@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+### 5.6.1 - 2020-01-20
+
+## Fixed
+
+- Allow duplicate key tracker to grow greater than V8 engine limit. See
+  [#420](https://github.com/JupiterOne/sdk/pull/420).
+
 ### 5.6.0 - 2020-01-14
 
 ## Added
