@@ -9,46 +9,52 @@ and this project adheres to
 
 ## Unreleased
 
-### 5.6.1 - 2020-01-20
+## 5.6.2 - 2020-02-09
 
-## Fixed
+### Added
+
+- Added log statement after `uploadData()` successfully sends data to synchronizer.
+
+## 5.6.1 - 2020-01-20
+
+### Fixed
 
 - Allow duplicate key tracker to grow greater than V8 engine limit. See
   [#420](https://github.com/JupiterOne/sdk/pull/420).
 
-### 5.6.0 - 2020-01-14
+## 5.6.0 - 2020-01-14
 
-## Added
+### Added
 
 - Whitespace trimming of integration config values.
 - Support for skipping writing graph object files when running CLI commands
 
-## Changed
+### Changed
 
 - Skip logging warn message when a `CredentialsError` is received in graph
   object uploads.
 
-### 5.5.0 - 2020-01-02
+## 5.5.0 - 2020-01-02
 
-## Added
+### Added
 
 - Support for specifying the upload batch size via the `uploadBatchSize` in
   `createPersisterApiStepGraphObjectDataUploader`.
 
-### 5.4.0 - 2020-12-31
+## 5.4.0 - 2020-12-31
 
-## Added
+### Added
 
 - `JobState.hasKey()` as an efficient means of determining whether an entity or
   relationship has been added. This allows integrations to avoid doing any of
   their own key tracking.
 
-## Fixed
+### Fixed
 
 - A `createIntegrationEntity` bug in transferring source properties into an
   entity caused a memory leak.
 
-### 5.3.0 - 2020-12-27
+## 5.3.0 - 2020-12-27
 
 ### Added
 
