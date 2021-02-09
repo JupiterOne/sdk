@@ -193,6 +193,13 @@ export async function uploadGraphObjectData(
         graphObjectData.entities,
         uploadBatchSize,
       );
+      
+      synchronizationJobContext.logger.info(
+        {
+          entities: graphObjectData.entities.length,
+        },
+        'Successfully uploaded entities',
+      );
     }
 
     if (
@@ -211,6 +218,13 @@ export async function uploadGraphObjectData(
         'relationships',
         graphObjectData.relationships,
         uploadBatchSize,
+      );
+
+      synchronizationJobContext.logger.info(
+        {
+          relationships: graphObjectData.relationships.length,
+        },
+        'Successfully uploaded relationships',
       );
     }
   } catch (err) {
