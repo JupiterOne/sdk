@@ -9,20 +9,30 @@ and this project adheres to
 
 ## Unreleased
 
-## 5.6.2 - 2020-02-09
+## 5.7.0 - 2021-02-15
 
 ### Added
 
-- Added log statement after `uploadData()` successfully sends data to synchronizer.
+- Expose the following read-only properties on `IntegrationProviderAPIError`
+  - `endpoint`
+  - `status`
+  - `statusText`
 
-## 5.6.1 - 2020-01-20
+## 5.6.2 - 2021-02-09
+
+### Added
+
+- Added log statement after `uploadData()` successfully sends data to
+  synchronizer.
+
+## 5.6.1 - 2021-01-20
 
 ### Fixed
 
 - Allow duplicate key tracker to grow greater than V8 engine limit. See
   [#420](https://github.com/JupiterOne/sdk/pull/420).
 
-## 5.6.0 - 2020-01-14
+## 5.6.0 - 2021-01-14
 
 ### Added
 
@@ -34,7 +44,7 @@ and this project adheres to
 - Skip logging warn message when a `CredentialsError` is received in graph
   object uploads.
 
-## 5.5.0 - 2020-01-02
+## 5.5.0 - 2021-01-02
 
 ### Added
 

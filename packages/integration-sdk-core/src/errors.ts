@@ -270,27 +270,30 @@ export class IntegrationProviderAuthorizationError extends IntegrationError {
  * for improving the integration's handling of provider API errors.
  */
 export class IntegrationProviderAPIError extends IntegrationError {
+  /**
+   * The endpoint that provided the unexpected error response.
+   */
+  readonly endpoint: string;
+
+  /**
+   * The response status code, i.e. `500`, or in the case of GraphQL, whatever
+   * error code provided by the response body.
+   */
+  readonly status: string | number;
+
+  /**
+   * The response status text, i.e. `"Internal Server Error"`.
+   */
+  readonly statusText: string;
+
   constructor(options: {
     /**
      * An optional reference to the error that caused this error. The cause tree
      * will be included in logging of the error to assist problem resolution.
      */
     cause?: Error;
-
-    /**
-     * The endpoint that provided the unexpected error response.
-     */
     endpoint: string;
-
-    /**
-     * The response status code, i.e. `500`, or in the case of GraphQL, whatever
-     * error code provided by the response body.
-     */
     status: string | number;
-
-    /**
-     * The response status text, i.e. `"Internal Server Error"`.
-     */
     statusText: string;
   }) {
     super({
@@ -299,6 +302,10 @@ export class IntegrationProviderAPIError extends IntegrationError {
       message: `Provider API failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
       fatal: false,
     });
+
+    this.endpoint = options.endpoint;
+    this.status = options.status;
+    this.statusText = options.statusText;
   }
 }
 
