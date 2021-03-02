@@ -314,7 +314,7 @@ describe('#getData/#setData', () => {
     expect(await jobState.getData(key)).toEqual('test');
   });
 
-  test('should allow returning data', async () => {
+  test('should return "undefined" when a key is not found', async () => {
     const jobState = createTestStepJobState();
     expect(await jobState.getData(uuid())).toEqual(undefined);
   });
