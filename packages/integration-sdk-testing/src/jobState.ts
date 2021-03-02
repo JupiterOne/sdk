@@ -147,7 +147,7 @@ export function createMockJobState({
       return Promise.resolve();
     },
 
-    getData: async <T>(key: string): Promise<T> => {
+    getData: async <T>(key: string): Promise<T | undefined> => {
       return Promise.resolve(dataStore.get(key) as T);
     },
 

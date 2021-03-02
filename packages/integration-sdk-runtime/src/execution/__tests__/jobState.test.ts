@@ -301,3 +301,21 @@ describe('upload callbacks', () => {
     expect(graphObjectDataCollection).toEqual(expectedUploaded);
   });
 });
+
+describe('#getData/#setData', () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  test('should allow returning data', async () => {
+    const jobState = createTestStepJobState();
+    const key = uuid();
+    await jobState.setData(key, 'test');
+    expect(await jobState.getData(key)).toEqual('test');
+  });
+
+  test('should allow returning data', async () => {
+    const jobState = createTestStepJobState();
+    expect(await jobState.getData(uuid())).toEqual(undefined);
+  });
+});
