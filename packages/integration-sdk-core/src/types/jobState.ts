@@ -43,7 +43,7 @@ export interface JobState {
    *
    * @see setData
    */
-  getData: <T>(key: string) => Promise<T>;
+  getData: <T>(key: string) => Promise<T | undefined>;
 
   /**
    * Adds an entity to the job's collection. `addEntities` can be used

@@ -20,6 +20,11 @@ describe('data', () => {
     await jobState.setData('my-key', 'ohyeah');
     await expect(jobState.getData('my-key')).resolves.toEqual('ohyeah');
   });
+
+  test('should return "undefined" when a key is not found', async () => {
+    const jobState = createMockJobState();
+    expect(await jobState.getData('unknown')).toEqual(undefined);
+  });
 });
 
 describe('entities', () => {
