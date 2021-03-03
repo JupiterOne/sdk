@@ -9,6 +9,25 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.8.1 - 2021-03-03
+
+### Fixed
+
+- [#426](https://github.com/JupiterOne/sdk/issues/426) - Update return typings
+  for `jobState.getData` to be more realistic
+
+Old:
+
+```ts
+getData: <T>(key: string) => Promise<T>;
+```
+
+New:
+
+```ts
+getData: <T>(key: string) => Promise<T | undefined>;
+```
+
 ## 5.8.0 - 2021-02-26
 
 ### Changed
