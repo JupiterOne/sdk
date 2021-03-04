@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- [#429](https://github.com/JupiterOne/sdk/issues/429) - fixed
+  `toMatchGraphObjectSchema` failure when multiple classes share same `enum`
+  property name.
+
 ## 5.8.1 - 2021-03-03
 
 ### Fixed
