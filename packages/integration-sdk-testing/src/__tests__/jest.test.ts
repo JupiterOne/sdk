@@ -333,6 +333,40 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
 )`,
     );
   });
+
+  test('should try to merge two enum set properties in array of classes', () => {
+    const entity: Entity = {
+      _class: ['Host', 'Device'],
+      _type: 'user_endpoint',
+      _key: 'enum-set-test',
+      name: 'test',
+      displayName: 'test',
+      category: 'endpoint',
+      make: 'Apple',
+      model: 'MacBookPro14,3',
+      serial: 'C0123',
+      platform: 'darwin',
+      specialProp: 'abc',
+    };
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: ['Host', 'Device'],
+      schema: {
+        additionalProperties: false,
+        properties: {
+          _type: { const: 'user_endpoint' },
+          specialProp: { type: 'string' },
+        },
+      },
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+
+    expect(result.message()).toEqual('Success!');
+  });
 });
 
 describe('#toMatchDirectRelationshipSchema', () => {
