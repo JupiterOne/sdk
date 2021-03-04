@@ -113,6 +113,46 @@ function dedupSchemaPropertyTypes(
   };
 }
 
+/**
+ * It's possible that two classes contain the same property name and both have
+ * "enum" values in the schema.
+ *
+ * For example, `Host` and `Device` both contain a `platform` property that
+ * contain enum values.
+ *
+ * See here:
+ *
+ * - https://github.com/JupiterOne/data-model/blob/master/src/schemas/Host.json#L75
+ * - https://github.com/JupiterOne/data-model/blob/master/src/schemas/Device.json#L58
+ *
+ * @param schema
+ */
+function dedupSchemaEnumValues(schema: GraphObjectSchema): GraphObjectSchema {
+  if (!schema.properties) {
+    return schema;
+  }
+
+  const newProperties: Record<string, any> = {};
+
+  for (const propertyName in schema.properties) {
+    const property = schema.properties[propertyName];
+
+    if (property.enum) {
+      newProperties[propertyName] = {
+        ...property,
+        enum: Array.from(new Set(property.enum)),
+      };
+    } else {
+      newProperties[propertyName] = property;
+    }
+  }
+
+  return {
+    ...schema,
+    properties: newProperties,
+  };
+}
+
 function generateGraphObjectSchemaFromDataModelSchemas(
   schemas: GraphObjectSchema[],
 ) {
@@ -155,9 +195,11 @@ function generateGraphObjectSchemaFromDataModelSchemas(
     newSchemas.push(schema);
   }
 
-  return dedupSchemaRequiredPropertySchema(
-    dedupSchemaPropertyTypes(deepmerge.all(newSchemas)),
-  );
+  let resultSchema = dedupSchemaPropertyTypes(deepmerge.all(newSchemas));
+  resultSchema = dedupSchemaRequiredPropertySchema(resultSchema);
+  resultSchema = dedupSchemaEnumValues(resultSchema);
+
+  return resultSchema;
 }
 
 function graphObjectClassToSchemaRef(_class: string) {
