@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.8.2 - 2021-03-04
+
 ### Fixed
 
 - [#429](https://github.com/JupiterOne/sdk/issues/429) - fixed
