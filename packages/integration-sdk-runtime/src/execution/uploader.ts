@@ -5,6 +5,7 @@ import {
   uploadGraphObjectData,
   SynchronizationJobContext,
 } from '../synchronization';
+import { v4 as uuid } from 'uuid';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;
@@ -105,6 +106,28 @@ export function createQueuedStepGraphObjectDataUploader({
   };
 }
 
+/**
+ * Adding an uploadId and stepId to each log in the upload process makes it
+ * easier to reason about how many graph objects are being uploaded etc.
+ */
+function jobContextWithUploaderMetadataLogger({
+  synchronizationJobContext,
+  uploadId,
+  stepId,
+}: {
+  synchronizationJobContext: SynchronizationJobContext;
+  uploadId: string;
+  stepId: string;
+}): SynchronizationJobContext {
+  return {
+    ...synchronizationJobContext,
+    logger: synchronizationJobContext.logger.child({
+      uploadId,
+      stepId,
+    }),
+  };
+}
+
 export interface CreatePersisterApiStepGraphObjectDataUploaderParams {
   stepId: string;
   synchronizationJobContext: SynchronizationJobContext;
@@ -123,7 +146,11 @@ export function createPersisterApiStepGraphObjectDataUploader({
     uploadConcurrency,
     upload(graphObjectData) {
       return uploadGraphObjectData(
-        synchronizationJobContext,
+        jobContextWithUploaderMetadataLogger({
+          synchronizationJobContext,
+          uploadId: uuid(),
+          stepId: stepId,
+        }),
         graphObjectData,
         uploadBatchSize,
       );
