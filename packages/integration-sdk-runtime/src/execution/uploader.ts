@@ -144,16 +144,26 @@ export function createPersisterApiStepGraphObjectDataUploader({
   return createQueuedStepGraphObjectDataUploader({
     stepId,
     uploadConcurrency,
-    upload(graphObjectData) {
-      return uploadGraphObjectData(
-        jobContextWithUploaderMetadataLogger({
-          synchronizationJobContext,
-          uploadId: uuid(),
-          stepId: stepId,
-        }),
-        graphObjectData,
-        uploadBatchSize,
-      );
+    async upload(graphObjectData) {
+      const context = jobContextWithUploaderMetadataLogger({
+        synchronizationJobContext,
+        uploadId: uuid(),
+        stepId: stepId,
+      });
+
+      try {
+        await uploadGraphObjectData(context, graphObjectData, uploadBatchSize);
+      } catch (err) {
+        context.logger.error(
+          {
+            err,
+            uploadConcurrency,
+            uploadBatchSize,
+          },
+          'Error uploading graph object data',
+        );
+        throw err;
+      }
     },
   });
 }
