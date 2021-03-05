@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.10.0 - 2021-03-05
+
+### Changed
+
+- Additional logged information in uploads error case
+
 ## 5.9.0 - 2021-03-05
 
 ### Changed
