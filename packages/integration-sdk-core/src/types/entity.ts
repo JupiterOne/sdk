@@ -93,7 +93,9 @@ export type EntityRawData = {
   name: string;
 
   /**
-   * Any type of data representing the source content used to build an entity.
+   * A string or an object of any type representing the source content used to build an entity.
    */
-  rawData: any;
+  rawData: NonArrayObject | string;
 };
+
+type NonArrayObject = Record<string, unknown>;
