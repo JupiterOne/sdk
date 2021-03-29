@@ -278,7 +278,6 @@ export function executeStepDependencyGraph<
 
       try {
         await step.executionHandler(context);
-        context.logger.stepSuccess(step);
 
         if (stepHasDependencyFailure(stepId)) {
           status = StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
@@ -297,7 +296,7 @@ export function executeStepDependencyGraph<
         status = StepResultStatus.FAILURE;
       }
 
-      await context.jobState.flush();
+      await context.jobState.flush(stepId);
 
       if (context.jobState.waitUntilUploadsComplete) {
         try {
@@ -305,6 +304,9 @@ export function executeStepDependencyGraph<
           // fatal failure. We just want to make this step as a partial success
           // and move on with our lives!
           await context.jobState.waitUntilUploadsComplete();
+          if (status != StepResultStatus.FAILURE) {
+            context.logger.stepSuccess(step);
+          }
         } catch (err) {
           context.logger.stepFailure(step, err);
           status = StepResultStatus.FAILURE;

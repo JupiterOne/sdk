@@ -129,6 +129,25 @@ describe('flushEntitiesToDisk', () => {
     const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenStepData);
   });
+
+  test('should only flush entities that match the passed in stepId', async () => {
+    const stepIdA = 'a';
+    const { store } = setupFileSystemObjectStore(undefined, stepIdA);
+    const entityTypeA = uuid();
+    const entitiesA = times(3, () => createTestEntity({ _type: entityTypeA }));
+    await store.addEntities(stepIdA, entitiesA);
+
+    const stepIdB = 'b';
+    const entityTypeB = uuid();
+    const entitiesB = times(3, () => createTestEntity({ _type: entityTypeB }));
+    await store.addEntities(stepIdB, entitiesB);
+
+    await store.flushEntitiesToDisk(
+      // eslint-disable-next-line @typescript-eslint/require-await
+      async (entities) => expect(entities).toEqual(entitiesA),
+      stepIdA,
+    );
+  });
 });
 
 describe('flushRelationshipsToDisk', () => {
@@ -173,6 +192,29 @@ describe('flushRelationshipsToDisk', () => {
 
     const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenData);
+  });
+
+  test('should only flush relationships that match the passed in stepId', async () => {
+    const stepIdA = 'a';
+    const { store } = setupFileSystemObjectStore(undefined, stepIdA);
+    const relationshipTypeA = uuid();
+    const relationshipsA = times(3, () =>
+      createTestRelationship({ _type: relationshipTypeA }),
+    );
+    await store.addRelationships(stepIdA, relationshipsA);
+
+    const stepIdB = 'b';
+    const relationshipTypeB = uuid();
+    const relationshipsB = times(3, () =>
+      createTestRelationship({ _type: relationshipTypeB }),
+    );
+    await store.addRelationships(stepIdB, relationshipsB);
+
+    await store.flushRelationshipsToDisk(
+      // eslint-disable-next-line @typescript-eslint/require-await
+      async (relationships) => expect(relationships).toEqual(relationshipsA),
+      stepIdA,
+    );
   });
 });
 
@@ -876,8 +918,10 @@ describe('flush callbacks', () => {
   });
 });
 
-function setupFileSystemObjectStore(params?: FileSystemGraphObjectStoreParams) {
-  const storageDirectoryPath = uuid();
+function setupFileSystemObjectStore(
+  params?: FileSystemGraphObjectStoreParams,
+  storageDirectoryPath = uuid(),
+) {
   const store = new FileSystemGraphObjectStore(params);
 
   return {

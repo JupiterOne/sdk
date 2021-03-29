@@ -210,19 +210,21 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async flush(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    stepId?: string,
   ) {
     await Promise.all([
-      this.flushEntitiesToDisk(onEntitiesFlushed),
-      this.flushRelationshipsToDisk(onRelationshipsFlushed),
+      this.flushEntitiesToDisk(onEntitiesFlushed, stepId),
+      this.flushRelationshipsToDisk(onRelationshipsFlushed, stepId),
     ]);
   }
 
   async flushEntitiesToDisk(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onlyThisStepId?: string,
   ) {
     await this.lockOperation(() =>
       pMap(
-        this.localGraphObjectStore.collectEntitiesByStep(),
+        this.localGraphObjectStore.collectEntitiesByStep(onlyThisStepId),
         async ([stepId, entities]) => {
           const indexable = entities.filter((e) => {
             const indexMetadata = this.getIndexMetadataForGraphObjectType({
@@ -259,10 +261,11 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async flushRelationshipsToDisk(
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onlyThisStepId?: string,
   ) {
     await this.lockOperation(() =>
       pMap(
-        this.localGraphObjectStore.collectRelationshipsByStep(),
+        this.localGraphObjectStore.collectRelationshipsByStep(onlyThisStepId),
         async ([stepId, relationships]) => {
           const indexable = relationships.filter((r) => {
             const indexMetadata = this.getIndexMetadataForGraphObjectType({

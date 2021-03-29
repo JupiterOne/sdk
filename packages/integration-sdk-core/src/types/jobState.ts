@@ -123,8 +123,11 @@ export interface JobState {
    * Ensures all current state is written to persistent storage. It is not
    * necessary to invoke this in an integration; the state is periodically
    * flushed to reduce memory consumption.
+   *
+   * @param stepId is an optonal parameter used to only flush data that was
+   * generated from a specific step; not all the data in the jobState.
    */
-  flush: () => Promise<void>;
+  flush: (stepId?: string) => Promise<void>;
 
   /**
    * A job state may be created with a graph object uploader. This function

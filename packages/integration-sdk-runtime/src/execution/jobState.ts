@@ -189,7 +189,7 @@ export function createStepJobState({
     iterateRelationships: (filter, iteratee) =>
       graphObjectStore.iterateRelationships(filter, iteratee),
 
-    flush: () =>
+    flush: (stepId?: string) =>
       graphObjectStore.flush(
         async (entities) =>
           uploader?.enqueue({
@@ -201,6 +201,7 @@ export function createStepJobState({
             entities: [],
             relationships,
           }),
+        stepId,
       ),
 
     async waitUntilUploadsComplete() {

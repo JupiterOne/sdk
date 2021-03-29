@@ -45,6 +45,7 @@ export interface GraphObjectStore {
   flush(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    stepId?: string,
   ): Promise<void>;
 
   getIndexMetadataForGraphObjectType?: (

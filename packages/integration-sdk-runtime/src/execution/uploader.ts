@@ -148,7 +148,7 @@ export function createPersisterApiStepGraphObjectDataUploader({
       const context = jobContextWithUploaderMetadataLogger({
         synchronizationJobContext,
         uploadId: uuid(),
-        stepId: stepId,
+        stepId,
       });
 
       try {

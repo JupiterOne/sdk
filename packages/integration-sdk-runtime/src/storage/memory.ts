@@ -212,11 +212,12 @@ export class InMemoryGraphObjectStore {
     }
   }
 
-  collectEntitiesByStep(): Map<string, Entity[]> {
+  collectEntitiesByStep(onlyThisStepId?: string): Map<string, Entity[]> {
     const entitiesByStepMap = new Map<string, Entity[]>();
 
     for (const [_key, graphObjectData] of this.entityKeyToEntityMap) {
       const { stepId, entity } = graphObjectData;
+      if (onlyThisStepId && onlyThisStepId !== stepId) continue;
 
       const entitiesByStepArray = entitiesByStepMap.get(stepId);
       if (entitiesByStepArray) {
@@ -229,12 +230,15 @@ export class InMemoryGraphObjectStore {
     return entitiesByStepMap;
   }
 
-  collectRelationshipsByStep(): Map<string, Relationship[]> {
+  collectRelationshipsByStep(
+    onlyThisStepId?: string,
+  ): Map<string, Relationship[]> {
     const relationshipsByStepMap = new Map<string, Relationship[]>();
 
     for (const [_key, graphObjectData] of this
       .relationshipKeyToRelationshipMap) {
       const { stepId, relationship } = graphObjectData;
+      if (onlyThisStepId && onlyThisStepId !== stepId) continue;
 
       const relationshipsByStepArray = relationshipsByStepMap.get(stepId);
       if (relationshipsByStepArray) {

@@ -198,6 +198,6 @@ export function createMockJobState({
       }
     },
 
-    flush: (): Promise<void> => Promise.resolve(),
+    flush: (stepId?: string): Promise<void> => Promise.resolve(),
   };
 }
