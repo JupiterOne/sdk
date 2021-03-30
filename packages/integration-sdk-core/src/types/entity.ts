@@ -98,4 +98,9 @@ export type EntityRawData = {
   rawData: NonArrayObject | string;
 };
 
-type NonArrayObject = Record<string, unknown>;
+type NonArrayObject = {
+  [k: string]: any;
+  // `reduceRight` is used determine the difference between an object and an array
+  // the side effect is that we can not have an object with a key of `reduceRight`
+  reduceRight?: never;
+};
