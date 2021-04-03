@@ -7,7 +7,7 @@ const BASE10_NUMBER_REGEX = /^\d+$/;
 const FLOAT_NUMBER_REGEX = /^\d+\.\d+$/;
 
 export function parseStringPropertyValue(
-  value: string,
+  value: string | undefined | null,
 ): string | boolean | number | undefined {
   if (!value) {
     return undefined;

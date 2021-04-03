@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- `parseStringPropertyValue()` accepts `string | undefined | null` as a
+  convenience for cases where provider data answers `undefined` or `null`
+  values.
 ## 5.11.0 - 2021-03-16
 
 - Upgrade `@jupiterone/data-model@^0.18.0`
