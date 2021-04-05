@@ -14,6 +14,14 @@ and this project adheres to
 - `parseStringPropertyValue()` accepts `string | undefined | null` as a
   convenience for cases where provider data answers `undefined` or `null`
   values.
+
+### Fixed
+
+- `IntegrationProviderAuthorizationError` and
+  `IntegrationProviderAuthenticationError` constructors were not compatible with
+  `IntegrationProviderAPIError`, making for linting errors in projects that
+  would expect them to be.
+
 ## 5.11.0 - 2021-03-16
 
 - Upgrade `@jupiterone/data-model@^0.18.0`

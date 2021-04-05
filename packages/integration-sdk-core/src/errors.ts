@@ -171,94 +171,29 @@ export class IntegrationValidationError extends IntegrationError {
   }
 }
 
-/**
- * An error that may be thrown by an integration during `validateInvocation`,
- * used to communicate a provider API authentication error the user should see
- * that can help them fix a configuration problem. This is a fatal error because
- * an integration cannot reach the provider.
- *
- * An alert SHOULD NOT be delivered to operators when this error is thrown.
- */
-export class IntegrationProviderAuthenticationError extends IntegrationError {
-  constructor(options: {
-    /**
-     * An optional reference to the error that caused this error. The cause tree
-     * will be included in logging of the error to assist problem resolution.
-     */
-    cause?: Error;
+interface IntegrationProviderApiErrorOptions {
+  /**
+   * An optional reference to the error that caused this error. The cause tree
+   * will be included in logging of the error to assist problem resolution.
+   */
+  cause?: Error;
 
-    /**
-     * The endpoint that provided the response indicating the authentication
-     * parameters are invalid.
-     */
-    endpoint: string;
+  /**
+   * The endpoint that provided the response indicating the authentication
+   * parameters are invalid.
+   */
+  endpoint: string;
 
-    /**
-     * The response status code, i.e. `401`, or in the case of GraphQL, whatever
-     * error code provided by the response body.
-     */
-    status: string | number;
+  /**
+   * The response status code, i.e. `401`, or in the case of GraphQL, whatever
+   * error code provided by the response body.
+   */
+  status: string | number;
 
-    /**
-     * The response status text, i.e. `"Unauthorized"`.
-     */
-    statusText: string;
-  }) {
-    super({
-      ...options,
-      code: 'PROVIDER_AUTHENTICATION_ERROR',
-      message: `Provider authentication failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
-      fatal: true,
-    });
-  }
-}
-
-/**
- * An error that may be thrown by an integration during any step that interacts
- * with provider APIs, used to communicate an authenticated provider API client
- * resource access authorization error the user should see that can help them
- * fix a configuration problem.
- *
- * An alert SHOULD NOT be delivered to operators when this error is thrown.
- */
-export class IntegrationProviderAuthorizationError extends IntegrationError {
-  constructor(options: {
-    /**
-     * An optional reference to the error that caused this error. The cause tree
-     * will be included in logging of the error to assist problem resolution.
-     */
-    cause?: Error;
-
-    /**
-     * The endpoint that provided the response indicating the authenticated
-     * client is not authorized to access a resource.
-     */
-    endpoint: string;
-
-    /**
-     * The response status code, i.e. `403`, or in the case of GraphQL, whatever
-     * error code provided by the response body.
-     */
-    status: string | number;
-
-    /**
-     * The response status text, i.e. `"Forbidden"`.
-     */
-    statusText: string;
-
-    /**
-     * The `_type` of entity/relationship data that could not be obtained due to
-     * the authorization error.
-     */
-    resourceType?: string[];
-  }) {
-    super({
-      ...options,
-      code: 'PROVIDER_AUTHORIZATION_ERROR',
-      message: `Provider authorization failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
-      fatal: false,
-    });
-  }
+  /**
+   * The response status text, i.e. `"Unauthorized"`.
+   */
+  statusText: string;
 }
 
 /**
@@ -286,26 +221,69 @@ export class IntegrationProviderAPIError extends IntegrationError {
    */
   readonly statusText: string;
 
-  constructor(options: {
-    /**
-     * An optional reference to the error that caused this error. The cause tree
-     * will be included in logging of the error to assist problem resolution.
-     */
-    cause?: Error;
-    endpoint: string;
-    status: string | number;
-    statusText: string;
-  }) {
+  constructor(
+    options: IntegrationProviderApiErrorOptions & {
+      code?: string;
+      message?: string;
+      fatal?: boolean;
+    },
+  ) {
     super({
-      ...options,
       code: 'PROVIDER_API_ERROR',
       message: `Provider API failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
       fatal: false,
+      ...options,
     });
 
     this.endpoint = options.endpoint;
     this.status = options.status;
     this.statusText = options.statusText;
+  }
+}
+
+/**
+ * An error that may be thrown by an integration during `validateInvocation`,
+ * used to communicate a provider API authentication error the user should see
+ * that can help them fix a configuration problem. This is a fatal error because
+ * an integration cannot reach the provider.
+ *
+ * An alert SHOULD NOT be delivered to operators when this error is thrown.
+ */
+export class IntegrationProviderAuthenticationError extends IntegrationProviderAPIError {
+  constructor(options: IntegrationProviderApiErrorOptions & {}) {
+    super({
+      ...options,
+      code: 'PROVIDER_AUTHENTICATION_ERROR',
+      message: `Provider authentication failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
+      fatal: true,
+    });
+  }
+}
+
+/**
+ * An error that may be thrown by an integration during any step that interacts
+ * with provider APIs, used to communicate an authenticated provider API client
+ * resource access authorization error the user should see that can help them
+ * fix a configuration problem.
+ *
+ * An alert SHOULD NOT be delivered to operators when this error is thrown.
+ */
+export class IntegrationProviderAuthorizationError extends IntegrationProviderAPIError {
+  constructor(
+    options: IntegrationProviderApiErrorOptions & {
+      /**
+       * The `_type` of entity/relationship data that could not be obtained due to
+       * the authorization error.
+       */
+      resourceType?: string[];
+    },
+  ) {
+    super({
+      ...options,
+      code: 'PROVIDER_AUTHORIZATION_ERROR',
+      message: `Provider authorization failed at ${options.endpoint}: ${options.status} ${options.statusText}`,
+      fatal: false,
+    });
   }
 }
 
