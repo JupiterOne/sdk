@@ -14,6 +14,7 @@ and this project adheres to
 - `parseStringPropertyValue()` accepts `string | undefined | null` as a
   convenience for cases where provider data answers `undefined` or `null`
   values.
+- Updated numerous dependencies.
 
 ### Fixed
 
