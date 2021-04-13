@@ -31,7 +31,6 @@ export interface GraphObjectStore {
   ): Promise<void>;
 
   /**
-   *
    * @deprecated Use findEntity
    */
   getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity>;

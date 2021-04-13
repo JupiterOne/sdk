@@ -37,7 +37,6 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   }
 
   /**
-   *
    * @deprecated Use findEntity
    */
   async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {

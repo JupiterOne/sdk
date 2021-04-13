@@ -12,11 +12,16 @@ import {
   buildObjectCollectionFilePath,
 } from './path';
 
-interface FlushDataToDiskInput {
+interface FlushDataToDiskInput<TGraphObject = Entity | Relationship> {
   storageDirectoryPath: string;
   collectionType: CollectionType;
-  data: Entity[] | Relationship[];
+  data: TGraphObject[];
   pretty?: boolean;
+}
+
+interface GraphObjectToFilePath<TGraphObject = Entity | Relationship> {
+  graphDataPath: string;
+  collection: TGraphObject[];
 }
 
 /**
@@ -24,18 +29,20 @@ interface FlushDataToDiskInput {
  * creating a symlink in the 'index' directory
  * based on the entity or relationship '_type'.
  */
-export async function flushDataToDisk({
+export async function flushDataToDisk<TGraphObject = Entity | Relationship>({
   storageDirectoryPath,
   collectionType,
   data,
   pretty,
-}: FlushDataToDiskInput) {
+}: FlushDataToDiskInput<TGraphObject>): Promise<
+  GraphObjectToFilePath<TGraphObject>[]
+> {
   // split the data by type first
   const groupedCollections = groupBy(data, '_type');
 
   // for each collection, write the data to disk,
   // then symlink to index directory
-  await pMap(
+  return await pMap(
     Object.entries(groupedCollections),
     async ([type, collection]) => {
       const filename = generateJsonFilename();
@@ -58,6 +65,10 @@ export async function flushDataToDisk({
         sourcePath: graphDataPath,
         destinationPath: indexPath,
       });
+      return {
+        graphDataPath,
+        collection,
+      };
     },
     { concurrency: 3 },
   );

@@ -339,6 +339,101 @@ describe('getEntity', () => {
   });
 });
 
+describe('findEntity', () => {
+  describe('inMemory', () => {
+    test('entity location should be "inMemory" when entity in InMemoryGraphObjectStore', async () => {
+      const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+      const _type = uuid();
+      const _key = uuid();
+
+      const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+      const matchingEntity = createTestEntity({ _type, _key });
+
+      await store.addEntities(storageDirectoryPath, [
+        ...nonMatchingEntities,
+        matchingEntity,
+      ]);
+
+      const entity = await store.findEntity(_key);
+      expect(entity).toEqual(matchingEntity);
+
+      expect((store as any).entityLocationMap.get(_key)).toEqual({
+        location: 'inMemory',
+      });
+    });
+  });
+
+  describe('onDisk', () => {
+    test('entity location should be "onDisk" when entity has been flushed from InMemoryGraphObjectStore', async () => {
+      const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+      const _type = uuid();
+      const _key = uuid();
+
+      const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+      const matchingEntity = createTestEntity({ _type, _key });
+
+      await store.addEntities(storageDirectoryPath, [
+        ...nonMatchingEntities,
+        matchingEntity,
+      ]);
+      await store.flushEntitiesToDisk();
+
+      const entity = await store.findEntity(_key);
+      expect(entity).toEqual(matchingEntity);
+
+      expect((store as any).entityLocationMap.get(_key)).toMatchObject({
+        location: 'onDisk',
+      });
+    });
+  });
+
+  describe('nonIndexable', () => {
+    test('entity location should be "nonIndexable" when non-indexable entity has been flushed from InMemoryGraphObjectStore', async () => {
+      const _type = uuid();
+      const _key = uuid();
+
+      const stepId = uuid();
+
+      const { store } = setupFileSystemObjectStore({
+        integrationSteps: [
+          {
+            id: stepId,
+            name: '',
+            entities: [
+              {
+                _type,
+                _class: '',
+                resourceName: '',
+                indexMetadata: { enabled: false },
+              },
+            ],
+            relationships: [],
+            executionHandler: () => {
+              return;
+            },
+          },
+        ],
+      });
+
+      const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+      const matchingEntity = createTestEntity({ _type, _key });
+
+      await store.addEntities(stepId, [...nonMatchingEntities, matchingEntity]);
+      await store.flushEntitiesToDisk();
+
+      await expect(store.findEntity(_key)).rejects.toThrow(
+        'Attempted to call findEntity() on an entity that is not indexed.',
+      );
+
+      expect((store as any).entityLocationMap.get(_key)).toMatchObject({
+        location: 'nonIndexable',
+      });
+    });
+  });
+});
+
 describe('iterateEntities', () => {
   test('should find buffered & non-buffered entities and iterate the entity "_type" index stored on disk', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
