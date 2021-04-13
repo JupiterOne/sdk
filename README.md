@@ -37,7 +37,10 @@ details about how to develop integrations with this SDK.
 
 ## Development
 
-First install dependencies using `yarn`.
+To get started with development:
+
+1. Install dependencies using `yarn`
+1. Run `yarn build`
 
 This project utilizes TypeScript project references for incremental builds. To
 prepare all of the packages, run `yarn build`. If you are making a changes
