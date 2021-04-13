@@ -36,6 +36,10 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     return Promise.resolve();
   }
 
+  /**
+   *
+   * @deprecated Use findEntity
+   */
   async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
     const entity = this.entityMap.get(_key);
 
@@ -44,6 +48,12 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
         `Failed to find entity (_type=${_type}, _key=${_key})`,
       );
     }
+
+    return Promise.resolve(entity);
+  }
+
+  async findEntity(_key: string): Promise<Entity | undefined> {
+    const entity = this.entityMap.get(_key);
 
     return Promise.resolve(entity);
   }

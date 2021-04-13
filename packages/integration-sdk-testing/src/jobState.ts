@@ -2,9 +2,6 @@ import {
   Entity,
   JobState,
   Relationship,
-  IntegrationMissingKeyError,
-  IntegrationDuplicateKeyError,
-  GraphObjectLookupKey,
   KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 import {
@@ -104,31 +101,6 @@ export function createMockJobState({
     }
   };
 
-  const getEntity = async (lookupKey: GraphObjectLookupKey) => {
-    const { _key, _type } = lookupKey;
-    const entities: Entity[] = [];
-
-    await iterateEntities({ _type }, async (e) => {
-      if (e._key === _key) {
-        entities.push(e);
-      }
-
-      return Promise.resolve();
-    });
-
-    if (entities.length === 0) {
-      throw new IntegrationMissingKeyError(
-        `Failed to find entity (_type=${_type}, _key=${_key})`,
-      );
-    } else if (entities.length > 1) {
-      throw new IntegrationDuplicateKeyError(
-        `Duplicate _key detected (_type=${_type}, _key=${_key})`,
-      );
-    } else {
-      return entities[0];
-    }
-  };
-
   return {
     get collectedEntities() {
       return collectedEntities;
@@ -171,12 +143,11 @@ export function createMockJobState({
         return null;
       }
 
-      const entity = await getEntity({
-        _key: graphObjectMetadata._key,
-        _type: graphObjectMetadata._type,
-      });
-
-      return entity;
+      return Promise.resolve(
+        [...inputEntities, ...collectedEntities].find(
+          (e) => e._key === graphObjectMetadata._key,
+        ) || null,
+      );
     },
 
     hasKey: (_key: string) => {

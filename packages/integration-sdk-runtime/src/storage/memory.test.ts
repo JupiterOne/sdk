@@ -33,15 +33,15 @@ async function collectRelationshipsByType(
 }
 
 describe('#InMemoryGraphObjectStore', () => {
-  test('should allow adding entities and finding by _key', () => {
+  test('should allow adding entities and finding by _key', async () => {
     const store = new InMemoryGraphObjectStore();
 
     const e1 = createTestEntity();
     const e2 = createTestEntity();
-    store.addEntities(uuid(), [e1, e2]);
+    await store.addEntities(uuid(), [e1, e2]);
 
-    expect(store.findEntity(e1._key)).toEqual(e1);
-    expect(store.findEntity(e2._key)).toEqual(e2);
+    expect(await store.findEntity(e1._key)).toEqual(e1);
+    expect(await store.findEntity(e2._key)).toEqual(e2);
   });
 
   test('should add entities to same _type map if already exists', async () => {
@@ -51,8 +51,8 @@ describe('#InMemoryGraphObjectStore', () => {
     const e1 = createTestEntity({ _type });
     const e2 = createTestEntity({ _type });
 
-    store.addEntities(uuid(), [e1]);
-    store.addEntities(uuid(), [e2]);
+    await store.addEntities(uuid(), [e1]);
+    await store.addEntities(uuid(), [e2]);
 
     expect(await collectEntitiesByType(store, _type)).toEqual([e1, e2]);
   });
@@ -64,8 +64,8 @@ describe('#InMemoryGraphObjectStore', () => {
     const r1 = createTestRelationship({ _type });
     const r2 = createTestRelationship({ _type });
 
-    store.addRelationships(uuid(), [r1]);
-    store.addRelationships(uuid(), [r2]);
+    await store.addRelationships(uuid(), [r1]);
+    await store.addRelationships(uuid(), [r2]);
 
     expect(await collectRelationshipsByType(store, _type)).toEqual([r1, r2]);
   });
@@ -75,7 +75,7 @@ describe('#InMemoryGraphObjectStore', () => {
 
     const e1 = createTestEntity();
     const e2 = createTestEntity();
-    store.addEntities(uuid(), [e1, e2]);
+    await store.addEntities(uuid(), [e1, e2]);
 
     expect(await collectEntitiesByType(store, e1._type)).toEqual([e1]);
     expect(await collectEntitiesByType(store, e2._type)).toEqual([e2]);
@@ -96,29 +96,29 @@ describe('#InMemoryGraphObjectStore', () => {
 
     const r1 = createTestRelationship();
     const r2 = createTestRelationship();
-    store.addRelationships(uuid(), [r1, r2]);
+    await store.addRelationships(uuid(), [r1, r2]);
 
     expect(await collectRelationshipsByType(store, r1._type)).toEqual([r1]);
     expect(await collectRelationshipsByType(store, r2._type)).toEqual([r2]);
   });
 
-  test('should return "undefined" if entity not found', () => {
+  test('should return "undefined" if entity not found', async () => {
     const store = new InMemoryGraphObjectStore();
-    expect(store.findEntity(uuid())).toEqual(undefined);
+    expect(await store.findEntity(uuid())).toEqual(undefined);
   });
 
-  test('should allow collecting entities by step', () => {
+  test('should allow collecting entities by step', async () => {
     const store = new InMemoryGraphObjectStore();
 
     const step1 = uuid();
     const e1 = createTestEntity();
     const e2 = createTestEntity();
-    store.addEntities(step1, [e1, e2]);
+    await store.addEntities(step1, [e1, e2]);
 
     const step2 = uuid();
     const e3 = createTestEntity();
     const e4 = createTestEntity();
-    store.addEntities(step2, [e3, e4]);
+    await store.addEntities(step2, [e3, e4]);
 
     const collected = store.collectEntitiesByStep();
     expect(collected.size).toEqual(2);
@@ -126,18 +126,18 @@ describe('#InMemoryGraphObjectStore', () => {
     expect(collected.get(step2)).toEqual([e3, e4]);
   });
 
-  test('should allow collecting relationships by step', () => {
+  test('should allow collecting relationships by step', async () => {
     const store = new InMemoryGraphObjectStore();
 
     const step1 = uuid();
     const r1 = createTestRelationship();
     const r2 = createTestRelationship();
-    store.addRelationships(step1, [r1, r2]);
+    await store.addRelationships(step1, [r1, r2]);
 
     const step2 = uuid();
     const r3 = createTestRelationship();
     const r4 = createTestRelationship();
-    store.addRelationships(step2, [r3, r4]);
+    await store.addRelationships(step2, [r3, r4]);
 
     const collected = store.collectRelationshipsByStep();
     expect(collected.size).toEqual(2);
@@ -145,7 +145,7 @@ describe('#InMemoryGraphObjectStore', () => {
     expect(collected.get(step2)).toEqual([r3, r4]);
   });
 
-  test('should get correct total entity and relationship counts', () => {
+  test('should get correct total entity and relationship counts', async () => {
     const store = new InMemoryGraphObjectStore();
 
     const e1 = createTestEntity();
@@ -153,24 +153,24 @@ describe('#InMemoryGraphObjectStore', () => {
     const r1 = createTestRelationship();
     const r2 = createTestRelationship();
 
-    store.addEntities(uuid(), [e1, e2]);
-    store.addRelationships(uuid(), [r1, r2]);
+    await store.addEntities(uuid(), [e1, e2]);
+    await store.addRelationships(uuid(), [r1, r2]);
 
     expect(store.getTotalEntityItemCount()).toEqual(2);
     expect(store.getTotalRelationshipItemCount()).toEqual(2);
   });
 
-  test('should delete only selected entities when flushing', () => {
+  test('should delete only selected entities when flushing', async () => {
     const store = new InMemoryGraphObjectStore();
 
     const e1 = createTestEntity();
     const e2 = createTestEntity();
 
-    store.addEntities(uuid(), [e1, e2]);
+    await store.addEntities(uuid(), [e1, e2]);
     store.flushEntities([e1]);
 
-    expect(store.findEntity(e1._key)).toEqual(undefined);
-    expect(store.findEntity(e2._key)).toEqual(e2);
+    expect(await store.findEntity(e1._key)).toEqual(undefined);
+    expect(await store.findEntity(e2._key)).toEqual(e2);
     expect(store.getTotalEntityItemCount()).toEqual(1);
   });
 
@@ -180,7 +180,7 @@ describe('#InMemoryGraphObjectStore', () => {
     const r1 = createTestRelationship();
     const r2 = createTestRelationship();
 
-    store.addRelationships(uuid(), [r1, r2]);
+    await store.addRelationships(uuid(), [r1, r2]);
     store.flushRelationships([r1]);
 
     expect(await collectRelationshipsByType(store, r1._type)).toEqual([]);

@@ -2,6 +2,8 @@ import {
   Entity,
   GraphObjectFilter,
   GraphObjectIteratee,
+  GraphObjectStore,
+  IntegrationError,
   IntegrationMissingKeyError,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
@@ -22,7 +24,7 @@ interface InMemoryGraphObjectStoreRelationshipData extends GraphObjectMetadata {
  * Stores entities and relationships in memory and may be used to buffer data in
  * memory before flushing to another datastore (e.g. disk).
  */
-export class InMemoryGraphObjectStore {
+export class InMemoryGraphObjectStore implements GraphObjectStore {
   /**
    * Maps to lookup entity/relationship with metadata by _key
    *
@@ -65,7 +67,7 @@ export class InMemoryGraphObjectStore {
     Map<string, boolean>
   > = new Map();
 
-  addEntities(stepId: string, newEntities: Entity[]): void {
+  addEntities(stepId: string, newEntities: Entity[]): Promise<void> {
     for (const entity of newEntities) {
       this.entityKeyToEntityMap.set(entity._key, {
         stepId,
@@ -82,9 +84,13 @@ export class InMemoryGraphObjectStore {
         );
       }
     }
+    return Promise.resolve();
   }
 
-  addRelationships(stepId: string, newRelationships: Relationship[]): void {
+  addRelationships(
+    stepId: string,
+    newRelationships: Relationship[],
+  ): Promise<void> {
     for (const relationship of newRelationships) {
       this.relationshipKeyToRelationshipMap.set(relationship._key, {
         stepId,
@@ -104,10 +110,34 @@ export class InMemoryGraphObjectStore {
         );
       }
     }
+    return Promise.resolve();
   }
 
-  findEntity(_key: string): Entity | undefined {
-    return this.entityKeyToEntityMap.get(_key)?.entity;
+  findEntity(_key: string): Promise<Entity | undefined> {
+    return Promise.resolve(this.entityKeyToEntityMap.get(_key)?.entity);
+  }
+
+  /**
+   * @notImplemented
+   * @deprecated Use findEntity
+   */
+  getEntity(): Promise<Entity> {
+    throw new IntegrationError({
+      message:
+        'InMemoryGraphObjectStore.getEntity() is not implemented. Use .findEntity() instead.',
+      code: 'GET_ENTITY_NOT_IMPLEMENTED',
+    });
+  }
+
+  /**
+   * @notImplemented
+   */
+  flush(): Promise<void> {
+    throw new IntegrationError({
+      message:
+        'InMemoryGraphObjectStore.flush() is not implemented. Use .flushEntities(entities) and .flushRelationships(relationships) instead.',
+      code: 'FLUSH_NOT_IMPLEMENTED',
+    });
   }
 
   async iterateEntities<T extends Entity = Entity>(

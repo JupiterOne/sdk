@@ -13,6 +13,7 @@ import {
   GraphObjectIndexMetadata,
   GetIndexMetadataForGraphObjectTypeParams,
   IntegrationStep,
+  IntegrationError,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -127,7 +128,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     newEntities: Entity[],
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
-    this.localGraphObjectStore.addEntities(stepId, newEntities);
+    await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
     if (
       this.localGraphObjectStore.getTotalEntityItemCount() >=
@@ -142,7 +143,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     newRelationships: Relationship[],
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
-    this.localGraphObjectStore.addRelationships(stepId, newRelationships);
+    await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
     if (
       this.localGraphObjectStore.getTotalRelationshipItemCount() >=
@@ -152,8 +153,12 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     }
   }
 
+  /**
+   *
+   * @deprecated Use findEntity
+   */
   async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
-    const bufferedEntity = this.localGraphObjectStore.findEntity(_key);
+    const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
 
     if (bufferedEntity) {
       // This entity has not yet been flushed to disk
@@ -181,6 +186,16 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     } else {
       return entities[0];
     }
+  }
+
+  /**
+   * @notImplemented
+   */
+  findEntity(_key: string): Promise<Entity | undefined> {
+    throw new IntegrationError({
+      code: 'FIND_ENTITY_NOT_IMPLEMENTED',
+      message: 'This method has not been implemented yet',
+    });
   }
 
   async iterateEntities<T extends Entity = Entity>(
