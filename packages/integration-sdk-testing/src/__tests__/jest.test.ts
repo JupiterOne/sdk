@@ -289,13 +289,13 @@ describe('#toMatchGraphObjectSchema', () => {
     const expectedSerialzedErrors = JSON.stringify(
       [
         {
-          keyword: 'type',
-          dataPath: '.enabled',
+          instancePath: '/enabled',
           schemaPath: '#/properties/enabled/type',
+          keyword: 'type',
           params: {
             type: 'string',
           },
-          message: 'should be string',
+          message: 'must be string',
         },
       ],
       null,
@@ -443,13 +443,56 @@ describe('#toMatchDirectRelationshipSchema', () => {
   ]
 }, errors=[
   {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/0/type",
     "keyword": "type",
-    "dataPath": "['someAdditionalProperty']",
-    "schemaPath": "#/additionalProperties/type",
     "params": {
-      "type": "boolean,integer,null,number,string"
+      "type": "boolean"
     },
-    "message": "should be boolean,integer,null,number,string"
+    "message": "must be boolean"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/1/type",
+    "keyword": "type",
+    "params": {
+      "type": "integer"
+    },
+    "message": "must be integer"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/2/type",
+    "keyword": "type",
+    "params": {
+      "type": "null"
+    },
+    "message": "must be null"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/3/type",
+    "keyword": "type",
+    "params": {
+      "type": "number"
+    },
+    "message": "must be number"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/4/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf",
+    "keyword": "anyOf",
+    "params": {},
+    "message": "must match a schema in anyOf"
   }
 ], index=0)
 
@@ -481,13 +524,56 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
   }
 }, errors=[
   {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/0/type",
     "keyword": "type",
-    "dataPath": "['someAdditionalProperty']",
-    "schemaPath": "#/additionalProperties/type",
     "params": {
-      "type": "boolean,integer,null,number,string"
+      "type": "boolean"
     },
-    "message": "should be boolean,integer,null,number,string"
+    "message": "must be boolean"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/1/type",
+    "keyword": "type",
+    "params": {
+      "type": "integer"
+    },
+    "message": "must be integer"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/2/type",
+    "keyword": "type",
+    "params": {
+      "type": "null"
+    },
+    "message": "must be null"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/3/type",
+    "keyword": "type",
+    "params": {
+      "type": "number"
+    },
+    "message": "must be number"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf/4/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string"
+  },
+  {
+    "instancePath": "/someAdditionalProperty",
+    "schemaPath": "#/additionalProperties/anyOf",
+    "keyword": "anyOf",
+    "params": {},
+    "message": "must match a schema in anyOf"
   }
 ], index=0)
 

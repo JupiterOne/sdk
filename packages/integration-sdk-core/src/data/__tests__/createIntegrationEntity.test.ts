@@ -373,7 +373,7 @@ describe('schema validation on', () => {
           },
         },
       }),
-    ).toThrow(/should have required property 'name'/);
+    ).toThrow(/required property 'name'/);
   });
 });
 

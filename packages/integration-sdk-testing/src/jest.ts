@@ -305,7 +305,13 @@ export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
       },
       {
         additionalProperties: {
-          type: ['boolean', 'integer', 'null', 'number', 'string'],
+          anyOf: [
+            { type: 'boolean' },
+            { type: 'integer' },
+            { type: 'null' },
+            { type: 'number' },
+            { type: 'string' },
+          ],
         },
       },
     ],
