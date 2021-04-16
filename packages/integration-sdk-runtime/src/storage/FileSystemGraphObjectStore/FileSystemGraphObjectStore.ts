@@ -5,15 +5,11 @@ import {
   Entity,
   GraphObjectFilter,
   GraphObjectIteratee,
-  GraphObjectLookupKey,
-  IntegrationDuplicateKeyError,
-  IntegrationMissingKeyError,
   Relationship,
   GraphObjectStore,
   GraphObjectIndexMetadata,
   GetIndexMetadataForGraphObjectTypeParams,
   IntegrationStep,
-  IntegrationError,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -170,40 +166,6 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       this.graphObjectBufferThreshold
     ) {
       await this.flushRelationshipsToDisk(onRelationshipsFlushed);
-    }
-  }
-
-  /**
-   * @deprecated Use findEntity
-   */
-  async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
-    const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
-
-    if (bufferedEntity) {
-      // This entity has not yet been flushed to disk
-      return bufferedEntity;
-    }
-
-    const entities: Entity[] = [];
-
-    await this.iterateEntities({ _type }, async (e) => {
-      if (e._key === _key) {
-        entities.push(e);
-      }
-
-      return Promise.resolve();
-    });
-
-    if (entities.length === 0) {
-      throw new IntegrationMissingKeyError(
-        `Failed to find entity (_type=${_type}, _key=${_key})`,
-      );
-    } else if (entities.length > 1) {
-      throw new IntegrationDuplicateKeyError(
-        `Duplicate _key detected (_type=${_type}, _key=${_key})`,
-      );
-    } else {
-      return entities[0];
     }
   }
 

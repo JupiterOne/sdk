@@ -1,9 +1,5 @@
 import { Entity } from './entity';
-import {
-  GraphObjectFilter,
-  GraphObjectIteratee,
-  GraphObjectLookupKey,
-} from './jobState';
+import { GraphObjectFilter, GraphObjectIteratee } from './jobState';
 import { Relationship } from './relationship';
 import { GraphObjectIndexMetadata } from '../types/step';
 
@@ -29,11 +25,6 @@ export interface GraphObjectStore {
     newRelationships: Relationship[],
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
-
-  /**
-   * @deprecated Use findEntity
-   */
-  getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity>;
 
   findEntity(_key: string): Promise<Entity | undefined>;
 

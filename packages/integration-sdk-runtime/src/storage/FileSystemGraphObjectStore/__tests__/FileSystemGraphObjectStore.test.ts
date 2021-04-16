@@ -305,40 +305,6 @@ describe('addRelationships', () => {
   });
 });
 
-describe('getEntity', () => {
-  test('should find buffered entities and get an entity by "_type" and "_key"', async () => {
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
-
-    const _type = uuid();
-    const _key = uuid();
-
-    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
-    const matchingEntity = createTestEntity({ _type, _key });
-
-    await store.addEntities(storageDirectoryPath, [
-      ...nonMatchingEntities,
-      matchingEntity,
-    ]);
-
-    const entity = await store.getEntity({ _key, _type });
-    expect(entity).toEqual(matchingEntity);
-  });
-
-  test('should find non-buffered entities and get an entity by "_type" and "_key"', async () => {
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThreshold: 2,
-    });
-
-    const _type = uuid();
-
-    const entities = times(2, () => createTestEntity({ _type }));
-    await store.addEntities(storageDirectoryPath, entities);
-
-    const entity = await store.getEntity({ _key: entities[1]._key, _type });
-    expect(entity).toEqual(entities[1]);
-  });
-});
-
 describe('findEntity', () => {
   test('entity should be returned from InMemoryGraphObjectStore if it has not been flushed', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();

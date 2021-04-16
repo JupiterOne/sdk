@@ -119,18 +119,6 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
   /**
    * @notImplemented
-   * @deprecated Use findEntity
-   */
-  getEntity(): Promise<Entity> {
-    throw new IntegrationError({
-      message:
-        'InMemoryGraphObjectStore.getEntity() is not implemented. Use .findEntity() instead.',
-      code: 'GET_ENTITY_NOT_IMPLEMENTED',
-    });
-  }
-
-  /**
-   * @notImplemented
    */
   flush(): Promise<void> {
     throw new IntegrationError({

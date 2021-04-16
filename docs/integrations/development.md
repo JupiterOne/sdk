@@ -684,7 +684,7 @@ automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that are
 based on the step that was run. Entities and relationships will also be grouped
 by the `_type` and linked into separate directories to provide faster look ups.
-These directories will be used by the `getEntity`, `iterateEntities`, and
+These directories will be used by the `findEntity`, `iterateEntities`, and
 `iterateRelationships` functions to provide faster lookups.
 
 From our experience, integrations most commonly query collected data from
