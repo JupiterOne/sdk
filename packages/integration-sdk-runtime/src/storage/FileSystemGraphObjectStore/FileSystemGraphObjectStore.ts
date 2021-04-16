@@ -103,54 +103,16 @@ function integrationStepsToGraphObjectIndexMetadataMap(
 }
 
 /**
- * When entities are first ignested, they are stored in a local in-memory
- * graph object store.
- */
-type GraphObjectLocationInMemory = {
-  location: 'inMemory';
-};
-
-/**
- * When entities are flushed from the local in-memory graph obejct store,
- * they have two options: onDisk or nonIndexable.
+ * After entities are flushed from the local in-memory graph object store, most are
+ * placed on disk. (With the exception of entities whose metadata includes
+ * `{ indexMetadata: { enabled: false }}`).
  *
- * nonIndexable entities are explicitly not required to be stored on disk,
- * and will not be searchable after they've been flushed from the local
- * in-memory graph object store.
- */
-type GraphObjectLocationNonIndexable = {
-  location: 'nonIndexable';
-};
-
-/**
- * Most entities flushed from the local in-memory graph object store are
- * flushed to disk.
- *
- * These entities can be looked up by their file path and index.
+ * This map allows us to more efficiently retrieve those entities using the `findEntity()` method,
+ * using their file path and index.
  */
 type GraphObjectLocationOnDisk = {
-  location: 'onDisk';
   graphDataPath: string;
 };
-
-/**
- * The FileSystemGraphObjectStore will keep track of the current location of entities:
- *
- * Entities that have yet to be flushed from the InMemoryGraphObjectStore have a location of
- *   { location: 'inMemory' }
- *
- * Entities that have been flushed to disk have a location of
- *   { location: 'onDisk', graphDataPath: '/graph/step-id/filename.json' }
- *
- * Finally, entities that have been flushed from the InMemoryGraphObjectStore, but that
- * have `indexMetadata.enabled = false`, are explicitly not findable. These have a
- * location of
- *   { location: 'nonIndexable' }
- */
-type GraphObjectLocation =
-  | GraphObjectLocationInMemory
-  | GraphObjectLocationOnDisk
-  | GraphObjectLocationNonIndexable;
 
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
@@ -161,7 +123,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     string,
     GraphObjectIndexMetadataMap
   >;
-  private readonly entityLocationMap = new Map<string, GraphObjectLocation>();
+  private readonly entityOnDiskLocationMap = new Map<
+    string,
+    GraphObjectLocationOnDisk
+  >();
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
@@ -183,10 +148,6 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
     await this.localGraphObjectStore.addEntities(stepId, newEntities);
-
-    for (const entity of newEntities) {
-      this.entityLocationMap.set(entity._key, { location: 'inMemory' });
-    }
 
     if (
       this.localGraphObjectStore.getTotalEntityItemCount() >=
@@ -245,47 +206,33 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     }
   }
 
+  /**
+   * The FileSystemGraphObjectStore first checks to see if the entity exists
+   * in the InMemoryGraphObjectStore. If not, it then checks to see if it is
+   * located on disk.
+   */
   async findEntity(_key: string): Promise<Entity | undefined> {
-    const entityLocation = this.entityLocationMap.get(_key);
-
-    if (!entityLocation) return;
-
-    /**
-     * If the entity _key exists in the entityLocationMap, and we cannot find it, there is a bug
-     * in this function (or the developer is misusing non-indexed entities).
-     */
-
-    switch (entityLocation.location) {
-      case 'inMemory': {
-        const entity = await this.localGraphObjectStore.findEntity(_key);
-        if (entity) return entity;
-        throw new IntegrationError({
-          code: 'FIND_IN_MEMORY_ENTITY_ERROR',
-          message: `Could not find entity indexed in memory. (_key=${_key})`,
-        });
-      }
-      case 'onDisk': {
-        const filePath = getRootStorageAbsolutePath(
-          entityLocation.graphDataPath,
-        );
-        const flushedEntityData = await readGraphObjectFile<FlushedEntityData>({
-          filePath,
-        });
-        for (const entity of flushedEntityData.entities) {
-          if (entity._key === _key) return entity;
-        }
-        throw new IntegrationError({
-          code: 'FIND_ON_DISK_ENTITY_ERROR',
-          message: `Could not find entity indexed on disk. (_key=${_key})`,
-        });
-      }
-      case 'nonIndexable': {
-        throw new IntegrationError({
-          code: 'FIND_NON_INDEXED_ENTITY_ERROR',
-          message: `Attempted to call findEntity() on an entity that is not indexed. (_key=${_key})`,
-        });
-      }
+    const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
+    if (bufferedEntity) {
+      return bufferedEntity;
     }
+
+    const entityLocationOnDisk = this.entityOnDiskLocationMap.get(_key);
+    if (!entityLocationOnDisk) return;
+
+    const filePath = getRootStorageAbsolutePath(
+      entityLocationOnDisk.graphDataPath,
+    );
+    const flushedEntityData = await readGraphObjectFile<FlushedEntityData>({
+      filePath,
+    });
+    for (const entity of flushedEntityData.entities) {
+      if (entity._key === _key) return entity;
+    }
+    throw new IntegrationError({
+      code: 'FIND_ON_DISK_ENTITY_ERROR',
+      message: `Could not find entity indexed on disk. (_key=${_key})`,
+    });
   }
 
   async iterateEntities<T extends Entity = Entity>(
@@ -340,12 +287,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
               return true;
             }
 
-            if (indexMetadata.enabled === true) {
-              return true;
-            }
-
-            this.entityLocationMap.set(e._key, { location: 'nonIndexable' });
-            return false;
+            return indexMetadata.enabled === true;
           });
 
           if (indexable.length) {
@@ -360,8 +302,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
               collection,
             } of graphObjectsToFilePaths) {
               for (const e of collection) {
-                this.entityLocationMap.set(e._key, {
-                  location: 'onDisk',
+                this.entityOnDiskLocationMap.set(e._key, {
                   graphDataPath,
                 });
               }

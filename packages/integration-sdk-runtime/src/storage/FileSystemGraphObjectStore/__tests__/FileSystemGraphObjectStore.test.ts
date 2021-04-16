@@ -340,97 +340,113 @@ describe('getEntity', () => {
 });
 
 describe('findEntity', () => {
-  describe('inMemory', () => {
-    test('entity location should be "inMemory" when entity in InMemoryGraphObjectStore', async () => {
-      const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+  test('entity should be returned from InMemoryGraphObjectStore if it has not been flushed', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 
-      const _type = uuid();
-      const _key = uuid();
+    const localGraphObjectStoreFindEntitySpy = jest.spyOn(
+      (store as any).localGraphObjectStore,
+      'findEntity',
+    );
 
-      const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
-      const matchingEntity = createTestEntity({ _type, _key });
+    const _type = uuid();
+    const _key = uuid();
 
-      await store.addEntities(storageDirectoryPath, [
-        ...nonMatchingEntities,
-        matchingEntity,
-      ]);
+    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+    const matchingEntity = createTestEntity({ _type, _key });
 
-      const entity = await store.findEntity(_key);
-      expect(entity).toEqual(matchingEntity);
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+      matchingEntity,
+    ]);
 
-      expect((store as any).entityLocationMap.get(_key)).toEqual({
-        location: 'inMemory',
-      });
+    await expect(store.findEntity(_key)).resolves.toEqual(matchingEntity);
+
+    expect(localGraphObjectStoreFindEntitySpy).toHaveBeenCalledTimes(1);
+    expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
+      Promise.resolve(matchingEntity),
+    );
+  });
+
+  test('entity location should be returned from  when entity has been flushed from InMemoryGraphObjectStore', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const localGraphObjectStoreFindEntitySpy = jest.spyOn(
+      (store as any).localGraphObjectStore,
+      'findEntity',
+    );
+    const entityOnDiskLocationMapGetSpy = jest.spyOn(
+      (store as any).entityOnDiskLocationMap,
+      'get',
+    );
+
+    const _type = uuid();
+    const _key = uuid();
+
+    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+    const matchingEntity = createTestEntity({ _type, _key });
+
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+      matchingEntity,
+    ]);
+    await store.flushEntitiesToDisk();
+
+    await expect(store.findEntity(_key)).resolves.toEqual(matchingEntity);
+    expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
+      Promise.resolve(undefined),
+    );
+    expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith({
+      graphDataPath: expect.any(String),
     });
   });
 
-  describe('onDisk', () => {
-    test('entity location should be "onDisk" when entity has been flushed from InMemoryGraphObjectStore', async () => {
-      const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+  test('entity should not be found when non-indexable entity has been flushed from InMemoryGraphObjectStore', async () => {
+    const _type = uuid();
+    const _key = uuid();
 
-      const _type = uuid();
-      const _key = uuid();
+    const stepId = uuid();
 
-      const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
-      const matchingEntity = createTestEntity({ _type, _key });
-
-      await store.addEntities(storageDirectoryPath, [
-        ...nonMatchingEntities,
-        matchingEntity,
-      ]);
-      await store.flushEntitiesToDisk();
-
-      const entity = await store.findEntity(_key);
-      expect(entity).toEqual(matchingEntity);
-
-      expect((store as any).entityLocationMap.get(_key)).toMatchObject({
-        location: 'onDisk',
-      });
-    });
-  });
-
-  describe('nonIndexable', () => {
-    test('entity location should be "nonIndexable" when non-indexable entity has been flushed from InMemoryGraphObjectStore', async () => {
-      const _type = uuid();
-      const _key = uuid();
-
-      const stepId = uuid();
-
-      const { store } = setupFileSystemObjectStore({
-        integrationSteps: [
-          {
-            id: stepId,
-            name: '',
-            entities: [
-              {
-                _type,
-                _class: '',
-                resourceName: '',
-                indexMetadata: { enabled: false },
-              },
-            ],
-            relationships: [],
-            executionHandler: () => {
-              return;
+    const { store } = setupFileSystemObjectStore({
+      integrationSteps: [
+        {
+          id: stepId,
+          name: '',
+          entities: [
+            {
+              _type,
+              _class: '',
+              resourceName: '',
+              indexMetadata: { enabled: false },
             },
+          ],
+          relationships: [],
+          executionHandler: () => {
+            return;
           },
-        ],
-      });
-
-      const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
-      const matchingEntity = createTestEntity({ _type, _key });
-
-      await store.addEntities(stepId, [...nonMatchingEntities, matchingEntity]);
-      await store.flushEntitiesToDisk();
-
-      await expect(store.findEntity(_key)).rejects.toThrow(
-        'Attempted to call findEntity() on an entity that is not indexed.',
-      );
-
-      expect((store as any).entityLocationMap.get(_key)).toMatchObject({
-        location: 'nonIndexable',
-      });
+        },
+      ],
     });
+
+    const localGraphObjectStoreFindEntitySpy = jest.spyOn(
+      (store as any).localGraphObjectStore,
+      'findEntity',
+    );
+    const entityOnDiskLocationMapGetSpy = jest.spyOn(
+      (store as any).entityOnDiskLocationMap,
+      'get',
+    );
+
+    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+    const matchingEntity = createTestEntity({ _type, _key });
+
+    await store.addEntities(stepId, [...nonMatchingEntities, matchingEntity]);
+    await store.flushEntitiesToDisk();
+
+    await expect(store.findEntity(_key)).resolves.toBeUndefined();
+    expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
+      Promise.resolve(undefined),
+    );
+    expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith(undefined);
   });
 });
 
