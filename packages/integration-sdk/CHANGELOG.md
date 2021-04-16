@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.12.0 - 2021-04-16
+
 ### Changed
 
 - Improved the performance of `jobState.findEntity()` when entities are written
@@ -18,7 +20,7 @@ and this project adheres to
 - `parseStringPropertyValue()` accepts `string | undefined | null` as a
   convenience for cases where provider data answers `undefined` or `null`
   values.
-- Updated numerous dependencies.
+- Updated numerous dependencies, including `typescript` and `eslint`.
 
 ### Fixed
 
