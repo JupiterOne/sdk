@@ -112,6 +112,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
  */
 type GraphObjectLocationOnDisk = {
   graphDataPath: string;
+  index: number;
 };
 
 export class FileSystemGraphObjectStore implements GraphObjectStore {
@@ -223,16 +224,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     const filePath = getRootStorageAbsolutePath(
       entityLocationOnDisk.graphDataPath,
     );
-    const flushedEntityData = await readGraphObjectFile<FlushedEntityData>({
+    const { entities } = await readGraphObjectFile<FlushedEntityData>({
       filePath,
     });
-    for (const entity of flushedEntityData.entities) {
-      if (entity._key === _key) return entity;
-    }
-    throw new IntegrationError({
-      code: 'FIND_ON_DISK_ENTITY_ERROR',
-      message: `Could not find entity indexed on disk. (_key=${_key})`,
-    });
+    return entities[entityLocationOnDisk.index];
   }
 
   async iterateEntities<T extends Entity = Entity>(
@@ -301,9 +296,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
               graphDataPath,
               collection,
             } of graphObjectsToFilePaths) {
-              for (const e of collection) {
+              for (const [index, e] of collection.entries()) {
                 this.entityOnDiskLocationMap.set(e._key, {
                   graphDataPath,
+                  index,
                 });
               }
             }

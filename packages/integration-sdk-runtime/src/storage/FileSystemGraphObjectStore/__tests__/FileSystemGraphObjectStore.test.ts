@@ -397,6 +397,7 @@ describe('findEntity', () => {
     );
     expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith({
       graphDataPath: expect.any(String),
+      index: expect.any(Number),
     });
   });
 
