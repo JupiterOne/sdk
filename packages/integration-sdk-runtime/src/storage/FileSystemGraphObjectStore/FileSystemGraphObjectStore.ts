@@ -21,6 +21,7 @@ import {
 import { InMemoryGraphObjectStore } from '../memory';
 import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
+import { BigMap } from '../../execution/utils/bigMap';
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 
@@ -111,6 +112,8 @@ type GraphObjectLocationOnDisk = {
   index: number;
 };
 
+const ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE = 2000000;
+
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
@@ -120,10 +123,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     string,
     GraphObjectIndexMetadataMap
   >;
-  private readonly entityOnDiskLocationMap = new Map<
+  private readonly entityOnDiskLocationMap = new BigMap<
     string,
     GraphObjectLocationOnDisk
-  >();
+  >(ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE);
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
