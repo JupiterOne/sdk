@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 5.12.0 - 2021-04-16
+
 ### Changed
 
 - `parseStringPropertyValue()` accepts `string | undefined | null` as a
