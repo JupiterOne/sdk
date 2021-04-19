@@ -9,7 +9,7 @@ and this project adheres to
 
 ## Unreleased
 
-## 5.12.0 - 2021-04-16
+## 6.0.0 - 2021-04-19
 
 ### Changed
 
@@ -17,6 +17,11 @@ and this project adheres to
   on disk.
 - Removed `GraphObjectStore.getEntity()`, and added `.findEntity()` to the
   specification.
+
+## 5.12.0 - 2021-04-16
+
+### Changed
+
 - `parseStringPropertyValue()` accepts `string | undefined | null` as a
   convenience for cases where provider data answers `undefined` or `null`
   values.
