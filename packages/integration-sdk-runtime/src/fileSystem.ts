@@ -24,6 +24,10 @@ export function getRootStorageDirectory() {
   );
 }
 
+export function getRootStorageAbsolutePath(relativePath: string) {
+  return path.resolve(getRootStorageDirectory(), relativePath);
+}
+
 export function getRootStorageDirectorySize(): Promise<number> {
   return new Promise((resolve, reject) => {
     getFolderSize(getRootStorageDirectory(), (err: Error, size: number) =>

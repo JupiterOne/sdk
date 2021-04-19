@@ -2,8 +2,6 @@ import {
   Entity,
   GraphObjectFilter,
   GraphObjectIteratee,
-  GraphObjectLookupKey,
-  IntegrationMissingKeyError,
   Relationship,
   GraphObjectStore,
 } from '@jupiterone/integration-sdk-core';
@@ -36,14 +34,8 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     return Promise.resolve();
   }
 
-  async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
+  async findEntity(_key: string): Promise<Entity | undefined> {
     const entity = this.entityMap.get(_key);
-
-    if (!entity) {
-      throw new IntegrationMissingKeyError(
-        `Failed to find entity (_type=${_type}, _key=${_key})`,
-      );
-    }
 
     return Promise.resolve(entity);
   }

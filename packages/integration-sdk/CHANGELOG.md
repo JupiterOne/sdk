@@ -13,6 +13,10 @@ and this project adheres to
 
 ### Changed
 
+- Improved the performance of `jobState.findEntity()` when entities are written
+  on disk.
+- Removed `GraphObjectStore.getEntity()`, and added `.findEntity()` to the
+  specification.
 - `parseStringPropertyValue()` accepts `string | undefined | null` as a
   convenience for cases where provider data answers `undefined` or `null`
   values.

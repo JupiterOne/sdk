@@ -305,9 +305,14 @@ describe('addRelationships', () => {
   });
 });
 
-describe('getEntity', () => {
-  test('should find buffered entities and get an entity by "_type" and "_key"', async () => {
+describe('findEntity', () => {
+  test('entity should be returned from InMemoryGraphObjectStore if it has not been flushed', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const localGraphObjectStoreFindEntitySpy = jest.spyOn(
+      (store as any).localGraphObjectStore,
+      'findEntity',
+    );
 
     const _type = uuid();
     const _key = uuid();
@@ -320,22 +325,95 @@ describe('getEntity', () => {
       matchingEntity,
     ]);
 
-    const entity = await store.getEntity({ _key, _type });
-    expect(entity).toEqual(matchingEntity);
+    await expect(store.findEntity(_key)).resolves.toEqual(matchingEntity);
+
+    expect(localGraphObjectStoreFindEntitySpy).toHaveBeenCalledTimes(1);
+    expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
+      Promise.resolve(matchingEntity),
+    );
   });
 
-  test('should find non-buffered entities and get an entity by "_type" and "_key"', async () => {
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThreshold: 2,
-    });
+  test('entity location should be returned from  when entity has been flushed from InMemoryGraphObjectStore', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const localGraphObjectStoreFindEntitySpy = jest.spyOn(
+      (store as any).localGraphObjectStore,
+      'findEntity',
+    );
+    const entityOnDiskLocationMapGetSpy = jest.spyOn(
+      (store as any).entityOnDiskLocationMap,
+      'get',
+    );
 
     const _type = uuid();
+    const _key = uuid();
 
-    const entities = times(2, () => createTestEntity({ _type }));
-    await store.addEntities(storageDirectoryPath, entities);
+    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+    const matchingEntity = createTestEntity({ _type, _key });
 
-    const entity = await store.getEntity({ _key: entities[1]._key, _type });
-    expect(entity).toEqual(entities[1]);
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+      matchingEntity,
+    ]);
+    await store.flushEntitiesToDisk();
+
+    await expect(store.findEntity(_key)).resolves.toEqual(matchingEntity);
+    expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
+      Promise.resolve(undefined),
+    );
+    expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith({
+      graphDataPath: expect.any(String),
+      index: expect.any(Number),
+    });
+  });
+
+  test('entity should not be found when non-indexable entity has been flushed from InMemoryGraphObjectStore', async () => {
+    const _type = uuid();
+    const _key = uuid();
+
+    const stepId = uuid();
+
+    const { store } = setupFileSystemObjectStore({
+      integrationSteps: [
+        {
+          id: stepId,
+          name: '',
+          entities: [
+            {
+              _type,
+              _class: '',
+              resourceName: '',
+              indexMetadata: { enabled: false },
+            },
+          ],
+          relationships: [],
+          executionHandler: () => {
+            return;
+          },
+        },
+      ],
+    });
+
+    const localGraphObjectStoreFindEntitySpy = jest.spyOn(
+      (store as any).localGraphObjectStore,
+      'findEntity',
+    );
+    const entityOnDiskLocationMapGetSpy = jest.spyOn(
+      (store as any).entityOnDiskLocationMap,
+      'get',
+    );
+
+    const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
+    const matchingEntity = createTestEntity({ _type, _key });
+
+    await store.addEntities(stepId, [...nonMatchingEntities, matchingEntity]);
+    await store.flushEntitiesToDisk();
+
+    await expect(store.findEntity(_key)).resolves.toBeUndefined();
+    expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
+      Promise.resolve(undefined),
+    );
+    expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith(undefined);
   });
 });
 

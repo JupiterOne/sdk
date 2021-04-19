@@ -5,9 +5,6 @@ import {
   Entity,
   GraphObjectFilter,
   GraphObjectIteratee,
-  GraphObjectLookupKey,
-  IntegrationDuplicateKeyError,
-  IntegrationMissingKeyError,
   Relationship,
   GraphObjectStore,
   GraphObjectIndexMetadata,
@@ -19,8 +16,12 @@ import { flushDataToDisk } from './flushDataToDisk';
 import {
   iterateEntityTypeIndex,
   iterateRelationshipTypeIndex,
+  readGraphObjectFile,
 } from './indices';
 import { InMemoryGraphObjectStore } from '../memory';
+import { FlushedEntityData } from '../types';
+import { getRootStorageAbsolutePath } from '../../fileSystem';
+import { BigMap } from '../../execution/utils/bigMap';
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 
@@ -98,6 +99,21 @@ function integrationStepsToGraphObjectIndexMetadataMap(
   return stepIdToGraphObjectIndexMetadataMap;
 }
 
+/**
+ * After entities are flushed from the local in-memory graph object store, most are
+ * placed on disk. (With the exception of entities whose metadata includes
+ * `{ indexMetadata: { enabled: false }}`).
+ *
+ * This map allows us to more efficiently retrieve those entities using the `findEntity()` method,
+ * using their file path and index.
+ */
+type GraphObjectLocationOnDisk = {
+  graphDataPath: string;
+  index: number;
+};
+
+const ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE = 2000000;
+
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
@@ -107,6 +123,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     string,
     GraphObjectIndexMetadataMap
   >;
+  private readonly entityOnDiskLocationMap = new BigMap<
+    string,
+    GraphObjectLocationOnDisk
+  >(ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE);
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
@@ -127,7 +147,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     newEntities: Entity[],
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
-    this.localGraphObjectStore.addEntities(stepId, newEntities);
+    await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
     if (
       this.localGraphObjectStore.getTotalEntityItemCount() >=
@@ -142,7 +162,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     newRelationships: Relationship[],
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
-    this.localGraphObjectStore.addRelationships(stepId, newRelationships);
+    await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
     if (
       this.localGraphObjectStore.getTotalRelationshipItemCount() >=
@@ -152,35 +172,27 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     }
   }
 
-  async getEntity({ _key, _type }: GraphObjectLookupKey): Promise<Entity> {
-    const bufferedEntity = this.localGraphObjectStore.findEntity(_key);
-
+  /**
+   * The FileSystemGraphObjectStore first checks to see if the entity exists
+   * in the InMemoryGraphObjectStore. If not, it then checks to see if it is
+   * located on disk.
+   */
+  async findEntity(_key: string): Promise<Entity | undefined> {
+    const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
     if (bufferedEntity) {
-      // This entity has not yet been flushed to disk
       return bufferedEntity;
     }
 
-    const entities: Entity[] = [];
+    const entityLocationOnDisk = this.entityOnDiskLocationMap.get(_key);
+    if (!entityLocationOnDisk) return;
 
-    await this.iterateEntities({ _type }, async (e) => {
-      if (e._key === _key) {
-        entities.push(e);
-      }
-
-      return Promise.resolve();
+    const filePath = getRootStorageAbsolutePath(
+      entityLocationOnDisk.graphDataPath,
+    );
+    const { entities } = await readGraphObjectFile<FlushedEntityData>({
+      filePath,
     });
-
-    if (entities.length === 0) {
-      throw new IntegrationMissingKeyError(
-        `Failed to find entity (_type=${_type}, _key=${_key})`,
-      );
-    } else if (entities.length > 1) {
-      throw new IntegrationDuplicateKeyError(
-        `Duplicate _key detected (_type=${_type}, _key=${_key})`,
-      );
-    } else {
-      return entities[0];
-    }
+    return entities[entityLocationOnDisk.index];
   }
 
   async iterateEntities<T extends Entity = Entity>(
@@ -239,12 +251,23 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           });
 
           if (indexable.length) {
-            await flushDataToDisk({
+            const graphObjectsToFilePaths = await flushDataToDisk({
               storageDirectoryPath: stepId,
               collectionType: 'entities',
               data: indexable,
               pretty: this.prettifyFiles,
             });
+            for (const {
+              graphDataPath,
+              collection,
+            } of graphObjectsToFilePaths) {
+              for (const [index, e] of collection.entries()) {
+                this.entityOnDiskLocationMap.set(e._key, {
+                  graphDataPath,
+                  index,
+                });
+              }
+            }
           }
 
           this.localGraphObjectStore.flushEntities(entities);

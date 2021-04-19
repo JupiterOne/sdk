@@ -4,11 +4,6 @@ export interface GraphObjectFilter {
   _type: string;
 }
 
-export interface GraphObjectLookupKey {
-  _type: string;
-  _key: string;
-}
-
 export type GraphObjectIteratee<T> = (obj: T) => void | Promise<void>;
 
 /**
