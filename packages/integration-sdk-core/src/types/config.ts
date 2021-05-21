@@ -7,6 +7,7 @@ import {
   StepExecutionContext,
   IntegrationStepExecutionContext,
 } from './context';
+import { Entity } from './entity';
 
 /**
  * Normalization transform for tracking keys in an integration. Allows
@@ -19,6 +20,10 @@ import {
  */
 export type KeyNormalizationFunction = (_key: string) => string;
 
+export type BeforeAddEntityHookFunction<
+  TExecutionContext extends ExecutionContext
+> = (context: TExecutionContext, entity: Entity) => Entity;
+
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
@@ -27,6 +32,7 @@ export interface InvocationConfig<
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
 }
 
 export interface IntegrationInvocationConfig<

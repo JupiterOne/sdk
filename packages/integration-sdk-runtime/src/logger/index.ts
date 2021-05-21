@@ -45,12 +45,14 @@ interface CreateLoggerInput<
   onFailure?: OnFailureFunction;
 }
 
-interface CreateIntegrationLoggerInput
+interface CreateIntegrationLoggerInput<
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+>
   extends CreateLoggerInput<
-    IntegrationExecutionContext,
-    IntegrationStepExecutionContext
+    IntegrationExecutionContext<TIntegrationConfig>,
+    IntegrationStepExecutionContext<TIntegrationConfig>
   > {
-  invocationConfig?: IntegrationInvocationConfig;
+  invocationConfig?: IntegrationInvocationConfig<TIntegrationConfig>;
 }
 
 export function createLogger<
@@ -96,13 +98,15 @@ export function createLogger<
  * Create a logger for the integration that will include invocation details and
  * serializers common to all integrations.
  */
-export function createIntegrationLogger({
+export function createIntegrationLogger<
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+>({
   name,
   invocationConfig,
   pretty,
   serializers,
   onFailure,
-}: CreateIntegrationLoggerInput): IntegrationLogger {
+}: CreateIntegrationLoggerInput<TIntegrationConfig>): IntegrationLogger {
   const serializeInstanceConfig = createInstanceConfigSerializer(
     invocationConfig?.instanceConfigFields,
   );

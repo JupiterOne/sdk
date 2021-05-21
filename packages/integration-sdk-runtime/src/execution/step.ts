@@ -1,6 +1,7 @@
 import uniq from 'lodash/uniq';
 
 import {
+  BeforeAddEntityHookFunction,
   ExecutionContext,
   IntegrationStepResult,
   InvocationConfig,
@@ -29,6 +30,7 @@ export async function executeSteps<
   duplicateKeyTracker,
   graphObjectStore,
   createStepGraphObjectDataUploader,
+  beforeAddEntity,
 }: {
   executionContext: TExecutionContext;
   integrationSteps: Step<TStepExecutionContext>[];
@@ -36,6 +38,7 @@ export async function executeSteps<
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   return executeStepDependencyGraph({
     executionContext,
@@ -44,6 +47,7 @@ export async function executeSteps<
     duplicateKeyTracker,
     graphObjectStore,
     createStepGraphObjectDataUploader,
+    beforeAddEntity,
   });
 }
 

@@ -91,6 +91,7 @@ export interface CreateStepJobStateParams {
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
+  beforeAddEntity?: (entity: Entity) => Entity;
 }
 
 export function createStepJobState({
@@ -99,9 +100,14 @@ export function createStepJobState({
   typeTracker,
   graphObjectStore,
   dataStore,
+  beforeAddEntity,
   uploader,
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
+    if (beforeAddEntity) {
+      entities = entities.map(beforeAddEntity);
+    }
+
     entities.forEach((e) => {
       duplicateKeyTracker.registerKey(e._key, {
         _type: e._type,
@@ -152,8 +158,8 @@ export function createStepJobState({
     },
 
     addEntity: async (entity: Entity): Promise<Entity> => {
-      await addEntities([entity]);
-      return entity;
+      const newEntity = await addEntities([entity]);
+      return newEntity[0];
     },
     addEntities,
 

@@ -2,6 +2,8 @@ import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
 import {
+  BeforeAddEntityHookFunction,
+  Entity,
   ExecutionContext,
   IntegrationStepResult,
   Step,
@@ -75,6 +77,7 @@ export function executeStepDependencyGraph<
   duplicateKeyTracker,
   graphObjectStore,
   createStepGraphObjectDataUploader,
+  beforeAddEntity,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -82,6 +85,7 @@ export function executeStepDependencyGraph<
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -260,13 +264,17 @@ export function executeStepDependencyGraph<
         uploader = createStepGraphObjectDataUploader(stepId);
       }
 
-      const context = buildStepContext<TStepExecutionContext>({
+      const context = buildStepContext<
+        TExecutionContext,
+        TStepExecutionContext
+      >({
         context: executionContext,
         duplicateKeyTracker,
         typeTracker,
         graphObjectStore,
         dataStore,
         stepId,
+        beforeAddEntity,
         uploader,
       });
 
@@ -325,7 +333,10 @@ export function executeStepDependencyGraph<
   });
 }
 
-function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
+function buildStepContext<
+  TExecutionContext extends ExecutionContext,
+  TStepExecutionContext extends StepExecutionContext
+>({
   stepId,
   context,
   duplicateKeyTracker,
@@ -333,28 +344,44 @@ function buildStepContext<TStepExecutionContext extends StepExecutionContext>({
   graphObjectStore,
   dataStore,
   uploader,
+  beforeAddEntity,
 }: {
   stepId: string;
-  context: ExecutionContext;
+  context: TExecutionContext;
   duplicateKeyTracker: DuplicateKeyTracker;
   typeTracker: TypeTracker;
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
 }): TStepExecutionContext {
+  // Purposely assigned to `undefined` instead of a noop function even though
+  // this code is a bit messier. The jobState code is fairly hot and checking
+  // for a falsy `beforeAddEntity` is faster than invoking a noop function for
+  // every entity.
+  const jobStateBeforeAddEntity =
+    typeof beforeAddEntity !== 'undefined'
+      ? (entity: Entity): Entity => {
+          return beforeAddEntity(context, entity);
+        }
+      : undefined;
+
+  const jobState = createStepJobState({
+    stepId,
+    duplicateKeyTracker,
+    typeTracker,
+    graphObjectStore,
+    dataStore,
+    beforeAddEntity: jobStateBeforeAddEntity,
+    uploader,
+  });
+
   const stepExecutionContext: StepExecutionContext = {
     ...context,
     logger: context.logger.child({
       stepId,
     }),
-    jobState: createStepJobState({
-      stepId,
-      duplicateKeyTracker,
-      typeTracker,
-      graphObjectStore,
-      dataStore,
-      uploader,
-    }),
+    jobState,
   };
 
   return stepExecutionContext as TStepExecutionContext;

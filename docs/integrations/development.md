@@ -201,6 +201,42 @@ data retrieved in the step as a partial dataset. See the
 [Failure handling](#failure-handling) section below for more information on
 partial datasets.
 
+#### `beforeAddEntity`
+
+`beforeAddEntity` is an optional hook function that can be provided. The
+function is called before an entity is added to the job state internally and the
+return value of the function is the entity that will ultimately be added to the
+job state. The hook is particularly useful for when a specific property should
+be added to every entity that is produced by the integration.
+
+Example:
+
+```typescript
+import {
+  Entity,
+  IntegrationInvocationConfig,
+} from '@jupiterone/integration-sdk-core';
+import { IntegrationConfig, IntegrationStepContext } from './types';
+import getStepStartStates from './getStepStartStates';
+
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = {
+  instanceConfigFields: {},
+  integrationSteps: [],
+
+  beforeAddEntity(
+    context: IntegrationExecutionContext<IntegrationConfig>,
+    entity: Entity,
+  ): Entity {
+    const projectId = context.instance.config.myProjectId;
+
+    return {
+      ...entity,
+      projectId: entity.projectId || myProjectId,
+    };
+  },
+};
+```
+
 ### How integrations are executed
 
 The `IntegrationInvocationConfig` declaratively defines how an integration runs.
