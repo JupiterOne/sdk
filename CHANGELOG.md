@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.2.0 - 2021-05-21
+
 - [#470](https://github.com/JupiterOne/sdk/issues/470) Introduce
   `beforeAddEntity` hook into `IntegrationInvocationConfig`. See the development
   documentation for more information on its usage.
