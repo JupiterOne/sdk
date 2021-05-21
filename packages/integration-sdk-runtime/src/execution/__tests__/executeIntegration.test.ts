@@ -9,6 +9,7 @@ import {
   Entity,
   IntegrationExecutionContext,
   IntegrationInstance,
+  IntegrationInstanceConfig,
   IntegrationInvocationConfig,
   IntegrationInvocationValidationFunction,
   IntegrationLogger,
@@ -41,10 +42,14 @@ function sleep(ms: number) {
   });
 }
 
-export interface InstanceConfigurationData {
-  validateInvocation: IntegrationInvocationValidationFunction;
-  instance: IntegrationInstance;
-  invocationConfig: IntegrationInvocationConfig;
+export interface InstanceConfigurationData<
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+> {
+  validateInvocation: IntegrationInvocationValidationFunction<
+    TIntegrationConfig
+  >;
+  instance: IntegrationInstance<TIntegrationConfig>;
+  invocationConfig: IntegrationInvocationConfig<TIntegrationConfig>;
   logger: IntegrationLogger;
 }
 
@@ -56,11 +61,13 @@ afterEach(() => {
 describe('executeIntegrationInstance', () => {
   const executionStartedOn = Date.now();
 
-  async function executeIntegrationInstanceWithConfig(
-    config: InstanceConfigurationData,
+  async function executeIntegrationInstanceWithConfig<
+    TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  >(
+    config: InstanceConfigurationData<TIntegrationConfig>,
     options: ExecuteIntegrationOptions = {},
   ) {
-    return executeIntegrationInstance(
+    return executeIntegrationInstance<TIntegrationConfig>(
       config.logger,
       config.instance,
       config.invocationConfig,
@@ -286,6 +293,118 @@ describe('executeIntegrationInstance', () => {
             _fromEntityKey: 'test',
             _toEntityKey: 'test1',
             displayName: 'HAS',
+          },
+        ],
+      },
+    ]);
+  });
+
+  test('should call "beforeAddEntity" hook if provided to config', async () => {
+    const defaultDisplayName = 'Bob';
+
+    interface CustomIntegrationConfig extends IntegrationInstanceConfig {
+      defaultDisplayName: string;
+    }
+
+    const integrationInstance: IntegrationInstance<CustomIntegrationConfig> = {
+      ...LOCAL_INTEGRATION_INSTANCE,
+      config: {
+        ...LOCAL_INTEGRATION_INSTANCE.config,
+        defaultDisplayName,
+      },
+    };
+
+    const config = createInstanceConfiguration<CustomIntegrationConfig>({
+      instance: integrationInstance,
+      invocationConfig: {
+        instanceConfigFields: {
+          defaultDisplayName: {
+            type: 'string',
+          },
+        },
+        beforeAddEntity(context, entity) {
+          const configDisplayName = context.instance.config.defaultDisplayName;
+
+          return {
+            ...entity,
+            displayName: entity.displayName || configDisplayName,
+          };
+        },
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+                displayName: 'Alice',
+              });
+
+              await jobState.addEntity({
+                _key: 'test1',
+                _type: 'test',
+                _class: 'Test',
+              });
+            },
+          },
+        ],
+      },
+    });
+
+    await executeIntegrationInstanceWithConfig(config);
+
+    interface FlushedGraphObjectDataWithFilePath
+      extends FlushedGraphObjectData {
+      filePath;
+    }
+
+    const flushedGraphData: FlushedGraphObjectDataWithFilePath[] = [];
+
+    await integrationFileSystem.walkDirectory({
+      path: path.join(integrationFileSystem.getRootStorageDirectory(), 'graph'),
+      iteratee: async ({ filePath }) => {
+        const fileData = (await fs.readFile(filePath)).toString('utf-8');
+
+        flushedGraphData.push({
+          ...JSON.parse(fileData),
+          filePath,
+        });
+      },
+    });
+
+    const sortedFlushedGraphData = flushedGraphData
+      .sort((a, b) => {
+        return a.filePath > b.filePath ? 1 : -1;
+      })
+      .map((flushed) => {
+        delete flushed.filePath;
+        return flushed;
+      });
+
+    expect(sortedFlushedGraphData).toEqual([
+      {
+        entities: [
+          {
+            _key: 'test',
+            _type: 'test',
+            _class: 'Test',
+            displayName: 'Alice',
+          },
+          {
+            _key: 'test1',
+            _type: 'test',
+            _class: 'Test',
+            displayName: 'Bob',
           },
         ],
       },

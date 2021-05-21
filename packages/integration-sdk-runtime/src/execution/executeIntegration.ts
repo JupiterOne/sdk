@@ -2,6 +2,7 @@ import {
   ExecutionContext,
   ExecutionHistory,
   IntegrationInstance,
+  IntegrationInstanceConfig,
   IntegrationInvocationConfig,
   IntegrationLogger,
   IntegrationStepResult,
@@ -94,10 +95,12 @@ export async function executeIntegrationLocally(
 /**
  * Starts execution of an integration instance.
  */
-export async function executeIntegrationInstance(
+export async function executeIntegrationInstance<
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+>(
   logger: IntegrationLogger,
-  instance: IntegrationInstance,
-  config: IntegrationInvocationConfig,
+  instance: IntegrationInstance<TIntegrationConfig>,
+  config: IntegrationInvocationConfig<TIntegrationConfig>,
   executionHistory: ExecutionHistory,
   options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
@@ -220,6 +223,7 @@ export async function executeWithContext<
       ),
       graphObjectStore,
       createStepGraphObjectDataUploader,
+      beforeAddEntity: config.beforeAddEntity,
     });
 
     const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
