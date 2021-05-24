@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.2.1 - 2021-05-24
+
+- Upgrade `@jupiterone/data-model@^0.22.2`
+
 ## 6.2.0 - 2021-05-21
 
 - [#470](https://github.com/JupiterOne/sdk/issues/470) Introduce
