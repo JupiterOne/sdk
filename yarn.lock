@@ -614,10 +614,10 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
-"@jupiterone/data-model@^0.22.2":
-  version "0.22.2"
-  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.22.2.tgz#bf00c843bc4c23e171151fbc03918f1803861f9d"
-  integrity sha512-GPXQXIZr/+2L1LdccmNqTPc28wvdlTBuopVYFVPu5sr5yW02y060w+qsnL5umQSQdWCFewLTy3kpxCGv4bZNUQ==
+"@jupiterone/data-model@^0.24.0":
+  version "0.24.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.24.0.tgz#0f3e2d7b0267e8ef7ec0dea3065f145e23d90c1e"
+  integrity sha512-4RKzgnFac9hONiqRN4rY9gj+DsvCE+almGfbHD76k4ugQRTW/dt7+IMXJNjiBnU55q8+3oVxApVMtsZXP6hjAQ==
   dependencies:
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
