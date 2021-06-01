@@ -1,7 +1,14 @@
-import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
+import {
+  createIntegrationEntity,
+  createMappedRelationship,
+  Entity,
+  ExplicitRelationship,
+  RelationshipClass,
+} from '@jupiterone/integration-sdk-core';
 import {
   toMatchGraphObjectSchema,
   toMatchDirectRelationshipSchema,
+  toCreateValidRelationshipsToEntities,
   GraphObjectSchema,
   registerMatchers,
 } from '../jest';
@@ -583,6 +590,86 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
   });
 });
 
+describe('#toCreateValidRelationshipsToEntities', () => {
+  test('should pass if mapped relationships match entities', () => {
+    const targetEntityKey = uuid();
+    const targetEntityType = 'entity-type';
+    const result = toCreateValidRelationshipsToEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: targetEntityKey,
+          },
+        }),
+      ],
+      [
+        createIntegrationEntity({
+          entityData: {
+            source: {},
+            assign: {
+              _class: 'Entity',
+              _type: targetEntityType,
+              _key: targetEntityKey,
+            },
+          },
+        }),
+      ],
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
+  test('should fail if mapped relationships do not match entities', () => {
+    const targetEntityType = 'entity-type';
+    const result = toCreateValidRelationshipsToEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: uuid(),
+          },
+        }),
+      ],
+      [
+        createIntegrationEntity({
+          entityData: {
+            source: {},
+            assign: {
+              _class: 'Entity',
+              _type: targetEntityType,
+              _key: uuid(),
+            },
+          },
+        }),
+      ],
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+    expect(result.message()).toMatch(
+      'No target entity found for mapped relationship: {',
+    );
+  });
+});
+
 describe('#registerMatchers', () => {
   test('should register all test matchers', () => {
     const mockJestExtendFn = jest.fn();
@@ -596,6 +683,7 @@ describe('#registerMatchers', () => {
     expect(mockJestExtendFn).toHaveBeenCalledWith({
       toMatchGraphObjectSchema,
       toMatchDirectRelationshipSchema,
+      toCreateValidRelationshipsToEntities,
     });
   });
 });

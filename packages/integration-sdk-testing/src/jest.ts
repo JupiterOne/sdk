@@ -1,6 +1,10 @@
 import * as dataModel from '@jupiterone/data-model';
 import * as deepmerge from 'deepmerge';
-import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
+import {
+  Entity,
+  ExplicitRelationship,
+  MappedRelationship,
+} from '@jupiterone/integration-sdk-core';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -13,6 +17,8 @@ declare global {
       toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
         params: ToMatchRelationshipSchemaParams,
       ): R;
+
+      toCreateValidRelationshipsToEntities(entities: Entity[]): R;
     }
   }
 }
@@ -224,6 +230,72 @@ export interface ToMatchGraphObjectSchemaParams {
   schema?: GraphObjectSchema;
 }
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toCreateValidRelationshipsToEntities(entities: Entity[]): R;
+    }
+  }
+}
+
+export function toCreateValidRelationshipsToEntities(
+  mappedRelationships: MappedRelationship[],
+  entities: Entity[],
+) {
+  for (const mappedRelationship of mappedRelationships) {
+    const _mapping = mappedRelationship._mapping;
+    if (!_mapping) {
+      throw new Error(
+        'expect(mappedRelationships).toCreateValidRelationshipsToEntities() requires relationships with the `_mapping` property!',
+      );
+    }
+    const targetEntity = _mapping.targetEntity;
+    for (let targetFilterKey of _mapping.targetFilterKeys) {
+      /* type TargetFilterKey = string | string[]; */
+      if (!Array.isArray(targetFilterKey)) {
+        console.warn(
+          'WARNING: Found mapped relationship with targetFilterKey of type string. Please ensure the targetFilterKey was not intended to be of type string[]',
+        );
+        targetFilterKey = [targetFilterKey];
+      }
+      const mappingTargetEntities = entities.filter((entity) =>
+        (targetFilterKey as string[]).every(
+          (k) => targetEntity[k] === entity[k],
+        ),
+      );
+
+      if (mappingTargetEntities.length === 0) {
+        return {
+          message: () =>
+            `No target entity found for mapped relationship: ${JSON.stringify(
+              mappedRelationship,
+              null,
+              2,
+            )}`,
+          pass: false,
+        };
+      } else if (mappingTargetEntities.length > 1) {
+        return {
+          message: () =>
+            `Multiple target entities found for mapped relationship [${mappingTargetEntities.map(
+              (e) => e._key,
+            )}]; expected exactly one: ${JSON.stringify(
+              mappedRelationship,
+              null,
+              2,
+            )}`,
+          pass: false,
+        };
+      }
+    }
+  }
+  return {
+    message: () => '',
+    pass: true,
+  };
+}
+
 export function toMatchGraphObjectSchema<T extends Entity>(
   /**
    * The data received from the test assertion. (e.g. expect(DATA_HERE).toMatchGraphObjectSchema(...)
@@ -373,5 +445,6 @@ export function registerMatchers(expect: jest.Expect) {
   expect.extend({
     toMatchGraphObjectSchema,
     toMatchDirectRelationshipSchema,
+    toCreateValidRelationshipsToEntities,
   });
 }
