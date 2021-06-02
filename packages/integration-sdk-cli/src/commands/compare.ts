@@ -15,12 +15,12 @@ export function compare() {
     JSON.stringify(require('../utils/exampleDataset.json'), null, 4)
     
     , {
-      oldPath: 'relitive path to the dataset to compare against',
-      neoPath: 'relitive path to the new dataset'
+      oldPath: 'relative path to the dataset to compare against',
+      neoPath: 'relative path to the new dataset'
     })
     .option(
-      '-logkey, --log-only-key-changes',
-      'Only log entities and relationships that have _key values that are not in the other dataset.'
+      '-ok, --log-only-key-changes',
+      'Only log entities and relationships if their _key is only in one dataset or the other, but not in both.'
     )
     .action((oldPath, neoPath, options) => {
       log.info(`oldPath: ${oldPath}`);
