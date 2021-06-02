@@ -29,5 +29,3 @@ export function compare() {
       findDifferences(oldPath, neoPath, options.logOnlyKeyChanges)
     });
 }
-
-compare().parse()
