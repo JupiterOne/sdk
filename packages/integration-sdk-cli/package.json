@@ -25,6 +25,7 @@
     "@jupiterone/integration-sdk-runtime": "^6.3.0",
     "commander": "^5.0.0",
     "globby": "^11.0.0",
+    "json-diff": "^0.5.4",
     "lodash": "^4.17.19",
     "markdown-table": "^2.0.0",
     "upath": "^1.2.0",
