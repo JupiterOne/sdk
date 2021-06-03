@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.4.0 - 2021-06-03
+
+- Add `compare` method to `@jupiterone/integration-sdk-cli` which is used to diff data sets downloaded from JupiterOne.
+
 ## 6.3.0 - 2021-05-25
 
 - Upgrade `@jupiterone/data-model@^0.24.0`
