@@ -22,6 +22,7 @@ describe('#toMatchGraphObjectSchema', () => {
       state: 'ENABLED',
       enabled: true,
       usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
+      function: ['other'],
       _rawData: [
         {
           name: 'default',
