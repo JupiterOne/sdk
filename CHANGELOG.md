@@ -9,19 +9,34 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.5.0 - 2021-06-05
+
+### Changed
+
+- Upgrade `@jupiterone/data-model@^0.27.0`
+
 ## 6.4.0 - 2021-06-03
 
-- Add `compare` method to `@jupiterone/integration-sdk-cli` which is used to diff data sets downloaded from JupiterOne.
+### Changed
+
+- Add `compare` method to `@jupiterone/integration-sdk-cli` which is used to
+  diff data sets downloaded from JupiterOne.
 
 ## 6.3.0 - 2021-05-25
+
+### Changed
 
 - Upgrade `@jupiterone/data-model@^0.24.0`
 
 ## 6.2.1 - 2021-05-24
 
+### Changed
+
 - Upgrade `@jupiterone/data-model@^0.22.2`
 
 ## 6.2.0 - 2021-05-21
+
+### Added
 
 - [#470](https://github.com/JupiterOne/sdk/issues/470) Introduce
   `beforeAddEntity` hook into `IntegrationInvocationConfig`. See the development
@@ -29,9 +44,13 @@ and this project adheres to
 
 ## 6.1.0 - 2021-05-19
 
+### Changed
+
 - Upgrade `@jupiterone/data-model@^0.22.1`
 
 ## 6.0.1 - 2021-05-10
+
+### Changed
 
 - Upgrade `@jupiterone/data-model@^0.22.0`
 
