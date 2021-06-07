@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+- Fix missing CLI `compare` sub command.
+- Fix `compare` relationship key tracking.
+- Ignore metadata graph object properties in `compare`.
+
 ## 6.5.0 - 2021-06-05
 
 ### Changed
