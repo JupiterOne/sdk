@@ -1,10 +1,14 @@
-import fs from "fs";
-import { diff as diffJson } from 'json-diff'
+import fs from 'fs';
+import { diff as diffJson } from 'json-diff';
+import { omit } from 'lodash';
 
-export function findDifferences(oldJsonDataPath, newJsonDataPath, logOnlyKeyChanges) {
-
-  const neo = JSON.parse(fs.readFileSync(newJsonDataPath, 'utf8'))
-  const old = JSON.parse(fs.readFileSync(oldJsonDataPath, 'utf8'))
+export function findDifferences(
+  oldJsonDataPath,
+  newJsonDataPath,
+  logOnlyKeyChanges,
+) {
+  const neo = JSON.parse(fs.readFileSync(newJsonDataPath, 'utf8'));
+  const old = JSON.parse(fs.readFileSync(oldJsonDataPath, 'utf8'));
 
   /**
    * These regexes are necessary due to the way we export the data from JupiterOne.
@@ -13,23 +17,26 @@ export function findDifferences(oldJsonDataPath, newJsonDataPath, logOnlyKeyChan
   const ENTITY_PROPERTY = /^e\./;
   const RELATIONSHIP_PROPERTY = /^r\./;
 
-  const extractor = (acc, obj) => {
-
+  const extractor = (acc, graphObject) => {
     const entity: any = {};
     const relationship: any = {};
-    for (const key in obj) {
-      if (ENTITY_PROPERTY.test(key)) {
-        entity[key.slice(2)] = obj[key];
-        if (GRAPH_OBJECT_KEY_PROPERTY.test(key)) {
-          acc[obj[key]] = entity;
+
+    for (const property in graphObject) {
+      if (ENTITY_PROPERTY.test(property)) {
+        entity[property.slice(2)] = graphObject[property];
+        if (GRAPH_OBJECT_KEY_PROPERTY.test(property)) {
+          acc[graphObject[property]] = entity;
         }
-      } else if (RELATIONSHIP_PROPERTY.test(key)) {
-        relationship[key.slice(2)] = obj[key];
-        if (GRAPH_OBJECT_KEY_PROPERTY.test(key)) {
-          acc[getRelationshipKey(relationship)] = relationship;
-        }
+      } else if (RELATIONSHIP_PROPERTY.test(property)) {
+        relationship[property.slice(2)] = graphObject[property];
       }
     }
+
+    if (relationship._key) {
+      // graphObject is a relationship
+      acc[getRelationshipKey(relationship)] = relationship;
+    }
+
     return acc;
   };
 
@@ -39,15 +46,20 @@ export function findDifferences(oldJsonDataPath, newJsonDataPath, logOnlyKeyChan
   const oldKeys: string[] = [];
   const newKeys: string[] = [];
 
+  // Pair up old and new by key
   const pairs: { [key: string]: { key: string; old: any; neo: any } } = {};
   for (const [key, value] of Object.entries<any>(oldByKey)) {
     oldKeys.push(key);
-    pairs[key] = { key, old: value, neo: newByKey[getRelationshipKey(value)]};
+    pairs[key] = { key, old: value, neo: newByKey[getRelationshipKey(value)] };
   }
   for (const [key, value] of Object.entries<any>(newByKey)) {
-    newKeys.push(key)
+    newKeys.push(key);
     if (!pairs[key]) {
-      pairs[key] = { key, old: oldByKey[getRelationshipKey(value)], neo: value };
+      pairs[key] = {
+        key,
+        old: oldByKey[getRelationshipKey(value)],
+        neo: value,
+      };
     }
   }
 
@@ -58,18 +70,35 @@ export function findDifferences(oldJsonDataPath, newJsonDataPath, logOnlyKeyChan
 
   const differences: any[] = [];
   for (const [key, { old, neo }] of Object.entries(pairs)) {
-    if (!logOnlyKeyChanges || (!old || !neo)) {
-      const mappedRelationship =
-        'system-mapper' === (old?._source || neo?._source);
+    if (!logOnlyKeyChanges || !old || !neo) {
+      const ignoreProperties = [
+        '_integrationName',
+        '_beginOn',
+        '_version',
+        '_id',
+        '_integrationInstanceId',
+        '_createdOn',
+        '_latest__deleted',
+        '_rawDataHashes__deleted',
+        '_mapper_sourceEntityId',
+        'tag.AccountName',
+        '_fromEntityId',
+        '_toEntityId',
+      ];
 
-      const diff = diffJson(old, neo);
-      differences.push({ key, mappedRelationship, diff });
+      differences.push({
+        type: old?._type || neo?._type,
+        key,
+        diff: diffJson(
+          omit(old, ignoreProperties),
+          omit(neo, ignoreProperties),
+        ),
+      });
     }
   }
 
   console.log('differences: ', JSON.stringify(differences, null, 2));
 }
-
 
 /**
  * In some integrations, _key values for relationships were made with JupiterOne
@@ -78,7 +107,14 @@ export function findDifferences(oldJsonDataPath, newJsonDataPath, logOnlyKeyChan
  * on the entity types and the relationship.
  */
 function getRelationshipKey(relationship) {
-  return (relationship._fromEntityKey && relationship._toEntityKey && relationship._class) ?
-    '' + relationship._fromEntityKey + relationship._class + relationship._toEntityKey :
-    relationship._key
+  return relationship._fromEntityKey &&
+    relationship._toEntityKey &&
+    relationship._class
+    ? 'normalized:' +
+        relationship._fromEntityKey +
+        '|' +
+        relationship._class +
+        '|' +
+        relationship._toEntityKey
+    : relationship._key;
 }
