@@ -18,7 +18,7 @@ declare global {
         params: ToMatchRelationshipSchemaParams,
       ): R;
 
-      toCreateValidRelationshipsToEntities(entities: Entity[]): R;
+      toTargetEntities(entities: Entity[]): R;
     }
   }
 }
@@ -230,24 +230,20 @@ export interface ToMatchGraphObjectSchemaParams {
   schema?: GraphObjectSchema;
 }
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace jest {
-    interface Matchers<R> {
-      toCreateValidRelationshipsToEntities(entities: Entity[]): R;
-    }
-  }
+interface ToTargetEntitiesOptions {
+  enforceSingleTarget?: boolean;
 }
 
-export function toCreateValidRelationshipsToEntities(
+export function toTargetEntities(
   mappedRelationships: MappedRelationship[],
   entities: Entity[],
+  options?: ToTargetEntitiesOptions,
 ) {
   for (const mappedRelationship of mappedRelationships) {
     const _mapping = mappedRelationship._mapping;
     if (!_mapping) {
       throw new Error(
-        'expect(mappedRelationships).toCreateValidRelationshipsToEntities() requires relationships with the `_mapping` property!',
+        'expect(mappedRelationships).toTargetEntities() requires relationships with the `_mapping` property!',
       );
     }
     const targetEntity = _mapping.targetEntity;
@@ -275,13 +271,14 @@ export function toCreateValidRelationshipsToEntities(
             )}`,
           pass: false,
         };
-      } else if (mappingTargetEntities.length > 1) {
+      } else if (
+        options?.enforceSingleTarget &&
+        mappingTargetEntities.length > 1
+      ) {
         return {
           message: () =>
-            `Multiple target entities found for mapped relationship [${mappingTargetEntities.map(
-              (e) => e._key,
-            )}]; expected exactly one: ${JSON.stringify(
-              mappedRelationship,
+            `Multiple target entities found for mapped relationship, expected exactly one: ${JSON.stringify(
+              { mappedRelationship, mappingTargetEntities },
               null,
               2,
             )}`,
@@ -445,6 +442,6 @@ export function registerMatchers(expect: jest.Expect) {
   expect.extend({
     toMatchGraphObjectSchema,
     toMatchDirectRelationshipSchema,
-    toCreateValidRelationshipsToEntities,
+    toTargetEntities,
   });
 }

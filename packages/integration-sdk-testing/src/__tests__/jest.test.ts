@@ -8,7 +8,7 @@ import {
 import {
   toMatchGraphObjectSchema,
   toMatchDirectRelationshipSchema,
-  toCreateValidRelationshipsToEntities,
+  toTargetEntities,
   GraphObjectSchema,
   registerMatchers,
 } from '../jest';
@@ -594,7 +594,7 @@ describe('#toCreateValidRelationshipsToEntities', () => {
   test('should pass if mapped relationships match entities', () => {
     const targetEntityKey = uuid();
     const targetEntityType = 'entity-type';
-    const result = toCreateValidRelationshipsToEntities(
+    const result = toTargetEntities(
       [
         createMappedRelationship({
           _class: RelationshipClass.HAS,
@@ -629,9 +629,89 @@ describe('#toCreateValidRelationshipsToEntities', () => {
     });
   });
 
+  test('should pass if mapped relationships match more than one entities', () => {
+    const targetEntityKey = uuid();
+    const targetEntityType = 'entity-type';
+
+    const targetEntity = createIntegrationEntity({
+      entityData: {
+        source: {},
+        assign: {
+          _class: 'Entity',
+          _type: targetEntityType,
+          _key: targetEntityKey,
+        },
+      },
+    });
+    const result = toTargetEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: targetEntityKey,
+          },
+        }),
+      ],
+      [targetEntity, targetEntity],
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
+  test('should fail if mapped relationships match more than one entities and enforceSingleTarget = true', () => {
+    const targetEntityKey = uuid();
+    const targetEntityType = 'entity-type';
+
+    const targetEntity = createIntegrationEntity({
+      entityData: {
+        source: {},
+        assign: {
+          _class: 'Entity',
+          _type: targetEntityType,
+          _key: targetEntityKey,
+        },
+      },
+    });
+    const result = toTargetEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: targetEntityKey,
+          },
+        }),
+      ],
+      [targetEntity, targetEntity],
+      { enforceSingleTarget: true },
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+    expect(result.message()).toMatch(
+      'Multiple target entities found for mapped relationship, expected exactly one: {',
+    );
+  });
+
   test('should fail if mapped relationships do not match entities', () => {
     const targetEntityType = 'entity-type';
-    const result = toCreateValidRelationshipsToEntities(
+    const result = toTargetEntities(
       [
         createMappedRelationship({
           _class: RelationshipClass.HAS,
@@ -683,7 +763,7 @@ describe('#registerMatchers', () => {
     expect(mockJestExtendFn).toHaveBeenCalledWith({
       toMatchGraphObjectSchema,
       toMatchDirectRelationshipSchema,
-      toCreateValidRelationshipsToEntities,
+      toTargetEntities,
     });
   });
 });

@@ -9,6 +9,20 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `toTargetEntities()` jest matcher for mapped relationship validation.
+  Usage:
+  ```typescript
+  expect([mappedRel1, mappedRel2]).toTargetEntities([
+    entity1,
+    entity2,
+    entity3,
+  ]);
+  ```
+
+### Fixed
+
 - Fix missing CLI `compare` sub command.
 - Fix `compare` relationship key tracking.
 - Ignore metadata graph object properties in `compare`.
