@@ -34,8 +34,8 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     return Promise.resolve();
   }
 
-  async findEntity(_key: string): Promise<Entity | undefined> {
-    const entity = this.entityMap.get(_key);
+  async findEntity(_key: string | undefined): Promise<Entity | undefined> {
+    const entity = _key ? this.entityMap.get(_key) : undefined;
 
     return Promise.resolve(entity);
   }

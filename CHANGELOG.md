@@ -21,6 +21,10 @@ and this project adheres to
   ]);
   ```
 
+### Changed
+
+- Expanded the interface of `findEntity` to accept `string | undefined`.
+
 ### Fixed
 
 - Fix missing CLI `compare` sub command.

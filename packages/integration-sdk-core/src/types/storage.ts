@@ -26,7 +26,7 @@ export interface GraphObjectStore {
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
 
-  findEntity(_key: string): Promise<Entity | undefined>;
+  findEntity(_key: string | undefined): Promise<Entity | undefined>;
 
   iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
