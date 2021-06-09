@@ -590,8 +590,8 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
   });
 });
 
-describe('#toCreateValidRelationshipsToEntities', () => {
-  test('should pass if mapped relationships match entities', () => {
+describe('#toTargetEntities', () => {
+  test('should pass if mapped relationship targets any entities', () => {
     const targetEntityKey = uuid();
     const targetEntityType = 'entity-type';
     const result = toTargetEntities(
@@ -629,7 +629,7 @@ describe('#toCreateValidRelationshipsToEntities', () => {
     });
   });
 
-  test('should pass if mapped relationships match more than one entities', () => {
+  test('should pass if mapped relationship targets multiple entities', () => {
     const targetEntityKey = uuid();
     const targetEntityType = 'entity-type';
 
@@ -667,7 +667,7 @@ describe('#toCreateValidRelationshipsToEntities', () => {
     });
   });
 
-  test('should fail if mapped relationships match more than one entities and enforceSingleTarget = true', () => {
+  test('should fail if mapped relationship targets more than one entity and enforceSingleTarget = true', () => {
     const targetEntityKey = uuid();
     const targetEntityType = 'entity-type';
 
@@ -709,7 +709,7 @@ describe('#toCreateValidRelationshipsToEntities', () => {
     );
   });
 
-  test('should fail if mapped relationships do not match entities', () => {
+  test('should fail if mapped relationship targets unknown entities', () => {
     const targetEntityType = 'entity-type';
     const result = toTargetEntities(
       [
