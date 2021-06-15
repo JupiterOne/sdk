@@ -30,9 +30,10 @@ This integration ingests the following entities and relationships:
   - `acme_user_has_device`
   - `acme_device_has_application`
 
-In order design the optimal mapping of steps to their entities & relationships,
-you'll need to read the API specification of the target system. For the sake of
-this example, let's assume the API spec is composed of the following endpoints:
+In order to design the optimal mapping of steps to their entities &
+relationships, you'll need to read the API specification of the target system.
+For the sake of this example, let's assume the API spec is composed of the
+following endpoints:
 
 - Endpoints
   - ```
@@ -295,8 +296,7 @@ const buildUserDeviceRelationships: Step = {
   relationships: [{ _type: 'acme_user_has_device', ... }],
   dependsOn: ['fetch-users', 'fetch-devices'],
   executionHandler: (context) => {
-    const { jobState, instance } = context;
-    const client = new AcmeClient({ config: instance.config });
+    const { jobState } = context;
 
     await jobState.iterateEntities(
       { _type: 'acme_user' },
