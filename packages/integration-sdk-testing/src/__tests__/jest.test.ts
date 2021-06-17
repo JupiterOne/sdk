@@ -1,7 +1,14 @@
-import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
+import {
+  createIntegrationEntity,
+  createMappedRelationship,
+  Entity,
+  ExplicitRelationship,
+  RelationshipClass,
+} from '@jupiterone/integration-sdk-core';
 import {
   toMatchGraphObjectSchema,
   toMatchDirectRelationshipSchema,
+  toTargetEntities,
   GraphObjectSchema,
   registerMatchers,
 } from '../jest';
@@ -583,6 +590,166 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
   });
 });
 
+describe('#toTargetEntities', () => {
+  test('should pass if mapped relationship targets any entities', () => {
+    const targetEntityKey = uuid();
+    const targetEntityType = 'entity-type';
+    const result = toTargetEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: targetEntityKey,
+          },
+        }),
+      ],
+      [
+        createIntegrationEntity({
+          entityData: {
+            source: {},
+            assign: {
+              _class: 'Entity',
+              _type: targetEntityType,
+              _key: targetEntityKey,
+            },
+          },
+        }),
+      ],
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
+  test('should pass if mapped relationship targets multiple entities', () => {
+    const targetEntityKey = uuid();
+    const targetEntityType = 'entity-type';
+
+    const targetEntity = createIntegrationEntity({
+      entityData: {
+        source: {},
+        assign: {
+          _class: 'Entity',
+          _type: targetEntityType,
+          _key: targetEntityKey,
+        },
+      },
+    });
+    const result = toTargetEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: targetEntityKey,
+          },
+        }),
+      ],
+      [targetEntity, targetEntity],
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
+  test('should fail if mapped relationship targets more than one entity and enforceSingleTarget = true', () => {
+    const targetEntityKey = uuid();
+    const targetEntityType = 'entity-type';
+
+    const targetEntity = createIntegrationEntity({
+      entityData: {
+        source: {},
+        assign: {
+          _class: 'Entity',
+          _type: targetEntityType,
+          _key: targetEntityKey,
+        },
+      },
+    });
+    const result = toTargetEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: targetEntityKey,
+          },
+        }),
+      ],
+      [targetEntity, targetEntity],
+      { enforceSingleTarget: true },
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+    expect(result.message()).toMatch(
+      'Multiple target entities found for mapped relationship, expected exactly one: {',
+    );
+  });
+
+  test('should fail if mapped relationship targets unknown entities', () => {
+    const targetEntityType = 'entity-type';
+    const result = toTargetEntities(
+      [
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          source: {
+            _class: 'Entity',
+            _key: uuid(),
+            _type: '',
+          },
+          target: {
+            _type: targetEntityType,
+            _key: uuid(),
+          },
+        }),
+      ],
+      [
+        createIntegrationEntity({
+          entityData: {
+            source: {},
+            assign: {
+              _class: 'Entity',
+              _type: targetEntityType,
+              _key: uuid(),
+            },
+          },
+        }),
+      ],
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+    expect(result.message()).toMatch(
+      'No target entity found for mapped relationship: {',
+    );
+  });
+});
+
 describe('#registerMatchers', () => {
   test('should register all test matchers', () => {
     const mockJestExtendFn = jest.fn();
@@ -596,6 +763,7 @@ describe('#registerMatchers', () => {
     expect(mockJestExtendFn).toHaveBeenCalledWith({
       toMatchGraphObjectSchema,
       toMatchDirectRelationshipSchema,
+      toTargetEntities,
     });
   });
 });
