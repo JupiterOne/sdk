@@ -21,8 +21,11 @@ and this project adheres to
   ]);
   ```
 
-### Fixed
+## 6.6.0 - 2021-06-010
 
+### Changed
+
+- Upgrade `@jupiterone/data-model@^0.28.0`
 - Fix missing CLI `compare` sub command.
 - Fix `compare` relationship key tracking.
 - Ignore metadata graph object properties in `compare`.
