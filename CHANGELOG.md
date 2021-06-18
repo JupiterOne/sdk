@@ -21,6 +21,10 @@ and this project adheres to
   ]);
   ```
 
+### Changed
+
+- Expanded the interface of `findEntity` to accept `string | undefined`.
+
 ## 6.6.0 - 2021-06-010
 
 ### Changed
