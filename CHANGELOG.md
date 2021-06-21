@@ -9,6 +9,22 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `toTargetEntities()` jest matcher for mapped relationship validation.
+  Usage:
+  ```typescript
+  expect([mappedRel1, mappedRel2]).toTargetEntities([
+    entity1,
+    entity2,
+    entity3,
+  ]);
+  ```
+
+### Changed
+
+- Expanded the interface of `findEntity` to accept `string | undefined`.
+
 ## 6.6.0 - 2021-06-010
 
 ### Changed
