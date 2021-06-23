@@ -20,6 +20,8 @@ and this project adheres to
     entity3,
   ]);
   ```
+- Added `j1-integration diff` command to ouptut colorized diffs of old/new
+  integrations.
 
 ### Changed
 
