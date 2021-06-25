@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.7.0 - 2021-06-010
+
+### Changed
+
+- Upgrade `@jupiterone/data-model@^0.30.0`
+
 ### Added
 
 - Added `toTargetEntities()` jest matcher for mapped relationship validation.
