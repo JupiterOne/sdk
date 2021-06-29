@@ -9,7 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
-## 6.7.0 - 2021-06-010
+## 6.7.1 - 2021-06-29
+
+### Fixed
+
+- [#494](https://github.com/JupiterOne/sdk/issues/494) - Expose 401 Unauthorized
+  errors from synchronization API
+
+## 6.7.0 - 2021-06-10
 
 ### Changed
 
