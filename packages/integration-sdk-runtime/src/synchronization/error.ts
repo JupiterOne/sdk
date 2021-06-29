@@ -10,7 +10,9 @@ export function synchronizationApiError(
   if (err.response?.data?.error) {
     // Looks like Axios error response with data
     const responseData: SynchronizationApiErrorResponse = err.response.data;
-    const { code, message } = responseData!.error!;
+    const code = responseData!.error!.code || err.response.status;
+    const message = responseData!.error!.message || err.response.statusText;
+
     return new IntegrationError({
       code: 'SYNCHRONIZATION_API_RESPONSE_ERROR',
       message: `${errorMessage} (API response: code=${
