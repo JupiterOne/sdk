@@ -9,6 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.8.0 - 2021-06-29
+
+### Added
+
+- Added `j1-integration diff` command to ouptut colorized diffs of old/new
+  integrations.
+- Allow overriding integration instance properties when running integrations
+  locally.
+
 ## 6.7.1 - 2021-06-29
 
 ### Fixed
@@ -33,8 +42,6 @@ and this project adheres to
     entity3,
   ]);
   ```
-- Added `j1-integration diff` command to ouptut colorized diffs of old/new
-  integrations.
 
 ### Changed
 
