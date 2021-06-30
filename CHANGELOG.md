@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Removed
+
+- Removed `j1-integration compare` command. Developers should use
+  `j1-integration diff` in its place.
+
 ## 6.8.0 - 2021-06-29
 
 ### Added
