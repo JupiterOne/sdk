@@ -302,7 +302,7 @@ describe('upload callbacks', () => {
   });
 });
 
-describe('#getData/#setData', () => {
+describe('#getData/#setData/#deleteData', () => {
   afterEach(() => {
     vol.reset();
   });
@@ -317,5 +317,13 @@ describe('#getData/#setData', () => {
   test('should return "undefined" when a key is not found', async () => {
     const jobState = createTestStepJobState();
     expect(await jobState.getData(uuid())).toEqual(undefined);
+  });
+
+  test('should return "undefined" when a key is deleted', async () => {
+    const jobState = createTestStepJobState();
+    const key = uuid();
+    await jobState.setData(key, 'test');
+    await jobState.deleteData(key);
+    expect(await jobState.getData(key)).toEqual(undefined);
   });
 });

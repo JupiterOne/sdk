@@ -9,6 +9,16 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `deleteData()` for jobState Usage:
+  ```typescript
+  await jobState.setData('abc', true);
+  await jobState.getData('abc'); // true
+  await jobState.deleteData('abc'); // void
+  await jobState.getData('abc'); // undefined
+  ```
+
 ## 6.8.0 - 2021-06-29
 
 ### Added
