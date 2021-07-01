@@ -84,7 +84,7 @@ export class MemoryDataStore {
   }
 
   delete(key: string): void {
-    this.data[key] = undefined;
+    delete this.data[key];
   }
 }
 
