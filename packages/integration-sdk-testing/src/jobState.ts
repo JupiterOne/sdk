@@ -123,6 +123,11 @@ export function createMockJobState({
       return Promise.resolve(dataStore.get(key) as T);
     },
 
+    deleteData: async <T>(key: string): Promise<void> => {
+      dataStore.delete(key);
+      return Promise.resolve();
+    },
+
     addEntity: async (entity: Entity): Promise<Entity> => {
       await addEntities([entity]);
       return entity;

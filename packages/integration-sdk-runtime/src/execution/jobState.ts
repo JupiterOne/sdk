@@ -82,6 +82,10 @@ export class MemoryDataStore {
   get(key: string): unknown {
     return this.data[key];
   }
+
+  delete(key: string): void {
+    delete this.data[key];
+  }
 }
 
 export interface CreateStepJobStateParams {
@@ -155,6 +159,11 @@ export function createStepJobState({
 
     getData: async <T>(key: string): Promise<T | undefined> => {
       return Promise.resolve(dataStore.get(key) as T);
+    },
+
+    deleteData: async <T>(key: string): Promise<void> => {
+      dataStore.delete(key);
+      return Promise.resolve();
     },
 
     addEntity: async (entity: Entity): Promise<Entity> => {

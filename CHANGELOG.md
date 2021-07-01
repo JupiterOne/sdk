@@ -9,6 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `deleteData()` for jobState Usage:
+  ```typescript
+  await jobState.setData('abc', true);
+  await jobState.getData('abc'); // true
+  await jobState.deleteData('abc'); // void
+  await jobState.getData('abc'); // undefined
+  ```
 ### Removed
 
 - Removed `j1-integration compare` command. Developers should use
