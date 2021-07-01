@@ -2,7 +2,6 @@ import { createCommand } from 'commander';
 
 import {
   collect,
-  compare,
   diff,
   visualize,
   sync,
@@ -14,7 +13,6 @@ import {
 export function createCli() {
   return createCommand()
     .addCommand(collect())
-    .addCommand(compare())
     .addCommand(diff())
     .addCommand(visualize())
     .addCommand(sync())

@@ -25,12 +25,11 @@ export function diff() {
     .arguments('<oldExportPath> <newExportPath>')
     .description(
       'Compare two datasets downloaded from JupiterOne using: \n\n' +
-        '\t find * with _integrationInstanceId="abc-123" that RELATES TO * return tree\n\n',
+        '\t find * with _integrationInstanceId="abc-123" (that RELATES TO *)? return tree\n\n',
     )
     .option('-k, --keys-only', 'Only diff _key properties.')
     .action((oldExportPath, newExportPath, options) => {
       findDifferences(oldExportPath, newExportPath, options.keysOnly);
-      console.log(options.keysOnly);
     });
 }
 
@@ -100,8 +99,8 @@ export function findDifferences(
     fs.readFileSync(newJsonDataPath, 'utf8'),
   );
 
-  diffVertices(oldExport.data.vertices, newExport.data.vertices, keysOnly);
-  diffEdges(oldExport.data.edges, newExport.data.edges, keysOnly);
+  diffEntities(oldExport.data.vertices, newExport.data.vertices, keysOnly);
+  diffRelationships(oldExport.data.edges, newExport.data.edges, keysOnly);
 }
 
 interface DiffableEntity {
@@ -116,7 +115,7 @@ interface DiffableEntities {
   [_key: string]: DiffableEntity;
 }
 
-function diffVertices(
+function diffEntities(
   oldVertices: VertexExport[],
   newVertices: VertexExport[],
   keysOnly?: boolean,
@@ -143,6 +142,7 @@ function diffVertices(
     };
   }
 
+  console.log('--- ENTITY DIFF ---');
   console.log(diffString(oldEntities, newEntities, undefined, { keysOnly }));
 }
 
@@ -160,7 +160,7 @@ interface DiffableRelationships {
   [_key: string]: DiffableRelationship;
 }
 
-function diffEdges(
+function diffRelationships(
   oldEdges: EdgeExport[],
   newEdges: EdgeExport[],
   keysOnly?: boolean,
@@ -191,6 +191,7 @@ function diffEdges(
     };
   }
 
+  console.log('--- RELATIONSHIP DIFF ---');
   console.log(
     diffString(oldRelationships, newRelationships, undefined, { keysOnly }),
   );
