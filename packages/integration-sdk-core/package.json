@@ -23,7 +23,7 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/data-model": "^0.30.0",
+    "@jupiterone/data-model": "^0.31.0",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2"
   },

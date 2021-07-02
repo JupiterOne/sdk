@@ -18,6 +18,11 @@ and this project adheres to
   await jobState.deleteData('abc'); // void
   await jobState.getData('abc'); // undefined
   ```
+
+### Changed
+
+- Upgrade `@jupiterone/data-model@^0.31.0`
+
 ### Removed
 
 - Removed `j1-integration compare` command. Developers should use
