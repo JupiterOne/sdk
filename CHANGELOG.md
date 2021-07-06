@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.9.0 - 2021-07-06
+
 ### Added
 
 - Added `deleteData()` for jobState Usage:
@@ -18,6 +20,8 @@ and this project adheres to
   await jobState.deleteData('abc'); // void
   await jobState.getData('abc'); // undefined
   ```
+- Added `development` option to `j1-integration sync` command.
+
 ### Removed
 
 - Removed `j1-integration compare` command. Developers should use
