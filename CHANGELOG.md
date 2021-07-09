@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.10.0 - 2021-07-09
+
 ### Changed
 
 - Bump `@jupiterone/data-model` to incorporate `RelationshipClass.PUBLISHED`
