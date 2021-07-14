@@ -20,7 +20,10 @@ import {
 } from './dependencyGraph';
 import { DuplicateKeyTracker } from './jobState';
 import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
-import { DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER, seperateStepsByDependencyGraph } from './utils/seperateStepsByDependencyGraph';
+import {
+  DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
+  seperateStepsByDependencyGraph,
+} from './utils/seperateStepsByDependencyGraph';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
@@ -44,7 +47,6 @@ export async function executeSteps<
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
 }): Promise<IntegrationStepResult[]> {
-
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
   let allStepResults: IntegrationStepResult[] = [];
 
@@ -52,18 +54,28 @@ export async function executeSteps<
     DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
     ...(dependencyGraphOrder ?? []),
   ]) {
-    const steps = stepsByGraphId[graphId] ?? [];
-    const stepIds = steps.map((s) => s.id);
-    allStepResults = allStepResults.concat(await executeStepDependencyGraph({
-      executionContext,
-      inputGraph: buildStepDependencyGraph(steps),
-      stepStartStates: pick(stepStartStates, stepIds),
-      duplicateKeyTracker,
-      graphObjectStore,
-      createStepGraphObjectDataUploader,
-      beforeAddEntity,
-    }))
+    const steps = stepsByGraphId[graphId];
 
+    if (!steps) {
+      executionContext.logger.warn(
+        { graphId },
+        'A graphId in the dependencyGraphOrder was not refrenced by any steps.',
+      );
+      continue;
+    }
+
+    const stepIds = steps.map((s) => s.id);
+    allStepResults = allStepResults.concat(
+      await executeStepDependencyGraph({
+        executionContext,
+        inputGraph: buildStepDependencyGraph(steps),
+        stepStartStates: pick(stepStartStates, stepIds),
+        duplicateKeyTracker,
+        graphObjectStore,
+        createStepGraphObjectDataUploader,
+        beforeAddEntity,
+      }),
+    );
   }
 
   return allStepResults;
