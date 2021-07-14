@@ -1,4 +1,5 @@
 import uniq from 'lodash/uniq';
+import { pick } from 'lodash';
 
 import {
   BeforeAddEntityHookFunction,
@@ -19,6 +20,7 @@ import {
 } from './dependencyGraph';
 import { DuplicateKeyTracker } from './jobState';
 import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
+import { DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER, seperateStepsByDependencyGraph } from './utils/seperateStepsByDependencyGraph';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
@@ -31,6 +33,7 @@ export async function executeSteps<
   graphObjectStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
+  dependencyGraphOrder,
 }: {
   executionContext: TExecutionContext;
   integrationSteps: Step<TStepExecutionContext>[];
@@ -39,16 +42,31 @@ export async function executeSteps<
   graphObjectStore: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  dependencyGraphOrder?: string[];
 }): Promise<IntegrationStepResult[]> {
-  return executeStepDependencyGraph({
-    executionContext,
-    inputGraph: buildStepDependencyGraph(integrationSteps),
-    stepStartStates,
-    duplicateKeyTracker,
-    graphObjectStore,
-    createStepGraphObjectDataUploader,
-    beforeAddEntity,
-  });
+
+  const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
+  let allStepResults: IntegrationStepResult[] = [];
+
+  for (const graphId of [
+    DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
+    ...(dependencyGraphOrder ?? []),
+  ]) {
+    const steps = stepsByGraphId[graphId] ?? [];
+    const stepIds = steps.map((s) => s.id);
+    allStepResults = allStepResults.concat(await executeStepDependencyGraph({
+      executionContext,
+      inputGraph: buildStepDependencyGraph(steps),
+      stepStartStates: pick(stepStartStates, stepIds),
+      duplicateKeyTracker,
+      graphObjectStore,
+      createStepGraphObjectDataUploader,
+      beforeAddEntity,
+    }))
+
+  }
+
+  return allStepResults;
 }
 
 export function getDefaultStepStartStates<

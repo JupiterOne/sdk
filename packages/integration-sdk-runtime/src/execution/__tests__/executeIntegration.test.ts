@@ -194,6 +194,128 @@ describe('executeIntegrationInstance', () => {
     );
   });
 
+  test('runs multiple dependency graphs in order and returns integration step results and metadata about partial datasets', async () => {
+
+    const firstStepExecutionHandler = jest.fn()
+    const secondStepExecutionHandler = jest.fn()
+    const thirdStepExecutionHandler = jest.fn()
+    const fourthStepExecutionHandler = jest.fn()
+
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-fourth-step',
+            name: 'My fourth step',
+            entities: [
+              {
+                resourceName: 'The Fourth Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: fourthStepExecutionHandler,
+            dependencyGraphId: '2',
+          },
+          {
+            id: 'my-first-step',
+            name: 'My first step',
+            entities: [
+              {
+                resourceName: 'The First Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: firstStepExecutionHandler,
+            dependencyGraphId: undefined // defaults to going first
+          },
+          {
+            id: 'my-second-step',
+            name: 'My second step',
+            entities: [
+              {
+                resourceName: 'The Second Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: secondStepExecutionHandler,
+            dependencyGraphId: '1'
+          },
+          {
+            id: 'depends-on-second-step',
+            name: 'Depends on second step',
+            entities: [
+              {
+                resourceName: 'The Third Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: thirdStepExecutionHandler,
+            dependsOn: ['my-second-step'], 
+            dependencyGraphId: '1'
+          },
+        ],
+        dependencyGraphOrder: ['1', '2']
+      },
+    });
+
+    await expect(executeIntegrationInstanceWithConfig(config)).resolves.toEqual(
+      {
+        integrationStepResults: [
+          {
+            id: 'my-first-step',
+            name: 'My first step',
+            declaredTypes: ['test'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.SUCCESS,
+          },
+          {
+            id: 'my-second-step',
+            name: 'My second step',
+            declaredTypes: ['test'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.SUCCESS,
+          },
+          {
+            id: 'depends-on-second-step',
+            name: 'Depends on second step',
+            declaredTypes: ['test'],
+            dependsOn: ['my-second-step'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.SUCCESS,
+          },
+          {
+            id: 'my-fourth-step',
+            name: 'My fourth step',
+            declaredTypes: ['test'],
+            partialTypes: [],
+            encounteredTypes: [],
+            status: StepResultStatus.SUCCESS,
+          },
+        ],
+        metadata: {
+          partialDatasets: {
+            types: [],
+          },
+        },
+      },
+    );
+
+    expect(firstStepExecutionHandler).toHaveBeenCalledBefore(secondStepExecutionHandler)
+    expect(secondStepExecutionHandler).toHaveBeenCalledBefore(thirdStepExecutionHandler)
+    expect(thirdStepExecutionHandler).toHaveBeenCalledBefore(fourthStepExecutionHandler)
+  });
+
   test('compresses files when INTEGRATION_FILE_COMPRESSION_ENABLED is set', async () => {
     process.env.INTEGRATION_FILE_COMPRESSION_ENABLED = '1';
 

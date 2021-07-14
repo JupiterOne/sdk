@@ -33,6 +33,15 @@ export interface InvocationConfig<
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  /**
+   * An optional array of identifiers used to execute dependency
+   * graphs in a specific order. These values should match the
+   * StepMetadata `dependencyGraphId` prpoperties.
+   * 
+   * If this is not provided, all steps will be evalueted in
+   * the same dependency graph.
+   */
+  dependencyGraphOrder?: string[];
 }
 
 export interface IntegrationInvocationConfig<
