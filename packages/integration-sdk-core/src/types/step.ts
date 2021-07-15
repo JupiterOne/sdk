@@ -151,4 +151,20 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    * before the current step can.
    */
   dependsOn?: string[];
+
+  /**
+   * An optional array of identifiers used to execute dependency
+   * graphs in a specific order. These values should match the
+   * IntegrationInvocationConfig `dependencyGraphOrder`
+   * prpoperty.
+   * 
+   * Steps that do not have a `dependencyGraphId` will be added to
+   * the default dependency graph which is executed first.
+   * 
+   * NOTE: If your step `dependsOn` a step that is not in the same
+   * dependencyGraphId, you will get a `Node does not exist` error.
+   * These dependencies will need to be accounted for by the
+   * the `dependencyGraphOrder` in the IntegrationInvocationConfig
+   */
+  dependencyGraphId?: string;
 };

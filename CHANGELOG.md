@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.11.0 - 20201-07-14
+
+### Added
+
+- a `dependencyGraphOrder` property to the InvocationConfig and a
+  `dependencyGraphId` property to the StepMetadata which togeather can be used
+  to create multiple ordered dependency graphs per execution.
+
 ## 6.10.0 - 2021-07-09
 
 ### Changed

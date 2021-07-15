@@ -224,6 +224,7 @@ export async function executeWithContext<
       graphObjectStore,
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
+      dependencyGraphOrder: config.dependencyGraphOrder
     });
 
     const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
