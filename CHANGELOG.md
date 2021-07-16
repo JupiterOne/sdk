@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Used default J1 colors for `yarn j1-integration visualize-types` command
+
 ## 6.11.0 - 20201-07-14
 
 ### Added

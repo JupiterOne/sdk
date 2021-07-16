@@ -1,4 +1,7 @@
-import { generateVisHTML, nothingToDisplayMessage } from '../../utils/generateVisHTML';
+import {
+  generateVisHTML,
+  nothingToDisplayMessage,
+} from '../../utils/generateVisHTML';
 import { Node, Edge } from 'vis';
 
 const nodeDataSets: Node[] = [
@@ -23,9 +26,11 @@ test('renders html with default config', () => {
 });
 
 test('renders custom config when passed in', () => {
-  const html = generateVisHTML(nodeDataSets, edgeDataSet, {});
+  const html = generateVisHTML(nodeDataSets, edgeDataSet, {
+    edges: { color: '#ffffff' },
+  });
 
-  expect(html).toContain('var options = {}');
+  expect(html).toContain('"color":"#ffffff"');
   expect(html).toMatchSnapshot();
 });
 

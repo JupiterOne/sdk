@@ -1,6 +1,12 @@
+import { defaultsDeep } from 'lodash';
 import { Node, Edge, Options } from 'vis';
 
 export const nothingToDisplayMessage = 'There was no data found to visualize.';
+
+const defaultOptions: Options = {
+  edges: { arrows: { to: { enabled: true } } },
+  physics: { barnesHut: { springLength: 300, centralGravity: 0.03 } },
+};
 
 /**
  * Creates the html to display the vis graph
@@ -8,8 +14,9 @@ export const nothingToDisplayMessage = 'There was no data found to visualize.';
 export function generateVisHTML(
   nodeDataSets: Node[],
   edgeDataSets: Edge[],
-  options: Options = { edges: { arrows: { to: { enabled: true } } }, physics: { barnesHut: { springLength: 300, centralGravity: 0.03 } } },
+  options?: Options,
 ) {
+  options = defaultsDeep(options, defaultOptions);
   const displayVisualization =
     nodeDataSets.length > 0 || edgeDataSets.length > 0;
 

@@ -11,7 +11,12 @@ import {
   TypesCommandArgs,
 } from '../utils/getSortedJupiterOneTypes';
 import { generateVisHTML } from '../utils/generateVisHTML';
-import { Node, Edge } from 'vis';
+import { Node, Edge, Options } from 'vis';
+
+const COLORS = {
+  J1_PRIMARY_GREEN: '#3ce3b5',
+  J1_PRIMARY_PURPLE: '#6647ff',
+};
 
 interface VisualizeTypesCommandArgs extends TypesCommandArgs {
   outputFile: string;
@@ -74,8 +79,19 @@ async function executeVisualizeTypesAction(
     types,
     edges,
   });
+  const networkVisualizationOptions: Options = {
+    edges: {
+      color: COLORS.J1_PRIMARY_PURPLE,
+    },
+    nodes: {
+      color: {
+        border: COLORS.J1_PRIMARY_PURPLE,
+        background: COLORS.J1_PRIMARY_GREEN,
+      },
+    },
+  };
 
-  const visHtml = generateVisHTML(nodes, edges);
+  const visHtml = generateVisHTML(nodes, edges, networkVisualizationOptions);
 
   await fs.mkdir(path.dirname(graphFilePath), { recursive: true });
   await fs.writeFile(graphFilePath, visHtml, 'utf-8');
