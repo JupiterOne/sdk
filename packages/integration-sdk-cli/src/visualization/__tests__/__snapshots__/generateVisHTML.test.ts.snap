@@ -20,7 +20,7 @@ exports[`renders custom config when passed in 1`] = `
           nodes: nodes,
           edges: edges
         };
-        var options = {};
+        var options = {\\"edges\\":{\\"color\\":\\"#ffffff\\",\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>
