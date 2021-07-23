@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.11.1 - 20201-07-23
+
 ### Changed
 
 - A single DataStore is now used for all dependency graphs executed in an
