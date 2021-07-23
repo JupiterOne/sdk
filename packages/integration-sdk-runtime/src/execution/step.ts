@@ -18,7 +18,7 @@ import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from './dependencyGraph';
-import { DuplicateKeyTracker } from './jobState';
+import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
 import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
 import {
   DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
@@ -34,6 +34,7 @@ export async function executeSteps<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
   dependencyGraphOrder,
@@ -43,6 +44,7 @@ export async function executeSteps<
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
@@ -72,6 +74,7 @@ export async function executeSteps<
         stepStartStates: pick(stepStartStates, stepIds),
         duplicateKeyTracker,
         graphObjectStore,
+        dataStore,
         createStepGraphObjectDataUploader,
         beforeAddEntity,
       }),
