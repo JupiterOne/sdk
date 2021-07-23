@@ -76,6 +76,7 @@ export function executeStepDependencyGraph<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
 }: {
@@ -84,6 +85,7 @@ export function executeStepDependencyGraph<
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
@@ -99,7 +101,6 @@ export function executeStepDependencyGraph<
   const promiseQueue = new PromiseQueue();
 
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
-  const dataStore = new MemoryDataStore();
 
   function isStepEnabled(stepId: string) {
     return stepStartStates[stepId].disabled === false;
