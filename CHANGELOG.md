@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.12.0 - 20201-07-27
+
+- Bump `@jupiterone/data-model` to expose `Problem` entity schema.
+
 ## 6.11.1 - 20201-07-23
 
 ### Changed
