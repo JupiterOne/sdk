@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 6.13.0 - 2021-07-28
+
 ### Added
 
 - Track summary of collected graph object `_type`'s and the number of times that
