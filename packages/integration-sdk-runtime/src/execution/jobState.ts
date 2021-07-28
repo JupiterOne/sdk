@@ -60,15 +60,82 @@ export class DuplicateKeyTracker {
   }
 }
 
-export class TypeTracker {
-  private readonly registeredTypeSet = new Set<string>();
+export type TypeTrackerStepSummary = {
+  graphObjectTypeSummary: {
+    _type: string;
+    total: number;
+  }[];
+};
 
-  registerType(type: string) {
-    this.registeredTypeSet.add(type);
+type InternalTypeTrackerSummary = {
+  total: number;
+};
+
+export class TypeTracker {
+  private readonly graphObjectTypeSummaryByStep = new Map<
+    string,
+    Map<string, InternalTypeTrackerSummary>
+  >();
+
+  addStepGraphObjectType(input: {
+    stepId: string;
+    _type: string;
+    count: number;
+  }) {
+    const existingStepSummary = this.graphObjectTypeSummaryByStep.get(
+      input.stepId,
+    );
+
+    if (existingStepSummary) {
+      const existingTypeMap = existingStepSummary.get(input._type);
+
+      if (existingTypeMap) {
+        existingTypeMap.total += input.count;
+      } else {
+        existingStepSummary.set(input._type, { total: input.count });
+      }
+    } else {
+      this.graphObjectTypeSummaryByStep.set(
+        input.stepId,
+        new Map<string, InternalTypeTrackerSummary>([
+          [input._type, { total: input.count }],
+        ]),
+      );
+    }
   }
 
-  getEncounteredTypes() {
-    return [...this.registeredTypeSet.values()];
+  getEncounteredTypesForStep(stepId: string): string[] {
+    const existingStepSummary = this.graphObjectTypeSummaryByStep.get(stepId);
+    return existingStepSummary ? [...existingStepSummary.keys()] : [];
+  }
+
+  getAllEncounteredTypes(): string[] {
+    const encounteredTypes = new Set<string>();
+
+    for (const stepSummary of this.graphObjectTypeSummaryByStep.values()) {
+      for (const _type of stepSummary.keys()) {
+        encounteredTypes.add(_type);
+      }
+    }
+
+    return [...encounteredTypes];
+  }
+
+  summarizeStep(stepId: string): TypeTrackerStepSummary {
+    const stepSummary: TypeTrackerStepSummary = {
+      graphObjectTypeSummary: [],
+    };
+
+    const existingStepSummary = this.graphObjectTypeSummaryByStep.get(stepId);
+
+    for (const [_type, summary] of existingStepSummary?.entries() || []) {
+      stepSummary.graphObjectTypeSummary.push({
+        _type,
+        ...summary,
+      });
+    }
+
+    return stepSummary;
   }
 }
 
@@ -118,7 +185,11 @@ export function createStepJobState({
         _key: e._key,
       });
 
-      typeTracker.registerType(e._type);
+      typeTracker.addStepGraphObjectType({
+        stepId,
+        _type: e._type,
+        count: 1,
+      });
     });
 
     await graphObjectStore.addEntities(stepId, entities, async (entities) =>
@@ -132,12 +203,16 @@ export function createStepJobState({
 
   const addRelationships = (relationships: Relationship[]) => {
     relationships.forEach((r) => {
-      // relationship types are not playing nicely
-      duplicateKeyTracker.registerKey(r._key as string, {
+      duplicateKeyTracker.registerKey(r._key, {
         _type: r._type,
         _key: r._key,
       });
-      typeTracker.registerType(r._type as string);
+
+      typeTracker.addStepGraphObjectType({
+        stepId,
+        _type: r._type,
+        count: 1,
+      });
     });
 
     return graphObjectStore.addRelationships(
