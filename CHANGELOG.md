@@ -9,11 +9,18 @@ and this project adheres to
 
 ## Unreleased
 
-## 6.12.0 - 20201-07-27
+### Added
+
+- Track summary of collected graph object `_type`'s and the number of times that
+  each `_type` has been encountered
+
+## 6.12.0 - 2021-07-27
+
+### Changed
 
 - Bump `@jupiterone/data-model` to expose `Problem` entity schema.
 
-## 6.11.1 - 20201-07-23
+## 6.11.1 - 2021-07-23
 
 ### Changed
 
@@ -21,7 +28,7 @@ and this project adheres to
   integration run.
 - Used default J1 colors for `yarn j1-integration visualize-types` command.
 
-## 6.11.0 - 20201-07-14
+## 6.11.0 - 2021-07-14
 
 ### Added
 
