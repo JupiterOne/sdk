@@ -13,7 +13,7 @@ and this project adheres to
 
 - Changed how `j1-integration visualize` displays placeholder entities. Now only
   properties present in `targetFilterKeys` are displayed in the graph, making
-  target entities smaller.
+  target entities smaller. Also, set borders of placeholder entities to dashed.
 
 ## 6.13.0 - 2021-07-28
 
