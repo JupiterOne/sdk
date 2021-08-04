@@ -317,7 +317,7 @@ describe('#toMatchGraphObjectSchema', () => {
         2,
       )}, errors=${expectedSerialzedErrors}, index=0)
 
-Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas
 `,
     );
   });
@@ -337,7 +337,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
     expect(result.message()).toEqual(
       `Error loading schemas for class (err=Invalid _class passed in schema for "toMatchGraphObjectSchema" (_class=#INVALID_DATA_MODEL_CLASS)
 
-Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas
 )`,
     );
   });
@@ -504,7 +504,7 @@ describe('#toMatchDirectRelationshipSchema', () => {
   }
 ], index=0)
 
-Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas
 `);
   });
 
@@ -585,7 +585,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
   }
 ], index=0)
 
-Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas
 `);
   });
 });
