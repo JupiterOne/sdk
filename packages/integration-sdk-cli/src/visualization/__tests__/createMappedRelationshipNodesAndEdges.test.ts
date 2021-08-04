@@ -2,8 +2,13 @@ import {
   createMappedRelationshipNodesAndEdges,
   isClassMatch,
   findTargetEntity,
+  createPlaceholderEntity,
 } from '../createMappedRelationshipNodesAndEdges';
-import { RelationshipDirection } from '@jupiterone/integration-sdk-core/src';
+import {
+  MappedRelationship,
+  RelationshipClass,
+  RelationshipDirection,
+} from '@jupiterone/integration-sdk-core/src';
 
 describe('#createMappedRelationshipNodesAndEdges', () => {
   const mappedRelationships = [
@@ -468,5 +473,32 @@ describe('#isClassMatch', () => {
 
   test('should not match when classes differ', () => {
     expect(isClassMatch('User', 'Group')).toEqual(false);
+  });
+});
+
+describe('#CreatePlaceholderEntity', () => {
+  test('should return object with only targetFilterKey properties', () => {
+    const mappedRelationship: MappedRelationship = {
+      _class: RelationshipClass.HAS,
+      _key: 'key',
+      _type: 'type',
+      _mapping: {
+        relationshipDirection: RelationshipDirection.FORWARD,
+        sourceEntityKey: 'source-entity-key',
+        targetEntity: {
+          _type: 'target-type',
+          _key: 'target-key',
+          id: 'target-id',
+          otherKey: 'otherValue',
+        },
+        targetFilterKeys: ['_key', 'id', ['_key', '_type']],
+      },
+    };
+
+    expect(createPlaceholderEntity(mappedRelationship._mapping)).toEqual({
+      _key: 'target-key',
+      id: 'target-id',
+      _type: 'target-type',
+    });
   });
 });
