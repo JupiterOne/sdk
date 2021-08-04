@@ -24,7 +24,7 @@ declare global {
 }
 
 const FIND_OUT_MORE =
-  '\n\nFind out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas\n';
+  '\n\nFind out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas\n';
 
 function createGraphObjectSchemaValidationError<T>(
   ajv: typeof dataModel.IntegrationSchema,
@@ -128,8 +128,8 @@ function dedupSchemaPropertyTypes(
  *
  * See here:
  *
- * - https://github.com/JupiterOne/data-model/blob/master/src/schemas/Host.json#L75
- * - https://github.com/JupiterOne/data-model/blob/master/src/schemas/Device.json#L58
+ * - https://github.com/JupiterOne/data-model/blob/main/src/schemas/Host.json#L75
+ * - https://github.com/JupiterOne/data-model/blob/main/src/schemas/Device.json#L58
  *
  * @param schema
  */
@@ -221,7 +221,7 @@ export interface GraphObjectSchema extends dataModel.IntegrationEntitySchema {
 
 export interface ToMatchGraphObjectSchemaParams {
   /**
-   * The JupiterOne hierarchy class or classes from the data model that will be used to generate a new schema to be validated against. See: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+   * The JupiterOne hierarchy class or classes from the data model that will be used to generate a new schema to be validated against. See: https://github.com/JupiterOne/data-model/tree/main/src/schemas
    */
   _class: string | string[];
   /**

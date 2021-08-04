@@ -137,7 +137,7 @@ type AdditionalRelationshipProperties = {
 function createInvalidateRelationshipClassError(_class: string) {
   return new IntegrationError({
     code: 'INVALID_RELATIONSHIP_CLASS',
-    message: `Invalid relationship class "${_class}" specified. The relationship class must be listed in "@jupiterone/data-model". See here for a list of valid relationship classes: https://github.com/JupiterOne/data-model/blob/master/src/RelationshipClass.ts`,
+    message: `Invalid relationship class "${_class}" specified. The relationship class must be listed in "@jupiterone/data-model". See here for a list of valid relationship classes: https://github.com/JupiterOne/data-model/blob/main/src/RelationshipClass.ts`,
   });
 }
 

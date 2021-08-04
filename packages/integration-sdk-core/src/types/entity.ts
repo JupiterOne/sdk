@@ -45,7 +45,10 @@ export type Entity = EntityCoreProperties &
   EntityAdditionalProperties;
 
 interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
-  // entity can have multiple classes
+  /**
+   * Relationships are allowed a single `_class` value; entities are
+   * allowed multiple values.
+   */
   _class: string | string[];
 }
 
@@ -56,19 +59,16 @@ type EntityPropertyValue = PrimitiveEntityPropertyValue | EntityRawData[];
 
 export interface RawDataTracking {
   /**
-   * Maintains references to a collection of raw data uploads accumulated during
+   * Maintains references to a collection of raw data accumulated during
    * the construction of an entity.
-   *
-   * This data will not be included in any operations delivered to the persister.
-   * Each input is placed in a queue by the `RawDataUploader` for upload to
-   * temporary storage and the associated storage URI is added to
-   * `_rawDataTempUris`.
    */
   _rawData?: EntityRawData[];
 }
 
 /**
- * Raw data to store
+ * Entities are typically produced by collecting resources from another system and
+ * transforming the data to meet the goals of the JupiterOne data model. The source
+ * "raw" data can be tracked alongside the entity.
  */
 export type EntityRawData = {
   /**
@@ -76,9 +76,10 @@ export type EntityRawData = {
    * used to build an entity.
    *
    * This name is part of a permanent key associated with the data. It must be
-   * unique within the context of the entity. `'default'` is an acceptable value
-   * when there is only one data payload, though it is recommended to use names
-   * that are more meaningful when there is more than one.
+   * unique within the context of the entity. `'default'` is typically used
+   * when there is only one data payload. It is recommended to use names
+   * that are more meaningful when there is more than one resource used to build
+   * the entity.
    *
    * For example, consider an AWS IAM Role entity, where the role has an
    * embedded policy obtained through a separate API call:
@@ -93,7 +94,8 @@ export type EntityRawData = {
   name: string;
 
   /**
-   * A string or an object of any type representing the source content used to build an entity.
+   * A string or an object of any type representing the source content used
+   * to build an entity.
    */
   rawData: NonArrayObject | string;
 };
