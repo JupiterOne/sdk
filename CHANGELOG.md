@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Alert` entity schema.
+
 ## 6.13.0 - 2021-07-28
 
 ### Added
