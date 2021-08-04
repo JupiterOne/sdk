@@ -275,6 +275,7 @@ function createPlaceholderEntityNode(targetEntity: NodeEntity) {
     {
       id: targetEntity.nodeId,
       group: targetEntity._type || UNKNOWN_GROUP,
+      shapeProperties: { borderDashes: true },
     },
     {
       isDuplicateId: isNodeIdDuplicate(targetEntity),
