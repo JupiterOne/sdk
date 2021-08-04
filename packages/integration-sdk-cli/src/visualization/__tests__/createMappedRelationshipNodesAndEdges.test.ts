@@ -16,10 +16,10 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       displayName: 'HAS',
       _mapping: {
         relationshipDirection: RelationshipDirection.FORWARD,
-        sourceEntityKey: '123',
+        sourceEntityKey: 'key-1',
         targetFilterKeys: ['_key'],
         targetEntity: {
-          _key: '456',
+          _key: 'key-2',
         },
       },
       _key: 'abc',
@@ -31,12 +31,12 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
   test('should return relationship between two existing entities', () => {
     const explicitEntities = [
       {
-        _key: '123',
+        _key: 'key-1',
         _type: 'src',
         _class: ['Account'],
       },
       {
-        _key: '456',
+        _key: 'key-2',
         _type: 'target',
         _class: ['User'],
       },
@@ -52,8 +52,8 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
-        to: '456',
+        from: 'key-1',
+        to: 'key-2',
         label: 'HAS',
         dashes: true,
       },
@@ -65,7 +65,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
   test('should return MISSING entity when sourceEntityKey is not found in explicitEntities', () => {
     const explicitEntities = [
       {
-        _key: '456',
+        _key: 'key-2',
         _type: 'target',
         _class: ['User'],
       },
@@ -81,8 +81,8 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
-        to: '456',
+        from: 'key-1',
+        to: 'key-2',
         label: 'HAS',
         dashes: true,
       },
@@ -90,13 +90,13 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipNodes).toMatchObject([
       {
-        id: '123',
+        id: 'key-1',
         color: 'red',
         font: {
           multi: 'html',
         },
         group: 'missing',
-        label: '<b>[MISSING ENTITY]</b>\n123',
+        label: '<b>[MISSING ENTITY]</b>\nkey-1',
       },
     ]);
   });
@@ -104,7 +104,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
   test('should return PLACEHOLDER entity when targetEntity is not found in entities', () => {
     const explicitEntities = [
       {
-        _key: '123',
+        _key: 'key-1',
         _type: 'source',
         _class: ['Acccount'],
       },
@@ -120,8 +120,8 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
-        to: '456',
+        from: 'key-1',
+        to: 'key-2',
         label: 'HAS',
         dashes: true,
       },
@@ -129,12 +129,12 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipNodes).toMatchObject([
       {
-        id: '456',
+        id: 'key-2',
         font: {
           multi: 'html',
         },
         group: 'unknown',
-        label: '<b>[PLACEHOLDER ENTITY]</b>\n_key: "456"',
+        label: '<b>[PLACEHOLDER ENTITY]</b>\n_key: "key-2"',
       },
     ]);
   });
@@ -145,7 +145,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         displayName: 'HAS',
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
-          sourceEntityKey: '123',
+          sourceEntityKey: 'key-1',
           targetFilterKeys: ['_key'],
           targetEntity: {
             _key: '789',
@@ -159,7 +159,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         displayName: 'HAS',
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
-          sourceEntityKey: '456',
+          sourceEntityKey: 'key-2',
           targetFilterKeys: ['_key'],
           targetEntity: {
             _key: '789',
@@ -173,12 +173,12 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     const explicitEntities = [
       {
-        _key: '123',
+        _key: 'key-1',
         _type: 'source',
         _class: ['Acccount'],
       },
       {
-        _key: '456',
+        _key: 'key-2',
         _type: 'target',
         _class: ['User'],
       },
@@ -194,13 +194,13 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
+        from: 'key-1',
         to: '789',
         label: 'HAS',
         dashes: true,
       },
       {
-        from: '456',
+        from: 'key-2',
         to: '789',
         label: 'HAS',
         dashes: true,
@@ -225,7 +225,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         displayName: 'HAS',
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
-          sourceEntityKey: '123',
+          sourceEntityKey: 'key-1',
           targetFilterKeys: ['_class'],
           targetEntity: {
             _class: '789',
@@ -239,7 +239,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         displayName: 'HAS',
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
-          sourceEntityKey: '456',
+          sourceEntityKey: 'key-2',
           targetFilterKeys: ['_class'],
           targetEntity: {
             _class: '789',
@@ -253,12 +253,12 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     const explicitEntities = [
       {
-        _key: '123',
+        _key: 'key-1',
         _type: 'source',
         _class: ['Acccount'],
       },
       {
-        _key: '456',
+        _key: 'key-2',
         _type: 'target',
         _class: ['User'],
       },
@@ -274,13 +274,13 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
+        from: 'key-1',
         to: expect.any(String),
         label: 'HAS',
         dashes: true,
       },
       {
-        from: '456',
+        from: 'key-2',
         to: expect.any(String),
         label: 'HAS',
         dashes: true,
@@ -308,7 +308,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         displayName: 'HAS',
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
-          sourceEntityKey: '123',
+          sourceEntityKey: 'key-1',
           targetFilterKeys: ['_type'],
           targetEntity: {
             _type: '789',
@@ -322,7 +322,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     const explicitEntities = [
       {
-        _key: '123',
+        _key: 'key-1',
         _type: 'source',
         _class: ['Acccount'],
       },
@@ -338,7 +338,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
+        from: 'key-1',
         to: expect.any(String),
         label: 'HAS',
         dashes: true,
@@ -363,10 +363,10 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         displayName: 'HAS',
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
-          sourceEntityKey: '123',
+          sourceEntityKey: 'key-1',
           targetFilterKeys: [['_key', '_type']],
           targetEntity: {
-            _key: '456',
+            _key: 'key-2',
             _type: 'non-matching-target',
           },
         },
@@ -378,12 +378,12 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     const explicitEntities = [
       {
-        _key: '123',
+        _key: 'key-1',
         _type: 'source',
         _class: ['Acccount'],
       },
       {
-        _key: '456',
+        _key: 'key-2',
         _type: 'target',
         _class: ['User'],
       },
@@ -399,8 +399,8 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
 
     expect(mappedRelationshipEdges).toEqual([
       {
-        from: '123',
-        to: expect.not.stringMatching('456'),
+        from: 'key-1',
+        to: expect.not.stringContaining('key-2'),
         label: 'HAS',
         dashes: true,
       },
@@ -415,7 +415,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         },
         group: 'non-matching-target',
         label:
-          '<b>[DUPLICATE _KEY][PLACEHOLDER ENTITY]</b>\n_key: "456"\n_type: "non-matching-target"',
+          '<b>[DUPLICATE _KEY][PLACEHOLDER ENTITY]</b>\n_key: "key-2"\n_type: "non-matching-target"',
       },
     ]);
   });
@@ -425,20 +425,20 @@ describe('#findTargetEntity', () => {
   test('should not match entity with same key but different other props', () => {
     const _mapping = {
       relationshipDirection: RelationshipDirection.FORWARD,
-      sourceEntityKey: '123',
+      sourceEntityKey: 'key-1',
       targetFilterKeys: [['_key', '_type']],
       targetEntity: {
-        _key: '456',
+        _key: 'key-2',
         _type: 'non-matching-target',
       },
     };
 
     const nodeEntities = [
       {
-        _key: '456',
+        _key: 'key-2',
         _type: 'target',
         _class: ['User'],
-        nodeId: '456',
+        nodeId: 'key-2',
       },
     ];
 
