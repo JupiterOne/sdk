@@ -96,7 +96,14 @@ function findOrCreatePlaceholderEntity(
 ): NodeEntity | NewPlaceholderEntity {
   const targetEntity = findTargetEntity(nodeEntities, _mapping);
   if (targetEntity === undefined) {
-    return _mapping.targetEntity;
+    const newPlaceholderEntity = {};
+    for (const filterKey of _mapping.targetFilterKeys) {
+      const keys = Array.isArray(filterKey) ? filterKey : [filterKey];
+      for (const key of keys) {
+        newPlaceholderEntity[key] = _mapping.targetEntity[key];
+      }
+    }
+    return newPlaceholderEntity;
   } else {
     return targetEntity;
   }

@@ -11,6 +11,9 @@ and this project adheres to
 
 ### Changed
 
+- Changed how `j1-integration visualize` displays placeholder entities. Now only
+  properties present in `targetFilterKeys` are displayed in the graph, making
+  target entities smaller.
 - Bump `@jupiterone/data-model` to expose `Alert` entity schema.
 
 ## 6.13.0 - 2021-07-28
