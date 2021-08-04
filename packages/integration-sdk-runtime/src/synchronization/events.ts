@@ -1,13 +1,13 @@
 import { IntegrationEvent } from '@jupiterone/integration-sdk-core';
+import { AxiosRequestConfig } from 'axios';
 import PromiseQueue from 'p-queue';
 
 import { SynchronizationJobContext } from '../synchronization';
 
-export const createEventPublishingQueue = ({
-  apiClient,
-  logger,
-  job,
-}: SynchronizationJobContext) => {
+export const createEventPublishingQueue = (
+  { apiClient, logger, job }: SynchronizationJobContext,
+  config?: AxiosRequestConfig,
+) => {
   const queue = new PromiseQueue({ concurrency: 1 });
 
   return {
@@ -19,6 +19,7 @@ export const createEventPublishingQueue = ({
             {
               events: [event],
             },
+            config,
           );
         } catch (err) {
           logger.error({ err }, 'Failed to publish integration event');
