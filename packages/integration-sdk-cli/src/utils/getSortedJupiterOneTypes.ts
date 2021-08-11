@@ -7,6 +7,7 @@ import {
   StepGraphObjectMetadataProperties,
   StepEntityMetadata,
   StepRelationshipMetadata,
+  StepMappedRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 
 export interface TypesCommandArgs {
@@ -74,6 +75,9 @@ function alphabetizeMetadataProperties(
     relationships: metadata.relationships.sort(
       alphabetizeRelationshipMetadataPropertyByTypeCompareFn,
     ),
+    mappedRelationships: metadata.mappedRelationships?.sort(
+      alphabetizeRelationshipMetadataPropertyByTypeCompareFn,
+    ),
   };
 }
 
@@ -83,15 +87,15 @@ function collectGraphObjectMetadataFromSteps(
   const orderedStepNames = buildStepDependencyGraph(steps).overallOrder();
   const integrationStepMap = integrationStepsToMap(steps);
 
-  const metadata: StepGraphObjectMetadataProperties = {
-    entities: [],
-    relationships: [],
-  };
+  const entities: StepEntityMetadata[] = [];
+  const relationships: StepRelationshipMetadata[] = [];
+  const mappedRelationships: StepMappedRelationshipMetadata[] = [];
 
   // There could be multiple steps that ingest the same entity/relationship
   // `_type`, so we need to deduplicate the data.
   const entityTypeSet = new Set<string>();
   const relationshipTypeSet = new Set<string>();
+  const mappedRelationshipTypeSet = new Set<string>();
 
   for (const stepName of orderedStepNames) {
     const step = integrationStepMap.get(stepName) as Step<
@@ -104,7 +108,7 @@ function collectGraphObjectMetadataFromSteps(
       }
 
       entityTypeSet.add(e._type);
-      metadata.entities.push(e);
+      entities.push(e);
     }
 
     for (const r of step.relationships) {
@@ -113,9 +117,22 @@ function collectGraphObjectMetadataFromSteps(
       }
 
       relationshipTypeSet.add(r._type);
-      metadata.relationships.push(r);
+      relationships.push(r);
+    }
+
+    for (const r of step.mappedRelationships || []) {
+      if (mappedRelationshipTypeSet.has(r._type)) {
+        continue;
+      }
+
+      mappedRelationshipTypeSet.add(r._type);
+      mappedRelationships.push(r);
     }
   }
 
-  return metadata;
+  return {
+    entities,
+    relationships,
+    mappedRelationships,
+  };
 }
