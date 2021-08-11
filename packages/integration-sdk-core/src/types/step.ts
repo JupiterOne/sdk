@@ -6,6 +6,7 @@ import {
   StepExecutionContext,
 } from './context';
 import { IntegrationInstanceConfig } from './instance';
+import { RelationshipDirection } from './relationship';
 
 export interface StepStartState {
   /**
@@ -120,6 +121,14 @@ export interface StepRelationshipMetadata extends StepGraphObjectMetadata {
   targetType: string;
 }
 
+export interface StepMappedRelationshipMetadata
+  extends StepGraphObjectMetadata {
+  sourceType: string;
+  _class: RelationshipClass;
+  targetType: string;
+  direction: RelationshipDirection;
+}
+
 export interface StepGraphObjectMetadataProperties {
   /**
    * Metadata about the entities ingested in this integration step. This is
@@ -132,6 +141,12 @@ export interface StepGraphObjectMetadataProperties {
    * used to generate documentation.
    */
   relationships: StepRelationshipMetadata[];
+
+  /**
+   * Metadata about any mapped relationships ingested in this integration step. This is
+   * used to generate documentation.
+   */
+  mappedRelationships?: StepMappedRelationshipMetadata[];
 }
 
 export type StepMetadata = StepGraphObjectMetadataProperties & {
@@ -157,10 +172,10 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    * graphs in a specific order. These values should match the
    * IntegrationInvocationConfig `dependencyGraphOrder`
    * prpoperty.
-   * 
+   *
    * Steps that do not have a `dependencyGraphId` will be added to
    * the default dependency graph which is executed first.
-   * 
+   *
    * NOTE: If your step `dependsOn` a step that is not in the same
    * dependencyGraphId, you will get a `Node does not exist` error.
    * These dependencies will need to be accounted for by the
