@@ -3,6 +3,7 @@ import * as path from 'path';
 import { createCommand } from 'commander';
 import {
   StepEntityMetadata,
+  StepGraphObjectMetadataProperties,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { promises as fs } from 'fs';
@@ -43,7 +44,7 @@ export function visualizeTypes() {
     )
     .option(
       '-t, --type <string>',
-      'J1 type(s) to visualize, comma separated if multiple.',
+      'J1 entity type(s) to visualize, comma separated if multiple.',
       collector,
       [],
     )
@@ -104,6 +105,22 @@ function getDefaultTypesGraphFilePath(projectSourceDirectory: string): string {
     projectSourceDirectory,
     '.j1-integration/types-graph/index.html',
   );
+}
+
+export function getNodesAndEdgesFromStepMetadata(
+  metadata: StepGraphObjectMetadataProperties,
+  options?: {
+    types?: string[];
+  },
+): { nodes: Node[]; edges: Edge[] } {
+  const edges = getEdgesFromStepRelationshipMetadata(metadata.relationships, {
+    types: options?.types,
+  });
+  const nodes = getNodesFromStepEntityMetadata(metadata.entities, {
+    types: options?.types,
+    edges,
+  });
+  return { nodes, edges };
 }
 
 function getNodesFromStepEntityMetadata(
