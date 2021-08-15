@@ -442,7 +442,7 @@ function buildStepResultsMap<
   return new Map<string, IntegrationStepResult>(stepResultMapEntries);
 }
 
-function getDeclaredTypesInStep<
+export function getDeclaredTypesInStep<
   TStepExecutionContext extends StepExecutionContext
 >(
   step: Step<TStepExecutionContext>,
@@ -453,7 +453,11 @@ function getDeclaredTypesInStep<
   const declaredTypes: string[] = [];
   const partialTypes: string[] = [];
 
-  [...step.entities, ...step.relationships].map((e) => {
+  [
+    ...step.entities,
+    ...step.relationships,
+    ...(step.mappedRelationships || []),
+  ].map((e) => {
     declaredTypes.push(e._type);
     if (e.partial) {
       partialTypes.push(e._type);
