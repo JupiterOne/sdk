@@ -9,9 +9,30 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Improve grammar and consistency of CLI help content
+- Change `j1-integration visualize --data-dir` to support absolute path,
+  complementing added support for `--project-path` on other commands
+
+### Fixed
+
+- Fix `j1-integration document --output-file` to reflect that it is a path
+  relative to `--project-path`
+
 ### Added
 
-- Added optional `mappedRelationships` to step metadata
+- Add optional `mappedRelationships` to step metadata
+- Add `j1-integration collect --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration sync --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration run --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration visualize --output-file` to allow for specifying the
+  output file path
+- Add the `j1-integration visualize --data-dir` value to the error content of
+  the generated file when there were no entities or relationships to render
 
 ## 6.14.0 - 2021-08-04
 

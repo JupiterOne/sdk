@@ -1223,7 +1223,7 @@ Options:
     Defaults to {CWD}/.j1-integration/types-graph/index.html.
 
   -t, --type <string>
-    J1 type(s) to visualize, comma separated if multiple.
+    J1 type(s) to visualize, comma separate multiple.
 
   -h, --help
     Display help for command.

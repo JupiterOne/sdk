@@ -1,4 +1,5 @@
 import { createCommand } from 'commander';
+import path from 'path';
 
 import { Metric } from '@jupiterone/integration-sdk-core';
 import {
@@ -15,21 +16,33 @@ import {
   getApiKeyFromEnvironment,
   initiateSynchronization,
 } from '@jupiterone/integration-sdk-runtime';
+import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
 
 import { loadConfig } from '../config';
 import * as log from '../log';
-import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
 
 const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
 export function run() {
   return createCommand('run')
-    .description('Performs the collection and synchronization of ')
+    .description('collect and sync to upload entities and relationships')
     .requiredOption(
       '-i, --integrationInstanceId <id>',
-      'The id of the integration instance to associate uploaded entities and relationships with.',
+      '_integrationInstanceId assigned to uploaded entities and relationships',
+    )
+    .option(
+      '-p, --project-path <directory>',
+      'absolute path to integration project directory',
+      process.cwd(),
     )
     .action(async (options) => {
+      // Point `fileSystem.ts` functions to expected location relative to
+      // integration project path.
+      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
+        options.projectPath,
+        '.j1-integration',
+      );
+
       log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
       const accessToken = getApiKeyFromEnvironment();
 
@@ -71,7 +84,9 @@ export function run() {
         .on('event', (event) => eventPublishingQueue.enqueue(event))
         .on('metric', (metric) => metrics.push(metric));
 
-      const invocationConfig = await loadConfig();
+      const invocationConfig = await loadConfig(
+        path.join(options.projectPath, 'src'),
+      );
 
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,

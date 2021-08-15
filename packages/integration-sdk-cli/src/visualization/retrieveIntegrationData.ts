@@ -1,9 +1,14 @@
-import { Entity, ExplicitRelationship, MappedRelationship } from '@jupiterone/integration-sdk-core';
+import {
+  Entity,
+  ExplicitRelationship,
+  MappedRelationship,
+} from '@jupiterone/integration-sdk-core';
 import { readJsonFromPath } from '@jupiterone/integration-sdk-runtime';
+
 import { IntegrationData } from './types/IntegrationData';
 
 /**
- * Retrieve integration data from the JSON files from the specified path, defaults to .j1-integration/graph
+ * Retrieve integration data from provided JSON file paths.
  */
 export async function retrieveIntegrationData(
   entitiesAndRelationshipPaths: string[],
