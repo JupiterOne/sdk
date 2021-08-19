@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.15.0] - 2021-08-19
+
 ### Added
 
 - Added optional `mappedRelationships` to step metadata
