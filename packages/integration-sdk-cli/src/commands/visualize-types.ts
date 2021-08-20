@@ -1,6 +1,8 @@
-import * as log from '../log';
-import * as path from 'path';
 import { createCommand } from 'commander';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import { Edge, Node, Options } from 'vis';
+
 import {
   RelationshipDirection,
   StepEntityMetadata,
@@ -8,13 +10,13 @@ import {
   StepMappedRelationshipMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
-import { promises as fs } from 'fs';
+
+import * as log from '../log';
+import { generateVisHTML } from '../utils/generateVisHTML';
 import {
   getSortedJupiterOneTypes,
   TypesCommandArgs,
 } from '../utils/getSortedJupiterOneTypes';
-import { generateVisHTML } from '../utils/generateVisHTML';
-import { Node, Edge, Options } from 'vis';
 
 const COLORS = {
   J1_PRIMARY_GREEN: '#3ce3b5',
@@ -44,19 +46,22 @@ const collector = (value: string, arr: string[]) => {
 
 export function visualizeTypes() {
   return createCommand('visualize-types')
-    .description('Generates a graph of types metadata for all steps')
+    .description(
+      'generate graph visualization of entity and relationship types to collect',
+    )
     .option(
       '-p, --project-path <directory>',
-      'Absolute path to the integration project directory. Defaults to the current working directory.',
+      'absolute path to integration project directory',
       process.cwd(),
     )
     .option(
       '-o, --output-file <path>',
-      'Absolute path to the HTML file that should be created/overwritten. Defaults to {CWD}/.j1-integration/types-graph/index.html.',
+      'absolute path of generated HTML file',
+      path.join(process.cwd(), '.j1-integration', 'types-graph', 'index.html'),
     )
     .option(
       '-t, --type <string>',
-      'J1 entity type(s) to visualize, comma separated if multiple.',
+      'J1 entity type(s) to visualize, comma separated',
       collector,
       [],
     )
@@ -100,7 +105,12 @@ async function executeVisualizeTypesAction(
     },
   };
 
-  const visHtml = generateVisHTML(nodes, edges, networkVisualizationOptions);
+  const visHtml = generateVisHTML(
+    graphFilePath,
+    nodes,
+    edges,
+    networkVisualizationOptions,
+  );
 
   await fs.mkdir(path.dirname(graphFilePath), { recursive: true });
   await fs.writeFile(graphFilePath, visHtml, 'utf-8');

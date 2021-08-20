@@ -3,10 +3,10 @@ import { createCommand } from 'commander';
 import {
   collect,
   diff,
-  visualize,
-  sync,
-  run,
   document,
+  run,
+  sync,
+  visualize,
   visualizeTypes,
 } from './commands';
 

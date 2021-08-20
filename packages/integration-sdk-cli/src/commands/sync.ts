@@ -1,32 +1,44 @@
 import { createCommand } from 'commander';
+import path from 'path';
 
-import * as log from '../log';
 import {
-  getApiKeyFromEnvironment,
-  getAccountFromEnvironment,
-  getApiBaseUrl,
   createApiClient,
   createIntegrationLogger,
+  getAccountFromEnvironment,
+  getApiBaseUrl,
+  getApiKeyFromEnvironment,
   synchronizeCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
+
+import * as log from '../log';
 
 export function sync() {
   return createCommand('sync')
     .description(
-      'Synchronizes collected data with the JupiterOne graph. \n\n' +
-        'Requires Environment Variables: \n' +
-        '\t JUPITERONE_API_KEY - Created in the INTEGRATION API KEYS section of the integration instance configuration page \n' +
-        '\t JUPITERONE_ACCOUNT - Your JupiterOne accountId',
+      'sync collected data with JupiterOne, requires JUPITERONE_API_KEY, JUPITERONE_ACCOUNT',
     )
     .requiredOption(
       '-i, --integrationInstanceId <id>',
-      'The id of the integration instance to associate uploaded entities and relationships with.',
+      '_integrationInstanceId assigned to uploaded entities and relationships',
+    )
+    .option(
+      '-p, --project-path <directory>',
+      'absolute path to integration project directory',
+      process.cwd(),
     )
     .option(
       '-d, --development',
-      '"true" to target the development environment instead of production.',
+      '"true" to target apps.dev.jupiterone.io',
+      !!process.env.JUPITERONE_DEV,
     )
     .action(async (options) => {
+      // Point `fileSystem.ts` functions to expected location relative to
+      // integration project path.
+      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
+        options.projectPath,
+        '.j1-integration',
+      );
+
       log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
       const accessToken = getApiKeyFromEnvironment();
 
@@ -34,7 +46,7 @@ export function sync() {
       const account = getAccountFromEnvironment();
 
       const apiBaseUrl = getApiBaseUrl({
-        dev: process.env.JUPITERONE_DEV || options.development,
+        dev: options.development,
       });
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 

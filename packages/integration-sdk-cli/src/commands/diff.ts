@@ -24,10 +24,9 @@ export function diff() {
     .storeOptionsAsProperties()
     .arguments('<oldExportPath> <newExportPath>')
     .description(
-      'Compare two datasets downloaded from JupiterOne using: \n\n' +
-        '\t find * with _integrationInstanceId="abc-123" (that RELATES TO *)? return tree\n\n',
+      'compare results from \'find * with _integrationInstanceId="abc-123" that RELATES TO * return tree\'',
     )
-    .option('-k, --keys-only', 'Only diff _key properties.')
+    .option('-k, --keys-only', 'only diff _key properties')
     .action((oldExportPath, newExportPath, options) => {
       findDifferences(oldExportPath, newExportPath, options.keysOnly);
     });

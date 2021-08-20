@@ -87,6 +87,13 @@ export async function writeFileToPath({
   }
 }
 
+/**
+ * Reads any file and parses content as JSON; does not need to be relative to
+ * `getRootStorageDirectory()`.
+ *
+ * @param path File path to read, may be relative to process.cwd() or absolute
+ * @returns JSON contained in file
+ */
 export async function readJsonFromPath<T>(path: string) {
   let fileStr: string;
 
