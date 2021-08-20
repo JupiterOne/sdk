@@ -35,6 +35,11 @@ export function run() {
       'absolute path to integration project directory',
       process.cwd(),
     )
+    .option(
+      '-d, --development',
+      '"true" to target apps.dev.jupiterone.io',
+      !!process.env.JUPITERONE_DEV,
+    )
     .action(async (options) => {
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
@@ -49,7 +54,7 @@ export function run() {
       log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
       const account = getAccountFromEnvironment();
 
-      const apiBaseUrl = getApiBaseUrl({ dev: !!process.env.JUPITERONE_DEV });
+      const apiBaseUrl = getApiBaseUrl({ dev: options.development });
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const startTime = Date.now();

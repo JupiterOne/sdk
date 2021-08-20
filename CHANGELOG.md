@@ -18,6 +18,8 @@ and this project adheres to
   project in any location
 - Add `j1-integration run --project-path` to allow for executing against a
   project in any location
+- Add `j1-integration run --development` to match other commands that connect to
+  JupiterOne development environment
 - Add `j1-integration visualize --output-file` to allow for specifying the
   output file path
 - Add the `j1-integration visualize --data-dir` value to the error content of
