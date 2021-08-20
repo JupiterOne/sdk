@@ -441,6 +441,10 @@ describe('document', () => {
     await documentCommandSnapshotTest('docsInstanceRelationshipsAlphabetize');
   });
 
+  test('loads the integration with entity and mapped relationship and writes documentation results', async () => {
+    await documentCommandSnapshotTest('docsInstanceWithMappedRelationships');
+  });
+
   test('should allow passing a file path for the generated documentation', async () => {
     loadProjectStructure('docsInstanceCustomDocLoc');
 
