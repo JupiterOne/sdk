@@ -31,7 +31,7 @@ type RequiredEntityProperties = { _class: string | string[]; _type: string };
  * made for referencing specific TypeScript types. In those cases, it should be
  * possible to provide additional literal entity properties.
  */
-type AdditionalEntityProperties = { [key: string]: any };
+export type AdditionalEntityProperties = { [key: string]: any };
 
 /**
  * Properties to be assigned to a generated entity which are declared in code
@@ -136,6 +136,8 @@ function generateEntity({
   assign,
   tagProperties,
 }: IntegrationEntityData): GeneratedEntity {
+
+
   const _rawData: EntityRawData[] = [];
   if (Object.entries(source).length > 0) {
     _rawData.push({ name: 'default', rawData: source });
