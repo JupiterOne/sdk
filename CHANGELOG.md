@@ -11,7 +11,6 @@ and this project adheres to
 
 ### Added
 
-- Add optional `mappedRelationships` to step metadata
 - Add `j1-integration collect --project-path` to allow for executing against a
   project in any location
 - Add `j1-integration sync --project-path` to allow for executing against a
@@ -24,7 +23,7 @@ and this project adheres to
   output file path
 - Add the `j1-integration visualize --data-dir` value to the error content of
   the generated file when there were no entities or relationships to render
- 
+
 ### Changed
 
 - Improve grammar and consistency of CLI help content
