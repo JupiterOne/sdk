@@ -9,17 +9,6 @@ and this project adheres to
 
 ## Unreleased
 
-### Changed
-
-- Improve grammar and consistency of CLI help content
-- Change `j1-integration visualize --data-dir` to support absolute path,
-  complementing added support for `--project-path` on other commands
-
-### Fixed
-
-- Fix `j1-integration document --output-file` to reflect that it is a path
-  relative to `--project-path`
-
 ### Added
 
 - Add optional `mappedRelationships` to step metadata
@@ -33,6 +22,23 @@ and this project adheres to
   output file path
 - Add the `j1-integration visualize --data-dir` value to the error content of
   the generated file when there were no entities or relationships to render
+ 
+### Changed
+
+- Improve grammar and consistency of CLI help content
+- Change `j1-integration visualize --data-dir` to support absolute path,
+  complementing added support for `--project-path` on other commands
+
+### Fixed
+
+- Fix `j1-integration document --output-file` to reflect that it is a path
+  relative to `--project-path`
+
+## [6.15.0] - 2021-08-19
+
+### Added
+
+- Add optional `mappedRelationships` to step metadata
 
 ## 6.14.0 - 2021-08-04
 
