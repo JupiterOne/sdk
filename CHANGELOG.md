@@ -26,6 +26,10 @@ and this project adheres to
 
 ### Changed
 
+- Calling `createIntegrationEntity` with a `property` that contains more than 1,500
+  elements will now result in an error being thrown. This is because the
+  database can not handle storing arrays of this length.
+  
 - Improve grammar and consistency of CLI help content
 - Change `j1-integration visualize --data-dir` to support absolute path,
   complementing added support for `--project-path` on other commands

@@ -1,3 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ensureNoArraysAreTooLargeToStore should error out if there is a property that is an array with more than 1,500 elements 1`] = `"Property array is has too many array elements to be stored: 1500"`;
+exports[`ensureNoArraysAreTooLargeToStore should error out if there is a property that is an array with more than 1,500 elements 1`] = `"Property array has too many array elements to be stored: 1500"`;

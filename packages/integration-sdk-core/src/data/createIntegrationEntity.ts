@@ -9,6 +9,7 @@ import { Entity, EntityRawData, RawDataTracking } from '../types';
 import { parseTimePropertyValue } from './converters';
 import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
+import { ensureNoArraysAreTooLargeToStore } from './utils/ensureNoArraysAreTooLargeToStore';
 
 const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
 
@@ -123,6 +124,7 @@ export function createIntegrationEntity(
   const generatedEntity = generateEntity(input.entityData);
 
   validateRawData(generatedEntity);
+  ensureNoArraysAreTooLargeToStore(input.entityData.assign)
 
   if (process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION) {
     validateEntityWithSchema(generatedEntity);
@@ -136,8 +138,6 @@ function generateEntity({
   assign,
   tagProperties,
 }: IntegrationEntityData): GeneratedEntity {
-
-
   const _rawData: EntityRawData[] = [];
   if (Object.entries(source).length > 0) {
     _rawData.push({ name: 'default', rawData: source });

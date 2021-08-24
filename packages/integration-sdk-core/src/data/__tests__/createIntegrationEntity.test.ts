@@ -396,3 +396,32 @@ describe('schema validation off', () => {
     ).not.toThrow();
   });
 });
+
+describe('array size', () => {
+  test('throws if a property contains an array that is too large to be stored', () => {
+    expect(() =>
+      createIntegrationEntity({
+        entityData: {
+          assign: {
+            ...networkAssigns,
+            tooLargeArrayProperty: new Array(1500).fill(Math.random())
+          },
+          source: networkSourceData,
+        },
+      }),
+    ).toThrow(/has too many array elements to be stored/);
+  });
+  test('does not throw if a property contains an array that is not too large to be stored', () => {
+    expect(() =>
+      createIntegrationEntity({
+        entityData: {
+          assign: {
+            ...networkAssigns,
+            tooLargeArrayProperty: new Array(1400).fill(Math.random())
+          },
+          source: networkSourceData,
+        },
+      }),
+    ).not.toThrow();
+  });
+});
