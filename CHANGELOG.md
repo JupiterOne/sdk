@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.16.0] - 2021-08-25
+
 ### Added
 
 - Add `j1-integration collect --project-path` to allow for executing against a
