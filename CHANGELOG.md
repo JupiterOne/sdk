@@ -34,6 +34,8 @@ and this project adheres to
 
 - Fix `j1-integration document --output-file` to reflect that it is a path
   relative to `--project-path`
+- Fixed the way that symlinks are created on windows machines, which previously
+  threw `EPERM: operation not permitted, symlink`
 
 ## [6.15.0] - 2021-08-19
 

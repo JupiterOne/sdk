@@ -127,7 +127,7 @@ export async function symlink({ sourcePath, destinationPath }: SymlinkInput) {
   const fullDestinationPath = path.resolve(directory, destinationPath);
 
   await ensurePathCanBeWrittenTo(fullDestinationPath);
-  await fs.symlink(fullSourcePath, fullDestinationPath);
+  await fs.symlink(fullSourcePath, fullDestinationPath, 'junction');
 }
 
 export interface WalkDirectoryIterateeInput {
