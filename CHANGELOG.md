@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.17.0] - 2021-08-27
+
 ### Changed
 
 - Bump `@jupiterone/data-model` to expose `Question` entity class.
