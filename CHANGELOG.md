@@ -9,6 +9,16 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.18.0] - 2021-08-27
+
+### Added
+
+- Add mapped relationship details to documentation output
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Secret` entity class.
+
 ## [6.17.0] - 2021-08-27
 
 ### Changed
