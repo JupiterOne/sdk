@@ -9,11 +9,53 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.17.0] - 2021-08-27
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Question` entity class.
+
+## [6.16.1] - 2021-08-27
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `RelationshipClass.ENFORCES`
+
+## [6.16.0] - 2021-08-25
+
+### Added
+
+- Add `j1-integration collect --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration sync --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration run --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration run --development` to match other commands that connect to
+  JupiterOne development environment
+- Add `j1-integration visualize --output-file` to allow for specifying the
+  output file path
+- Add the `j1-integration visualize --data-dir` value to the error content of
+  the generated file when there were no entities or relationships to render
+
+### Changed
+
+- Improve grammar and consistency of CLI help content
+- Change `j1-integration visualize --data-dir` to support absolute path,
+  complementing added support for `--project-path` on other commands
+
+### Fixed
+
+- Fix `j1-integration document --output-file` to reflect that it is a path
+  relative to `--project-path`
+- Fixed the way that symlinks are created on windows machines, which previously
+  threw `EPERM: operation not permitted, symlink`
+
 ## [6.15.0] - 2021-08-19
 
 ### Added
 
-- Added optional `mappedRelationships` to step metadata
+- Add optional `mappedRelationships` to step metadata
 
 ## 6.14.0 - 2021-08-04
 

@@ -1,15 +1,15 @@
+import * as nodeFs from 'fs';
 import path from 'path';
-import {
-  loadProjectStructure,
-  getProjectDirectoryPath,
-} from '@jupiterone/integration-sdk-private-test-utils';
 
 import { StepResultStatus } from '@jupiterone/integration-sdk-core';
+import {
+  getProjectDirectoryPath,
+  loadProjectStructure,
+} from '@jupiterone/integration-sdk-private-test-utils';
 
 import { createCli } from '../index';
 import * as log from '../log';
 
-import * as nodeFs from 'fs';
 const fs = nodeFs.promises;
 
 jest.mock('../log');
@@ -357,7 +357,9 @@ describe('visualize', () => {
       'j1-integration',
       'visualize',
       '--data-dir',
-      'custom-integration',
+      path.resolve(process.cwd(), 'custom-integration'),
+      '--output-file',
+      htmlFileLocation,
     ]);
 
     const content = await fs.readFile(htmlFileLocation, 'utf8');
@@ -380,7 +382,7 @@ describe('collect/visualize integration', () => {
 
     htmlFileLocation = path.resolve(
       process.cwd(),
-      '.j1-integration/graph',
+      '.j1-integration',
       'index.html',
     );
   });
@@ -462,7 +464,7 @@ describe('document', () => {
       'j1-integration',
       'document',
       '-o',
-      customDocumentationFilePath,
+      'custom-docs/custom-jupiterone.md',
     ]);
 
     expect(writeFileSpy).toHaveBeenCalledTimes(1);

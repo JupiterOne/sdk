@@ -1,4 +1,5 @@
 import { createCommand } from 'commander';
+import path from 'path';
 
 import {
   executeIntegrationLocally,
@@ -17,19 +18,31 @@ const collector = (value: string, arr: string[]) => {
 
 export function collect() {
   return createCommand('collect')
-    .description(
-      'Executes the integration and stores the collected data to disk',
+    .description('collect data and store entities and relationships to disk')
+    .option(
+      '-p, --project-path <directory>',
+      'absolute path to integration project directory',
+      process.cwd(),
     )
     .option(
       '-s, --step <steps>',
-      'step(s) to run, comma separated if multiple',
+      'step(s) to run, comma separated',
       collector,
       [],
     )
-    .option('-V, --disable-schema-validation', 'Disable schema validation')
+    .option('-V, --disable-schema-validation', 'disable schema validation')
     .action(async (options) => {
-      const enableSchemaValidation = !options.disableSchemaValidation;
-      const config = prepareLocalStepCollection(await loadConfig(), options);
+      // Point `fileSystem.ts` functions to expected location relative to
+      // integration project path.
+      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
+        options.projectPath,
+        '.j1-integration',
+      );
+
+      const config = prepareLocalStepCollection(
+        await loadConfig(path.join(options.projectPath, 'src')),
+        options,
+      );
       log.info('\nConfiguration loaded! Running integration...\n');
 
       const graphObjectStore = new FileSystemGraphObjectStore({
@@ -37,6 +50,7 @@ export function collect() {
         integrationSteps: config.integrationSteps,
       });
 
+      const enableSchemaValidation = !options.disableSchemaValidation;
       const results = await executeIntegrationLocally(
         config,
         {
@@ -49,6 +63,7 @@ export function collect() {
           graphObjectStore,
         },
       );
+
       log.displayExecutionResults(results);
     });
 }

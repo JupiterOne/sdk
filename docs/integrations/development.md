@@ -1211,22 +1211,13 @@ files:
 ```
 Usage: j1-integration visualize-types [options]
 
-Generates a graph of types metadata for all steps.
+generate graph visualization of entity and relationship types to collect
 
 Options:
-  -p, --project-path <directory>
-    Absolute file path to the integration project directory. Defaults to the
-    current working directory.
-
-  -o, --output-file <directory>
-    Absolute file path to the HTML file that should be created/overridden.
-    Defaults to {CWD}/.j1-integration/types-graph/index.html.
-
-  -t, --type <string>
-    J1 type(s) to visualize, comma separated if multiple.
-
-  -h, --help
-    Display help for command.
+  -p, --project-path <directory>  absolute path to integration project directory (default: "{CWD}")
+  -o, --output-file <path>        absolute path of generated HTML file (default: "{CWD}/.j1-integration/types-graph/index.html")
+  -t, --type <string>             J1 entity type(s) to visualize, comma separated (default: [])
+  -h, --help                      display help for command
 ```
 
 `j1-integration visualize-types` generates a [visjs](http://www.visjs.org) graph
@@ -1234,24 +1225,15 @@ based on the metadata defined in each step.
 
 #### `j1-integration document`
 
-Usage:
-
 ```
 Usage: j1-integration document [options]
 
-Generates documentation for all steps
+generate documentation for all steps
 
 Options:
-  -p, --project-path <directory>
-    Absolute file path to the integration project directory. Defaults to the
-    current working directory.
-
-  -o, --output-file <directory>
-    Absolute file path to the Markdown file that should be created/updated.
-    Defaults to {CWD}/docs/jupiterone.md.
-
-  -h, --help
-    Display help for command.
+  -p, --project-path <directory>  absolute path to integration project directory (default: "{CWD}")
+  -o, --output-file <path>        project relative path to generated Markdown file (default: "docs/jupiterone.md")
+  -h, --help                      display help for command
 ```
 
 `j1-integration document` generates entity and relationship documentation based

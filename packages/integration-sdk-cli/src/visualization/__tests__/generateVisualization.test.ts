@@ -1,19 +1,17 @@
-import path from 'path';
-
-import { mocked } from 'ts-jest/utils';
 import globby from 'globby';
+import path from 'path';
+import { mocked } from 'ts-jest/utils';
 
 import {
-  readJsonFromPath,
   getRootStorageDirectory,
+  readJsonFromPath,
   writeFileToPath,
 } from '@jupiterone/integration-sdk-runtime';
 
-import { IntegrationData } from '../types/IntegrationData';
 import * as log from '../../log';
-
 import { nothingToDisplayMessage } from '../../utils/generateVisHTML';
 import { generateVisualization } from '../generateVisualization';
+import { IntegrationData } from '../types/IntegrationData';
 
 jest.mock('fs');
 jest.mock('globby');
@@ -24,10 +22,12 @@ const mockedGlobby = mocked(globby);
 const mockedReadJson = mocked(readJsonFromPath);
 const mockedGetRootStorageDirectory = mocked(getRootStorageDirectory);
 
-const integrationPath = '.j1-integration/graph';
-const indexHtmlPath = path.resolve(
+const integrationPath = path.resolve(process.cwd(), '.j1-integration');
+const dataPath = path.resolve(integrationPath, 'graph');
+const visualizationOutputPath = path.resolve(
   process.cwd(),
-  integrationPath,
+  '.j1-integration',
+  'graph',
   'index.html',
 );
 const integrationData: IntegrationData = {
@@ -53,15 +53,14 @@ test('returns html path when writing the file is successful', async () => {
     .mockResolvedValueOnce({ entities: integrationData.entities })
     .mockResolvedValueOnce({ relationships: integrationData.relationships });
   mockedGlobby.mockResolvedValueOnce([
-    `${integrationPath}/index/entities/123.json`,
-    `${integrationPath}/index/relationships/abc.json`,
+    `${dataPath}/index/entities/123.json`,
+    `${dataPath}/index/relationships/abc.json`,
   ]);
 
-  const htmlPath = await generateVisualization(integrationPath);
+  await generateVisualization(dataPath, visualizationOutputPath);
 
-  expect(htmlPath).toBe(indexHtmlPath);
   expect(writeFileToPath).toBeCalledWith({
-    path: indexHtmlPath,
+    path: visualizationOutputPath,
     content: expect.any(String),
   });
 });
@@ -69,17 +68,16 @@ test('returns html path when writing the file is successful', async () => {
 test('returns empty html when there are no json files', async () => {
   mockedGlobby.mockResolvedValueOnce([]);
 
-  const htmlPath = await generateVisualization(integrationPath);
+  await generateVisualization(dataPath, visualizationOutputPath);
 
-  expect(htmlPath).toBe(indexHtmlPath);
   expect(log.warn).toHaveBeenCalledWith(
     `Unable to find any files under path: ${path.resolve(
       process.cwd(),
-      integrationPath,
+      dataPath,
     )}`,
   );
   expect(writeFileToPath).toBeCalledWith({
-    path: indexHtmlPath,
+    path: visualizationOutputPath,
     content: expect.stringContaining(nothingToDisplayMessage),
   });
 });

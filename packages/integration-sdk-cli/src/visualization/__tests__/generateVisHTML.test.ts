@@ -1,8 +1,9 @@
+import { Edge, Node } from 'vis';
+
 import {
   generateVisHTML,
   nothingToDisplayMessage,
 } from '../../utils/generateVisHTML';
-import { Node, Edge } from 'vis';
 
 const nodeDataSets: Node[] = [
   { id: '1', label: 'Node 1' },
@@ -17,7 +18,7 @@ const edgeDataSet: Edge[] = [
 ];
 
 test('renders html with default config', () => {
-  const html = generateVisHTML(nodeDataSets, edgeDataSet);
+  const html = generateVisHTML('path/to/data', nodeDataSets, edgeDataSet);
 
   expect(html).toContain(
     'var options = {"edges":{"arrows":{"to":{"enabled":true}}},"physics":{"barnesHut":{"springLength":300,"centralGravity":0.03}}}',
@@ -26,7 +27,7 @@ test('renders html with default config', () => {
 });
 
 test('renders custom config when passed in', () => {
-  const html = generateVisHTML(nodeDataSets, edgeDataSet, {
+  const html = generateVisHTML('path/to/data', nodeDataSets, edgeDataSet, {
     edges: { color: '#ffffff' },
   });
 
@@ -35,7 +36,7 @@ test('renders custom config when passed in', () => {
 });
 
 test('renders nothing to display message when there is nothing to display', () => {
-  const html = generateVisHTML([], []);
+  const html = generateVisHTML('path/to/data', [], []);
 
   expect(html).toContain(nothingToDisplayMessage);
   expect(html).toMatchSnapshot();

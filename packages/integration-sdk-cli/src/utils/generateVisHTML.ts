@@ -12,6 +12,7 @@ const defaultOptions: Options = {
  * Creates the html to display the vis graph
  */
 export function generateVisHTML(
+  graphDataPath: string,
   nodeDataSets: Node[],
   edgeDataSets: Edge[],
   options?: Options,
@@ -20,7 +21,7 @@ export function generateVisHTML(
   const displayVisualization =
     nodeDataSets.length > 0 || edgeDataSets.length > 0;
 
-  let content = `<h1 style="text-align: center;">${nothingToDisplayMessage}</h1>`;
+  let content = `<h1 style="text-align: center;">${graphDataPath}: ${nothingToDisplayMessage}</h1>`;
 
   if (displayVisualization) {
     content = `<div id="integration-graph" style="height:100vh;width:100%"></div>
