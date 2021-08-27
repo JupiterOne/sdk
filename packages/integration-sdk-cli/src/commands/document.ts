@@ -6,6 +6,7 @@ import {
   StepEntityMetadata,
   StepGraphObjectMetadataProperties,
   StepRelationshipMetadata,
+  StepMappedRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 
 import * as log from '../log';
@@ -142,11 +143,33 @@ function generateRelationshipTableFromAllStepEntityMetadata(
   return generated;
 }
 
+function generateMappedRelationshipTableFromAllStepEntityMetadata(
+  metadata: StepMappedRelationshipMetadata[],
+): string {
+  const generated = table([
+    [
+      'Source Entity `_type`',
+      'Relationship `_class`',
+      'Target Entity `_type`',
+      'Direction',
+    ],
+    ...metadata.map((v) => [
+      `\`${v.sourceType}\``,
+      `**${v._class}**`,
+      `\`*${v.targetType}*\``,
+      `${v.direction}`,
+    ]),
+  ]);
+
+  return generated;
+}
+
 function generateGraphObjectDocumentationFromStepsMetadata(
   metadata: StepGraphObjectMetadataProperties,
 ): string {
   let entitySection = '';
   let relationshipSection = '';
+  let mappedRelationshipSection = '';
 
   if (metadata.entities.length) {
     const generatedEntityTable = generateEntityTableFromAllStepEntityMetadata(
@@ -176,6 +199,20 @@ The following relationships are created/mapped:
 ${generatedRelationshipTable}`;
   }
 
+  if (metadata.mappedRelationships?.length) {
+    const generatedMappedRelationshipTable = generateMappedRelationshipTableFromAllStepEntityMetadata(
+      metadata.mappedRelationships,
+    );
+
+    mappedRelationshipSection += `
+
+### Mapped Relationships
+
+The following mapped relationships are created:
+
+${generatedMappedRelationshipTable}`;
+  }
+
   return `${J1_DOCUMENTATION_MARKER_START}
 <!--
 ********************************************************************************
@@ -187,7 +224,7 @@ https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
 ********************************************************************************
 -->
 
-## Data Model${entitySection}${relationshipSection}
+## Data Model${entitySection}${relationshipSection}${mappedRelationshipSection}
 
 <!--
 ********************************************************************************
