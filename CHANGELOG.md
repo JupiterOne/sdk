@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `RelationshipClass.ENFORCES`
+
 ## [6.16.0] - 2021-08-25
 
 ### Added
