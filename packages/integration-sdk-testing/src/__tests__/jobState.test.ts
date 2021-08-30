@@ -25,6 +25,13 @@ describe('data', () => {
     const jobState = createMockJobState();
     expect(await jobState.getData('unknown')).toEqual(undefined);
   });
+
+  test('should return "undefined" when data is deleted', async () => {
+    const jobState = createMockJobState();
+    await jobState.setData('my-key', 'whatever');
+    await jobState.deleteData('my-key');
+    await expect(jobState.getData('my-key')).resolves.toEqual(undefined);
+  });
 });
 
 describe('entities', () => {

@@ -9,6 +9,7 @@ import {
   MemoryDataStore,
   TypeTracker,
 } from '@jupiterone/integration-sdk-runtime';
+import { v4 as uuid } from 'uuid';
 
 export interface CreateMockJobStateOptions {
   entities?: Entity[];
@@ -47,20 +48,32 @@ export function createMockJobState({
   const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
+  const mockStepId = `mock-step-${uuid()}`;
 
   inputEntities.forEach((e) => {
     duplicateKeyTracker.registerKey(e._key, {
       _type: e._type,
       _key: e._key,
     });
-    typeTracker.registerType(e._type);
+
+    typeTracker.addStepGraphObjectType({
+      stepId: mockStepId,
+      _type: e._type,
+      count: 1,
+    });
   });
+
   inputRelationships.forEach((r) => {
     duplicateKeyTracker.registerKey(r._key as string, {
       _type: r._type,
       _key: r._key,
     });
-    typeTracker.registerType(r._type as string);
+
+    typeTracker.addStepGraphObjectType({
+      stepId: mockStepId,
+      _type: r._type,
+      count: 1,
+    });
   });
 
   Object.keys(inputData).forEach((key) => dataStore.set(key, inputData[key]));
@@ -71,8 +84,14 @@ export function createMockJobState({
         _type: e._type,
         _key: e._key,
       });
-      typeTracker.registerType(e._type);
+
+      typeTracker.addStepGraphObjectType({
+        stepId: mockStepId,
+        _type: e._type,
+        count: 1,
+      });
     });
+
     collectedEntities = collectedEntities.concat(newEntities);
     return Promise.resolve(newEntities);
   };
@@ -83,8 +102,14 @@ export function createMockJobState({
         _type: r._type,
         _key: r._key,
       });
-      typeTracker.registerType(r._type as string);
+
+      typeTracker.addStepGraphObjectType({
+        stepId: mockStepId,
+        _type: r._type,
+        count: 1,
+      });
     });
+
     collectedRelationships = collectedRelationships.concat(newRelationships);
     return Promise.resolve();
   };
@@ -111,7 +136,7 @@ export function createMockJobState({
     },
 
     get encounteredTypes() {
-      return typeTracker.getEncounteredTypes();
+      return typeTracker.getAllEncounteredTypes();
     },
 
     setData: async <T>(key: string, data: T): Promise<void> => {
@@ -121,6 +146,11 @@ export function createMockJobState({
 
     getData: async <T>(key: string): Promise<T | undefined> => {
       return Promise.resolve(dataStore.get(key) as T);
+    },
+
+    deleteData: async <T>(key: string): Promise<void> => {
+      dataStore.delete(key);
+      return Promise.resolve();
     },
 
     addEntity: async (entity: Entity): Promise<Entity> => {

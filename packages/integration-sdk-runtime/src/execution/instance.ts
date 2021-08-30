@@ -17,15 +17,23 @@ export const LOCAL_INTEGRATION_INSTANCE: IntegrationInstance = {
 export function createIntegrationInstanceForLocalExecution(
   config: IntegrationInvocationConfig,
 ): IntegrationInstance {
-  const accountId =
-    process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID ||
-    LOCAL_INTEGRATION_INSTANCE.accountId;
-
   return {
-    ...LOCAL_INTEGRATION_INSTANCE,
+    id: process.env.INTEGRATION_INSTANCE_ID || LOCAL_INTEGRATION_INSTANCE.id,
+    name:
+      process.env.INTEGRATION_INSTANCE_NAME || LOCAL_INTEGRATION_INSTANCE.name,
+    integrationDefinitionId:
+      process.env.INTEGRATION_INSTANCE_INTEGRATION_DEFINITION_ID ||
+      LOCAL_INTEGRATION_INSTANCE.integrationDefinitionId,
+    description:
+      process.env.INTEGRATION_INSTANCE_DESCRIPTION ||
+      LOCAL_INTEGRATION_INSTANCE.description,
+
+    accountId:
+      process.env.INTEGRATION_INSTANCE_ACCOUNT_ID ||
+      process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID ||
+      LOCAL_INTEGRATION_INSTANCE.accountId,
     config: config.instanceConfigFields
       ? loadConfigFromEnvironmentVariables(config.instanceConfigFields)
       : {},
-    accountId,
   };
 }

@@ -30,12 +30,14 @@ test('publishes events added to the queue in the order they were enqueued', asyn
     1,
     `/persister/synchronization/jobs/${job.id}/events`,
     { events: [eventA] },
+    { headers: { 'managed-integration': 'some-integration' } },
   );
 
   expect(postSpy).toHaveBeenNthCalledWith(
     2,
     `/persister/synchronization/jobs/${job.id}/events`,
     { events: [eventB] },
+    { headers: { 'managed-integration': 'some-integration' } },
   );
 });
 
@@ -81,6 +83,11 @@ function createContext() {
     apiClient,
     logger,
     job,
-    queue: createEventPublishingQueue({ apiClient, logger, job }),
+    queue: createEventPublishingQueue(
+      { apiClient, logger, job },
+      {
+        headers: { 'managed-integration': 'some-integration' },
+      },
+    ),
   };
 }

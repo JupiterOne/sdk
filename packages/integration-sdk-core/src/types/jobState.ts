@@ -41,6 +41,13 @@ export interface JobState {
   getData: <T>(key: string) => Promise<T | undefined>;
 
   /**
+   * Delete arbitrary data stored by parent steps.
+   *
+   * @see setData
+   */
+  deleteData: <T>(key: string) => Promise<void>;
+
+  /**
    * Adds an entity to the job's collection. `addEntities` can be used
    * to add a batch of entities to the collection.
    */

@@ -9,6 +9,165 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.18.0] - 2021-08-27
+
+### Added
+
+- Add mapped relationship details to documentation output
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Secret` entity class.
+
+## [6.17.0] - 2021-08-27
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Question` entity class.
+
+## [6.16.1] - 2021-08-27
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `RelationshipClass.ENFORCES`
+
+## [6.16.0] - 2021-08-25
+
+### Added
+
+- Add `j1-integration collect --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration sync --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration run --project-path` to allow for executing against a
+  project in any location
+- Add `j1-integration run --development` to match other commands that connect to
+  JupiterOne development environment
+- Add `j1-integration visualize --output-file` to allow for specifying the
+  output file path
+- Add the `j1-integration visualize --data-dir` value to the error content of
+  the generated file when there were no entities or relationships to render
+
+### Changed
+
+- Improve grammar and consistency of CLI help content
+- Change `j1-integration visualize --data-dir` to support absolute path,
+  complementing added support for `--project-path` on other commands
+
+### Fixed
+
+- Fix `j1-integration document --output-file` to reflect that it is a path
+  relative to `--project-path`
+- Fixed the way that symlinks are created on windows machines, which previously
+  threw `EPERM: operation not permitted, symlink`
+
+## [6.15.0] - 2021-08-19
+
+### Added
+
+- Add optional `mappedRelationships` to step metadata
+
+## 6.14.0 - 2021-08-04
+
+### Changed
+
+- Changed how `j1-integration visualize` displays placeholder entities. Now only
+  properties present in `targetFilterKeys` are displayed in the graph, making
+  target entities smaller. Also, set borders of placeholder entities to dashed.
+- Bump `@jupiterone/data-model` to expose `Alert` entity schema.
+- `createEventPublishingQueue` takes in an optional Axios config.
+
+## 6.13.0 - 2021-07-28
+
+### Added
+
+- Track summary of collected graph object `_type`'s and the number of times that
+  each `_type` has been encountered
+
+## 6.12.0 - 2021-07-27
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Problem` entity schema.
+
+## 6.11.1 - 2021-07-23
+
+### Changed
+
+- A single DataStore is now used for all dependency graphs executed in an
+  integration run.
+- Used default J1 colors for `yarn j1-integration visualize-types` command.
+
+## 6.11.0 - 2021-07-14
+
+### Added
+
+- a `dependencyGraphOrder` property to the InvocationConfig and a
+  `dependencyGraphId` property to the StepMetadata which togeather can be used
+  to create multiple ordered dependency graphs per execution.
+
+## 6.10.0 - 2021-07-09
+
+### Changed
+
+- Bump `@jupiterone/data-model` to incorporate `RelationshipClass.PUBLISHED`
+
+## 6.9.0 - 2021-07-06
+
+### Added
+
+- Added `deleteData()` for jobState Usage:
+  ```typescript
+  await jobState.setData('abc', true);
+  await jobState.getData('abc'); // true
+  await jobState.deleteData('abc'); // void
+  await jobState.getData('abc'); // undefined
+  ```
+- Added `development` option to `j1-integration sync` command.
+
+### Removed
+
+- Removed `j1-integration compare` command. Developers should use
+  `j1-integration diff` in its place.
+
+## 6.8.0 - 2021-06-29
+
+### Added
+
+- Added `j1-integration diff` command to ouptut colorized diffs of old/new
+  integrations.
+- Allow overriding integration instance properties when running integrations
+  locally.
+
+## 6.7.1 - 2021-06-29
+
+### Fixed
+
+- [#494](https://github.com/JupiterOne/sdk/issues/494) - Expose 401 Unauthorized
+  errors from synchronization API
+
+## 6.7.0 - 2021-06-10
+
+### Changed
+
+- Upgrade `@jupiterone/data-model@^0.30.0`
+
+### Added
+
+- Added `toTargetEntities()` jest matcher for mapped relationship validation.
+  Usage:
+  ```typescript
+  expect([mappedRel1, mappedRel2]).toTargetEntities([
+    entity1,
+    entity2,
+    entity3,
+  ]);
+  ```
+
+### Changed
+
+- Expanded the interface of `findEntity` to accept `string | undefined`.
+
 ## 6.6.0 - 2021-06-010
 
 ### Changed

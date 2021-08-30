@@ -1,30 +1,31 @@
-import path from 'path';
-import { writeFileToPath } from '@jupiterone/integration-sdk-runtime';
-
-import { retrieveIntegrationData } from './retrieveIntegrationData';
-import { generateVisHTML } from '../utils/generateVisHTML';
-import { Edge } from 'vis';
 import globby from 'globby';
 import upath from 'upath';
+import { Edge } from 'vis';
+
+import { writeFileToPath } from '@jupiterone/integration-sdk-runtime';
 
 import * as log from '../log';
+import { generateVisHTML } from '../utils/generateVisHTML';
 import { createMappedRelationshipNodesAndEdges } from './createMappedRelationshipNodesAndEdges';
+import { retrieveIntegrationData } from './retrieveIntegrationData';
 import { getNodeIdFromEntity } from './utils';
 
 /**
- * Generates visualization of Vertices and Edges using https://visjs.github.io/vis-network/docs/network/
+ * Generate a graph visualization of collected entities and relationships using
+ * https://visjs.github.io/vis-network/docs/network/.
+ *
+ * @param graphDataPath Absolute path to directory of collected entities and relationships
  */
 export async function generateVisualization(
-  integrationPath: string,
-): Promise<string> {
-  const resolvedIntegrationPath = path.resolve(process.cwd(), integrationPath);
-
+  graphDataPath: string,
+  visualizationOutputPath: string,
+): Promise<void> {
   const entitiesAndRelationshipPaths = await globby([
-    upath.toUnix(`${resolvedIntegrationPath}/**/*.json`),
+    upath.toUnix(`${graphDataPath}/**/*.json`),
   ]);
 
   if (entitiesAndRelationshipPaths.length === 0) {
-    log.warn(`Unable to find any files under path: ${resolvedIntegrationPath}`);
+    log.warn(`Unable to find any files under path: ${graphDataPath}`);
   }
 
   const {
@@ -54,15 +55,12 @@ export async function generateVisualization(
     explicitEntities: entities,
   });
 
-  const htmlFileLocation = path.join(resolvedIntegrationPath, 'index.html');
-
   await writeFileToPath({
-    path: htmlFileLocation,
+    path: visualizationOutputPath,
     content: generateVisHTML(
+      graphDataPath,
       [...nodeDataSets, ...mappedRelationshipNodes],
       [...explicitEdgeDataSets, ...mappedRelationshipEdges],
     ),
   });
-
-  return htmlFileLocation;
 }

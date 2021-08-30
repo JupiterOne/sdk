@@ -76,6 +76,7 @@ export function executeStepDependencyGraph<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
 }: {
@@ -84,6 +85,7 @@ export function executeStepDependencyGraph<
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
@@ -98,8 +100,8 @@ export function executeStepDependencyGraph<
   // create a queue for managing promises to be executed
   const promiseQueue = new PromiseQueue();
 
+  const typeTracker = new TypeTracker();
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
-  const dataStore = new MemoryDataStore();
 
   function isStepEnabled(stepId: string) {
     return stepStartStates[stepId].disabled === false;
@@ -118,7 +120,7 @@ export function executeStepDependencyGraph<
       stepResultsMap.set(stepId, {
         ...existingResult,
         status,
-        encounteredTypes: typeTracker.getEncounteredTypes(),
+        encounteredTypes: typeTracker.getEncounteredTypesForStep(stepId),
       });
     }
   }
@@ -180,7 +182,7 @@ export function executeStepDependencyGraph<
     step: Step<TStepExecutionContext>,
     typeTracker: TypeTracker,
   ) {
-    const encounteredTypes = typeTracker.getEncounteredTypes();
+    const encounteredTypes = typeTracker.getEncounteredTypesForStep(step.id);
     const declaredTypesSet = new Set(
       getDeclaredTypesInStep(step).declaredTypes,
     );
@@ -256,7 +258,6 @@ export function executeStepDependencyGraph<
      */
     async function executeStep(step: Step<TStepExecutionContext>) {
       const { id: stepId } = step;
-      const typeTracker = new TypeTracker();
 
       let uploader: StepGraphObjectDataUploader | undefined;
 
@@ -294,7 +295,23 @@ export function executeStepDependencyGraph<
           status = StepResultStatus.SUCCESS;
           maybeLogUndeclaredTypes(context, step, typeTracker);
         }
+
+        logger.info(
+          {
+            stepId,
+            summary: JSON.stringify(typeTracker.summarizeStep(stepId)),
+          },
+          'Step summary',
+        );
       } catch (err) {
+        logger.info(
+          {
+            stepId,
+            summary: JSON.stringify(typeTracker.summarizeStep(stepId)),
+          },
+          'Failed step summary',
+        );
+
         context.logger.stepFailure(step, err);
 
         if (err.fatal) {
@@ -425,7 +442,7 @@ function buildStepResultsMap<
   return new Map<string, IntegrationStepResult>(stepResultMapEntries);
 }
 
-function getDeclaredTypesInStep<
+export function getDeclaredTypesInStep<
   TStepExecutionContext extends StepExecutionContext
 >(
   step: Step<TStepExecutionContext>,
@@ -436,7 +453,11 @@ function getDeclaredTypesInStep<
   const declaredTypes: string[] = [];
   const partialTypes: string[] = [];
 
-  [...step.entities, ...step.relationships].map((e) => {
+  [
+    ...step.entities,
+    ...step.relationships,
+    ...(step.mappedRelationships || []),
+  ].map((e) => {
     declaredTypes.push(e._type);
     if (e.partial) {
       partialTypes.push(e._type);

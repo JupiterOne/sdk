@@ -1,6 +1,10 @@
 import * as dataModel from '@jupiterone/data-model';
 import * as deepmerge from 'deepmerge';
-import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
+import {
+  Entity,
+  ExplicitRelationship,
+  MappedRelationship,
+} from '@jupiterone/integration-sdk-core';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -13,12 +17,14 @@ declare global {
       toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
         params: ToMatchRelationshipSchemaParams,
       ): R;
+
+      toTargetEntities(entities: Entity[]): R;
     }
   }
 }
 
 const FIND_OUT_MORE =
-  '\n\nFind out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/master/src/schemas\n';
+  '\n\nFind out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas\n';
 
 function createGraphObjectSchemaValidationError<T>(
   ajv: typeof dataModel.IntegrationSchema,
@@ -122,8 +128,8 @@ function dedupSchemaPropertyTypes(
  *
  * See here:
  *
- * - https://github.com/JupiterOne/data-model/blob/master/src/schemas/Host.json#L75
- * - https://github.com/JupiterOne/data-model/blob/master/src/schemas/Device.json#L58
+ * - https://github.com/JupiterOne/data-model/blob/main/src/schemas/Host.json#L75
+ * - https://github.com/JupiterOne/data-model/blob/main/src/schemas/Device.json#L58
  *
  * @param schema
  */
@@ -215,13 +221,76 @@ export interface GraphObjectSchema extends dataModel.IntegrationEntitySchema {
 
 export interface ToMatchGraphObjectSchemaParams {
   /**
-   * The JupiterOne hierarchy class or classes from the data model that will be used to generate a new schema to be validated against. See: https://github.com/JupiterOne/data-model/tree/master/src/schemas
+   * The JupiterOne hierarchy class or classes from the data model that will be used to generate a new schema to be validated against. See: https://github.com/JupiterOne/data-model/tree/main/src/schemas
    */
   _class: string | string[];
   /**
    * The schema that should be used to validate the input data against
    */
   schema?: GraphObjectSchema;
+}
+
+interface ToTargetEntitiesOptions {
+  enforceSingleTarget?: boolean;
+}
+
+export function toTargetEntities(
+  mappedRelationships: MappedRelationship[],
+  entities: Entity[],
+  options?: ToTargetEntitiesOptions,
+) {
+  for (const mappedRelationship of mappedRelationships) {
+    const _mapping = mappedRelationship._mapping;
+    if (!_mapping) {
+      throw new Error(
+        'expect(mappedRelationships).toTargetEntities() requires relationships with the `_mapping` property!',
+      );
+    }
+    const targetEntity = _mapping.targetEntity;
+    for (let targetFilterKey of _mapping.targetFilterKeys) {
+      /* type TargetFilterKey = string | string[]; */
+      if (!Array.isArray(targetFilterKey)) {
+        console.warn(
+          'WARNING: Found mapped relationship with targetFilterKey of type string. Please ensure the targetFilterKey was not intended to be of type string[]',
+        );
+        targetFilterKey = [targetFilterKey];
+      }
+      const mappingTargetEntities = entities.filter((entity) =>
+        (targetFilterKey as string[]).every(
+          (k) => targetEntity[k] === entity[k],
+        ),
+      );
+
+      if (mappingTargetEntities.length === 0) {
+        return {
+          message: () =>
+            `No target entity found for mapped relationship: ${JSON.stringify(
+              mappedRelationship,
+              null,
+              2,
+            )}`,
+          pass: false,
+        };
+      } else if (
+        options?.enforceSingleTarget &&
+        mappingTargetEntities.length > 1
+      ) {
+        return {
+          message: () =>
+            `Multiple target entities found for mapped relationship, expected exactly one: ${JSON.stringify(
+              { mappedRelationship, mappingTargetEntities },
+              null,
+              2,
+            )}`,
+          pass: false,
+        };
+      }
+    }
+  }
+  return {
+    message: () => '',
+    pass: true,
+  };
 }
 
 export function toMatchGraphObjectSchema<T extends Entity>(
@@ -373,5 +442,6 @@ export function registerMatchers(expect: jest.Expect) {
   expect.extend({
     toMatchGraphObjectSchema,
     toMatchDirectRelationshipSchema,
+    toTargetEntities,
   });
 }

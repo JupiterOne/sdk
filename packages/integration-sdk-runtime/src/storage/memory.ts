@@ -113,8 +113,11 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     return Promise.resolve();
   }
 
-  findEntity(_key: string): Promise<Entity | undefined> {
-    return Promise.resolve(this.entityKeyToEntityMap.get(_key)?.entity);
+  findEntity(_key: string | undefined): Promise<Entity | undefined> {
+    const entity = _key
+      ? this.entityKeyToEntityMap.get(_key)?.entity
+      : undefined;
+    return Promise.resolve(entity);
   }
 
   /**

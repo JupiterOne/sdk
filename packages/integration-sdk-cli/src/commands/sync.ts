@@ -1,30 +1,53 @@
 import { createCommand } from 'commander';
+import path from 'path';
 
-import * as log from '../log';
 import {
-  getApiKeyFromEnvironment,
-  getAccountFromEnvironment,
-  getApiBaseUrl,
   createApiClient,
   createIntegrationLogger,
+  getAccountFromEnvironment,
+  getApiBaseUrl,
+  getApiKeyFromEnvironment,
   synchronizeCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
 
+import * as log from '../log';
+
 export function sync() {
   return createCommand('sync')
-    .description('Synchronizes collected data with the JupiterOne graph.')
+    .description(
+      'sync collected data with JupiterOne, requires JUPITERONE_API_KEY, JUPITERONE_ACCOUNT',
+    )
     .requiredOption(
       '-i, --integrationInstanceId <id>',
-      'The id of the integration instance to associate uploaded entities and relationships with.',
+      '_integrationInstanceId assigned to uploaded entities and relationships',
+    )
+    .option(
+      '-p, --project-path <directory>',
+      'absolute path to integration project directory',
+      process.cwd(),
+    )
+    .option(
+      '-d, --development',
+      '"true" to target apps.dev.jupiterone.io',
+      !!process.env.JUPITERONE_DEV,
     )
     .action(async (options) => {
+      // Point `fileSystem.ts` functions to expected location relative to
+      // integration project path.
+      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
+        options.projectPath,
+        '.j1-integration',
+      );
+
       log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
       const accessToken = getApiKeyFromEnvironment();
 
       log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
       const account = getAccountFromEnvironment();
 
-      const apiBaseUrl = getApiBaseUrl({ dev: !!process.env.JUPITERONE_DEV });
+      const apiBaseUrl = getApiBaseUrl({
+        dev: options.development,
+      });
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const apiClient = createApiClient({

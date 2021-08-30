@@ -1,4 +1,5 @@
 import uniq from 'lodash/uniq';
+import { pick } from 'lodash';
 
 import {
   BeforeAddEntityHookFunction,
@@ -17,8 +18,12 @@ import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from './dependencyGraph';
-import { DuplicateKeyTracker } from './jobState';
+import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
 import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
+import {
+  DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
+  seperateStepsByDependencyGraph,
+} from './utils/seperateStepsByDependencyGraph';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
@@ -29,26 +34,54 @@ export async function executeSteps<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
+  dependencyGraphOrder,
 }: {
   executionContext: TExecutionContext;
   integrationSteps: Step<TStepExecutionContext>[];
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  dependencyGraphOrder?: string[];
 }): Promise<IntegrationStepResult[]> {
-  return executeStepDependencyGraph({
-    executionContext,
-    inputGraph: buildStepDependencyGraph(integrationSteps),
-    stepStartStates,
-    duplicateKeyTracker,
-    graphObjectStore,
-    createStepGraphObjectDataUploader,
-    beforeAddEntity,
-  });
+  const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
+  let allStepResults: IntegrationStepResult[] = [];
+
+  for (const graphId of [
+    DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
+    ...(dependencyGraphOrder ?? []),
+  ]) {
+    const steps = stepsByGraphId[graphId];
+
+    if (!steps) {
+      executionContext.logger.warn(
+        { graphId },
+        'A graphId in the dependencyGraphOrder was not refrenced by any steps.',
+      );
+      continue;
+    }
+
+    const stepIds = steps.map((s) => s.id);
+    allStepResults = allStepResults.concat(
+      await executeStepDependencyGraph({
+        executionContext,
+        inputGraph: buildStepDependencyGraph(steps),
+        stepStartStates: pick(stepStartStates, stepIds),
+        duplicateKeyTracker,
+        graphObjectStore,
+        dataStore,
+        createStepGraphObjectDataUploader,
+        beforeAddEntity,
+      }),
+    );
+  }
+
+  return allStepResults;
 }
 
 export function getDefaultStepStartStates<

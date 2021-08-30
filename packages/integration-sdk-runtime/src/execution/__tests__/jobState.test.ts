@@ -4,6 +4,7 @@ import {
   TypeTracker,
   MemoryDataStore,
   CreateStepJobStateParams,
+  TypeTrackerStepSummary,
 } from '../jobState';
 import { v4 as uuid } from 'uuid';
 import { FileSystemGraphObjectStore } from '../../storage';
@@ -302,7 +303,7 @@ describe('upload callbacks', () => {
   });
 });
 
-describe('#getData/#setData', () => {
+describe('#getData/#setData/#deleteData', () => {
   afterEach(() => {
     vol.reset();
   });
@@ -317,5 +318,148 @@ describe('#getData/#setData', () => {
   test('should return "undefined" when a key is not found', async () => {
     const jobState = createTestStepJobState();
     expect(await jobState.getData(uuid())).toEqual(undefined);
+  });
+
+  test('should return "undefined" when a key is deleted', async () => {
+    const jobState = createTestStepJobState();
+    const key = uuid();
+    await jobState.setData(key, 'test');
+    await jobState.deleteData(key);
+    expect(await jobState.getData(key)).toEqual(undefined);
+  });
+});
+
+describe('#TypeTracker', () => {
+  describe('#getEncounteredTypesForStep', () => {
+    test('should allow getting encountered graph object types by step', () => {
+      const typeTracker = new TypeTracker();
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_1',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'b',
+        _type: 'my_type_1',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_2',
+        count: 1,
+      });
+
+      expect(typeTracker.getEncounteredTypesForStep('a')).toEqual([
+        'my_type_1',
+        'my_type_2',
+      ]);
+    });
+  });
+
+  describe('#getAllEncounteredTypes', () => {
+    test('should allow getting all encountered graph object types', () => {
+      const typeTracker = new TypeTracker();
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_1',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'b',
+        _type: 'my_type_1',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'b',
+        _type: 'my_type_3',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_2',
+        count: 1,
+      });
+
+      expect(typeTracker.getAllEncounteredTypes()).toEqual([
+        'my_type_1',
+        'my_type_2',
+        'my_type_3',
+      ]);
+    });
+  });
+
+  describe('#getEncounteredTypesForStep', () => {
+    test('should return empty array if step not found', () => {
+      const typeTracker = new TypeTracker();
+      expect(typeTracker.getEncounteredTypesForStep('a')).toEqual([]);
+    });
+  });
+
+  describe('#summarizeStep', () => {
+    test('should return empty summary when step does not exist', () => {
+      const typeTracker = new TypeTracker();
+
+      const expected: TypeTrackerStepSummary = {
+        graphObjectTypeSummary: [],
+      };
+
+      expect(typeTracker.summarizeStep('a')).toEqual(expected);
+    });
+
+    test('should allow summarizing an individual step', () => {
+      const typeTracker = new TypeTracker();
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_1',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_1',
+        count: 2,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'b',
+        _type: 'my_type_1',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'b',
+        _type: 'my_type_3',
+        count: 1,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: 'a',
+        _type: 'my_type_2',
+        count: 1,
+      });
+
+      const expected: TypeTrackerStepSummary = {
+        graphObjectTypeSummary: [
+          {
+            _type: 'my_type_1',
+            total: 3,
+          },
+          {
+            _type: 'my_type_2',
+            total: 1,
+          },
+        ],
+      };
+
+      expect(typeTracker.summarizeStep('a')).toEqual(expected);
+    });
   });
 });

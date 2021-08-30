@@ -15,7 +15,7 @@
     "prebuild:dist": "yarn clean:build",
     "build:dist": "lerna run build:dist",
     "format": "prettier --write '**/*.{js,ts,md,json}'",
-    "prepush": "yarn lint && yarn build:dist && yarn jest --changedSince master"
+    "prepush": "yarn lint && yarn build:dist && yarn jest --changedSince main"
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",

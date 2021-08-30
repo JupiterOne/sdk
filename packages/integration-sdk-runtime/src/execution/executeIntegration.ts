@@ -27,7 +27,7 @@ import {
 import { timeOperation } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
-import { DuplicateKeyTracker } from './jobState';
+import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
 import {
   determinePartialDatasetsFromStepExecutionResults,
   executeSteps,
@@ -222,8 +222,10 @@ export async function executeWithContext<
         config.normalizeGraphObjectKey,
       ),
       graphObjectStore,
+      dataStore: new MemoryDataStore(),
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
+      dependencyGraphOrder: config.dependencyGraphOrder
     });
 
     const partialDatasets = determinePartialDatasetsFromStepExecutionResults(

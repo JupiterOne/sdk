@@ -2,18 +2,18 @@ import { createCommand } from 'commander';
 
 import {
   collect,
-  compare,
-  visualize,
-  sync,
-  run,
+  diff,
   document,
+  run,
+  sync,
+  visualize,
   visualizeTypes,
 } from './commands';
 
 export function createCli() {
   return createCommand()
     .addCommand(collect())
-    .addCommand(compare())
+    .addCommand(diff())
     .addCommand(visualize())
     .addCommand(sync())
     .addCommand(run())

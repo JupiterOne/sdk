@@ -1,12 +1,15 @@
-import * as log from '../log';
-import * as path from 'path';
 import { createCommand } from 'commander';
-import {
-  StepGraphObjectMetadataProperties,
-  StepEntityMetadata,
-  StepRelationshipMetadata,
-} from '@jupiterone/integration-sdk-core';
 import { promises as fs } from 'fs';
+import * as path from 'path';
+
+import {
+  StepEntityMetadata,
+  StepGraphObjectMetadataProperties,
+  StepRelationshipMetadata,
+  StepMappedRelationshipMetadata,
+} from '@jupiterone/integration-sdk-core';
+
+import * as log from '../log';
 import {
   getSortedJupiterOneTypes,
   TypesCommandArgs,
@@ -24,15 +27,16 @@ interface DocumentCommandArgs extends TypesCommandArgs {
 
 export function document() {
   return createCommand('document')
-    .description('Generates documentation for all steps')
+    .description('generate documentation for all steps')
     .option(
       '-p, --project-path <directory>',
-      'Absolute path to the integration project directory. Defaults to the current working directory.',
+      'absolute path to integration project directory',
       process.cwd(),
     )
     .option(
       '-o, --output-file <path>',
-      'Absolute path to the Markdown file that should be created/updated. Defaults to {CWD}/docs/jupiterone.md.',
+      'project relative path to generated Markdown file',
+      path.join('docs', 'jupiterone.md'),
     )
     .action(executeDocumentAction);
 }
@@ -40,9 +44,8 @@ export function document() {
 async function executeDocumentAction(
   options: DocumentCommandArgs,
 ): Promise<void> {
-  const { projectPath } = options;
-  const documentationFilePath =
-    options.outputFile || getDefaultDocumentationFilePath(projectPath);
+  const { outputFile, projectPath } = options;
+  const documentationFilePath = path.join(projectPath, outputFile);
 
   log.info('\nCollecting metadata types from steps...\n');
   const metadata = await getSortedJupiterOneTypes({
@@ -102,12 +105,6 @@ async function getDocumentationFile(
   }
 }
 
-function getDefaultDocumentationFilePath(
-  projectSourceDirectory: string,
-): string {
-  return path.join(projectSourceDirectory, 'docs/jupiterone.md');
-}
-
 function buildEntityClassDocumentationValue(_class: string | string[]): string {
   if (typeof _class === 'string') {
     return `\`${_class}\``;
@@ -146,11 +143,33 @@ function generateRelationshipTableFromAllStepEntityMetadata(
   return generated;
 }
 
+function generateMappedRelationshipTableFromAllStepEntityMetadata(
+  metadata: StepMappedRelationshipMetadata[],
+): string {
+  const generated = table([
+    [
+      'Source Entity `_type`',
+      'Relationship `_class`',
+      'Target Entity `_type`',
+      'Direction',
+    ],
+    ...metadata.map((v) => [
+      `\`${v.sourceType}\``,
+      `**${v._class}**`,
+      `\`*${v.targetType}*\``,
+      `${v.direction}`,
+    ]),
+  ]);
+
+  return generated;
+}
+
 function generateGraphObjectDocumentationFromStepsMetadata(
   metadata: StepGraphObjectMetadataProperties,
 ): string {
   let entitySection = '';
   let relationshipSection = '';
+  let mappedRelationshipSection = '';
 
   if (metadata.entities.length) {
     const generatedEntityTable = generateEntityTableFromAllStepEntityMetadata(
@@ -180,6 +199,20 @@ The following relationships are created/mapped:
 ${generatedRelationshipTable}`;
   }
 
+  if (metadata.mappedRelationships?.length) {
+    const generatedMappedRelationshipTable = generateMappedRelationshipTableFromAllStepEntityMetadata(
+      metadata.mappedRelationships,
+    );
+
+    mappedRelationshipSection += `
+
+### Mapped Relationships
+
+The following mapped relationships are created:
+
+${generatedMappedRelationshipTable}`;
+  }
+
   return `${J1_DOCUMENTATION_MARKER_START}
 <!--
 ********************************************************************************
@@ -187,11 +220,11 @@ NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
 "j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
-https://github.com/JupiterOne/sdk/blob/master/docs/integrations/development.md
+https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
 ********************************************************************************
 -->
 
-## Data Model${entitySection}${relationshipSection}
+## Data Model${entitySection}${relationshipSection}${mappedRelationshipSection}
 
 <!--
 ********************************************************************************

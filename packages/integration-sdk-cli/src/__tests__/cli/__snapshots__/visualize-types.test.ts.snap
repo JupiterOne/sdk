@@ -20,7 +20,7 @@ exports[`visualize integration metadata creates graph based on integration data 
           nodes: nodes,
           edges: edges
         };
-        var options = {\\"edges\\":{\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
+        var options = {\\"edges\\":{\\"color\\":\\"#6647ff\\",\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"nodes\\":{\\"color\\":{\\"border\\":\\"#6647ff\\",\\"background\\":\\"#3ce3b5\\"}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>
@@ -47,7 +47,7 @@ exports[`visualize integration metadata creates graph filtered by --type flag 1`
           nodes: nodes,
           edges: edges
         };
-        var options = {\\"edges\\":{\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
+        var options = {\\"edges\\":{\\"color\\":\\"#6647ff\\",\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"nodes\\":{\\"color\\":{\\"border\\":\\"#6647ff\\",\\"background\\":\\"#3ce3b5\\"}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>

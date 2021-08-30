@@ -96,10 +96,26 @@ function findOrCreatePlaceholderEntity(
 ): NodeEntity | NewPlaceholderEntity {
   const targetEntity = findTargetEntity(nodeEntities, _mapping);
   if (targetEntity === undefined) {
-    return _mapping.targetEntity;
+    return createPlaceholderEntity(_mapping);
   } else {
     return targetEntity;
   }
+}
+
+/**
+ * Trims the target entity provided in `_mapping` to _only_ it's target filter keys.
+ */
+export function createPlaceholderEntity(
+  _mapping: RelationshipMapping,
+): NodeEntity | NewPlaceholderEntity {
+  const newPlaceholderEntity = {};
+  for (const filterKey of _mapping.targetFilterKeys) {
+    const keys = Array.isArray(filterKey) ? filterKey : [filterKey];
+    for (const key of keys) {
+      newPlaceholderEntity[key] = _mapping.targetEntity[key];
+    }
+  }
+  return newPlaceholderEntity;
 }
 
 export function createMappedRelationshipNodesAndEdges(options: {
@@ -268,6 +284,7 @@ function createPlaceholderEntityNode(targetEntity: NodeEntity) {
     {
       id: targetEntity.nodeId,
       group: targetEntity._type || UNKNOWN_GROUP,
+      shapeProperties: { borderDashes: true },
     },
     {
       isDuplicateId: isNodeIdDuplicate(targetEntity),

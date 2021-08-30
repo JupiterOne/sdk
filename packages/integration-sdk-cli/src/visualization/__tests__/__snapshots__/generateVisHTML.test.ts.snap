@@ -20,7 +20,7 @@ exports[`renders custom config when passed in 1`] = `
           nodes: nodes,
           edges: edges
         };
-        var options = {};
+        var options = {\\"edges\\":{\\"color\\":\\"#ffffff\\",\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>
@@ -63,7 +63,7 @@ exports[`renders nothing to display message when there is nothing to display 1`]
         <title>Integration SDK Graph</title>
     </head>
     <body style=\\"height:100vh;width:100%\\">
-      <h1 style=\\"text-align: center;\\">There was no data found to visualize.</h1>
+      <h1 style=\\"text-align: center;\\">path/to/data: There was no data found to visualize.</h1>
     </body>
     </html>"
 `;
