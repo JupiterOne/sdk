@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Changed language for relationships created that document command produces.
+
 ## [6.18.0] - 2021-08-27
 
 ### Added

@@ -194,7 +194,7 @@ ${generatedEntityTable}`;
 
 ### Relationships
 
-The following relationships are created/mapped:
+The following relationships are created:
 
 ${generatedRelationshipTable}`;
   }
