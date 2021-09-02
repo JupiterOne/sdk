@@ -67,7 +67,7 @@ https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
 
 ### Relationships
 
-The following relationships are created/mapped:
+The following relationships are created:
 
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
@@ -147,7 +147,7 @@ https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
 
 ### Relationships
 
-The following relationships are created/mapped:
+The following relationships are created:
 
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
@@ -194,7 +194,7 @@ The following entities are created:
 
 ### Relationships
 
-The following relationships are created/mapped:
+The following relationships are created:
 
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
@@ -282,7 +282,7 @@ The following entities are created:
 
 ### Relationships
 
-The following relationships are created/mapped:
+The following relationships are created:
 
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
@@ -368,7 +368,7 @@ https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
 
 ### Relationships
 
-The following relationships are created/mapped:
+The following relationships are created:
 
 | Source Entity \`_type\` | Relationship \`_class\` | Target Entity \`_type\` |
 | --------------------- | --------------------- | --------------------- |
