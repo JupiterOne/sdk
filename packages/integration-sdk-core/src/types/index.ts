@@ -4,6 +4,7 @@ export * from './instance';
 export * from './jobState';
 export * from './logger';
 export * from './partialDatasets';
+export * from './spec';
 export * from './step';
 export * from './validation';
 export * from './synchronization';
