@@ -11,6 +11,7 @@ and this project adheres to
 
 ### Added
 
+- Added `toImplementSpec` jest matcher
 - Added `StepSpec` and `IntegrationSpecConfig` types in order to define
   integration specifications
 
