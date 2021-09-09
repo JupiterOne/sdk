@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.19.0] - 2021-09-09
+
 ### Added
 
 - Added `toImplementSpec` jest matcher
