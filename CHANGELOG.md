@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `toImplementSpec` jest matcher
+- Added `StepSpec` and `IntegrationSpecConfig` types in order to define
+  integration specifications
+
 ### Changed
 
 - Changed language for relationships created that document command produces.

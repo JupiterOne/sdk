@@ -3,6 +3,8 @@ import {
   createMappedRelationship,
   Entity,
   ExplicitRelationship,
+  IntegrationInvocationConfig,
+  IntegrationSpecConfig,
   RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
 import {
@@ -11,6 +13,7 @@ import {
   toTargetEntities,
   GraphObjectSchema,
   registerMatchers,
+  toImplementSpec,
 } from '../jest';
 import { v4 as uuid } from 'uuid';
 
@@ -750,6 +753,188 @@ describe('#toTargetEntities', () => {
   });
 });
 
+describe('#toImplementSpec', () => {
+  const executionHandler = () => {
+    undefined;
+  };
+
+  test('should pass if integration matches implemented spec', () => {
+    const implementation: IntegrationInvocationConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          executionHandler,
+        },
+        {
+          id: 'step-2',
+          name: 'Step 2',
+          entities: [
+            {
+              resourceName: 'resource-2',
+              _type: 'resource_2',
+              _class: 'Record',
+            },
+          ],
+          relationships: [
+            {
+              _type: 'resource_1_has_resource_2',
+              sourceType: 'resource_1',
+              _class: RelationshipClass.HAS,
+              targetType: 'resource_2',
+            },
+          ],
+          dependsOn: ['step-1'],
+          executionHandler,
+        },
+      ],
+    };
+
+    const spec: IntegrationSpecConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          implemented: true,
+        },
+        {
+          id: 'step-2',
+          name: 'Step 2',
+          entities: [
+            {
+              resourceName: 'RESOURCE-3',
+              _type: 'resource_3',
+              _class: 'Record',
+            },
+          ],
+          relationships: [
+            {
+              _type: 'resource_1_has_resource_3',
+              sourceType: 'resource_1',
+              _class: RelationshipClass.HAS,
+              targetType: 'resource_3',
+            },
+          ],
+          dependsOn: ['step-1'],
+          implemented: false,
+        },
+      ],
+    };
+    const result = toImplementSpec(implementation, spec);
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
+  test('should fail if integration does not match implemented spec', () => {
+    const implementation: IntegrationInvocationConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          executionHandler,
+        },
+        {
+          id: 'step-2',
+          name: 'Step 2',
+          entities: [
+            {
+              resourceName: 'resource-2',
+              _type: 'resource_2',
+              _class: 'Record',
+            },
+          ],
+          relationships: [
+            {
+              _type: 'resource_1_has_resource_2',
+              sourceType: 'resource_1',
+              _class: RelationshipClass.HAS,
+              targetType: 'resource_2',
+            },
+          ],
+          dependsOn: ['step-1'],
+          executionHandler,
+        },
+      ],
+    };
+
+    const spec: IntegrationSpecConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          implemented: true,
+        },
+        {
+          id: 'step-2',
+          name: 'Step 2',
+          entities: [
+            {
+              resourceName: 'RESOURCE-3',
+              _type: 'resource_3',
+              _class: 'Record',
+            },
+          ],
+          relationships: [
+            {
+              _type: 'resource_1_has_resource_3',
+              sourceType: 'resource_1',
+              _class: RelationshipClass.HAS,
+              targetType: 'resource_3',
+            },
+          ],
+          dependsOn: ['step-1'],
+          implemented: true,
+        },
+      ],
+    };
+    const result = toImplementSpec(implementation, spec);
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+  });
+});
+
 describe('#registerMatchers', () => {
   test('should register all test matchers', () => {
     const mockJestExtendFn = jest.fn();
@@ -764,6 +949,7 @@ describe('#registerMatchers', () => {
       toMatchGraphObjectSchema,
       toMatchDirectRelationshipSchema,
       toTargetEntities,
+      toImplementSpec,
     });
   });
 });
