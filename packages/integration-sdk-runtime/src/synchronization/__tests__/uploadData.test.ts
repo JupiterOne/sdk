@@ -145,28 +145,28 @@ test('uploads mapped relationship data in batches of 250', async () => {
       logger,
       apiClient,
     },
-    'mapped-relationships',
+    'mappedRelationships',
     data,
   );
 
   expect(postSpy).toHaveBeenCalledTimes(3);
 
   expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/mapped-relationships`,
+    `/persister/synchronization/jobs/${job.id}/mappedRelationships`,
     {
-      'mapped-relationships': data.slice(0, 250),
+      mappedRelationships: data.slice(0, 250),
     },
   );
   expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/mapped-relationships`,
+    `/persister/synchronization/jobs/${job.id}/mappedRelationships`,
     {
-      'mapped-relationships': data.slice(250, 500),
+      mappedRelationships: data.slice(250, 500),
     },
   );
   expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/mapped-relationships`,
+    `/persister/synchronization/jobs/${job.id}/mappedRelationships`,
     {
-      'mapped-relationships': data.slice(500, 510),
+      mappedRelationships: data.slice(500, 510),
     },
   );
 });

@@ -242,7 +242,7 @@ export async function uploadGraphObjectData(
 
       await uploadData(
         synchronizationJobContext,
-        'mapped-relationships',
+        'mappedRelationships',
         graphObjectData.mappedRelationships,
         uploadBatchSize,
       );
@@ -288,7 +288,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
 interface UploadDataLookup {
   entities: Entity;
   relationships: Relationship;
-  'mapped-relationships': MappedRelationship;
+  mappedRelationships: MappedRelationship;
 }
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {

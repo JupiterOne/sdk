@@ -6,7 +6,7 @@ import { GraphObjectIndexMetadata } from '../types/step';
 export type CollectionType =
   | 'entities'
   | 'relationships'
-  | 'mapped-relationships';
+  | 'mappedRelationships';
 
 export interface GetIndexMetadataForGraphObjectTypeParams {
   stepId: string;

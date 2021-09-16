@@ -374,7 +374,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
             const indexMetadata = this.getIndexMetadataForGraphObjectType({
               stepId,
               _type: r._type,
-              graphObjectCollectionType: 'mapped-relationships',
+              graphObjectCollectionType: 'mappedRelationships',
             });
 
             if (typeof indexMetadata === 'undefined') {
@@ -387,7 +387,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           if (indexable.length) {
             await flushDataToDisk({
               storageDirectoryPath: stepId,
-              collectionType: 'mapped-relationships',
+              collectionType: 'mappedRelationships',
               data: indexable,
               pretty: this.prettifyFiles,
             });

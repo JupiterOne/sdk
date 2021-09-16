@@ -16,7 +16,7 @@ and this project adheres to
   were added to the job state using `jobState.addRelationships` and sent to the
   `/persister/synchronization/jobs/{jobId}/relationships` synchronization
   endpoint. They are now uploaded to
-  `/persister/synchronization/jobs/{jobId}/mapped-relationships`, which enables
+  `/persister/synchronization/jobs/{jobId}/mappedRelationships`, which enables
   some mapped relationships to be handled in an isolated fashion.
 
 ## [6.19.0] - 2021-09-09
