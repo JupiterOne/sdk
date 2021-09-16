@@ -5,6 +5,7 @@ import {
   GraphObjectStore,
   IntegrationError,
   IntegrationMissingKeyError,
+  MappedRelationship,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 
@@ -18,6 +19,11 @@ interface InMemoryGraphObjectStoreEntityData extends GraphObjectMetadata {
 
 interface InMemoryGraphObjectStoreRelationshipData extends GraphObjectMetadata {
   relationship: Relationship;
+}
+
+interface InMemoryGraphObjectStoreMappedRelationshipData
+  extends GraphObjectMetadata {
+  mappedRelationship: MappedRelationship;
 }
 
 /**
@@ -41,6 +47,10 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     string,
     InMemoryGraphObjectStoreRelationshipData
   >();
+  private readonly mappedRelationshipKeyToRelationshipMap = new Map<
+    string,
+    InMemoryGraphObjectStoreMappedRelationshipData
+  >();
 
   /**
    * Maps to lookup all entity/relationship _key's by _type. The value of this
@@ -63,6 +73,10 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     Map<string, boolean>
   > = new Map();
   private readonly relationshipTypeToKeysMap: Map<
+    string,
+    Map<string, boolean>
+  > = new Map();
+  private readonly mappedRelationshipTypeToKeysMap: Map<
     string,
     Map<string, boolean>
   > = new Map();
@@ -107,6 +121,32 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
         this.relationshipTypeToKeysMap.set(
           relationship._type,
           new Map<string, boolean>([[relationship._key, true]]),
+        );
+      }
+    }
+    return Promise.resolve();
+  }
+
+  addMappedRelationships(
+    stepId: string,
+    newMappedRelationships: MappedRelationship[],
+  ): Promise<void> {
+    for (const mappedRelationship of newMappedRelationships) {
+      this.mappedRelationshipKeyToRelationshipMap.set(mappedRelationship._key, {
+        stepId,
+        mappedRelationship,
+      });
+
+      const mappedRelationshipTypeKeysMap = this.mappedRelationshipTypeToKeysMap.get(
+        mappedRelationship._type,
+      );
+
+      if (mappedRelationshipTypeKeysMap) {
+        mappedRelationshipTypeKeysMap.set(mappedRelationship._key, true);
+      } else {
+        this.mappedRelationshipTypeToKeysMap.set(
+          mappedRelationship._type,
+          new Map<string, boolean>([[mappedRelationship._key, true]]),
         );
       }
     }
@@ -233,6 +273,34 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     }
   }
 
+  /**
+   * Instead of clearing the entire map, we want to delete old data individually.
+   * This will allow us to eventually run steps in parallel without locking when
+   * steps have no interdependence. If we cleared it out, it's possible that
+   * two steps could be running in parallel and one of the steps may clear out
+   * the maps while the other is still relying on it.
+   */
+  flushMappedRelationships(mappedRelationships: MappedRelationship[]) {
+    for (const mappedRelationship of mappedRelationships) {
+      this.mappedRelationshipKeyToRelationshipMap.delete(
+        mappedRelationship._key,
+      );
+      const mappedRelationshipTypeKeysMap = this.mappedRelationshipTypeToKeysMap.get(
+        mappedRelationship._type,
+      );
+
+      if (!mappedRelationshipTypeKeysMap) {
+        // NOTE: This should never happen. It's an indicator that there is a
+        // bug in keeping our two maps in syc.
+        throw new Error(
+          `Could not delete relationship from type keys map (_key=${mappedRelationship._key}, _type=${mappedRelationship._type})`,
+        );
+      }
+
+      mappedRelationshipTypeKeysMap.delete(mappedRelationship._key);
+    }
+  }
+
   collectEntitiesByStep(): Map<string, Entity[]> {
     const entitiesByStepMap = new Map<string, Entity[]>();
 
@@ -266,6 +334,29 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     }
 
     return relationshipsByStepMap;
+  }
+
+  collectMappedRelationshipsByStep(): Map<string, MappedRelationship[]> {
+    const mappedRelationshipsByStepMap = new Map<
+      string,
+      MappedRelationship[]
+    >();
+
+    for (const [_key, graphObjectData] of this
+      .mappedRelationshipKeyToRelationshipMap) {
+      const { stepId, mappedRelationship } = graphObjectData;
+
+      const mappedRelationshipsByStepArray = mappedRelationshipsByStepMap.get(
+        stepId,
+      );
+      if (mappedRelationshipsByStepArray) {
+        mappedRelationshipsByStepArray.push(mappedRelationship);
+      } else {
+        mappedRelationshipsByStepMap.set(stepId, [mappedRelationship]);
+      }
+    }
+
+    return mappedRelationshipsByStepMap;
   }
 
   getTotalEntityItemCount() {

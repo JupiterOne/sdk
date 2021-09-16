@@ -316,9 +316,9 @@ provides utilities for collecting and validating graph data.
 
 ##### `jobState`
 
-The `jobState` object is used for collecting entities and relationships that
-have been created throughout the integration run via the `addEntities` and
-`addRelationships` functions.
+The `jobState` object is used for collecting entities, relationships, and mapped
+relationships that have been created throughout the integration run via the
+`addEntities`, `addRelationships`, and `addMappedRelationships` functions.
 
 Previously collected integration data can be collected via the `iterateEntities`
 and `iterateRelationships` function. These functions will initially allow for
@@ -715,13 +715,14 @@ When the integration is run with context about an integration instance (via the
 
 The `executionContext` that is provided in the `executionHandler` step exposes a
 `jobState` utility that can be used to collect entity and relationship data via
-`addEntities` and `addRelationships` functions. The `jobState` utility will
-automatically flush the data to disk as a certain threshold of entities and
-relationships is met. The data flushed to disk are grouped in folders that are
-based on the step that was run. Entities and relationships will also be grouped
-by the `_type` and linked into separate directories to provide faster look ups.
-These directories will be used by the `findEntity`, `iterateEntities`, and
-`iterateRelationships` functions to provide faster lookups.
+`addEntities`, `addRelationships`, and `addMappedRelationships` functions. The
+`jobState` utility will automatically flush the data to disk as a certain
+threshold of entities and relationships is met. The data flushed to disk are
+grouped in folders that are based on the step that was run. Entities and
+relationships will also be grouped by the `_type` and linked into separate
+directories to provide faster look ups. These directories will be used by the
+`findEntity`, `iterateEntities`, and `iterateRelationships` functions to provide
+faster lookups.
 
 From our experience, integrations most commonly query collected data from
 previous steps the `_type` property for constructing relationships, so the

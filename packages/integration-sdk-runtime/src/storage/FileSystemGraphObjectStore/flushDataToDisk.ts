@@ -2,15 +2,15 @@ import pMap from 'p-map';
 import { v4 as uuid } from 'uuid';
 import groupBy from 'lodash/groupBy';
 
-import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
+import {
+  CollectionType,
+  Entity,
+  Relationship,
+} from '@jupiterone/integration-sdk-core';
 
 import { writeJsonToPath, symlink } from '../../fileSystem';
 
-import {
-  CollectionType,
-  buildIndexFilePath,
-  buildObjectCollectionFilePath,
-} from './path';
+import { buildIndexFilePath, buildObjectCollectionFilePath } from './path';
 
 interface FlushDataToDiskInput<TGraphObject = Entity | Relationship> {
   storageDirectoryPath: string;

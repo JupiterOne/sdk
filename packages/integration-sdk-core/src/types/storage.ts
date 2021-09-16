@@ -1,16 +1,21 @@
 import { Entity } from './entity';
 import { GraphObjectFilter, GraphObjectIteratee } from './jobState';
-import { Relationship } from './relationship';
+import { MappedRelationship, Relationship } from './relationship';
 import { GraphObjectIndexMetadata } from '../types/step';
+
+export type CollectionType =
+  | 'entities'
+  | 'relationships'
+  | 'mapped-relationships';
 
 export interface GetIndexMetadataForGraphObjectTypeParams {
   stepId: string;
   _type: string;
-  graphObjectCollectionType: 'entities' | 'relationships';
+  graphObjectCollectionType: CollectionType;
 }
 
 /**
- * Persists entities and relationships to a durable medium for the duration of
+ * Persists entities, relationships, and mapped relationships to a durable medium for the duration of
  * integration execution.
  */
 export interface GraphObjectStore {
@@ -26,6 +31,14 @@ export interface GraphObjectStore {
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
 
+  addMappedRelationships(
+    stepId: string,
+    newMappedRelationships: MappedRelationship[],
+    onRelationshipsFlushed?: (
+      mappedRelationships: MappedRelationship[],
+    ) => Promise<void>,
+  ): Promise<void>;
+
   findEntity(_key: string | undefined): Promise<Entity | undefined>;
 
   iterateEntities<T extends Entity = Entity>(
@@ -38,9 +51,14 @@ export interface GraphObjectStore {
     iteratee: GraphObjectIteratee<T>,
   ): Promise<void>;
 
+  // TODO iterateMappedRelationships()
+
   flush(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onMappedRelationshipsFlushed?: (
+      mappedRelationships: MappedRelationship[],
+    ) => Promise<void>,
   ): Promise<void>;
 
   getIndexMetadataForGraphObjectType?: (

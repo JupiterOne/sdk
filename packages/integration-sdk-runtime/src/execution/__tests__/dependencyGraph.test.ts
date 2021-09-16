@@ -735,10 +735,12 @@ describe('executeStepDependencyGraph', () => {
       {
         entities: [eA],
         relationships: [],
+        mappedRelationships: [],
       },
       {
         entities: [eC],
         relationships: [],
+        mappedRelationships: [],
       },
     ];
 

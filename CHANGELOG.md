@@ -9,6 +9,16 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added support for `jobState.addMappedRelationship` and
+  `jobState.addMappedRelationships` methods. Previously, mapped relationships
+  were added to the job state using `jobState.addRelationships` and sent to the
+  `/persister/synchronization/jobs/{jobId}/relationships` synchronization
+  endpoint. They are now uploaded to
+  `/persister/synchronization/jobs/{jobId}/mapped-relationships`, which enables
+  some mapped relationships to be handled in an isolated fashion.
+
 ## [6.19.0] - 2021-09-09
 
 ### Added

@@ -4,16 +4,21 @@ import {
   GraphObjectIteratee,
   Relationship,
   GraphObjectStore,
+  MappedRelationship,
 } from '@jupiterone/integration-sdk-core';
 
 /**
- * Custom implementation of GraphObjectStore that stores all entities and
- * relationships in memory. This should never be used in production and is
+ * Custom implementation of GraphObjectStore that stores all entities,
+ * relationships, and mapped relationships in memory. This should never be used in production and is
  * currently only used for testing purposes.
  */
 export class InMemoryGraphObjectStore implements GraphObjectStore {
   private readonly entityMap = new Map<string, Entity>();
   private readonly relationshipMap = new Map<string, Relationship>();
+  private readonly mappedRelationshipMap = new Map<
+    string,
+    MappedRelationship
+  >();
 
   async addEntities(stepId: string, newEntities: Entity[]): Promise<void> {
     for (const entity of newEntities) {
@@ -29,6 +34,20 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   ): Promise<void> {
     for (const relationship of newRelationships) {
       this.relationshipMap.set(relationship._key, relationship);
+    }
+
+    return Promise.resolve();
+  }
+
+  async addMappedRelationships(
+    stepId: string,
+    newMappedRelationships: MappedRelationship[],
+  ): Promise<void> {
+    for (const mappedRelationship of newMappedRelationships) {
+      this.mappedRelationshipMap.set(
+        mappedRelationship._key,
+        mappedRelationship,
+      );
     }
 
     return Promise.resolve();

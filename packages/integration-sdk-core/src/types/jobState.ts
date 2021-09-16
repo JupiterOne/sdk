@@ -1,3 +1,4 @@
+import { MappedRelationship } from '..';
 import { Entity, Relationship } from '../types';
 
 export interface GraphObjectFilter {
@@ -70,6 +71,22 @@ export interface JobState {
    * to add a single relationship to the collection.
    */
   addRelationships: (relationships: Relationship[]) => Promise<void>;
+
+  /**
+   * Adds a mapped relationship to the job's collection. `addMappedRelationships` can be used
+   * to add a batch of relationships to the collection.
+   */
+  addMappedRelationship: (
+    mappedRelationship: MappedRelationship,
+  ) => Promise<void>;
+
+  /**
+   * Adds a batch of mapped relationships to the job's collection. `addMappedRelationship` can be used
+   * to add a single relationship to the collection.
+   */
+  addMappedRelationships: (
+    mappedRelationships: MappedRelationship[],
+  ) => Promise<void>;
 
   /**
    * Finds an entity by `_key` and returns `null` if the entity does not exist.

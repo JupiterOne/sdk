@@ -20,6 +20,7 @@ function createFlushedGraphObjectData(): FlushedGraphObjectData {
   return {
     entities: [createTestEntity(), createTestEntity()],
     relationships: [createTestRelationship(), createTestRelationship()],
+    mappedRelationships: [],
   };
 }
 

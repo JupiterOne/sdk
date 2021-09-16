@@ -37,6 +37,7 @@ async function getStorageDirectoryDataForStep(
   const accumulatedWrittenStepData: FlushedGraphObjectData = {
     entities: [],
     relationships: [],
+    mappedRelationships: [],
   };
 
   for (const collectionType of ['entities', 'relationships']) {

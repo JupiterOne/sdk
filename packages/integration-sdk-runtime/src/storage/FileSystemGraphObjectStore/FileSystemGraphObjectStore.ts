@@ -10,6 +10,7 @@ import {
   GraphObjectIndexMetadata,
   GetIndexMetadataForGraphObjectTypeParams,
   IntegrationStep,
+  MappedRelationship,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -56,6 +57,10 @@ interface GraphObjectIndexMetadataMap {
    * Map of _type to GraphObjectIndexMetadata
    */
   relationships: Map<string, GraphObjectIndexMetadata>;
+  /**
+   * Map of _type to GraphObjectIndexMetadata
+   */
+  mappedRelationships: Map<string, GraphObjectIndexMetadata>;
 }
 
 /**
@@ -73,6 +78,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
     const metadataMap: GraphObjectIndexMetadataMap = {
       entities: new Map(),
       relationships: new Map(),
+      mappedRelationships: new Map(),
     };
 
     for (const entityMetadata of step.entities) {
@@ -90,6 +96,17 @@ function integrationStepsToGraphObjectIndexMetadataMap(
           relationshipMetadata._type,
           relationshipMetadata.indexMetadata,
         );
+      }
+    }
+
+    if (step.mappedRelationships) {
+      for (const mappedRelationshipMetadata of step.mappedRelationships) {
+        if (mappedRelationshipMetadata.indexMetadata) {
+          metadataMap.mappedRelationships.set(
+            mappedRelationshipMetadata._type,
+            mappedRelationshipMetadata.indexMetadata,
+          );
+        }
       }
     }
 
@@ -172,6 +189,26 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     }
   }
 
+  async addMappedRelationships(
+    stepId: string,
+    newMappedRelationships: MappedRelationship[],
+    onMappedRelationshipsFlushed?: (
+      mappedRelationships: MappedRelationship[],
+    ) => Promise<void>,
+  ) {
+    await this.localGraphObjectStore.addRelationships(
+      stepId,
+      newMappedRelationships,
+    );
+
+    if (
+      this.localGraphObjectStore.getTotalRelationshipItemCount() >=
+      this.graphObjectBufferThreshold
+    ) {
+      await this.flushMappedRelationshipsToDisk(onMappedRelationshipsFlushed);
+    }
+  }
+
   /**
    * The FileSystemGraphObjectStore first checks to see if the entity exists
    * in the InMemoryGraphObjectStore. If not, it then checks to see if it is
@@ -222,10 +259,14 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async flush(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onMappedRelationshipsFlushed?: (
+      mappedRelationships: MappedRelationship[],
+    ) => Promise<void>,
   ) {
     await Promise.all([
       this.flushEntitiesToDisk(onEntitiesFlushed),
       this.flushRelationshipsToDisk(onRelationshipsFlushed),
+      this.flushMappedRelationshipsToDisk(onMappedRelationshipsFlushed),
     ]);
   }
 
@@ -314,6 +355,50 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
           if (onRelationshipsFlushed) {
             await onRelationshipsFlushed(relationships);
+          }
+        },
+      ),
+    );
+  }
+
+  async flushMappedRelationshipsToDisk(
+    onMappedRelationshipsFlushed?: (
+      mappedRelationships: MappedRelationship[],
+    ) => Promise<void>,
+  ) {
+    await this.lockOperation(() =>
+      pMap(
+        this.localGraphObjectStore.collectMappedRelationshipsByStep(),
+        async ([stepId, mappedRelationships]) => {
+          const indexable = mappedRelationships.filter((r) => {
+            const indexMetadata = this.getIndexMetadataForGraphObjectType({
+              stepId,
+              _type: r._type,
+              graphObjectCollectionType: 'mapped-relationships',
+            });
+
+            if (typeof indexMetadata === 'undefined') {
+              return true;
+            }
+
+            return indexMetadata.enabled === true;
+          });
+
+          if (indexable.length) {
+            await flushDataToDisk({
+              storageDirectoryPath: stepId,
+              collectionType: 'mapped-relationships',
+              data: indexable,
+              pretty: this.prettifyFiles,
+            });
+          }
+
+          this.localGraphObjectStore.flushMappedRelationships(
+            mappedRelationships,
+          );
+
+          if (onMappedRelationshipsFlushed) {
+            await onMappedRelationshipsFlushed(mappedRelationships);
           }
         },
       ),

@@ -1,6 +1,5 @@
+import { CollectionType } from '@jupiterone/integration-sdk-core';
 import path from 'path';
-
-export type CollectionType = 'entities' | 'relationships';
 
 interface BuildObjectCollectionFilePathInput {
   storageDirectoryPath: string;

@@ -194,6 +194,7 @@ describe('upload callbacks', () => {
       {
         entities: [e1, e2],
         relationships: [],
+        mappedRelationships: [],
       },
     ];
 
@@ -219,6 +220,7 @@ describe('upload callbacks', () => {
       {
         entities: [],
         relationships: [r1, r2],
+        mappedRelationships: [],
       },
     ];
 
@@ -247,10 +249,12 @@ describe('upload callbacks', () => {
       {
         entities: [e1],
         relationships: [],
+        mappedRelationships: [],
       },
       {
         entities: [],
         relationships: [r1],
+        mappedRelationships: [],
       },
     ];
 
@@ -296,6 +300,7 @@ describe('upload callbacks', () => {
       {
         entities: [e1, e2],
         relationships: [],
+        mappedRelationships: [],
       },
     ];
 

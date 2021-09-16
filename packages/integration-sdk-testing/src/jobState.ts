@@ -3,6 +3,7 @@ import {
   JobState,
   Relationship,
   KeyNormalizationFunction,
+  MappedRelationship,
 } from '@jupiterone/integration-sdk-core';
 import {
   DuplicateKeyTracker,
@@ -44,6 +45,7 @@ export function createMockJobState({
 }: CreateMockJobStateOptions = {}): MockJobState {
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
+  let collectedMappedRelationships: MappedRelationship[] = [];
 
   const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
   const typeTracker = new TypeTracker();
@@ -114,6 +116,28 @@ export function createMockJobState({
     return Promise.resolve();
   };
 
+  const addMappedRelationships = async (
+    newMappedRelationships: MappedRelationship[],
+  ) => {
+    newMappedRelationships.forEach((r) => {
+      duplicateKeyTracker.registerKey(r._key as string, {
+        _type: r._type,
+        _key: r._key,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId: mockStepId,
+        _type: r._type,
+        count: 1,
+      });
+    });
+
+    collectedMappedRelationships = collectedMappedRelationships.concat(
+      newMappedRelationships,
+    );
+    return Promise.resolve();
+  };
+
   const iterateEntities = async <T extends Entity = Entity>(
     filter,
     iteratee,
@@ -163,6 +187,12 @@ export function createMockJobState({
       await addRelationships([relationship]);
     },
     addRelationships,
+
+    addMappedRelationship: async (mappedRelationship: MappedRelationship) => {
+      await addMappedRelationships([mappedRelationship]);
+    },
+
+    addMappedRelationships,
 
     findEntity: async (_key: string) => {
       const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(

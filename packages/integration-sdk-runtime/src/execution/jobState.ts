@@ -3,6 +3,7 @@ import {
   IntegrationDuplicateKeyError,
   JobState,
   KeyNormalizationFunction,
+  MappedRelationship,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 
@@ -196,6 +197,7 @@ export function createStepJobState({
       uploader?.enqueue({
         entities,
         relationships: [],
+        mappedRelationships: [],
       }),
     );
     return entities;
@@ -222,6 +224,35 @@ export function createStepJobState({
         uploader?.enqueue({
           entities: [],
           relationships,
+          mappedRelationships: [],
+        }),
+    );
+  };
+
+  const addMappedRelationships = (
+    mappedRelationships: MappedRelationship[],
+  ) => {
+    mappedRelationships.forEach((r) => {
+      duplicateKeyTracker.registerKey(r._key, {
+        _type: r._type,
+        _key: r._key,
+      });
+
+      typeTracker.addStepGraphObjectType({
+        stepId,
+        _type: r._type,
+        count: 1,
+      });
+    });
+
+    return graphObjectStore.addMappedRelationships(
+      stepId,
+      mappedRelationships,
+      async (mappedRelationships) =>
+        uploader?.enqueue({
+          entities: [],
+          relationships: [],
+          mappedRelationships,
         }),
     );
   };
@@ -251,6 +282,12 @@ export function createStepJobState({
       return addRelationships([relationship]);
     },
     addRelationships,
+
+    addMappedRelationship: (mappedRelationship: MappedRelationship) => {
+      return addMappedRelationships([mappedRelationship]);
+    },
+
+    addMappedRelationships,
 
     findEntity: async (_key: string) => {
       const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
@@ -282,11 +319,19 @@ export function createStepJobState({
           uploader?.enqueue({
             entities,
             relationships: [],
+            mappedRelationships: [],
           }),
         async (relationships) =>
           uploader?.enqueue({
             entities: [],
             relationships,
+            mappedRelationships: [],
+          }),
+        async (mappedRelationships) =>
+          uploader?.enqueue({
+            entities: [],
+            relationships: [],
+            mappedRelationships,
           }),
       ),
 

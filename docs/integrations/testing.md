@@ -208,8 +208,9 @@ collected via the `jobState` in memory.
 
 For convenience, the `jobState` created by the mocked context exposes a slightly
 different interface than the regular `jobState` object and allows for data
-collected via the `addEntities` and `addRelationships` functions to be accessed
-via `collectedEntities` and `collectedRelationships` properties.
+collected via the `addEntities`, `addRelationships`, and
+`addMappedRelationships` functions to be accessed via `collectedEntities` and
+`collectedRelationships` properties.
 
 Example usage in a test:
 

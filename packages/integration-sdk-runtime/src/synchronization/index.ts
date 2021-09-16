@@ -7,6 +7,7 @@ import {
   Entity,
   Relationship,
   SynchronizationJob,
+  MappedRelationship,
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationLogger } from '../logger';
@@ -193,7 +194,7 @@ export async function uploadGraphObjectData(
         graphObjectData.entities,
         uploadBatchSize,
       );
-      
+
       synchronizationJobContext.logger.info(
         {
           entities: graphObjectData.entities.length,
@@ -225,6 +226,32 @@ export async function uploadGraphObjectData(
           relationships: graphObjectData.relationships.length,
         },
         'Successfully uploaded relationships',
+      );
+    }
+
+    if (
+      Array.isArray(graphObjectData.mappedRelationships) &&
+      graphObjectData.mappedRelationships.length != 0
+    ) {
+      synchronizationJobContext.logger.info(
+        {
+          mappedRelationships: graphObjectData.mappedRelationships.length,
+        },
+        'Preparing batches of mapped relationships for upload',
+      );
+
+      await uploadData(
+        synchronizationJobContext,
+        'mapped-relationships',
+        graphObjectData.mappedRelationships,
+        uploadBatchSize,
+      );
+
+      synchronizationJobContext.logger.info(
+        {
+          mappedRelationships: graphObjectData.mappedRelationships.length,
+        },
+        'Successfully uploaded mapped relationships',
       );
     }
   } catch (err) {
@@ -261,6 +288,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
 interface UploadDataLookup {
   entities: Entity;
   relationships: Relationship;
+  'mapped-relationships': MappedRelationship;
 }
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
