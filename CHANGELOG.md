@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Introduce `j1-integration validate-question-file` command that is used to
+  automatically validate managed questions and JupiterOne queries
+
 ## [6.19.0] - 2021-09-09
 
 ### Added
