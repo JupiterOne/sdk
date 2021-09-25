@@ -1253,10 +1253,10 @@ Usage: j1-integration validate-question-file [options]
 validates an integration questions file
 
 Options:
-  -p, --file-path <filePath>                         absolute path to integration question file
-  -a, --jupiterone-account-id <jupiteroneAccountId>  JupiterOne account ID used to validate JupiterOne queries with
-  -k, --jupiterone-api-key <jupiteroneApiKey>        JupiterOne API key used to validate JupiterOne queries with
-  -d, --dry-run                                      Skip making HTTP requests to validate J1QL queries
+  -p, --file-path <filePath>                         absolute path to managed question file
+  -a, --jupiterone-account-id <jupiteroneAccountId>  J1 account ID used to validate J1QL queries
+  -k, --jupiterone-api-key <jupiteroneApiKey>        J1 API key used to validate J1QL queries
+  -d, --dry-run                                      skip making HTTP requests to validate J1QL queries
   -h, --help                                         display help for command
 ```
 

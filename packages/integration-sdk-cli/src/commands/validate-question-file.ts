@@ -20,19 +20,19 @@ export function validateQuestionFile() {
     .description('validates an integration questions file')
     .requiredOption(
       '-p, --file-path <filePath>',
-      'absolute path to integration question file',
+      'absolute path to managed question file',
     )
     .option(
       '-a, --jupiterone-account-id <jupiteroneAccountId>',
-      'JupiterOne account ID used to validate JupiterOne queries with',
+      'J1 account ID used to validate J1QL queries',
     )
     .option(
       '-k, --jupiterone-api-key <jupiteroneApiKey>',
-      'JupiterOne API key used to validate JupiterOne queries with',
+      'J1 API key used to validate J1QL queries',
     )
     .option(
       '-d, --dry-run',
-      'Skip making HTTP requests to validate J1QL queries',
+      'skip making HTTP requests to validate J1QL queries',
     )
     .action(executeValidateQuestionFileAction);
 }
@@ -50,7 +50,7 @@ async function executeValidateQuestionFileAction(
 
   if (!dryRun && (!jupiteroneAccountId || !jupiteroneApiKey)) {
     throw new Error(
-      'Must provide JupiterOne API key and JupiterOne API key when not running a dry run',
+      'Must provide J1 account ID and API key (except for --dry-run)',
     );
   } else if (!dryRun && jupiteroneAccountId && jupiteroneApiKey) {
     apiClient = createApiClient({
@@ -72,5 +72,5 @@ async function executeValidateQuestionFileAction(
     throw err;
   }
 
-  log.info('Successfully validated integration question file!');
+  log.info('Successfully validated managed question file!');
 }
