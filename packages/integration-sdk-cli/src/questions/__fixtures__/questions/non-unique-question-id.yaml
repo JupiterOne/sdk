@@ -1,0 +1,28 @@
+---
+sourceId: managed:google_cloud
+integrationDefinitionId: "${integration_definition_id}"
+questions:
+- id: integration-question-google-cloud-disabled-project-services
+  title: Which Google Cloud API services are disabled for my project?
+  description:
+    Finds all disabled Google Cloud API services in a specified project
+  queries:
+  - query: |
+      FIND google_cloud_api_service WITH projectId = '{{projectId}}' AND enabled = false
+  tags:
+  - google-cloud
+  - service
+  - api
+
+### NOTE: This ID is _not_ unique and will cause an error to be thrown!
+- id: integration-question-google-cloud-disabled-project-services
+  title: Ensure that corporate login credentials are used
+  description:
+    Use corporate login credentials instead of personal accounts, such as Gmail accounts.
+  queries:
+  - query: |
+      FIND google_user WITH email $="@{{domain}}"
+  tags:
+  - google-cloud
+  - user
+  - access

@@ -8,6 +8,7 @@ import {
   sync,
   visualize,
   visualizeTypes,
+  validateQuestionFile,
 } from './commands';
 
 export function createCli() {
@@ -18,5 +19,6 @@ export function createCli() {
     .addCommand(sync())
     .addCommand(run())
     .addCommand(visualizeTypes())
-    .addCommand(document());
+    .addCommand(document())
+    .addCommand(validateQuestionFile());
 }

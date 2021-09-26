@@ -1,0 +1,4 @@
+---
+sourceId: managed:google_cloud
+integrationDefinitionId: "${integration_definition_id}"
+questions: []

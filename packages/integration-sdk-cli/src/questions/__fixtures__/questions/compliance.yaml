@@ -1,0 +1,41 @@
+---
+sourceId: managed:google_cloud
+integrationDefinitionId: "${integration_definition_id}"
+questions:
+- id: integration-question-google-cloud-iam-not-assigned-user-token-roles-project-level
+  title: Ensure that IAM users are not assigned the Service Account User or Service Account Token Creator roles at project level
+  description: >
+    It is recommended to assign the Service Account User (iam.serviceAccountUser)
+    and Service Account Token Creator (iam.serviceAccountTokenCreator) roles to
+    a user for a specific service account rather than assigning the role to a
+    user at project level.
+  queries:
+  - name: good
+    query: |
+      find google_iam_service_account as user
+        that ASSIGNED google_iam_role as role
+        where
+          role.name!="roles/iam.serviceAccountUser" and
+          role.name!="roles/iam.serviceAccountTokenCreator"
+      return
+        user.name,
+        role.name
+  - name: bad
+    query: |
+      find google_iam_service_account as user
+        that ASSIGNED google_iam_role as role
+        where
+          role.name="roles/iam.serviceAccountUser" or
+          role.name="roles/iam.serviceAccountTokenCreator"
+      return
+        user.name,
+        role.name
+  tags:
+  - google-cloud
+  - service-account
+  - access
+  - iam
+  compliance:
+  - standard: CIS Google Cloud Foundations
+    requirements:
+      - '1.6'

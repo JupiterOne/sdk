@@ -1240,6 +1240,26 @@ Options:
 on the metadata defined in each step. Documentation for an integration is stored
 in the `{integration-project-dir}/docs/jupiterone.md` file by default.
 
+#### `j1-integration validate-question-file`
+
+JupiterOne managed question files live under an integration's `/jupiterone`
+directory. For example `/jupiterone/questions.yaml`. The
+`validate-question-file` command can run in a "dry-run" mode, which will skip
+making requests to validate individual JupiterOne queries.
+
+```
+Usage: j1-integration validate-question-file [options]
+
+validates an integration questions file
+
+Options:
+  -p, --file-path <filePath>                         absolute path to managed question file
+  -a, --jupiterone-account-id <jupiteroneAccountId>  J1 account ID used to validate J1QL queries
+  -k, --jupiterone-api-key <jupiteroneApiKey>        J1 API key used to validate J1QL queries
+  -d, --dry-run                                      skip making HTTP requests to validate J1QL queries
+  -h, --help                                         display help for command
+```
+
 #### Future commands and utilities
 
 ##### More commands and options
