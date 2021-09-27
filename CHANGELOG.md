@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.20.0] - 2021-09-26
+
 ### Added
 
 - Introduce `j1-integration validate-question-file` command that is used to
