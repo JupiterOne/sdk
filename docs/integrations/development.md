@@ -1253,7 +1253,7 @@ Usage: j1-integration validate-question-file [options]
 validates an integration questions file
 
 Options:
-  -p, --file-path <filePath>                         absolute path to managed question file
+  -p, --file-path <filePath>                         absolute path to managed question file (default: "{CWD}/jupiterone/questions/questions.yaml")
   -a, --jupiterone-account-id <jupiteroneAccountId>  J1 account ID used to validate J1QL queries
   -k, --jupiterone-api-key <jupiteroneApiKey>        J1 API key used to validate J1QL queries
   -d, --dry-run                                      skip making HTTP requests to validate J1QL queries
