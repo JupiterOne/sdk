@@ -7,6 +7,7 @@ import {
   createApiClient,
   getApiBaseUrl,
 } from '@jupiterone/integration-sdk-runtime';
+import * as path from 'path';
 
 interface ValidateQuestionFileCommandArgs extends TypesCommandArgs {
   filePath: string;
@@ -15,12 +16,17 @@ interface ValidateQuestionFileCommandArgs extends TypesCommandArgs {
   dryRun?: boolean;
 }
 
+export function getDefaultQuestionFilePath() {
+  return path.join(process.cwd(), './jupiterone/questions/questions.yaml');
+}
+
 export function validateQuestionFile() {
   return createCommand('validate-question-file')
     .description('validates an integration questions file')
     .requiredOption(
       '-p, --file-path <filePath>',
       'absolute path to managed question file',
+      getDefaultQuestionFilePath(),
     )
     .option(
       '-a, --jupiterone-account-id <jupiteroneAccountId>',

@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.21.0] - 2021-09-28
+
+- Use the default path `{CWD}/jupiterone/questions/questions.yaml` for the
+  `--file-path` argument of `j1-integration validate-question-file`
+
+### Added
+
 ## [6.20.0] - 2021-09-26
 
 ### Added
