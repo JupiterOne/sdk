@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-core",
-  "version": "6.20.0",
+  "version": "6.21.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
