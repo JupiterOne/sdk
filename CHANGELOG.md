@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.22.0] - 2021-09-30
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `Issue` entity class.
+
 ## [6.21.0] - 2021-09-28
 
 - Use the default path `{CWD}/jupiterone/questions/questions.yaml` for the
