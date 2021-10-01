@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- When an `IntegrationError` receives a `cause` property, append `cause.stack`
+  to the error's stack trace
+
 ## [6.22.0] - 2021-09-30
 
 ### Changed
