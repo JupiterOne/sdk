@@ -84,7 +84,7 @@ export class IntegrationError extends Error {
     this.fatal = options.fatal;
     this._cause = options.cause;
     if (options.cause?.stack) {
-      this.stack = this.stack + '\n' + options.cause.stack;
+      this.stack += '\nCaused By: ' + options.cause.stack;
     }
   }
 
