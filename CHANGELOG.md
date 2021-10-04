@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [6.22.1] - 2021-10-04
+
 ### Changed
 
 - When an `IntegrationError` receives a `cause` property, append `cause.stack`
