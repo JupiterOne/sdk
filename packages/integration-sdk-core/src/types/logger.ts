@@ -2,11 +2,6 @@ import { StepMetadata } from './';
 import { SynchronizationJob } from './synchronization';
 import { Metric } from './metric';
 
-export interface IntegrationEvent {
-  name: string;
-  description: string;
-}
-
 interface LogFunction {
   (...args: any[]): boolean | void;
 }
@@ -21,41 +16,53 @@ type SynchronizationLogFunction = (job: SynchronizationJob) => void;
 type ValidationLogFunction = (err: Error) => void;
 type IsHandledErrorFunction = (err: Error) => boolean;
 
-type PublishEventInput = {
+export enum PublishEventLevel {
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error',
+}
+
+export type IntegrationEvent = {
   name: string;
   description: string;
+  level: PublishEventLevel;
 };
+
+export type PublishEventInput = {
+  name: string;
+  description: string;
+  level?: PublishEventLevel;
+};
+
+export enum IntegrationInfoEventName {
+  Stats = 'stats',
+}
+
+export interface PublishInfoEventInput extends PublishEventInput {
+  name: IntegrationInfoEventName;
+}
+
+export enum IntegrationWarnEventName {
+  MissingPermission = 'warn_missing_permission',
+}
+
+export interface PublishWarnEventInput extends PublishEventInput {
+  name: IntegrationWarnEventName;
+}
+
+/**
+ * NOTE: using event names which include the substring 'error' will
+ * cause the integration to be marked with 'status: FAILED'
+ */
+export enum IntegrationErrorEventName {
+  MissingPermission = 'error_missing_permission',
+}
+
+export interface PublishErrorEventInput extends PublishEventInput {
+  name: IntegrationErrorEventName;
+}
 
 type PublishMetricFunction = (metric: Omit<Metric, 'timestamp'>) => void;
-
-type PublishEventFunction = (options: PublishEventInput) => void;
-
-type PublishErrorEventInput = {
-  /**
-   * A name to associate with error
-   */
-  name: string;
-
-  message: string;
-
-  /**
-   * The raw error that occurred
-   */
-  err: Error;
-
-  /**
-   * Any additional data that will only be logged (not published with event)
-   */
-  logData?: object;
-
-  /**
-   * Contents of `eventData` will be serialized and added to the description
-   * property of the event but it will not be logged.
-   */
-  eventData?: object;
-};
-
-type PublishErrorEventFunction = (options: PublishErrorEventInput) => void;
 
 interface BaseLogger {
   // traditional functions for regular logging
@@ -103,13 +110,24 @@ export interface IntegrationLoggerFunctions {
 
   /**
    * @deprecated
+   * Please defer to using `publishInfoEvent`, `publishWarnEvent`, and `publishErrorEvent`
    */
-  publishEvent: PublishEventFunction;
+  publishEvent: (options: PublishEventInput) => void;
 
   /**
-   * @deprecated
+   * Publish a job log event at level 'info'
    */
-  publishErrorEvent: PublishErrorEventFunction;
+  publishInfoEvent: (event: PublishInfoEventInput) => void;
+
+  /**
+   * Publish a job log event at level 'warn'
+   */
+  publishWarnEvent: (event: PublishWarnEventInput) => void;
+
+  /**
+   * Publish a job log event at level 'error'
+   */
+  publishErrorEvent: (event: PublishErrorEventInput) => void;
 }
 
 export type IntegrationLogger = BaseLogger & IntegrationLoggerFunctions;

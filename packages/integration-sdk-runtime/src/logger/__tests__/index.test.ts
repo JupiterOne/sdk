@@ -2,13 +2,16 @@ import Logger from 'bunyan';
 import { Writable } from 'stream';
 
 import {
-  IntegrationError,
+  IntegrationErrorEventName,
+  IntegrationInfoEventName,
   IntegrationInvocationConfig,
   IntegrationLocalConfigFieldMissingError,
   IntegrationProviderAuthenticationError,
   IntegrationProviderAuthorizationError,
   IntegrationStep,
   IntegrationValidationError,
+  IntegrationWarnEventName,
+  PublishEventLevel,
   SynchronizationJob,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
@@ -316,14 +319,17 @@ describe('step event publishing', () => {
     expect(onEmitEvent).toHaveBeenCalledTimes(3);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
+      level: PublishEventLevel.Info,
       description: 'Starting step "Mochi"...',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(2, {
       name: 'step_end',
+      level: PublishEventLevel.Info,
       description: 'Completed step "Mochi".',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(3, {
       name: 'step_failure',
+      level: PublishEventLevel.Error,
       description: expect.stringMatching(
         new RegExp(
           `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", errorId="(.*)"\\)$`,
@@ -378,6 +384,7 @@ describe('provider auth error details', () => {
 
       expect(onEmitEvent).toHaveBeenCalledWith({
         name: 'step_failure',
+        level: PublishEventLevel.Error,
         description: expect.stringMatching(
           new RegExp(
             '^Step "Mochi" failed to complete due to error.' +
@@ -393,6 +400,7 @@ describe('provider auth error details', () => {
 
       expect(onEmitEvent).toHaveBeenCalledWith({
         name: 'validation_failure',
+        level: PublishEventLevel.Error,
         description: expect.stringMatching(
           new RegExp(
             '^Error occurred while validating integration configuration.' +
@@ -423,10 +431,12 @@ describe('sync upload logging', () => {
     expect(onEmitEvent).toHaveBeenCalledTimes(2);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'sync_upload_start',
+      level: PublishEventLevel.Info,
       description: 'Uploading collected data for synchronization...',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(2, {
       name: 'sync_upload_end',
+      level: PublishEventLevel.Info,
       description: 'Upload complete.',
     });
   });
@@ -454,6 +464,7 @@ describe('validation failure logging', () => {
     expect(onEmitEvent).toHaveBeenCalledTimes(1);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'validation_failure',
+      level: PublishEventLevel.Error,
       description: expect.stringMatching(expectedDescriptionRegex),
     });
 
@@ -485,6 +496,7 @@ describe('validation failure logging', () => {
     expect(onEmitEvent).toHaveBeenCalledTimes(1);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'validation_failure',
+      level: PublishEventLevel.Error,
       description: expect.stringMatching(expectedDescriptionRegex),
     });
 
@@ -619,12 +631,57 @@ describe('#publishEvent', () => {
     expect(onEmitEvent).toHaveBeenCalledTimes(1);
     expect(onEmitEvent).toHaveBeenCalledWith({
       name: 'the name',
+      level: PublishEventLevel.Info,
       description: 'the description',
     });
   });
-});
 
-describe('#publishErrorEvent', () => {
+  test('should support publishInfoEvent(...) function', () => {
+    const onEmitEvent = jest.fn();
+
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    logger.on('event', onEmitEvent);
+
+    logger.publishInfoEvent({
+      name: IntegrationInfoEventName.Stats,
+      description: 'the description',
+    });
+
+    expect(onEmitEvent).toHaveBeenCalledTimes(1);
+    expect(onEmitEvent).toHaveBeenCalledWith({
+      name: IntegrationInfoEventName.Stats,
+      level: PublishEventLevel.Info,
+      description: 'the description',
+    });
+  });
+
+  test('should support publishWarnEvent(...) function', () => {
+    const onEmitEvent = jest.fn();
+
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    logger.on('event', onEmitEvent);
+
+    logger.publishWarnEvent({
+      name: IntegrationWarnEventName.MissingPermission,
+      description: 'the description',
+    });
+
+    expect(onEmitEvent).toHaveBeenCalledTimes(1);
+    expect(onEmitEvent).toHaveBeenCalledWith({
+      name: IntegrationWarnEventName.MissingPermission,
+      level: PublishEventLevel.Warn,
+      description: 'the description',
+    });
+  });
+
   test('should support publishErrorEvent(...) function', () => {
     const onEmitEvent = jest.fn();
 
@@ -635,35 +692,16 @@ describe('#publishErrorEvent', () => {
 
     logger.on('event', onEmitEvent);
 
-    const fakeError = new IntegrationError({
-      code: 'fake code',
-      message: 'fake reason',
+    logger.publishErrorEvent({
+      name: IntegrationErrorEventName.MissingPermission,
+      description: 'the description',
     });
-
-    const errorEvent = {
-      name: 'the name',
-      message: 'Something bad happened',
-      err: fakeError,
-      // `eventData` is serialized into the event description and logged
-      eventData: {
-        somethingExtra: 'abc',
-      },
-      // `logData` is not put into the event description but it is logged
-      logData: {
-        onlyForLogging: 'xyz',
-      },
-    };
-
-    logger.publishErrorEvent(errorEvent);
 
     expect(onEmitEvent).toHaveBeenCalledTimes(1);
     expect(onEmitEvent).toHaveBeenCalledWith({
-      name: errorEvent.name,
-      description: expect.stringMatching(
-        new RegExp(
-          `^${errorEvent.message} \\(errorCode="${fakeError.code}", errorId="[^\\)]+", reason="${fakeError.message}", somethingExtra="${errorEvent.eventData.somethingExtra}"\\)$`,
-        ),
-      ),
+      name: IntegrationErrorEventName.MissingPermission,
+      level: PublishEventLevel.Error,
+      description: 'the description',
     });
   });
 });

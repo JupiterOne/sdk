@@ -1,4 +1,7 @@
-import { SynchronizationJob } from '@jupiterone/integration-sdk-core';
+import {
+  PublishEventLevel,
+  SynchronizationJob,
+} from '@jupiterone/integration-sdk-core';
 import { createIntegrationLogger } from '../../logger';
 import { createApiClient } from '../../api';
 
@@ -9,11 +12,13 @@ test('publishes events added to the queue in the order they were enqueued', asyn
   const eventA = {
     name: 'a',
     description: 'Event A',
+    level: PublishEventLevel.Info,
   };
 
   const eventB = {
     name: 'b',
     description: 'Event B',
+    level: PublishEventLevel.Info,
   };
 
   const { apiClient, job, queue } = createContext();
@@ -45,6 +50,7 @@ test('logs an error if publish fails', async () => {
   const event = {
     name: 'a',
     description: 'Event A',
+    level: PublishEventLevel.Info,
   };
 
   const { apiClient, logger, queue } = createContext();

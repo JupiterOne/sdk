@@ -5,7 +5,6 @@ import { v4 as uuid } from 'uuid';
 import {
   ExecutionContext,
   IntegrationError,
-  IntegrationEvent,
   IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInstanceConfigFieldMap,
@@ -22,6 +21,12 @@ import {
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
   IntegrationInstanceConfig,
+  PublishEventInput,
+  PublishWarnEventInput,
+  PublishEventLevel,
+  IntegrationEvent,
+  PublishInfoEventInput,
+  PublishErrorEventInput,
 } from '@jupiterone/integration-sdk-core';
 
 export * from './registerEventHandlers';
@@ -47,8 +52,7 @@ interface CreateLoggerInput<
 
 interface CreateIntegrationLoggerInput<
   TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
->
-  extends CreateLoggerInput<
+> extends CreateLoggerInput<
     IntegrationExecutionContext<TIntegrationConfig>,
     IntegrationStepExecutionContext<TIntegrationConfig>
   > {
@@ -169,7 +173,8 @@ interface IntegrationLoggerInput {
   onFailure?: OnFailureFunction;
 }
 
-export class IntegrationLogger extends EventEmitter
+export class IntegrationLogger
+  extends EventEmitter
   implements IntegrationLoggerType {
   private _logger: Logger;
   private _errorSet: Set<Error>;
@@ -338,7 +343,11 @@ export class IntegrationLogger extends EventEmitter
       this.warn({ errorId, err }, description);
     }
 
-    this.publishEvent({ name: eventName, description });
+    this.publishEvent({
+      name: eventName,
+      description,
+      level: PublishEventLevel.Error,
+    });
   }
 
   publishMetric(metric: Omit<Metric, 'timestamp'>) {
@@ -354,32 +363,23 @@ export class IntegrationLogger extends EventEmitter
     return this.emit('metric', metricWithTimestamp);
   }
 
-  publishEvent(event: IntegrationEvent) {
-    return this.emit('event', event);
+  publishEvent(event: PublishEventInput) {
+    return this.emit('event', {
+      ...event,
+      level: event.level || PublishEventLevel.Info,
+    });
   }
 
-  publishErrorEvent(options) {
-    const {
-      name,
-      message,
-      err,
+  publishInfoEvent(event: PublishInfoEventInput) {
+    return this.publishEvent({ ...event, level: PublishEventLevel.Info });
+  }
 
-      // `logData` is only logged (it is used to log data that should
-      // not be shown to customer but might be helpful for troubleshooting)
-      logData,
+  publishWarnEvent(event: PublishWarnEventInput) {
+    return this.publishEvent({ ...event, level: PublishEventLevel.Warn });
+  }
 
-      // `eventData` is added to error description but not logged
-      eventData,
-    } = options;
-
-    const { errorId, description } = createErrorEventDescription(
-      err,
-      message,
-      eventData,
-    );
-
-    this._logger.error({ ...logData, errorId, err }, description);
-    this.publishEvent({ name, description });
+  publishErrorEvent(event: PublishErrorEventInput) {
+    return this.publishEvent({ ...event, level: PublishEventLevel.Error });
   }
 
   private trackHandledError(logArg: any): void {
