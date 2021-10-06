@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [7.0.0] - 2021-10-05
+
+### Changed
+
+- Drop support for any version below Node 14.x. The build now only targets 14.x
+
 ## [6.22.1] - 2021-10-04
 
 ### Changed
