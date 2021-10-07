@@ -47,8 +47,7 @@ interface CreateLoggerInput<
 
 interface CreateIntegrationLoggerInput<
   TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
->
-  extends CreateLoggerInput<
+> extends CreateLoggerInput<
     IntegrationExecutionContext<TIntegrationConfig>,
     IntegrationStepExecutionContext<TIntegrationConfig>
   > {
@@ -169,7 +168,8 @@ interface IntegrationLoggerInput {
   onFailure?: OnFailureFunction;
 }
 
-export class IntegrationLogger extends EventEmitter
+export class IntegrationLogger
+  extends EventEmitter
   implements IntegrationLoggerType {
   private _logger: Logger;
   private _errorSet: Set<Error>;
@@ -283,7 +283,7 @@ export class IntegrationLogger extends EventEmitter
   }
 
   stepFailure(step: StepMetadata, err: Error) {
-    const eventName = 'step_failure';
+    const eventName = 'error_step_failure';
     const { errorId, description } = createErrorEventDescription(
       err,
       `Step "${step.name}" failed to complete due to error.`,
@@ -325,7 +325,7 @@ export class IntegrationLogger extends EventEmitter
   }
 
   private handleFailure(options: {
-    eventName: 'validation_failure' | 'step_failure';
+    eventName: 'validation_failure' | 'error_step_failure';
     errorId: string;
     err: Error;
     description: string;

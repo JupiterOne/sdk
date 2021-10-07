@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Changed step failure job log name from `step_failure` to `error_step_failure`,
+  which will force the job to be marked as `errorsOccurred: true`
+
 ## [7.0.0] - 2021-10-05
 
 ### Changed

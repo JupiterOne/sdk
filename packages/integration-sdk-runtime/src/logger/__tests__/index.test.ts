@@ -323,7 +323,7 @@ describe('step event publishing', () => {
       description: 'Completed step "Mochi".',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(3, {
-      name: 'step_failure',
+      name: 'error_step_failure',
       description: expect.stringMatching(
         new RegExp(
           `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", errorId="(.*)"\\)$`,
@@ -377,7 +377,7 @@ describe('provider auth error details', () => {
       logger.stepFailure(step, error);
 
       expect(onEmitEvent).toHaveBeenCalledWith({
-        name: 'step_failure',
+        name: 'error_step_failure',
         description: expect.stringMatching(
           new RegExp(
             '^Step "Mochi" failed to complete due to error.' +
@@ -703,7 +703,7 @@ describe('#handleFailure', () => {
     logger.handleFailure({
       err: new Error(),
       errorId: 'SOME_ERROR_ID',
-      eventName: 'step_failure',
+      eventName: 'error_step_failure',
       description: 'an error :(',
     });
 
@@ -726,7 +726,7 @@ describe('#handleFailure', () => {
     logger.handleFailure({
       err: new Error(),
       errorId: 'SOME_ERROR_ID',
-      eventName: 'step_failure',
+      eventName: 'error_step_failure',
       description: 'an error :(',
     });
 
@@ -750,7 +750,7 @@ describe('#handleFailure', () => {
     logger.handleFailure({
       err: new IntegrationValidationError(''),
       errorId: 'SOME_ERROR_ID',
-      eventName: 'step_failure',
+      eventName: 'error_step_failure',
       description: 'an error :(',
     });
 
