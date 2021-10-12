@@ -9,6 +9,7 @@ import {
   TargetFilterKey,
 } from '../types';
 import { RelationshipClass } from '@jupiterone/data-model';
+import { DateYMDString } from '../types/datestring';
 
 type DirectRelationshipOptions = {
   _class: RelationshipClass;
@@ -131,6 +132,10 @@ type TargetEntity = TargetEntityProperties & {
 type AdditionalRelationshipProperties = {
   _type?: string;
   _key?: string;
+  /**
+    * A date for when there will be no guarantee that the relationship will continue to be ingested.
+    */
+  _deprecationDate?: DateYMDString;
   [key: string]: string | boolean | number | null | undefined;
 };
 

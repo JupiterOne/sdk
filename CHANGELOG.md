@@ -14,6 +14,8 @@ and this project adheres to
 - A `deprecationDate` property on types `StepRelationshipMetadata` and
   `StepMappedRelationshipMetadata` that will be used to allow for rolling
   transitions between different different data models.
+- A `_deprecationDate` property on type `AdditionalRelationshipProperties` that
+  will be used for notifying users when this relationship may disappear.
 
 ## [7.0.0] - 2021-10-05
 
