@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- A `deprecationDate` property on types `StepRelationshipMetadata` and
+  `StepMappedRelationshipMetadata` that will be used to allow for rolling
+  transitions between different different data models.
+
 ## [7.0.0] - 2021-10-05
 
 ### Changed

@@ -5,6 +5,7 @@ import {
   IntegrationStepExecutionContext,
   StepExecutionContext,
 } from './context';
+import { DateYMDString } from './datestring';
 import { IntegrationInstanceConfig } from './instance';
 import { RelationshipDirection } from './relationship';
 
@@ -119,6 +120,10 @@ export interface StepRelationshipMetadata extends StepGraphObjectMetadata {
   _class: RelationshipClass;
   sourceType: string;
   targetType: string;
+  /**
+   * A date for when there will be no guarantee that the relationship will continue to be ingested.
+   */
+  deprecationDate?: DateYMDString;
 }
 
 export interface StepMappedRelationshipMetadata
@@ -127,6 +132,10 @@ export interface StepMappedRelationshipMetadata
   _class: RelationshipClass;
   targetType: string;
   direction: RelationshipDirection;
+  /**
+   * A date for when there will be no guarantee that the relationship will continue to be ingested.
+   */
+  deprecationDate?: DateYMDString;
 }
 
 export interface StepGraphObjectMetadataProperties {
