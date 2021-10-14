@@ -34,14 +34,28 @@ test('publishes events added to the queue in the order they were enqueued', asyn
   expect(postSpy).toHaveBeenNthCalledWith(
     1,
     `/persister/synchronization/jobs/${job.id}/events`,
-    { events: [eventA] },
+    {
+      events: [
+        {
+          name: eventA.name,
+          description: eventA.description,
+        },
+      ],
+    },
     { headers: { 'managed-integration': 'some-integration' } },
   );
 
   expect(postSpy).toHaveBeenNthCalledWith(
     2,
     `/persister/synchronization/jobs/${job.id}/events`,
-    { events: [eventB] },
+    {
+      events: [
+        {
+          name: eventB.name,
+          description: eventB.description,
+        },
+      ],
+    },
     { headers: { 'managed-integration': 'some-integration' } },
   );
 });
