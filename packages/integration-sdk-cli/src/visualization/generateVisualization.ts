@@ -14,7 +14,7 @@ import { getNodeIdFromEntity } from './utils';
  * Generate a graph visualization of collected entities and relationships using
  * https://visjs.github.io/vis-network/docs/network/.
  *
- * @param graphDataPath Absolute path to directory of collected entities and relationships
+ * @param graphDataPath path to directory of collected entities and relationships
  */
 export async function generateVisualization(
   graphDataPath: string,

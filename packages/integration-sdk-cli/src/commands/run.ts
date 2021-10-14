@@ -32,7 +32,7 @@ export function run() {
     )
     .option(
       '-p, --project-path <directory>',
-      'absolute path to integration project directory',
+      'path to integration project directory',
       process.cwd(),
     )
     .option(
@@ -41,10 +41,11 @@ export function run() {
       !!process.env.JUPITERONE_DEV,
     )
     .action(async (options) => {
+      const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
       process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
-        options.projectPath,
+        projectPath,
         '.j1-integration',
       );
 
@@ -89,9 +90,7 @@ export function run() {
         .on('event', (event) => eventPublishingQueue.enqueue(event))
         .on('metric', (metric) => metrics.push(metric));
 
-      const invocationConfig = await loadConfig(
-        path.join(options.projectPath, 'src'),
-      );
+      const invocationConfig = await loadConfig(path.join(projectPath, 'src'));
 
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,

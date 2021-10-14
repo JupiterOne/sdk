@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added support for relative paths in `yarn j1-integration *` commands
+
 ## [7.0.0] - 2021-10-05
 
 ### Changed

@@ -30,7 +30,7 @@ export function document() {
     .description('generate documentation for all steps')
     .option(
       '-p, --project-path <directory>',
-      'absolute path to integration project directory',
+      'path to integration project directory',
       process.cwd(),
     )
     .option(
@@ -44,7 +44,8 @@ export function document() {
 async function executeDocumentAction(
   options: DocumentCommandArgs,
 ): Promise<void> {
-  const { outputFile, projectPath } = options;
+  const { outputFile } = options;
+  const projectPath = path.resolve(options.projectPath);
   const documentationFilePath = path.join(projectPath, outputFile);
 
   log.info('\nCollecting metadata types from steps...\n');

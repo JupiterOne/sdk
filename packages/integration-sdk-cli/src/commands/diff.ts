@@ -1,6 +1,7 @@
 import { createCommand } from 'commander';
 import fs from 'fs';
 import { diffString } from 'json-diff';
+import path from 'path';
 
 declare module 'json-diff' {
   /**
@@ -28,7 +29,11 @@ export function diff() {
     )
     .option('-k, --keys-only', 'only diff _key properties')
     .action((oldExportPath, newExportPath, options) => {
-      findDifferences(oldExportPath, newExportPath, options.keysOnly);
+      findDifferences(
+        path.resolve(oldExportPath),
+        path.resolve(newExportPath),
+        options.keysOnly,
+      );
     });
 }
 

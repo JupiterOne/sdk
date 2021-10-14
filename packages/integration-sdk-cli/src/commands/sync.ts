@@ -23,7 +23,7 @@ export function sync() {
     )
     .option(
       '-p, --project-path <directory>',
-      'absolute path to integration project directory',
+      'path to integration project directory',
       process.cwd(),
     )
     .option(
