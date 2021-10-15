@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-dev-tools",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "A collection of developer tools that will assist with building integrations.",
   "repository": "git@github.com:JupiterOne/sdk.git",
   "author": "JupiterOne <dev@jupiterone.io>",
@@ -15,8 +15,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-cli": "^7.0.0",
-    "@jupiterone/integration-sdk-testing": "^7.0.0",
+    "@jupiterone/integration-sdk-cli": "^7.1.0",
+    "@jupiterone/integration-sdk-testing": "^7.1.0",
     "@types/jest": "^25.2.3",
     "@types/node": "^14.0.5",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
