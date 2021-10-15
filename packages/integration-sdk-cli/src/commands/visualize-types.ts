@@ -51,12 +51,12 @@ export function visualizeTypes() {
     )
     .option(
       '-p, --project-path <directory>',
-      'absolute path to integration project directory',
+      'path to integration project directory',
       process.cwd(),
     )
     .option(
       '-o, --output-file <path>',
-      'absolute path of generated HTML file',
+      'path of generated HTML file',
       path.join(process.cwd(), '.j1-integration', 'types-graph', 'index.html'),
     )
     .option(
@@ -71,10 +71,11 @@ export function visualizeTypes() {
 async function executeVisualizeTypesAction(
   options: VisualizeTypesCommandArgs,
 ): Promise<void> {
-  const { projectPath } = options;
+  const projectPath = path.resolve(options.projectPath);
   const types = options.type.length === 0 ? undefined : options.type;
-  const graphFilePath =
-    options.outputFile || getDefaultTypesGraphFilePath(projectPath);
+  const graphFilePath = options.outputFile
+    ? path.resolve(options.outputFile)
+    : getDefaultTypesGraphFilePath(projectPath);
 
   log.info('\nCollecting metadata types from steps...\n');
   const metadata = await getSortedJupiterOneTypes({

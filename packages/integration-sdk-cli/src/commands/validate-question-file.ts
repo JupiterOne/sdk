@@ -25,7 +25,7 @@ export function validateQuestionFile() {
     .description('validates an integration questions file')
     .requiredOption(
       '-p, --file-path <filePath>',
-      'absolute path to managed question file',
+      'path to managed question file',
       getDefaultQuestionFilePath(),
     )
     .option(
@@ -46,7 +46,8 @@ export function validateQuestionFile() {
 async function executeValidateQuestionFileAction(
   options: ValidateQuestionFileCommandArgs,
 ): Promise<void> {
-  const { filePath, jupiteroneAccountId, jupiteroneApiKey, dryRun } = options;
+  const { jupiteroneAccountId, jupiteroneApiKey, dryRun } = options;
+  const filePath = path.resolve(options.filePath);
 
   log.info(
     `\nRunning validate-question-file action (path=${filePath}, accountId=${jupiteroneAccountId}, dryRun=${dryRun})...\n`,

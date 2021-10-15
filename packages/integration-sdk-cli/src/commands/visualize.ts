@@ -11,16 +11,18 @@ export function visualize() {
     )
     .option(
       '-d, --data-dir <directory>',
-      'absolute path to collected entities and relationships',
+      'path to collected entities and relationships',
       path.resolve(process.cwd(), '.j1-integration', 'graph'),
     )
     .option(
       '-o, --output-file <path>',
-      'absolute path of generated HTML file',
+      'path of generated HTML file',
       path.resolve(process.cwd(), '.j1-integration', 'index.html'),
     )
     .action(async (options) => {
-      await generateVisualization(options.dataDir, options.outputFile);
-      log.info(`Visualize graph here: ${options.outputFile}`);
+      const dataDir = path.resolve(options.dataDir);
+      const outputFile = path.resolve(options.outputFile);
+      await generateVisualization(dataDir, outputFile);
+      log.info(`Visualize graph here: ${outputFile}`);
     });
 }
