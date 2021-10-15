@@ -9,6 +9,27 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added support to publish job log events at level `info`, `warn`, and `error`.
+
+  Usage:
+
+  ```ts
+  logger.publishInfoEvent({
+    name: IntegrationErrorEventName.Stats,
+    description: 'fetched 100000 records',
+  });
+  logger.publishWarnEvent({
+    name: IntegrationErrorEventName.MissingPermission,
+    description: 'Missing permission users.read',
+  });
+  logger.publishErrorEvent({
+    name: IntegrationErrorEventName.MissingPermission,
+    description: 'Missing permission users.read',
+  });
+  ```
+
 ## [7.0.0] - 2021-10-05
 
 ### Changed

@@ -1,4 +1,7 @@
-import { SynchronizationJob } from '@jupiterone/integration-sdk-core';
+import {
+  PublishEventLevel,
+  SynchronizationJob,
+} from '@jupiterone/integration-sdk-core';
 import { createIntegrationLogger } from '../../logger';
 import { createApiClient } from '../../api';
 
@@ -9,11 +12,13 @@ test('publishes events added to the queue in the order they were enqueued', asyn
   const eventA = {
     name: 'a',
     description: 'Event A',
+    level: PublishEventLevel.Info,
   };
 
   const eventB = {
     name: 'b',
     description: 'Event B',
+    level: PublishEventLevel.Info,
   };
 
   const { apiClient, job, queue } = createContext();
@@ -29,14 +34,28 @@ test('publishes events added to the queue in the order they were enqueued', asyn
   expect(postSpy).toHaveBeenNthCalledWith(
     1,
     `/persister/synchronization/jobs/${job.id}/events`,
-    { events: [eventA] },
+    {
+      events: [
+        {
+          name: eventA.name,
+          description: eventA.description,
+        },
+      ],
+    },
     { headers: { 'managed-integration': 'some-integration' } },
   );
 
   expect(postSpy).toHaveBeenNthCalledWith(
     2,
     `/persister/synchronization/jobs/${job.id}/events`,
-    { events: [eventB] },
+    {
+      events: [
+        {
+          name: eventB.name,
+          description: eventB.description,
+        },
+      ],
+    },
     { headers: { 'managed-integration': 'some-integration' } },
   );
 });
@@ -45,6 +64,7 @@ test('logs an error if publish fails', async () => {
   const event = {
     name: 'a',
     description: 'Event A',
+    level: PublishEventLevel.Info,
   };
 
   const { apiClient, logger, queue } = createContext();

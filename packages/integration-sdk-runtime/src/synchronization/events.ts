@@ -17,7 +17,13 @@ export const createEventPublishingQueue = (
           await apiClient.post(
             `/persister/synchronization/jobs/${job.id}/events`,
             {
-              events: [event],
+              events: [
+                {
+                  name: event.name,
+                  description: event.description,
+                  // level: event.level, // TODO enable the `level` property in synchronization API
+                },
+              ],
             },
             config,
           );
