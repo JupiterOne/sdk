@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [7.1.0] - 2021-10-15
+
 ### Added
 
 - Added support to publish job log events at level `info`, `warn`, and `error`.
@@ -29,6 +31,7 @@ and this project adheres to
     description: 'Missing permission users.read',
   });
   ```
+
 - Added support for relative paths in `yarn j1-integration *` commands
 
 ## [7.0.0] - 2021-10-05
