@@ -289,6 +289,10 @@ async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
       delay: 200,
       factor: 1.05,
       handleError(err, attemptContext) {
+        if (err.code === 'RequestEntityTooLargeException') {
+          // No reason to retry these errors as the request size ain't gonna change.
+          attemptContext.abort()
+        }
         if (
           attemptContext.attemptsRemaining &&
           // There are sometimes intermittent credentials errors when running
