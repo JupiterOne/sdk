@@ -291,7 +291,7 @@ async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
       handleError(err, attemptContext) {
         if (err.code === 'RequestEntityTooLargeException') {
           // No reason to retry these errors as the request size ain't gonna change.
-          attemptContext.abort()
+          throw err
         }
         if (
           attemptContext.attemptsRemaining &&
