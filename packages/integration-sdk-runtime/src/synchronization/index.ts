@@ -271,7 +271,7 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
-async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
+export async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
   logger,
   apiClient,
   jobId,
