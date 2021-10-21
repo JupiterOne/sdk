@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [7.1.1] - 2021-10-21
+
 ### Changed
 
 - Do not retry `RequestEntityTooLargeException`s
