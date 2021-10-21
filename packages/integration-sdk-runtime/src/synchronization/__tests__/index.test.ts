@@ -17,6 +17,7 @@ import {
   finalizeSynchronization,
   synchronizeCollectedData,
   abortSynchronization,
+  uploadDataChunk,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -376,6 +377,42 @@ describe('synchronizeCollectedData', () => {
     );
   });
 });
+
+describe('uploadDataChunk', () => {
+  it('should not retry uploading data when a "RequestEntityTooLargeException" is returned', async () => {
+    const context = createTestContext();
+    const job = generateSynchronizationJob();
+
+    const requestTooLargeError = new Error("Request must be smaller than 6291456 bytes for the InvokeFunction operation")
+    requestTooLargeError.name = "RequestEntityTooLargeException"
+    requestTooLargeError['code'] = "RequestEntityTooLargeException"
+
+    const type = 'entities'
+    const batch = []
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation((path: string): any => {
+        if (path === `/persister/synchronization/jobs/${job.id}/${type}`) {
+          throw requestTooLargeError
+        }
+        return {
+          data: {
+            job,
+          },
+        };
+      });
+    await expect(uploadDataChunk({
+      logger: context.logger,
+      apiClient: context.apiClient,
+      jobId: job.id,
+      type,
+      batch
+    })).rejects.toThrow(requestTooLargeError)
+    
+    expect(postSpy).toHaveBeenCalledTimes(1)
+  })
+})
 
 function createTestContext() {
   const apiClient = createApiClient({
