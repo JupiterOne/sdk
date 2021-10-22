@@ -189,3 +189,26 @@ export function sha256(object: object | string): string {
   hash.update(data);
   return hash.digest('base64');
 }
+
+/**
+ * At the time of writing this, 4096 is the maximum value described in the
+ * JupiterOne search indexer system
+ */
+const MAX_ENTITY_PROPERTY_VALUE = 4096;
+const TRUNCATED_ENTITY_PROPERTY_SUFFIX = '...';
+
+/**
+ * The JupiterOne system has a maximum property value length. This function
+ * ensures that the length of a provided entity property value does not exceed
+ * the maximum.
+ */
+export function truncateEntityPropertyValue(value: string | undefined) {
+  if (!value || value.length <= MAX_ENTITY_PROPERTY_VALUE) return value;
+
+  return (
+    value.substr(
+      0,
+      MAX_ENTITY_PROPERTY_VALUE - TRUNCATED_ENTITY_PROPERTY_SUFFIX.length,
+    ) + TRUNCATED_ENTITY_PROPERTY_SUFFIX
+  );
+}

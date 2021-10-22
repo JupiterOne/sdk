@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [7.2.0] - 2021-10-22
+
+### Added
+
+- [#567](https://github.com/JupiterOne/sdk/issues/567) - Add utility function
+  that truncates an entity property value
+
 ## [7.1.1] - 2021-10-21
 
 ### Changed

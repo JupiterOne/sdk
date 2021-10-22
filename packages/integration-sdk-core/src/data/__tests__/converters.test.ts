@@ -1,4 +1,14 @@
-import { convertNameValuePairs, convertProperties } from '../converters';
+import {
+  convertNameValuePairs,
+  convertProperties,
+  truncateEntityPropertyValue,
+} from '../converters';
+
+function strWithLen(len: number) {
+  let str = '';
+  for (let i = 0; i < len; i++) str += 'a';
+  return str;
+}
 
 describe('convertProperties', () => {
   const original: any = {
@@ -113,5 +123,30 @@ describe('convertNameValuePairs', () => {
       'n.one': '1',
       'n.two': '2',
     });
+  });
+});
+
+describe('#truncateEntityPropertyValue', () => {
+  test('should handle falsy values', () => {
+    expect(truncateEntityPropertyValue(undefined)).toBeUndefined();
+    expect(truncateEntityPropertyValue('')).toEqual('');
+  });
+
+  test('should not trim length of value if less than maximum length', () => {
+    const value = strWithLen(4095);
+    expect(truncateEntityPropertyValue(value)).toEqual(value);
+  });
+
+  test('should not trim length of value if equal to maximum length', () => {
+    const value = strWithLen(4096);
+    expect(truncateEntityPropertyValue(value)).toEqual(value);
+  });
+
+  test('should trim length of value if greater than maximum length', () => {
+    const value = strWithLen(4097);
+
+    expect(truncateEntityPropertyValue(value)).toEqual(
+      value.substr(0, 4096 - 3) + '...',
+    );
   });
 });
