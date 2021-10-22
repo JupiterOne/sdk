@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [7.2.0] - 2021-10-22
+
 ### Added
 
 - [#567](https://github.com/JupiterOne/sdk/issues/567) - Add utility function
