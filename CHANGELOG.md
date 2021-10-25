@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `VIOLATES` relationship class.
+
 ## [7.2.0] - 2021-10-22
 
 ### Added
