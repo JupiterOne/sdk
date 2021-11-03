@@ -146,7 +146,7 @@ function unzipGzippedRecordingEntry(entry: RecordingEntry): void {
       const chunkBuffer = Buffer.from(chunk, 'hex');
       chunkBuffers.push(chunkBuffer);
     });
-  
+
     return gunzipSync(Buffer.concat(chunkBuffers)).toString('utf-8');
   }
   let responseText = entry.response.content.text;
@@ -175,5 +175,5 @@ function unzipGzippedRecordingEntry(entry: RecordingEntry): void {
 }
 
 export const mutations = {
-  unzipGzippedRecordingEntry
-}
+  unzipGzippedRecordingEntry,
+};
