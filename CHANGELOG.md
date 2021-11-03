@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [7.4.0] - 2021-11-03
+
 ### Changed
 
 - Bump `@pollyjs` packages in `@jupiterone/integration-sdk-testing` and
