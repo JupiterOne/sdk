@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- **\*BREAKING\*** Explicitly require a `_key` property when using
+  `createIntegrationEntity()`. Previously, the `createIntegrationEntity()`
+  function allowed the `_key` property to be _optional_, and when not present,
+  the function automatically uses either `id` or `providerId` as the entity
+  `_key`.
+
+  This caused (entirely preventable) runtime errors if the given `source` data
+  did not have an `id` or `providerId` property available.
+
 ## [7.4.0] - 2021-11-03
 
 ### Changed
