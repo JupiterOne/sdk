@@ -81,7 +81,7 @@ export interface JobState {
    * the same `_key` value. Note however, there are mechanisms in place to
    * prevent storing duplicates.
    */
-  findEntity: (_key: string) => Promise<Entity | null>;
+  findEntity: (_key: string | undefined) => Promise<Entity | null>;
 
   /**
    * Answers `true` when an entity OR relationship having `_key` has been added.
@@ -89,7 +89,7 @@ export interface JobState {
    * @see findEntity when the entity, if present, is needed (there is no need to
    * use `hasKey` before `findEntity`).
    */
-  hasKey: (_key: string) => boolean | Promise<boolean>;
+  hasKey: (_key: string | undefined) => boolean | Promise<boolean>;
 
   /**
    * Allows a step to iterate all entities collected into the job state, limited
