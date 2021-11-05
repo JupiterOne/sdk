@@ -9,6 +9,21 @@ and this project adheres to
 
 ## Unreleased
 
+- Updated the interfaces for `jobState.findEntity` and `jobState.hasKey` to
+  allow `undefined`. Oftentimes, we use optional chaining with
+  `jobState.findEntity` or `jobState.hasKey`, so having the ability to pass
+  `undefined` into these methods can make our code easier to read.
+
+  ```ts
+  // without allowing `undefined`, we often need to assert values as `string`
+  const virtualMachineId = await jobState.findEntity(
+    nic.virtualMachine?.id as string,
+  );
+
+  // by allowing `undefined`, we can more safely use these methods without type assertions
+  const virtualMachineId = await jobState.findEntity(nic.virtualMachine?.id);
+  ```
+
 ## [7.4.0] - 2021-11-03
 
 ### Changed

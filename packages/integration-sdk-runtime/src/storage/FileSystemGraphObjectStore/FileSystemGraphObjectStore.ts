@@ -177,7 +177,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
    * in the InMemoryGraphObjectStore. If not, it then checks to see if it is
    * located on disk.
    */
-  async findEntity(_key: string): Promise<Entity | undefined> {
+  async findEntity(_key: string | undefined): Promise<Entity | undefined> {
+    if (!_key) return;
     const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
     if (bufferedEntity) {
       return bufferedEntity;

@@ -164,7 +164,8 @@ export function createMockJobState({
     },
     addRelationships,
 
-    findEntity: async (_key: string) => {
+    findEntity: async (_key: string | undefined) => {
+      if (!_key) return null;
       const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
         _key,
       );
@@ -180,7 +181,8 @@ export function createMockJobState({
       );
     },
 
-    hasKey: (_key: string) => {
+    hasKey: (_key: string | undefined) => {
+      if (!_key) return false;
       return duplicateKeyTracker.hasKey(_key);
     },
 
