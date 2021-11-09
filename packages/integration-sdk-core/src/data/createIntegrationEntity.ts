@@ -5,33 +5,12 @@ import {
 } from '@jupiterone/data-model';
 
 import { IntegrationError } from '../errors';
-import { Entity, EntityRawData, RawDataTracking } from '../types';
+import { Entity, EntityRawData } from '../types';
 import { parseTimePropertyValue } from './converters';
 import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
 const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
-
-/**
- * Properties required to build a valid `Entity`.
- *
- * These properties are more strict (than their counterpart definitions on
- * `Entity`) to prevent literal assignments of `undefined`
- * values.
- */
-type RequiredEntityProperties = { _class: string | string[]; _type: string };
-
-/**
- * Allows assignment of any additional properties without being forced to use
- * specific types where that isn't helpful.
- *
- * During development, schema validation prevents failures to provide properties
- * required by the entity `_class`. Combined with automatic transfer of many
- * properties from the `ProviderSourceData`, there may be no strong case to be
- * made for referencing specific TypeScript types. In those cases, it should be
- * possible to provide additional literal entity properties.
- */
-type AdditionalEntityProperties = { [key: string]: any };
 
 /**
  * Properties to be assigned to a generated entity which are declared in code
@@ -43,9 +22,7 @@ type AdditionalEntityProperties = { [key: string]: any };
  * certainly includes those of `Entity`, and some properties
  * *must* be provided.
  */
-type LiteralAssignments = Partial<Entity> &
-  RequiredEntityProperties &
-  AdditionalEntityProperties;
+type LiteralAssignments = Entity;
 
 /**
  * A type representing entity data from a provider.
@@ -95,9 +72,7 @@ export type IntegrationEntityData = {
  * A generated `Entity` that includes additional properties
  * specific to the entity class and some properties are guaranteed.
  */
-type GeneratedEntity = Omit<Entity, '_class'> &
-  AdditionalEntityProperties &
-  RawDataTracking & { _class: string[]; _key: string; _type: string };
+type GeneratedEntity = Entity & { _class: string[] };
 
 export type IntegrationEntityBuilderInput = {
   /**
@@ -144,13 +119,11 @@ function generateEntity({
     _rawData.push(...assign._rawData);
   }
 
-  const _key = assign._key || generateEntityKey(source);
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
   const entity: GeneratedEntity = {
     ...whitelistedProviderData(source, _class),
     ...assign,
-    _key,
     _class,
     _rawData,
   };
@@ -197,31 +170,10 @@ function generateEntity({
   // by `assign.displayName`, use `entity.name`. This is a last attempt to
   // to provide a value automatically.
   if (!entity.displayName && entity.name) {
-    entity.displayName = entity.name;
+    entity.displayName = entity.name as string;
   }
 
   return entity;
-}
-
-/**
- * Generates an entity `_key` value from the source data when possible or throws
- * an error. It is expected that this won't be called when a `_key` is
- * explicitly assigned.
- *
- * @param data any source data object
- * @throws IntegrationError when there is no suitable value
- */
-function generateEntityKey(data: any): string {
-  const id = data.providerId || data.id;
-  if (typeof id !== 'string') {
-    throw new IntegrationError({
-      code: 'INVALID_INPUT_TO_GENERATE_ENTITY_KEY',
-      message: `Entity key generation requires one of data.{providerId,id} as type string, received ${JSON.stringify(
-        id,
-      )}`,
-    });
-  }
-  return id;
 }
 
 /**

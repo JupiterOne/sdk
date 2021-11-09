@@ -219,6 +219,7 @@ describe('addEntities', () => {
     const networkAssigns = {
       _class: 'Network',
       _type: 'azure_vpc',
+      _key: 'azure_vpc_key',
       public: false,
       internal: true,
     };
@@ -269,6 +270,7 @@ describe('addRelationships', () => {
     const networkAssigns = {
       _class: 'Network',
       _type: 'azure_vpc',
+      _key: 'azure_vpc_key',
       public: false,
       internal: true,
     };

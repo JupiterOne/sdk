@@ -18,7 +18,7 @@ const networkSourceData = {
 };
 
 const networkResourceEntity = {
-  _key: 'natural-identifier',
+  _key: 'azure_vpc_key',
   _class: ['Network'],
   _type: 'azure_vpc',
   _rawData: [{ name: 'default', rawData: networkSourceData }],
@@ -34,6 +34,7 @@ const networkResourceEntity = {
 const networkAssigns = {
   _class: 'Network',
   _type: 'azure_vpc',
+  _key: 'azure_vpc_key',
   public: false,
   internal: true,
 };
@@ -93,40 +94,6 @@ describe('createIntegrationEntity', () => {
     });
     expect(entity).toHaveProperty('active', true);
   });
-
-  test.each(['id', 'providerId'])(
-    'requires _key when %s is not a single string value',
-    (prop) => {
-      expect(() =>
-        createIntegrationEntity({
-          entityData: {
-            assign: networkAssigns,
-            source: {
-              ...networkSourceData,
-              [prop]: ['yodog', 1234],
-            },
-          },
-        }),
-      ).toThrow(/as type string/);
-
-      const entity = createIntegrationEntity({
-        entityData: {
-          assign: {
-            ...networkAssigns,
-            _key: 'assigned-because-id-isnt-usable',
-          },
-          source: {
-            ...networkSourceData,
-            [prop]: ['yodog', 'numbers'],
-          },
-        },
-      });
-
-      expect(entity).toMatchObject({
-        _key: 'assigned-because-id-isnt-usable',
-      });
-    },
-  );
 
   test('should assign createdOn timestamp from creationDate', () => {
     const entity = createIntegrationEntity({
