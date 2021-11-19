@@ -6,6 +6,7 @@ import {
   Entity,
   ExecutionContext,
   IntegrationStepResult,
+  JobState,
   Step,
   StepExecutionContext,
   StepResultStatus,
@@ -87,7 +88,7 @@ export function executeStepDependencyGraph<
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
-  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -370,7 +371,7 @@ function buildStepContext<
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
-  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TStepExecutionContext>;
 }): TStepExecutionContext {
   // Purposely assigned to `undefined` instead of a noop function even though
   // this code is a bit messier. The jobState code is fairly hot and checking
@@ -378,8 +379,11 @@ function buildStepContext<
   // every entity.
   const jobStateBeforeAddEntity =
     typeof beforeAddEntity !== 'undefined'
-      ? (entity: Entity): Entity => {
-          return beforeAddEntity(context, entity);
+      ? (entity: Entity, jobState: JobState) => {
+          return beforeAddEntity(
+            ({ ...context, jobState } as unknown) as TStepExecutionContext,
+            entity,
+          );
         }
       : undefined;
 

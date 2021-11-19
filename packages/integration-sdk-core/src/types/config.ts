@@ -21,8 +21,11 @@ import { Entity } from './entity';
 export type KeyNormalizationFunction = (_key: string) => string;
 
 export type BeforeAddEntityHookFunction<
-  TExecutionContext extends ExecutionContext
-> = (context: TExecutionContext, entity: Entity) => Entity;
+  TStepExecutionContext extends StepExecutionContext
+> = (
+  context: TStepExecutionContext,
+  entity: Entity,
+) => Entity | Promise<Entity>;
 
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
@@ -32,12 +35,12 @@ export interface InvocationConfig<
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
-  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TStepExecutionContext>;
   /**
    * An optional array of identifiers used to execute dependency
    * graphs in a specific order. These values should match the
    * StepMetadata `dependencyGraphId` prpoperties.
-   * 
+   *
    * If this is not provided, all steps will be evalueted in
    * the same dependency graph.
    */
@@ -46,8 +49,7 @@ export interface InvocationConfig<
 
 export interface IntegrationInvocationConfig<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
->
-  extends InvocationConfig<
+> extends InvocationConfig<
     IntegrationExecutionContext<TConfig>,
     IntegrationStepExecutionContext<TConfig>
   > {

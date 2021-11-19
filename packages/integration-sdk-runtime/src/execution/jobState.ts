@@ -162,7 +162,10 @@ export interface CreateStepJobStateParams {
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
-  beforeAddEntity?: (entity: Entity) => Entity;
+  beforeAddEntity?: (
+    entity: Entity,
+    jobState: JobState,
+  ) => Entity | Promise<Entity>;
 }
 
 export function createStepJobState({
@@ -176,7 +179,9 @@ export function createStepJobState({
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     if (beforeAddEntity) {
-      entities = entities.map(beforeAddEntity);
+      entities = await Promise.all(
+        entities.map((e) => beforeAddEntity(e, jobState)),
+      );
     }
 
     entities.forEach((e) => {
@@ -226,7 +231,7 @@ export function createStepJobState({
     );
   };
 
-  return {
+  const jobState = {
     setData: async <T>(key: string, data: T): Promise<void> => {
       dataStore.set(key, data);
       return Promise.resolve();
@@ -296,4 +301,6 @@ export function createStepJobState({
       await uploader?.waitUntilUploadsComplete();
     },
   };
+
+  return jobState;
 }

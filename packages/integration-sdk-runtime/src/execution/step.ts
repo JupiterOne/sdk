@@ -46,7 +46,7 @@ export async function executeSteps<
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
-  beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddEntity?: BeforeAddEntityHookFunction<TStepExecutionContext>;
   dependencyGraphOrder?: string[];
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);

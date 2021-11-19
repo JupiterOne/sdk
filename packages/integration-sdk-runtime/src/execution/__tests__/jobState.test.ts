@@ -9,7 +9,12 @@ import {
 import { v4 as uuid } from 'uuid';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
-import { Entity } from '@jupiterone/integration-sdk-core';
+import {
+  createMappedRelationship,
+  Entity,
+  RelationshipClass,
+  RelationshipDirection,
+} from '@jupiterone/integration-sdk-core';
 import {
   createTestEntity,
   createTestRelationship,
@@ -95,6 +100,49 @@ describe('#createStepJobState', () => {
 
     const result = await jobState.addEntities(entities);
     expect(result).toBe(entities);
+  });
+
+  test('should allow calls to jobState in beforeAddEntity', async () => {
+    const jobState = createTestStepJobState({
+      beforeAddEntity: async (entity, jobState) => {
+        if (entity._type === 'acme_account') {
+          await jobState.addRelationship(
+            createMappedRelationship({
+              _key: 'acme-vendor-hosts-account',
+              _type: 'acme_vendor_hosts_account',
+              _class: RelationshipClass.HAS,
+              _mapping: {
+                relationshipDirection: RelationshipDirection.REVERSE,
+                sourceEntityKey: entity._key,
+                targetFilterKeys: [['_class', 'name']],
+                targetEntity: {
+                  name: 'Acme',
+                  displayName: 'Acme',
+                  _class: 'Vendor',
+                  _type: 'acme_vendor',
+                },
+                skipTargetCreation: false,
+              },
+            }),
+          );
+        }
+        return entity;
+      },
+    });
+
+    const addRelationshipSpy = jest.spyOn(jobState, 'addRelationship');
+
+    const entities: Entity[] = [
+      {
+        _type: 'acme_account',
+        _class: 'Account',
+        _key: 'acme-account',
+      },
+    ];
+
+    const result = await jobState.addEntities(entities);
+    expect(result).toStrictEqual(entities);
+    expect(addRelationshipSpy).toHaveBeenCalled();
   });
 });
 

@@ -9,6 +9,30 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added support for `jobState` in the `beforeAddEntity` hook. Also added support
+  for async implementations of `beforeAddEntity`. Example usage:
+
+  ```ts
+  import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
+  import { integrationSteps } from './steps';
+  import { createAccountVendorMappedRelationship } from './converters';
+
+  export const invocationConfig: IntegrationInvocationConfig = {
+    integrationSteps,
+    beforeAddEntity: async (context, entity) => {
+      if (entity._type === 'acme_account') {
+        await context.jobState.addRelationship(
+          createAccountVendorMappedRelationship(entity),
+        );
+      }
+
+      return entity;
+    },
+  };
+  ```
+
 ### Changed
 
 - **\*BREAKING\*** Explicitly require a `_key` property when using
@@ -19,6 +43,7 @@ and this project adheres to
 
   This caused (entirely preventable) runtime errors if the given `source` data
   did not have an `id` or `providerId` property available.
+
 - Updated the interfaces for `jobState.findEntity` and `jobState.hasKey` to
   allow `undefined`. Oftentimes, we use optional chaining with
   `jobState.findEntity` or `jobState.hasKey`, so having the ability to pass
