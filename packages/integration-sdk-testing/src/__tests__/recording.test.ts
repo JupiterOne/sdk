@@ -10,6 +10,8 @@ import { toUnixPath } from '@jupiterone/integration-sdk-private-test-utils';
 
 import { Recording, setupRecording } from '../recording';
 
+import { withRecording } from '../dataCollection';
+
 // mock fs so that we don't store recordings
 jest.mock('fs');
 
@@ -266,6 +268,20 @@ test('allows mutating a request preflight changing what is stored in the har fil
   expect(
     har.log.entries.some((e: any) => e.request.postData.text === 'mutated'),
   ).toEqual(true);
+});
+
+test('withRecordingTest should record', async () => {
+  process.env.LOAD_ENV = '1';
+  void (await withRecording({
+    recordingName: 'mockRecording',
+    directoryName: __dirname,
+    normalizeEntry: false,
+    cb: async () => {
+      await fetch(`http://localhost:${server.port}`);
+      return Promise.resolve();
+    },
+  }));
+  expect(Object.keys(vol.toJSON())).toHaveLength(1);
 });
 
 async function startServer(statusCode?: number) {
