@@ -270,19 +270,19 @@ test('allows mutating a request preflight changing what is stored in the har fil
   ).toEqual(true);
 });
 
-// test('withRecordingTest should record', async () => {
-//   process.env.LOAD_ENV = '1';
-//   void (await withRecording({
-//     recordingName: 'mockRecording',
-//     directoryName: __dirname,
-//     normalizeEntry: false,
-//     cb: async () => {
-//       await fetch(`http://localhost:${server.port}`);
-//       return Promise.resolve();
-//     },
-//   }));
-//   expect(Object.keys(vol.toJSON())).toHaveLength(1);
-// });
+test('withRecordingTest should record', async () => {
+  process.env.LOAD_ENV = '1';
+  void (await withRecording({
+    recordingName: 'mockRecording',
+    directoryName: __dirname,
+    normalizeEntry: false,
+    cb: async () => {
+      await fetch(`http://localhost:${server.port}`);
+      return Promise.resolve();
+    },
+  }));
+  expect(Object.keys(vol.toJSON())).toHaveLength(1);
+});
 
 async function startServer(statusCode?: number) {
   const recordingStatusCode = statusCode ?? 200;
