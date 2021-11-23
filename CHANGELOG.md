@@ -19,6 +19,7 @@ and this project adheres to
 
   This caused (entirely preventable) runtime errors if the given `source` data
   did not have an `id` or `providerId` property available.
+
 - Updated the interfaces for `jobState.findEntity` and `jobState.hasKey` to
   allow `undefined`. Oftentimes, we use optional chaining with
   `jobState.findEntity` or `jobState.hasKey`, so having the ability to pass
@@ -33,6 +34,12 @@ and this project adheres to
   // by allowing `undefined`, we can more safely use these methods without type assertions
   const virtualMachineId = await jobState.findEntity(nic.virtualMachine?.id);
   ```
+
+### Fixed
+
+- Fixed the way that symlinks are created on windows machines. Directories are
+  still created as simlinks, but files are now hardlinks to prevent the  
+  requirement that `yarn start` be run with admin credentials.
 
 ## [7.4.0] - 2021-11-03
 
