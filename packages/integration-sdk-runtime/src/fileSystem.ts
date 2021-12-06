@@ -129,8 +129,8 @@ export async function symlink({ sourcePath, destinationPath }: SymlinkInput) {
   await ensurePathCanBeWrittenTo(fullDestinationPath);
   // On Windows, we need to perform hardlinks for files
   if (
-    (await fs.lstat(fullSourcePath)).isFile() &&
-    process.platform === 'win32'
+    process.platform === 'win32' &&
+    (await fs.lstat(fullSourcePath)).isFile()
   ) {
     await fs.link(fullSourcePath, fullDestinationPath);
   } else {
