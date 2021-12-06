@@ -124,7 +124,12 @@ describe('flushEntitiesToDisk', () => {
     );
 
     const stats = await fs.lstat(expectedIndexFilePath);
-    expect(stats.isSymbolicLink()).toEqual(true);
+
+    // We can only test for symlinks on non-Windows platforms.  Windows
+    // will use hardlinks.
+    if (process.platform != 'win32') {
+      expect(stats.isSymbolicLink()).toEqual(true);
+    }
 
     const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenStepData);
@@ -169,7 +174,11 @@ describe('flushRelationshipsToDisk', () => {
     );
 
     const stats = await fs.lstat(expectedIndexFilePath);
-    expect(stats.isSymbolicLink()).toEqual(true);
+    // We can only test for symlinks on non-Windows platforms.  Windows
+    // will use hardlinks.
+    if (process.platform != 'win32') {
+      expect(stats.isSymbolicLink()).toEqual(true);
+    }
 
     const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenData);
