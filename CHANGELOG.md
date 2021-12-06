@@ -35,6 +35,8 @@ and this project adheres to
   const virtualMachineId = await jobState.findEntity(nic.virtualMachine?.id);
   ```
 
+## [7.4.1] - 2021-11-03
+
 ### Fixed
 
 - Fixed the way that symlinks are created on windows machines. Directories are
