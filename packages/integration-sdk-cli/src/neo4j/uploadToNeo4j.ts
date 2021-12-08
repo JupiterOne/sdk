@@ -11,9 +11,6 @@ export async function uploadToNeo4j() {
   if (!fs.existsSync(graphDirectory)) {
     throw new Error('ERROR: graph directory does not exist!');
   }
-
-  console.log(`We have a process.env of `, process.env);
-
   const neo4jUri = process.env.NEO4J_URI || 'bolt://localhost:7687';
   const neo4jUser = process.env.NEO4J_USER || 'neo4j';
   const neo4jPassword = process.env.NEO4J_PASSWORD || 'neo4j';
@@ -24,17 +21,15 @@ export async function uploadToNeo4j() {
     password: neo4jPassword,
   });
   try {
+    // We do all entities and then all relationships to ensure that both the
+    // start and end nodes are in place and available for relationship creation
+    // instead of trying to do any fancy Cypher steps.
     for await (const directory of fs.readdirSync(graphDirectory)) {
       console.log(`Scanning items in graphDirectory with ${directory}`);
       for await (const folder of fs.readdirSync(
         path.join(graphDirectory, directory),
       )) {
         console.log(`Scanning items in directory with ${folder}`);
-        if (folder != 'entities' && folder != 'relationships') {
-          throw new Error(
-            'ERROR: Found a directory that was not an entities/relationships directory',
-          );
-        }
         if (folder === 'entities') {
           for await (const file of fs.readdirSync(
             path.join(graphDirectory, directory, folder),
@@ -48,7 +43,16 @@ export async function uploadToNeo4j() {
             );
             await store.addEntities(entityData.entities);
           }
-        } else if (folder === 'relationships') {
+        }
+      }
+    }
+    for await (const directory of fs.readdirSync(graphDirectory)) {
+      console.log(`Scanning items in graphDirectory with ${directory}`);
+      for await (const folder of fs.readdirSync(
+        path.join(graphDirectory, directory),
+      )) {
+        console.log(`Scanning items in directory with ${folder}`);
+        if (folder === 'relationships') {
           for await (const file of fs.readdirSync(
             path.join(graphDirectory, directory, folder),
           )) {

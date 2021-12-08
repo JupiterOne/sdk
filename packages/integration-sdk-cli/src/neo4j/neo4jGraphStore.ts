@@ -10,24 +10,36 @@ export interface Neo4jGraphObjectStoreParams {
 
 export class Neo4jGraphStore {
   private neo4jDriver: neo4j.Driver;
+  private persistedSession: neo4j.Session;
   private databaseName = 'neo4j';
   private typeList = new Set<string>();
 
-  constructor(params: Neo4jGraphObjectStoreParams) {
-    this.neo4jDriver = neo4j.driver(
-      params.uri,
-      neo4j.auth.basic(params.username, params.password),
-    );
+  constructor(params: Neo4jGraphObjectStoreParams, session?: neo4j.Session) {
+    if(session) {
+      this.persistedSession = session;
+    }
+    else {
+      this.neo4jDriver = neo4j.driver(
+        params.uri,
+        neo4j.auth.basic(params.username, params.password),
+      );
+    }
   }
 
   private async runCypherCommand(cypherCommand: string): Promise<neo4j.Result> {
-    const session = this.neo4jDriver.session({
-      database: this.databaseName,
-      defaultAccessMode: neo4j.session.WRITE,
-    });
-    const result = await session.run(cypherCommand);
-    await session.close();
-    return result;
+    if(this.persistedSession) {
+      const result = await this.persistedSession.run(cypherCommand);
+      return result;
+    }
+    else {
+      const session = this.neo4jDriver.session({
+        database: this.databaseName,
+        defaultAccessMode: neo4j.session.WRITE,
+      });
+      const result = await session.run(cypherCommand);
+      await session.close();
+      return result;
+    }
   }
 
   async addEntities(newEntities: Entity[]) {
@@ -45,13 +57,11 @@ export class Neo4jGraphStore {
       for (const key in entity) {
         if (key === '_rawData') {
           propString += `n.${key} = '${JSON.stringify(entity[key])}', `;
-        } else {
+        } else if (key != '_key') { // skip _key because MERGE statement will handle it
           propString += `n.${key} = '${entity[key]}', `;
         }
       }
       propString = propString.slice(0, -2);
-
-      console.log(`Final Prop string:  ${propString}`);
 
       const buildCommand = `MERGE (n:${entity._type} {_key: '${entity._key}'}) ${propString};`;
       await this.runCypherCommand(buildCommand);
