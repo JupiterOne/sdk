@@ -42,6 +42,39 @@ export class Neo4jGraphStore {
     }
   }
 
+  private startsWithNumeric(str: string){
+    return /^\d+$/.test(str);
+  }
+
+  private sanitizePropertyName(propertyName: string): string {
+    let sanitizedName = '';
+    if(this.startsWithNumeric(propertyName)) {
+      sanitizedName += 'n';
+    }
+    sanitizedName += propertyName;
+    sanitizedName = sanitizedName.replace(/[\s!@#$%^&*()-=+\\|'";:/?.,><`~\t\n[\]{}]/g, "_");
+    return sanitizedName;
+  }
+
+  private buildPropertyString(propList, nodeName) {
+    let propString = '';
+    for (const key in propList) {
+      if (key === '_rawData') {
+        //stringify JSON in rawData so we can store it.
+        propString += `${nodeName}.${key} = '${JSON.stringify(propList[key])}', `;
+      } else {
+        // Escape single quotes so they don't terminate strings prematurely
+        const finalValue = propList[key].toString().replace(/'/gi, "\\'");
+        // Sanitize out characters that aren't allowed in property names
+        const propertyName = this.sanitizePropertyName(key);
+        propString += `${nodeName}.${propertyName} = '${finalValue}', `;
+      }
+    }
+    propString = propString.slice(0, -2);
+
+    return propString;
+  }
+
   async addEntities(newEntities: Entity[]) {
     for await (const entity of newEntities) {
       //Add constraint if not already in types
@@ -53,17 +86,9 @@ export class Neo4jGraphStore {
         );
         this.typeList.add(entity._type);
       }
-      let propString = 'SET ';
-      for (const key in entity) {
-        if (key === '_rawData') {
-          propString += `n.${key} = '${JSON.stringify(entity[key])}', `;
-        } else if (key != '_key') { // skip _key because MERGE statement will handle it
-          propString += `n.${key} = '${entity[key]}', `;
-        }
-      }
-      propString = propString.slice(0, -2);
+      const propString = this.buildPropertyString(entity, 'n');
 
-      const buildCommand = `MERGE (n:${entity._type} {_key: '${entity._key}'}) ${propString};`;
+      const buildCommand = `MERGE (n:${entity._type} {_key: '${entity._key}'}) SET ${propString};`;
       await this.runCypherCommand(buildCommand);
     }
     return Promise.resolve();
@@ -71,10 +96,34 @@ export class Neo4jGraphStore {
 
   async addRelationships(newRelationships: Relationship[]) {
     for await (const relationship of newRelationships) {
+      const propString = this.buildPropertyString(relationship, 'relationship');
+
+      //Get start and end _keys.  Will be overwritten if we're
+      //working with a mapped relationship.
+      let startEntityKey = relationship._fromEntityKey;
+      let endEntityKey = relationship._toEntityKey;
+
+      if(relationship._mapping) { //Mapped Relationship
+        if(relationship._mapping['skipTargetCreation'] === false) {
+          //Create target entity first
+          const tempEntity: Entity = {
+            _class: relationship._mapping['targetEntity']._class,
+            //TODO, I think this key is wrong, but not sure what else to use
+            _key:  relationship._key.replace(relationship._mapping['sourceEntityKey'], ''),
+            _type: relationship._mapping['targetEntity']._type,
+          }
+          await this.addEntities([tempEntity]);
+        }
+        startEntityKey = relationship._mapping['sourceEntityKey'];
+        // TODO, see above.  This key might also be an issue for the same reason
+        endEntityKey = relationship._key.replace(relationship._mapping['sourceEntityKey'], '');
+      }
+
       const buildCommand = `
-      MATCH (start {_key: '${relationship._fromEntityKey}'})
-      MATCH (end {_key: '${relationship._toEntityKey}'})
-      MERGE (start)-[:${relationship._type}]->(end);`;
+      MATCH (start {_key: '${startEntityKey}'})
+      MATCH (end {_key: '${endEntityKey}'})
+      MERGE (start)-[relationship:${relationship._type}]->(end)
+      SET ${propString};`;
       await this.runCypherCommand(buildCommand);
     }
     return Promise.resolve();
