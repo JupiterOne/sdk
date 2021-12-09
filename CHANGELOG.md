@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- CLI now has a command called `neo4j` that will upload any collected data in a
+  project to a local Neo4j database.  This requires that a NEO4J_URI, NEO4J_USER,
+  and NEO4J_PASSWORD be supplied in the local .env file.
+
 ### Changed
 
 - **\*BREAKING\*** Explicitly require a `_key` property when using
