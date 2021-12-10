@@ -7,6 +7,7 @@ import * as neo4j from 'neo4j-driver';
 import { Neo4jGraphStore } from '../neo4jGraphStore';
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 
+const testInstanceID = 'testInstanceID';
 const testEntityData: Entity[] = [{
   _type: "testType",
   _class: "testClass",
@@ -20,11 +21,13 @@ const testRelationshipData: Relationship[] = [{
   _class: "testRelationshipClass",
 }];
 const constraintCall = 'CREATE CONSTRAINT unique_testType IF NOT EXISTS ON (n:testType) ASSERT n._key IS UNIQUE;'
-const addEntityCall = `MERGE (n:testType {_key: 'testKey'}) SET n._type = 'testType', n._class = 'testClass';`;
+const addEntityCall = `MERGE (n:testType {_key: 'testKey', _integrationInstanceID: '${testInstanceID}'}) SET n._type = 'testType', n._class = 'testClass';`;
 const addRelationshipCall = `
-MATCH (start {_key: 'testKey1'})
-MATCH (end {_key: 'testKey2'})
-MERGE (start)-[:testRelType]->(end);`
+MATCH (start {_key: 'testKey1', _integrationInstanceID: '${testInstanceID}'})
+MATCH (end {_key: 'testKey2', _integrationInstanceID: '${testInstanceID}'})
+MERGE (start)-[relationship:testRelType]->(end);`
+const wipeByIDCall = `MATCH (n {_integrationInstanceID: '${testInstanceID}'}) DETACH DELETE n`;
+const wipeAllCall = 'MATCH (n) DETACH DELETE n';
 const querySet: QuerySpec[] = [{
   name: 'addConstraint',
   query: constraintCall,
@@ -42,12 +45,24 @@ const querySet: QuerySpec[] = [{
   query: addRelationshipCall,
   params: undefined,
   output: {records:[]}
+},
+{
+  name: 'wipeByID',
+  query: wipeByIDCall,
+  params: undefined,
+  output: {records:[]}
+},
+{
+  name: 'wipeAll',
+  query: wipeAllCall,
+  params: undefined,
+  output: {records:[]}
 }];
 
 describe('#neo4jGraphStore', () => {
   const mockDriverResp = mockDriver();
   const mockSession = mockSessionFromQuerySet(querySet);
-  const store = new Neo4jGraphStore({
+  const store = new Neo4jGraphStore(testInstanceID, {
     uri: '',
     username: '',
     password: '',
@@ -56,7 +71,7 @@ describe('#neo4jGraphStore', () => {
   test('should generate call to create a driver connection', () => {
     const spy = jest.spyOn(neo4j, 'driver').mockReturnValue(mockDriverResp);
 
-    const emptyStore = new Neo4jGraphStore({
+    const emptyStore = new Neo4jGraphStore(testInstanceID, {
       uri: '',
       username: '',
       password: '',
@@ -72,6 +87,15 @@ describe('#neo4jGraphStore', () => {
   test('should generate call to create a Relationship', () => {
 
     expect(async () => await store.addRelationships(testRelationshipData)).toReturn;
+  });
+
+  test('should generate call to wipe by ID', () => {
+    expect(async () => await store.wipeInstanceIdData()).toReturn;
+  });
+
+  test('should build property string correctly including sanitization', () => {
+    const testPropResults: string = store.buildPropertyString({test: '123', '1sanitize1hi&$abc d': "1h'i&$abc d"}, 'testNode');
+    expect(testPropResults).toEqual(`testNode.test = '123', testNode._sanitize_hi__abc_d = '1h\\'i&$abc d'`);
   });
 
 });

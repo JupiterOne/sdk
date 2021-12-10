@@ -13,8 +13,9 @@ export class Neo4jGraphStore {
   private persistedSession: neo4j.Session;
   private databaseName = 'neo4j';
   private typeList = new Set<string>();
+  private integrationInstanceID: string;
 
-  constructor(params: Neo4jGraphObjectStoreParams, session?: neo4j.Session) {
+  constructor(instanceID: string, params: Neo4jGraphObjectStoreParams, session?: neo4j.Session) {
     if(session) {
       this.persistedSession = session;
     }
@@ -24,6 +25,7 @@ export class Neo4jGraphStore {
         neo4j.auth.basic(params.username, params.password),
       );
     }
+    this.integrationInstanceID = instanceID;
   }
 
   private async runCypherCommand(cypherCommand: string): Promise<neo4j.Result> {
@@ -56,7 +58,11 @@ export class Neo4jGraphStore {
     return sanitizedName;
   }
 
-  private buildPropertyString(propList, nodeName) {
+  private sanitizeValue(value: string): string {
+    return value.replace(/'/gi, "\\'")
+  }
+
+  public buildPropertyString(propList, nodeName) {
     let propString = '';
     for (const key in propList) {
       if (key === '_rawData') {
@@ -64,7 +70,7 @@ export class Neo4jGraphStore {
         propString += `${nodeName}.${key} = '${JSON.stringify(propList[key])}', `;
       } else {
         // Escape single quotes so they don't terminate strings prematurely
-        const finalValue = propList[key].toString().replace(/'/gi, "\\'");
+        const finalValue = this.sanitizeValue(propList[key].toString());
         // Sanitize out characters that aren't allowed in property names
         const propertyName = this.sanitizePropertyName(key);
         propString += `${nodeName}.${propertyName} = '${finalValue}', `;
@@ -76,32 +82,38 @@ export class Neo4jGraphStore {
   }
 
   async addEntities(newEntities: Entity[]) {
-    for await (const entity of newEntities) {
-      //Add constraint if not already in types
-      //We check for existence in case we're ever running in an instance with
-      //multiple inputs.
+    for (const entity of newEntities) {
+      //Add index if not already in types.  This will optimize future
+      //MATCH/MERGE calls.
       if (!this.typeList.has(entity._type)) {
         await this.runCypherCommand(
-          `CREATE CONSTRAINT unique_${entity._type} IF NOT EXISTS ON (n:${entity._type}) ASSERT n._key IS UNIQUE;`,
+          `CREATE INDEX index_${entity._type} IF NOT EXISTS FOR (n:${entity._type}) ON (n._key, n._integrationInstanceID);`,
         );
         this.typeList.add(entity._type);
       }
       const propString = this.buildPropertyString(entity, 'n');
-
-      const buildCommand = `MERGE (n:${entity._type} {_key: '${entity._key}'}) SET ${propString};`;
+      const finalKeyValue = this.sanitizeValue(entity._key.toString());
+      const buildCommand = `
+        MERGE (n {_key: '${finalKeyValue}', _integrationInstanceID: '${this.integrationInstanceID}'}) 
+        SET ${propString}, n:${entity._type};`;
       await this.runCypherCommand(buildCommand);
     }
-    return Promise.resolve();
   }
 
   async addRelationships(newRelationships: Relationship[]) {
-    for await (const relationship of newRelationships) {
+    for (const relationship of newRelationships) {
       const propString = this.buildPropertyString(relationship, 'relationship');
 
+      let startEntityKey = '';
+      let endEntityKey = '';
       //Get start and end _keys.  Will be overwritten if we're
       //working with a mapped relationship.
-      let startEntityKey = relationship._fromEntityKey;
-      let endEntityKey = relationship._toEntityKey;
+      if (relationship._fromEntityKey) {
+        startEntityKey = this.sanitizeValue(relationship._fromEntityKey.toString());
+      }
+      if(relationship._toEntityKey) {
+        endEntityKey = this.sanitizeValue(relationship._toEntityKey.toString());
+      }
 
       if(relationship._mapping) { //Mapped Relationship
         if(relationship._mapping['skipTargetCreation'] === false) {
@@ -109,24 +121,38 @@ export class Neo4jGraphStore {
           const tempEntity: Entity = {
             _class: relationship._mapping['targetEntity']._class,
             //TODO, I think this key is wrong, but not sure what else to use
-            _key:  relationship._key.replace(relationship._mapping['sourceEntityKey'], ''),
+            _key:  this.sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], '')),
             _type: relationship._mapping['targetEntity']._type,
           }
           await this.addEntities([tempEntity]);
         }
-        startEntityKey = relationship._mapping['sourceEntityKey'];
+        startEntityKey = this.sanitizeValue(relationship._mapping['sourceEntityKey']);
         // TODO, see above.  This key might also be an issue for the same reason
-        endEntityKey = relationship._key.replace(relationship._mapping['sourceEntityKey'], '');
+        endEntityKey = this.sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], ''));
       }
 
       const buildCommand = `
-      MATCH (start {_key: '${startEntityKey}'})
-      MATCH (end {_key: '${endEntityKey}'})
+      MATCH (start {_key: '${startEntityKey}', _integrationInstanceID: '${this.integrationInstanceID}'})
+      MATCH (end {_key: '${endEntityKey}', _integrationInstanceID: '${this.integrationInstanceID}'})
       MERGE (start)-[relationship:${relationship._type}]->(end)
       SET ${propString};`;
       await this.runCypherCommand(buildCommand);
     }
-    return Promise.resolve();
+  }
+
+  // TODO, if we get to very large databases we could reach a size where
+  // one or both both of the below wipe commands can't be easily executed 
+  // in memory.  At that time, we should consider requiring/using the APOC 
+  // library so we can use apoc.periodic.iterate.  Leaving out for now,
+  // since that would further complicate the Neo4j database setup.
+  async wipeInstanceIdData() {
+    const wipeCypherCommand = `MATCH (n {_integrationInstanceID: '${this.integrationInstanceID}'}) DETACH DELETE n`;
+    await this.runCypherCommand(wipeCypherCommand);
+  }
+
+  async wipeDatabase() {
+    const wipeCypherCommand = `MATCH (n) DETACH DELETE n`;
+    await this.runCypherCommand(wipeCypherCommand);
   }
 
   async close() {
