@@ -69,11 +69,18 @@ export class Neo4jGraphStore {
         //stringify JSON in rawData so we can store it.
         propString += `${nodeName}.${key} = '${JSON.stringify(propList[key])}', `;
       } else {
-        // Escape single quotes so they don't terminate strings prematurely
-        const finalValue = this.sanitizeValue(propList[key].toString());
         // Sanitize out characters that aren't allowed in property names
         const propertyName = this.sanitizePropertyName(key);
-        propString += `${nodeName}.${propertyName} = '${finalValue}', `;
+
+        //If we're dealing with a number or boolean, leave alone, otherwise
+        //wrap in single quotes to convert to a string and escape all
+        //other single quotes so they don't terminate strings prematurely.
+        if(typeof propList[key] == 'number' || typeof propList[key] == 'boolean') {
+          propString += `${nodeName}.${propertyName} = ${propList[key]}, `;
+        }
+        else {
+          propString += `${nodeName}.${propertyName} = '${this.sanitizeValue(propList[key].toString())}', `;
+        }
       }
     }
     propString = propString.slice(0, -2);
