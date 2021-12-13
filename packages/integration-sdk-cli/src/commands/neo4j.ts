@@ -28,7 +28,10 @@ export function neo4j() {
     )
     .action(async (options) => {
       log.info(`Beginning data upload to local neo4j`);
-      await uploadToNeo4j(options.dataDir, options.integrationInstanceId);
+      await uploadToNeo4j({
+        pathToData: options.dataDir, 
+        integrationInstanceID: options.integrationInstanceId
+      });
       log.info(`Data uploaded to local neo4j`);
     });
 
@@ -41,14 +44,14 @@ export function neo4j() {
       'defaultLocalInstanceID'
     )
     .action(async (options) => {
-      await wipeNeo4jByID(options.integrationInstanceId);
+      await wipeNeo4jByID({integrationInstanceID: options.integrationInstanceId});
     });
 
     neo4jCommand
     .command('wipe-all')
     .description('wipe all entities and relationships in the Neo4j database')
     .action(async (options) => {
-      await wipeAllNeo4j();
+      await wipeAllNeo4j({});
     });
 
     return neo4jCommand;

@@ -1,20 +1,26 @@
 import { Neo4jGraphStore } from './neo4jGraphStore';
-import * as log from '../log';
 
-export async function wipeNeo4jByID(integrationInstanceID: string) {
-  if(!process.env.NEO4J_URI || !process.env.NEO4J_USER || !process.env.NEO4J_PASSWORD) {
-    throw new Error('ERROR: must include NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD files in your .env file!');
+type WipeNeo4jParams = {
+  integrationInstanceID: string;
+  neo4jUri?: string;
+  neo4jUser?: string;
+  neo4jPassword?: string;
+}
+export async function wipeNeo4jByID({
+  integrationInstanceID,
+  neo4jUri = process.env.NEO4J_URI,
+  neo4jUser = process.env. NEO4J_USER,
+  neo4jPassword = process.env. NEO4J_PASSWORD,
+}: WipeNeo4jParams) {
+  if(!neo4jUri || !neo4jUser || !neo4jPassword) {
+    throw new Error('ERROR: must provide login information in function call or include NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD files in your .env file!');
   }
-  log.info(`Wiping Neo4j data for integrationInstanceID: ${integrationInstanceID}`);
 
-  const neo4jUri = process.env.NEO4J_URI;
-  const neo4jUser = process.env.NEO4J_USER;
-  const neo4jPassword = process.env.NEO4J_PASSWORD;
-
-  const store = new Neo4jGraphStore(integrationInstanceID, {
+  const store = new Neo4jGraphStore({
     uri: neo4jUri,
     username: neo4jUser,
     password: neo4jPassword,
+    integrationInstanceID: integrationInstanceID,
   });
   try {
     await store.wipeInstanceIdData();
@@ -23,17 +29,26 @@ export async function wipeNeo4jByID(integrationInstanceID: string) {
   }
 }
 
-export async function wipeAllNeo4j() {
-  log.info(`Wiping all Neo4j data`);
+type WipeAllNeo4jParams = {
+  neo4jUri?: string;
+  neo4jUser?: string;
+  neo4jPassword?: string;
+}
 
-  const neo4jUri = process.env.NEO4J_URI || 'bolt://localhost:7687';
-  const neo4jUser = process.env.NEO4J_USER || 'neo4j';
-  const neo4jPassword = process.env.NEO4J_PASSWORD || 'neo4j';
+export async function wipeAllNeo4j({
+  neo4jUri = process.env.NEO4J_URI,
+  neo4jUser = process.env. NEO4J_USER,
+  neo4jPassword = process.env. NEO4J_PASSWORD,
+}: WipeAllNeo4jParams) {
+  if(!neo4jUri || !neo4jUser || !neo4jPassword) {
+    throw new Error('ERROR: must provide login information in function call or include NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD files in your .env file!');
+  }
 
-  const store = new Neo4jGraphStore('', {
+  const store = new Neo4jGraphStore({
     uri: neo4jUri,
     username: neo4jUser,
     password: neo4jPassword,
+    integrationInstanceID: '',
   });
   try {
     await store.wipeDatabase();

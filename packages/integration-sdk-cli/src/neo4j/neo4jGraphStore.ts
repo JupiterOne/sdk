@@ -1,4 +1,5 @@
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
+import { sanitizeValue, buildPropertyParameters } from './neo4jUtilities';
 
 import * as neo4j from 'neo4j-driver';
 
@@ -6,6 +7,8 @@ export interface Neo4jGraphObjectStoreParams {
   uri: string;
   username: string;
   password: string;
+  integrationInstanceID: string,
+  session?: neo4j.Session
 }
 
 export class Neo4jGraphStore {
@@ -15,9 +18,9 @@ export class Neo4jGraphStore {
   private typeList = new Set<string>();
   private integrationInstanceID: string;
 
-  constructor(instanceID: string, params: Neo4jGraphObjectStoreParams, session?: neo4j.Session) {
-    if(session) {
-      this.persistedSession = session;
+  constructor(params: Neo4jGraphObjectStoreParams) {
+    if(params.session) {
+      this.persistedSession = params.session;
     }
     else {
       this.neo4jDriver = neo4j.driver(
@@ -25,10 +28,10 @@ export class Neo4jGraphStore {
         neo4j.auth.basic(params.username, params.password),
       );
     }
-    this.integrationInstanceID = instanceID;
+    this.integrationInstanceID = params.integrationInstanceID;
   }
 
-  private async runCypherCommand(cypherCommand: string): Promise<neo4j.Result> {
+  private async runCypherCommand(cypherCommand: string, cypherParameters?: any): Promise<neo4j.Result> {
     if(this.persistedSession) {
       const result = await this.persistedSession.run(cypherCommand);
       return result;
@@ -38,57 +41,14 @@ export class Neo4jGraphStore {
         database: this.databaseName,
         defaultAccessMode: neo4j.session.WRITE,
       });
-      const result = await session.run(cypherCommand);
+      const result = await session.run(cypherCommand, cypherParameters);
       await session.close();
       return result;
     }
   }
 
-  private startsWithNumeric(str: string){
-    return /^\d+$/.test(str);
-  }
-
-  private sanitizePropertyName(propertyName: string): string {
-    let sanitizedName = '';
-    if(this.startsWithNumeric(propertyName)) {
-      sanitizedName += 'n';
-    }
-    sanitizedName += propertyName;
-    sanitizedName = sanitizedName.replace(/[\s!@#$%^&*()-=+\\|'";:/?.,><`~\t\n[\]{}]/g, "_");
-    return sanitizedName;
-  }
-
-  private sanitizeValue(value: string): string {
-    return value.replace(/'/gi, "\\'")
-  }
-
-  public buildPropertyString(propList, nodeName) {
-    let propString = '';
-    for (const key in propList) {
-      if (key === '_rawData') {
-        //stringify JSON in rawData so we can store it.
-        propString += `${nodeName}.${key} = '${JSON.stringify(propList[key])}', `;
-      } else {
-        // Sanitize out characters that aren't allowed in property names
-        const propertyName = this.sanitizePropertyName(key);
-
-        //If we're dealing with a number or boolean, leave alone, otherwise
-        //wrap in single quotes to convert to a string and escape all
-        //other single quotes so they don't terminate strings prematurely.
-        if(typeof propList[key] == 'number' || typeof propList[key] == 'boolean') {
-          propString += `${nodeName}.${propertyName} = ${propList[key]}, `;
-        }
-        else {
-          propString += `${nodeName}.${propertyName} = '${this.sanitizeValue(propList[key].toString())}', `;
-        }
-      }
-    }
-    propString = propString.slice(0, -2);
-
-    return propString;
-  }
-
   async addEntities(newEntities: Entity[]) {
+    const nodeAlias: string = 'entityNode';
     for (const entity of newEntities) {
       //Add index if not already in types.  This will optimize future
       //MATCH/MERGE calls.
@@ -98,28 +58,34 @@ export class Neo4jGraphStore {
         );
         this.typeList.add(entity._type);
       }
-      const propString = this.buildPropertyString(entity, 'n');
-      const finalKeyValue = this.sanitizeValue(entity._key.toString());
+      const propertyParameters = buildPropertyParameters(entity);
+      const finalKeyValue = sanitizeValue(entity._key.toString());
       const buildCommand = `
-        MERGE (n {_key: '${finalKeyValue}', _integrationInstanceID: '${this.integrationInstanceID}'}) 
-        SET ${propString}, n:${entity._type};`;
-      await this.runCypherCommand(buildCommand);
+        MERGE (${nodeAlias} {_key: $finalKeyValue, _integrationInstanceID: $integrationInstanceID}) 
+        SET ${nodeAlias} += $propertyParameters
+        SET ${nodeAlias}:${entity._type};`;
+      await this.runCypherCommand(buildCommand, {
+        propertyParameters: propertyParameters, 
+        finalKeyValue: finalKeyValue, 
+        integrationInstanceID: this.integrationInstanceID
+      });
     }
   }
 
   async addRelationships(newRelationships: Relationship[]) {
     for (const relationship of newRelationships) {
-      const propString = this.buildPropertyString(relationship, 'relationship');
+      const relationshipAlias: string = 'relationship';
+      const propertyParameters = buildPropertyParameters(relationship);
 
       let startEntityKey = '';
       let endEntityKey = '';
       //Get start and end _keys.  Will be overwritten if we're
       //working with a mapped relationship.
       if (relationship._fromEntityKey) {
-        startEntityKey = this.sanitizeValue(relationship._fromEntityKey.toString());
+        startEntityKey = sanitizeValue(relationship._fromEntityKey.toString());
       }
       if(relationship._toEntityKey) {
-        endEntityKey = this.sanitizeValue(relationship._toEntityKey.toString());
+        endEntityKey = sanitizeValue(relationship._toEntityKey.toString());
       }
 
       if(relationship._mapping) { //Mapped Relationship
@@ -128,22 +94,27 @@ export class Neo4jGraphStore {
           const tempEntity: Entity = {
             _class: relationship._mapping['targetEntity']._class,
             //TODO, I think this key is wrong, but not sure what else to use
-            _key:  this.sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], '')),
+            _key:  sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], '')),
             _type: relationship._mapping['targetEntity']._type,
           }
           await this.addEntities([tempEntity]);
         }
-        startEntityKey = this.sanitizeValue(relationship._mapping['sourceEntityKey']);
+        startEntityKey = sanitizeValue(relationship._mapping['sourceEntityKey']);
         // TODO, see above.  This key might also be an issue for the same reason
-        endEntityKey = this.sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], ''));
+        endEntityKey = sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], ''));
       }
 
       const buildCommand = `
-      MATCH (start {_key: '${startEntityKey}', _integrationInstanceID: '${this.integrationInstanceID}'})
-      MATCH (end {_key: '${endEntityKey}', _integrationInstanceID: '${this.integrationInstanceID}'})
-      MERGE (start)-[relationship:${relationship._type}]->(end)
-      SET ${propString};`;
-      await this.runCypherCommand(buildCommand);
+      MATCH (start {_key: $startEntityKey, _integrationInstanceID: $integrationInstanceID})
+      MATCH (end {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
+      MERGE (start)-[${relationshipAlias}:${relationship._type}]->(end)
+      SET ${relationshipAlias} += $propertyParameters;`;
+      await this.runCypherCommand(buildCommand, {
+        propertyParameters: propertyParameters, 
+        startEntityKey: startEntityKey, 
+        endEntityKey: endEntityKey,
+        integrationInstanceID: this.integrationInstanceID
+      });
     }
   }
 

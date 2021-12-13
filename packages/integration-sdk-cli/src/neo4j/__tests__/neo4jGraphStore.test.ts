@@ -62,19 +62,22 @@ const querySet: QuerySpec[] = [{
 describe('#neo4jGraphStore', () => {
   const mockDriverResp = mockDriver();
   const mockSession = mockSessionFromQuerySet(querySet);
-  const store = new Neo4jGraphStore(testInstanceID, {
+  const store = new Neo4jGraphStore({
     uri: '',
     username: '',
     password: '',
-  }, mockSession);
+    integrationInstanceID: testInstanceID,
+    session: mockSession,
+  });
 
   test('should generate call to create a driver connection', () => {
     const spy = jest.spyOn(neo4j, 'driver').mockReturnValue(mockDriverResp);
 
-    const emptyStore = new Neo4jGraphStore(testInstanceID, {
+    const emptyStore = new Neo4jGraphStore({
       uri: '',
       username: '',
       password: '',
+      integrationInstanceID: testInstanceID,
     });
     expect(async () => await emptyStore.close()).toReturn;
     expect(spy).toHaveBeenCalledTimes(1);
@@ -91,11 +94,6 @@ describe('#neo4jGraphStore', () => {
 
   test('should generate call to wipe by ID', () => {
     expect(async () => await store.wipeInstanceIdData()).toReturn;
-  });
-
-  test('should build property string correctly including sanitization', () => {
-    const testPropResults: string = store.buildPropertyString({test: '123', '1sanitize1hi&$abc d': "1h'i&$abc d"}, 'testNode');
-    expect(testPropResults).toEqual(`testNode.test = '123', testNode._sanitize_hi__abc_d = '1h\\'i&$abc d'`);
   });
 
 });
