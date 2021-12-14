@@ -19,7 +19,7 @@ export function neo4j() {
     .option(
       '-d, --data-dir <directory>',
       'path to collected entities and relationships',
-      path.resolve(process.cwd(), '.j1-integration', 'graph'),
+      path.resolve(process.cwd(), '.j1-integration'),
     )
     .option(
       '-i, --integration-instance-id <id>',
@@ -28,8 +28,13 @@ export function neo4j() {
     )
     .action(async (options) => {
       log.info(`Beginning data upload to local neo4j`);
+      // Point `fileSystem.ts` functions to expected location relative to
+      // integration project path.
+      const finalDir = path.resolve(process.cwd(), options.dataDir);
+      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = finalDir;
+
       await uploadToNeo4j({
-        pathToData: options.dataDir, 
+        pathToData: finalDir, 
         integrationInstanceID: options.integrationInstanceId
       });
       log.info(`Data uploaded to local neo4j`);
