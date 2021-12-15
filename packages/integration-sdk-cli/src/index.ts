@@ -9,6 +9,7 @@ import {
   visualize,
   visualizeTypes,
   validateQuestionFile,
+  neo4j,
 } from './commands';
 
 export function createCli() {
@@ -20,5 +21,6 @@ export function createCli() {
     .addCommand(run())
     .addCommand(visualizeTypes())
     .addCommand(document())
-    .addCommand(validateQuestionFile());
+    .addCommand(validateQuestionFile())
+    .addCommand(neo4j());
 }

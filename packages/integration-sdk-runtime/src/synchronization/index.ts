@@ -13,21 +13,17 @@ import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
 
-import {
-  getRootStorageDirectory,
-  readJsonFromPath,
-  walkDirectory,
-} from '../fileSystem';
+import { getRootStorageDirectory, readJsonFromPath } from '../fileSystem';
 import { synchronizationApiError } from './error';
 import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
-import { readGraphObjectFile } from '../storage/FileSystemGraphObjectStore/indices';
 import { FlushedGraphObjectData } from '../storage/types';
 import { retry } from '@lifeomic/attempt';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
+import { iterateParsedGraphFiles } from '..';
 export { createEventPublishingQueue } from './events';
 
 const UPLOAD_BATCH_SIZE = 250;
@@ -193,7 +189,7 @@ export async function uploadGraphObjectData(
         graphObjectData.entities,
         uploadBatchSize,
       );
-      
+
       synchronizationJobContext.logger.info(
         {
           entities: graphObjectData.entities.length,
@@ -238,21 +234,14 @@ export async function uploadGraphObjectData(
 export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
 
+  async function uploadGraphObjectFile(parsedData: FlushedGraphObjectData) {
+    await uploadGraphObjectData(context, parsedData);
+  }
+
   await timeOperation({
     logger: context.logger,
     metricName: 'duration-sync-upload',
-    operation: () =>
-      walkDirectory({
-        path: 'graph',
-        async iteratee({ filePath }) {
-          await uploadGraphObjectData(
-            context,
-            await readGraphObjectFile<FlushedGraphObjectData>({
-              filePath,
-            }),
-          );
-        },
-      }),
+    operation: () => iterateParsedGraphFiles(uploadGraphObjectFile),
   });
 
   context.logger.synchronizationUploadEnd(context.job);
@@ -271,13 +260,10 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
-export async function uploadDataChunk<T extends UploadDataLookup, K extends keyof T>({
-  logger,
-  apiClient,
-  jobId,
-  type,
-  batch,
-}: UploadDataChunkParams<T, K>) {
+export async function uploadDataChunk<
+  T extends UploadDataLookup,
+  K extends keyof T
+>({ logger, apiClient, jobId, type, batch }: UploadDataChunkParams<T, K>) {
   await retry(
     async () => {
       await apiClient.post(`/persister/synchronization/jobs/${jobId}/${type}`, {
@@ -291,7 +277,7 @@ export async function uploadDataChunk<T extends UploadDataLookup, K extends keyo
       handleError(err, attemptContext) {
         if (err.code === 'RequestEntityTooLargeException') {
           // No reason to retry these errors as the request size ain't gonna change.
-          throw err
+          throw err;
         }
         if (
           attemptContext.attemptsRemaining &&

@@ -29,6 +29,7 @@
     "json-diff": "^0.5.4",
     "lodash": "^4.17.19",
     "markdown-table": "^2.0.0",
+    "neo4j-driver": "^4.3.3",
     "runtypes": "5.1.0",
     "upath": "^1.2.0",
     "vis": "^4.21.0-EOL"
@@ -46,6 +47,7 @@
     "@types/pollyjs__persister": "^4.3.1",
     "@types/vis": "^4.21.20",
     "memfs": "^3.2.0",
+    "neo-forgery": "^2.0.0",
     "uuid": "^8.2.0"
   }
 }

@@ -6,3 +6,4 @@ export * from './run';
 export * from './document';
 export * from './visualize-types';
 export * from './validate-question-file';
+export * from './neo4j';
