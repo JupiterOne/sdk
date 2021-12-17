@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `RelationshipClass.HOSTS` and `RelationshipClass.LOGS`
+
 ## [8.0.0] - 2021-12-15
 
 ### Added
