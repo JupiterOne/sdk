@@ -4,61 +4,49 @@ import {
   GraphObjectIteratee,
   IntegrationError,
 } from '@jupiterone/integration-sdk-core';
-import { FlushedEntityData, FlushedRelationshipData } from '../types';
-import {
-  readJsonFromPath,
-  walkDirectory,
-  WalkDirectoryIterateeInput,
-} from '../../fileSystem';
+import { readJsonFromPath, WalkDirectoryIterateeInput } from '../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
+import { iterateParsedGraphFiles } from '../..';
 
 interface IterateIndexInput<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
 }
 
+interface BaseIterateIndexInput<GraphObject>
+  extends IterateIndexInput<GraphObject> {
+  collectionType: 'entities' | 'relationships';
+}
+
+async function iterateTypeIndex<T extends Entity | Relationship>({
+  type,
+  collectionType,
+  iteratee,
+}: BaseIterateIndexInput<T>) {
+  const path = buildIndexDirectoryPath({
+    collectionType,
+    type,
+  });
+
+  await iterateParsedGraphFiles(async (data) => {
+    for (const graphObj of (data[collectionType] as T[]) || []) {
+      await iteratee(graphObj);
+    }
+  }, path);
+}
+
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
 }: IterateIndexInput<T>) {
-  const path = buildIndexDirectoryPath({
-    collectionType: 'entities',
-    type,
-  });
-
-  await walkDirectory({
-    path,
-    iteratee: async (input) => {
-      const object = await readGraphObjectFile<FlushedEntityData>(input);
-      if (isObjectFlushedEntityData(object)) {
-        for (const entity of object.entities as T[]) {
-          await iteratee(entity);
-        }
-      }
-    },
-  });
+  await iterateTypeIndex({ type, iteratee, collectionType: 'entities' });
 }
 
 export async function iterateRelationshipTypeIndex<
   T extends Relationship = Relationship
 >({ type, iteratee }: IterateIndexInput<T>) {
-  const path = buildIndexDirectoryPath({
-    collectionType: 'relationships',
-    type,
-  });
-
-  await walkDirectory({
-    path,
-    iteratee: async (input) => {
-      const object = await readGraphObjectFile<FlushedRelationshipData>(input);
-      if (isObjectFlushedRelationshipData(object)) {
-        for (const relationship of object.relationships as T[]) {
-          await iteratee(relationship);
-        }
-      }
-    },
-  });
+  await iterateTypeIndex({ type, iteratee, collectionType: 'relationships' });
 }
 
 export async function readGraphObjectFile<T>({
@@ -74,14 +62,4 @@ export async function readGraphObjectFile<T>({
       cause: err,
     });
   }
-}
-
-function isObjectFlushedEntityData(object: any): object is FlushedEntityData {
-  return Array.isArray(object?.entities);
-}
-
-function isObjectFlushedRelationshipData(
-  object: any,
-): object is FlushedRelationshipData {
-  return Array.isArray(object?.relationships);
 }
