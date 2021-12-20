@@ -82,6 +82,7 @@ export function createMockExecutionContext<
   return {
     logger,
     instance,
+    executionConfig: {},
     executionHistory: options.executionHistory || {
       current: {
         startedOn: Date.now(),

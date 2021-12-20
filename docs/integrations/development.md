@@ -58,6 +58,88 @@ Example:
 }
 ```
 
+#### `loadExecutionConfig`
+
+The `loadExecutionConfig` method loads any config assets that should be used
+across multiple steps. This method is most often used to create shared
+credentials for API clients.
+
+The `loadExecutionConfig` method runs before `validateInvocation`,
+`getStepStartStates`, and `integrationSteps`. The loaded config is accessable in
+any of these contexts as `context.executionConfig`.
+
+Example:
+
+```typescript
+// src/loadExecutionConfig.ts
+import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
+import { v4 as uuid } from 'uuid';
+
+export function loadExecutionConfig({
+  config: { roleArn: string, externalId: string },
+}) {
+  return {
+    credentials: fromTemporaryCredentials({
+      params: {
+        RoleArn: config.roleArn,
+        ExternalId: config.externalId,
+        RoleSessionName: `juptierone-${uuid()}`,
+      },
+    }),
+  };
+}
+
+// -----------------------------------------------------------------------------
+// src/steps/ec2/client.ts
+import { EC2Client, DescribeVpcsCommand, Vpc } from '@aws-sdk/client-ec2';
+
+export class J1Ec2Client {
+  private ec2: Ec2Client;
+  constructor(credentials: ProviderCredentials) {
+    this.ec2 = new Ec2Client({ credentials });
+  }
+
+  public async iterateVpcs(iteratee: (vpc: Vpc) => Promise<void>) {
+    do {
+      const response = await this.ec2.send(new DescribeVpcsCommand({}));
+      if (response.Vpcs) {
+        for (const vpc of response.Vpcs) {
+          await iteratee(vpc);
+        }
+      }
+      nextToken = response.NextToken;
+    } while (nextToken);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// src/steps/ec2/index.ts
+import { J1Ec2Client } from './client';
+import { createVpcEntity } from './converters';
+import { Ec2Entities } from './constants';
+
+function fetchVpcs({
+  jobState,
+  executionConfig,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  const { credentials } = executionConfig;
+  const client = new J1Ec2Client(credentials);
+  await client.iterateVpcs(async (vpc) =>
+    jobState.addEntity(createVpcEntity(vpc)),
+  );
+}
+
+export const ec2Steps = [
+  {
+    id: 'fetch-vpcs',
+    name: 'Fetch EC2 VPCs',
+    entities: [Ec2Entities.VPC],
+    relationships: [],
+    executionHandler: fetchVpcs,
+  },
+];
+```
+
 #### `validateInvocation`
 
 The `validateInvocation` field is a validation function that is required for

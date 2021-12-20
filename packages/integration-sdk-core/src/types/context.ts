@@ -1,4 +1,8 @@
-import { IntegrationInstance, IntegrationInstanceConfig } from './instance';
+import {
+  IntegrationInstance,
+  IntegrationInstanceConfig,
+  IntegrationExecutionConfig,
+} from './instance';
 import { JobState } from './jobState';
 import { IntegrationLogger } from './logger';
 
@@ -22,10 +26,17 @@ export interface ExecutionContext {
  * @param TConfig the integration specific type of the `instance.config`
  * property
  */
-export type IntegrationExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+export type IntegrationLoadExecutionConfigContext<
+  TConfig extends IntegrationInstanceConfig
 > = ExecutionContext & {
   instance: IntegrationInstance<TConfig>;
+};
+
+export type IntegrationExecutionContext<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+> = IntegrationLoadExecutionConfigContext<TConfig> & {
+  executionConfig: TExecutionConfig;
 };
 
 export type StepExecutionContext = ExecutionContext & {
@@ -37,5 +48,7 @@ export type StepExecutionContext = ExecutionContext & {
  * property
  */
 export interface IntegrationStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
-> extends IntegrationExecutionContext<TConfig>, StepExecutionContext {}
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+> extends IntegrationExecutionContext<TConfig, TExecutionConfig>,
+    StepExecutionContext {}

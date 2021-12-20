@@ -45,9 +45,7 @@ function sleep(ms: number) {
 export interface InstanceConfigurationData<
   TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
 > {
-  validateInvocation: IntegrationInvocationValidationFunction<
-    TIntegrationConfig
-  >;
+  validateInvocation: IntegrationInvocationValidationFunction<TIntegrationConfig>;
   instance: IntegrationInstance<TIntegrationConfig>;
   invocationConfig: IntegrationInvocationConfig<TIntegrationConfig>;
   logger: IntegrationLogger;
@@ -99,9 +97,35 @@ describe('executeIntegrationInstance', () => {
           startedOn: executionStartedOn,
         },
       },
+      executionConfig: {},
     };
 
     expect(config.validateInvocation).toHaveBeenCalledWith(expectedContext);
+  });
+
+  test('should load executionConfig if loadExecutionConfig provided in config', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [],
+        loadExecutionConfig: ({ config: instanceConfig }) => ({
+          sharedCredentials: { instanceConfig },
+        }),
+      },
+    });
+
+    const loadExecutionConfigSpy = jest.spyOn(
+      config.invocationConfig,
+      'loadExecutionConfig',
+    );
+
+    await executeIntegrationInstanceWithConfig(config);
+
+    expect(loadExecutionConfigSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ config: config.instance.config }),
+    );
+    expect(loadExecutionConfigSpy).toHaveReturnedWith({
+      sharedCredentials: { instanceConfig: config.instance.config },
+    });
   });
 
   test('logs validation error if validation fails', async () => {
@@ -195,11 +219,10 @@ describe('executeIntegrationInstance', () => {
   });
 
   test('runs multiple dependency graphs in order and returns integration step results and metadata about partial datasets', async () => {
-
-    const firstStepExecutionHandler = jest.fn()
-    const secondStepExecutionHandler = jest.fn()
-    const thirdStepExecutionHandler = jest.fn()
-    const fourthStepExecutionHandler = jest.fn()
+    const firstStepExecutionHandler = jest.fn();
+    const secondStepExecutionHandler = jest.fn();
+    const thirdStepExecutionHandler = jest.fn();
+    const fourthStepExecutionHandler = jest.fn();
 
     const config = createInstanceConfiguration({
       invocationConfig: {
@@ -230,7 +253,7 @@ describe('executeIntegrationInstance', () => {
             ],
             relationships: [],
             executionHandler: firstStepExecutionHandler,
-            dependencyGraphId: undefined // defaults to going first
+            dependencyGraphId: undefined, // defaults to going first
           },
           {
             id: 'my-second-step',
@@ -244,7 +267,7 @@ describe('executeIntegrationInstance', () => {
             ],
             relationships: [],
             executionHandler: secondStepExecutionHandler,
-            dependencyGraphId: '1'
+            dependencyGraphId: '1',
           },
           {
             id: 'depends-on-second-step',
@@ -258,11 +281,11 @@ describe('executeIntegrationInstance', () => {
             ],
             relationships: [],
             executionHandler: thirdStepExecutionHandler,
-            dependsOn: ['my-second-step'], 
-            dependencyGraphId: '1'
+            dependsOn: ['my-second-step'],
+            dependencyGraphId: '1',
           },
         ],
-        dependencyGraphOrder: ['1', '2']
+        dependencyGraphOrder: ['1', '2'],
       },
     });
 
@@ -311,9 +334,15 @@ describe('executeIntegrationInstance', () => {
       },
     );
 
-    expect(firstStepExecutionHandler).toHaveBeenCalledBefore(secondStepExecutionHandler)
-    expect(secondStepExecutionHandler).toHaveBeenCalledBefore(thirdStepExecutionHandler)
-    expect(thirdStepExecutionHandler).toHaveBeenCalledBefore(fourthStepExecutionHandler)
+    expect(firstStepExecutionHandler).toHaveBeenCalledBefore(
+      secondStepExecutionHandler,
+    );
+    expect(secondStepExecutionHandler).toHaveBeenCalledBefore(
+      thirdStepExecutionHandler,
+    );
+    expect(thirdStepExecutionHandler).toHaveBeenCalledBefore(
+      fourthStepExecutionHandler,
+    );
   });
 
   test('compresses files when INTEGRATION_FILE_COMPRESSION_ENABLED is set', async () => {
@@ -1090,9 +1119,7 @@ describe('executeIntegrationInstance', () => {
       expectedResults,
     );
 
-    const writtenSummary = await integrationFileSystem.readJsonFromPath<
-      ExecuteIntegrationResult
-    >(
+    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
       path.resolve(
         integrationFileSystem.getRootStorageDirectory(),
         'summary.json',
@@ -1186,9 +1213,7 @@ describe('executeIntegrationInstance', () => {
       expectedResults,
     );
 
-    const writtenSummary = await integrationFileSystem.readJsonFromPath<
-      ExecuteIntegrationResult
-    >(
+    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
       path.resolve(
         integrationFileSystem.getRootStorageDirectory(),
         'summary.json',
@@ -1471,6 +1496,7 @@ describe('executeIntegrationLocally', () => {
           startedOn: executionStartedOn,
         },
       },
+      executionConfig: {},
     };
 
     expect(validateInvocation).toHaveBeenCalledWith(expectedContext);

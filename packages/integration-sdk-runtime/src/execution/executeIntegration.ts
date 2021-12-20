@@ -107,6 +107,10 @@ export async function executeIntegrationInstance<
   if (options.enableSchemaValidation === true) {
     process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
   }
+  const instanceWithTrimmedConfig = trimStringValues(
+    instance,
+    getMaskedFields(config),
+  );
 
   return timeOperation({
     logger,
@@ -114,9 +118,11 @@ export async function executeIntegrationInstance<
     operation: () =>
       executeWithContext(
         {
-          instance: trimStringValues(instance, getMaskedFields(config)),
+          instance: instanceWithTrimmedConfig,
           logger,
           executionHistory,
+          executionConfig:
+            config.loadExecutionConfig?.(instanceWithTrimmedConfig) || {},
         },
         config,
         options,
@@ -225,7 +231,7 @@ export async function executeWithContext<
       dataStore: new MemoryDataStore(),
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
-      dependencyGraphOrder: config.dependencyGraphOrder
+      dependencyGraphOrder: config.dependencyGraphOrder,
     });
 
     const partialDatasets = determinePartialDatasetsFromStepExecutionResults(

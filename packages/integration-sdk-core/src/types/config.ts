@@ -1,4 +1,7 @@
-import { IntegrationInstanceConfig } from './instance';
+import {
+  IntegrationInstanceConfig,
+  IntegrationExecutionConfig,
+} from './instance';
 import { GetStepStartStatesFunction, Step } from './step';
 import { InvocationValidationFunction } from './validation';
 import {
@@ -24,6 +27,11 @@ export type BeforeAddEntityHookFunction<
   TExecutionContext extends ExecutionContext
 > = (context: TExecutionContext, entity: Entity) => Entity;
 
+export type LoadExecutionConfigFunction<
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+> = (options: { config: TInstanceConfig }) => TExecutionConfig;
+
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext
@@ -33,11 +41,12 @@ export interface InvocationConfig<
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  loadExecutionConfig?: LoadExecutionConfigFunction;
   /**
    * An optional array of identifiers used to execute dependency
    * graphs in a specific order. These values should match the
    * StepMetadata `dependencyGraphId` prpoperties.
-   * 
+   *
    * If this is not provided, all steps will be evalueted in
    * the same dependency graph.
    */
@@ -46,8 +55,7 @@ export interface InvocationConfig<
 
 export interface IntegrationInvocationConfig<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
->
-  extends InvocationConfig<
+> extends InvocationConfig<
     IntegrationExecutionContext<TConfig>,
     IntegrationStepExecutionContext<TConfig>
   > {
