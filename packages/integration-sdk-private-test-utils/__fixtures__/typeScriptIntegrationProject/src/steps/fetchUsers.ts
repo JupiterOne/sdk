@@ -41,6 +41,7 @@ const fetchUsersStep: Step<StepExecutionContext> = {
             _key: 'user:12345',
             _type: 'my_user',
             _class: 'User',
+            active: false,
           },
         },
       }),
