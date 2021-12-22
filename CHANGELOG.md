@@ -9,12 +9,19 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.1.0] - 2021-12-17
+
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `RelationshipClass.HOSTS` and
+  `RelationshipClass.LOGS`
+
 ## [8.0.0] - 2021-12-15
 
 ### Added
 
 - CLI now has a command called `neo4j` that will upload any collected data in a
-  project to a local Neo4j database.  This requires that a NEO4J_URI, NEO4J_USER,
+  project to a local Neo4j database. This requires that a NEO4J_URI, NEO4J_USER,
   and NEO4J_PASSWORD be supplied in the local .env file.
 
 ## [7.4.1] - 2021-11-03
