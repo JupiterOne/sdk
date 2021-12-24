@@ -4,60 +4,56 @@ import {
   GraphObjectIteratee,
   IntegrationError,
 } from '@jupiterone/integration-sdk-core';
-import { FlushedEntityData, FlushedRelationshipData } from '../types';
-import {
-  readJsonFromPath,
-  walkDirectory,
-  WalkDirectoryIterateeInput,
-} from '../../fileSystem';
+import { readJsonFromPath, WalkDirectoryIterateeInput } from '../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
+import { iterateParsedGraphFiles } from '../..';
 
-interface IterateIndexInput<GraphObject> {
+interface BaseIterateCollectionIndexParams<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
+}
+
+interface IterateCollectionIndexParams<GraphObject>
+  extends BaseIterateCollectionIndexParams<GraphObject> {
+  collectionType: 'entities' | 'relationships';
+}
+
+async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
+  type,
+  collectionType,
+  iteratee,
+}: IterateCollectionIndexParams<T>) {
+  const path = buildIndexDirectoryPath({
+    collectionType,
+    type,
+  });
+
+  await iterateParsedGraphFiles(async (data) => {
+    for (const graphObj of (data[collectionType] as T[]) || []) {
+      await iteratee(graphObj);
+    }
+  }, path);
 }
 
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
-}: IterateIndexInput<T>) {
-  const path = buildIndexDirectoryPath({
-    collectionType: 'entities',
+}: BaseIterateCollectionIndexParams<T>) {
+  await iterateCollectionTypeIndex({
     type,
-  });
-
-  await walkDirectory({
-    path,
-    iteratee: async (input) => {
-      const object = await readGraphObjectFile<FlushedEntityData>(input);
-      if (isObjectFlushedEntityData(object)) {
-        for (const entity of object.entities as T[]) {
-          await iteratee(entity);
-        }
-      }
-    },
+    iteratee,
+    collectionType: 'entities',
   });
 }
 
 export async function iterateRelationshipTypeIndex<
   T extends Relationship = Relationship
->({ type, iteratee }: IterateIndexInput<T>) {
-  const path = buildIndexDirectoryPath({
-    collectionType: 'relationships',
+>({ type, iteratee }: BaseIterateCollectionIndexParams<T>) {
+  await iterateCollectionTypeIndex({
     type,
-  });
-
-  await walkDirectory({
-    path,
-    iteratee: async (input) => {
-      const object = await readGraphObjectFile<FlushedRelationshipData>(input);
-      if (isObjectFlushedRelationshipData(object)) {
-        for (const relationship of object.relationships as T[]) {
-          await iteratee(relationship);
-        }
-      }
-    },
+    iteratee,
+    collectionType: 'relationships',
   });
 }
 
@@ -74,14 +70,4 @@ export async function readGraphObjectFile<T>({
       cause: err,
     });
   }
-}
-
-function isObjectFlushedEntityData(object: any): object is FlushedEntityData {
-  return Array.isArray(object?.entities);
-}
-
-function isObjectFlushedRelationshipData(
-  object: any,
-): object is FlushedRelationshipData {
-  return Array.isArray(object?.relationships);
 }
