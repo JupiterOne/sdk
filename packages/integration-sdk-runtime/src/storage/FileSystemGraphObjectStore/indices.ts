@@ -9,21 +9,21 @@ import { readJsonFromPath, WalkDirectoryIterateeInput } from '../../fileSystem';
 import { buildIndexDirectoryPath } from './path';
 import { iterateParsedGraphFiles } from '../..';
 
-interface IterateIndexInput<GraphObject> {
+interface BaseIterateCollectionIndexParams<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
 }
 
-interface BaseIterateIndexInput<GraphObject>
-  extends IterateIndexInput<GraphObject> {
+interface IterateCollectionIndexParams<GraphObject>
+  extends BaseIterateCollectionIndexParams<GraphObject> {
   collectionType: 'entities' | 'relationships';
 }
 
-async function iterateTypeIndex<T extends Entity | Relationship>({
+async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
   type,
   collectionType,
   iteratee,
-}: BaseIterateIndexInput<T>) {
+}: IterateCollectionIndexParams<T>) {
   const path = buildIndexDirectoryPath({
     collectionType,
     type,
@@ -39,14 +39,22 @@ async function iterateTypeIndex<T extends Entity | Relationship>({
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
-}: IterateIndexInput<T>) {
-  await iterateTypeIndex({ type, iteratee, collectionType: 'entities' });
+}: BaseIterateCollectionIndexParams<T>) {
+  await iterateCollectionTypeIndex({
+    type,
+    iteratee,
+    collectionType: 'entities',
+  });
 }
 
 export async function iterateRelationshipTypeIndex<
   T extends Relationship = Relationship
->({ type, iteratee }: IterateIndexInput<T>) {
-  await iterateTypeIndex({ type, iteratee, collectionType: 'relationships' });
+>({ type, iteratee }: BaseIterateCollectionIndexParams<T>) {
+  await iterateCollectionTypeIndex({
+    type,
+    iteratee,
+    collectionType: 'relationships',
+  });
 }
 
 export async function readGraphObjectFile<T>({
