@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.1.1] - 2022-01-04
+
+### Fixed
+
+- Fixed an issue where the `j1-integration neo4j` command was calling
+  `toString()` on undefined properties in some cases
+
 ## [8.1.0] - 2021-12-17
 
 ### Changed
