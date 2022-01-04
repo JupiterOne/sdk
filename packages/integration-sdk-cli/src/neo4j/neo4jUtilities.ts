@@ -1,20 +1,22 @@
-
-export function startsWithNumeric(str: string): boolean{
+export function startsWithNumeric(str: string): boolean {
   return /^\d/.test(str);
 }
 
 export function sanitizePropertyName(propertyName: string): string {
   let sanitizedName = '';
-  if(startsWithNumeric(propertyName)) {
+  if (startsWithNumeric(propertyName)) {
     sanitizedName += 'n';
   }
   sanitizedName += propertyName;
-  sanitizedName = sanitizedName.replace(/[\s!@#$%^&*()\-=+\\|'";:/?.,><`~\t\n[\]{}]/g, "_");
+  sanitizedName = sanitizedName.replace(
+    /[\s!@#$%^&*()\-=+\\|'";:/?.,><`~\t\n[\]{}]/g,
+    '_',
+  );
   return sanitizedName;
 }
 
 export function sanitizeValue(value: string): string {
-  return value.replace(/"/gi, '\\"')
+  return value.replace(/"/gi, '\\"');
 }
 
 export function buildPropertyParameters(propList: Object) {
@@ -30,11 +32,17 @@ export function buildPropertyParameters(propList: Object) {
       //If we're dealing with a number or boolean, leave alone, otherwise
       //wrap in single quotes to convert to a string and escape all
       //other single quotes so they don't terminate strings prematurely.
-      if(typeof propList[key] == 'number' || typeof propList[key] == 'boolean') {
-        propertyParameters[propertyName] = propList[key];
-      }
-      else {
-        propertyParameters[propertyName] = sanitizeValue(propList[key].toString());
+      if (propList[key]) {
+        if (
+          typeof propList[key] == 'number' ||
+          typeof propList[key] == 'boolean'
+        ) {
+          propertyParameters[propertyName] = propList[key];
+        } else {
+          propertyParameters[propertyName] = sanitizeValue(
+            propList[key].toString(),
+          );
+        }
       }
     }
   }
