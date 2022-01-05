@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.1.2] - 2022-01-04
+
 ### Changed
 
 - Bump `@jupiterone/data-model` to remove warning messages for `User` and
