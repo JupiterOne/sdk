@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Bump `@jupiterone/data-model` to expose `RelationshipClass.SENDS`
+
 ## [8.1.2] - 2022-01-04
 
 ### Changed
