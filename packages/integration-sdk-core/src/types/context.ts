@@ -24,7 +24,7 @@ export interface ExecutionContext {
  * `IntegrationInstanceConfig`, containing dynamic values perhaps calculated
  * based on the instance config.
  */
-export type IntegrationExecutionConfig = Record<string, any>;
+export type IntegrationExecutionConfig = object;
 
 /**
  * @param TConfig the integration specific type of the `instance.config`
