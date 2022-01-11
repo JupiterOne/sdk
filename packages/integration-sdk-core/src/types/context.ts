@@ -1,8 +1,4 @@
-import {
-  IntegrationInstance,
-  IntegrationInstanceConfig,
-  IntegrationExecutionConfig,
-} from './instance';
+import { IntegrationInstance, IntegrationInstanceConfig } from './instance';
 import { JobState } from './jobState';
 import { IntegrationLogger } from './logger';
 
@@ -23,6 +19,14 @@ export interface ExecutionContext {
 }
 
 /**
+ * A configuration object constructed by an integration just before the
+ * integration is executed. This is distinct from the
+ * `IntegrationInstanceConfig`, containing dynamic values perhaps calculated
+ * based on the instance config.
+ */
+export type IntegrationExecutionConfig = Record<string, any>;
+
+/**
  * @param TConfig the integration specific type of the `instance.config`
  * property
  */
@@ -32,9 +36,15 @@ export type IntegrationLoadExecutionConfigContext<
   instance: IntegrationInstance<TConfig>;
 };
 
+/**
+ * @param TConfig the integration specific type of the `instance.config`
+ * property
+ * @param TExecutionConfig the configuration type produced by the
+ * integration's optional `loadExecutionConfig` function
+ */
 export type IntegrationExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
 > = IntegrationLoadExecutionConfigContext<TConfig> & {
   executionConfig: TExecutionConfig;
 };
@@ -46,6 +56,8 @@ export type StepExecutionContext = ExecutionContext & {
 /**
  * @param TConfig the integration specific type of the `instance.config`
  * property
+ * @param TExecutionConfig the configuration type produced by the
+ * integration's optional `loadExecutionConfig` function
  */
 export interface IntegrationStepExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,

@@ -1,7 +1,4 @@
-import {
-  IntegrationInstanceConfig,
-  IntegrationExecutionConfig,
-} from './instance';
+import { IntegrationInstanceConfig } from './instance';
 import { GetStepStartStatesFunction, Step } from './step';
 import { InvocationValidationFunction } from './validation';
 import {
@@ -9,6 +6,7 @@ import {
   IntegrationExecutionContext,
   StepExecutionContext,
   IntegrationStepExecutionContext,
+  IntegrationExecutionConfig,
 } from './context';
 import { Entity } from './entity';
 

@@ -71,7 +71,6 @@ any of these contexts as `context.executionConfig`.
 Example:
 
 ```typescript
-// src/loadExecutionConfig.ts
 import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 import { v4 as uuid } from 'uuid';
 
@@ -88,9 +87,13 @@ export function loadExecutionConfig({
     }),
   };
 }
+```
 
+Calling functions may use the loaded `executionConfig` like so:
+
+```ts
 // -----------------------------------------------------------------------------
-// src/steps/ec2/client.ts
+// client.ts
 import { EC2Client, DescribeVpcsCommand, Vpc } from '@aws-sdk/client-ec2';
 
 export class J1Ec2Client {
@@ -113,7 +116,7 @@ export class J1Ec2Client {
 }
 
 // -----------------------------------------------------------------------------
-// src/steps/ec2/index.ts
+// index.ts
 import { J1Ec2Client } from './client';
 import { createVpcEntity } from './converters';
 import { Ec2Entities } from './constants';

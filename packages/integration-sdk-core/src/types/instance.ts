@@ -1,7 +1,5 @@
 export type IntegrationInstanceConfig = Record<string, any>;
 
-export type IntegrationExecutionConfig = Record<string, any>;
-
 /**
  * A stored user configuration for executing the integration defined by
  * the associated `integrationDefinitionId`.
