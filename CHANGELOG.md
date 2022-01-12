@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.2.0] - 2022-01-12
+
 ### Added
 
 - Added the `loadExecutionConfig` lifecycle method to the `InvocationConfig`
