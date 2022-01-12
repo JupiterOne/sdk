@@ -19,13 +19,34 @@ export interface ExecutionContext {
 }
 
 /**
+ * A configuration object constructed by an integration just before the
+ * integration is executed. This is distinct from the
+ * `IntegrationInstanceConfig`, containing dynamic values perhaps calculated
+ * based on the instance config.
+ */
+export type IntegrationExecutionConfig = object;
+
+/**
  * @param TConfig the integration specific type of the `instance.config`
  * property
  */
-export type IntegrationExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+export type IntegrationLoadExecutionConfigContext<
+  TConfig extends IntegrationInstanceConfig
 > = ExecutionContext & {
   instance: IntegrationInstance<TConfig>;
+};
+
+/**
+ * @param TConfig the integration specific type of the `instance.config`
+ * property
+ * @param TExecutionConfig the configuration type produced by the
+ * integration's optional `loadExecutionConfig` function
+ */
+export type IntegrationExecutionContext<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+> = IntegrationLoadExecutionConfigContext<TConfig> & {
+  executionConfig: TExecutionConfig;
 };
 
 export type StepExecutionContext = ExecutionContext & {
@@ -35,7 +56,11 @@ export type StepExecutionContext = ExecutionContext & {
 /**
  * @param TConfig the integration specific type of the `instance.config`
  * property
+ * @param TExecutionConfig the configuration type produced by the
+ * integration's optional `loadExecutionConfig` function
  */
 export interface IntegrationStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
-> extends IntegrationExecutionContext<TConfig>, StepExecutionContext {}
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+> extends IntegrationExecutionContext<TConfig, TExecutionConfig>,
+    StepExecutionContext {}

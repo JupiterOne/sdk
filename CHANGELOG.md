@@ -9,6 +9,34 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added the `loadExecutionConfig` lifecycle method to the `InvocationConfig`
+  interface. `loadExecutionConfig` loads shared configuration assets, such as
+  shared API credentials. Example:
+
+  ```ts
+  import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
+
+  /**
+   * The AWS integration uses shared `fromTemporaryCredentials` across all of
+   * its clients.
+   */
+  export function loadExecutionConfig({
+    config: { roleArn: string, externalId: string },
+  }) {
+    return {
+      credentials: fromTemporaryCredentials({
+        params: {
+          RoleArn: config.roleArn,
+          ExternalId: config.externalId,
+          RoleSessionName: `juptierone-${uuid()}`,
+        },
+      }),
+    };
+  }
+  ```
+
 ## [8.1.3] - 2022-01-11
 
 ### Changed

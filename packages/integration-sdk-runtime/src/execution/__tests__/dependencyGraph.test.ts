@@ -50,6 +50,7 @@ const executionContext: IntegrationExecutionContext = {
     },
   }),
   instance: LOCAL_INTEGRATION_INSTANCE,
+  executionConfig: {},
   executionHistory: {
     current: {
       startedOn: Date.now(),
