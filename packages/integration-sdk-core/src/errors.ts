@@ -1,6 +1,6 @@
 export const UNEXPECTED_ERROR_CODE = 'UNEXPECTED_ERROR';
 export const UNEXPECTED_ERROR_REASON =
-  'Unexpected error occurred executing integration! Please contact us in Slack or at https://support.jupiterone.io if the problem continues to occur.';
+  'Unexpected error occurred executing integration! Please contact us in Slack, or alternatively email us at support@jupiterone.com if the problem continues to occur.';
 
 export interface IntegrationErrorOptions {
   message: string;
