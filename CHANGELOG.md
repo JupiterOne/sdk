@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.2.1] - 2022-01-25
+
+### Changed
+
+Updated the error message within the sdk-core to reference support email instead
+of the support.jupiterone.io site.
+
 ## [8.2.0] - 2022-01-12
 
 ### Added
