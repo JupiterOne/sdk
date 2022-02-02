@@ -1,0 +1,1 @@
+require('./benchmarks/FileSystemGraphObjectStore.addEntities');

@@ -1,0 +1,23 @@
+{
+  "name": "@jupiterone/integration-sdk-benchmark",
+  "version": "8.2.1",
+  "private": true,
+  "description": "SDK benchmarking scripts",
+  "main": "./src/index.js",
+  "repository": "git@github.com:JupiterOne/sdk.git",
+  "author": "JupiterOne <dev@jupiterone.io>",
+  "license": "MPL-2.0",
+  "engines": {
+    "node": "14.x"
+  },
+  "scripts": {
+    "prebenchmark": "rm -rf .j1-integration",
+    "benchmark": "node ./src/index.js"
+  },
+  "dependencies": {
+    "@jupiterone/integration-sdk-core": "^8.2.1",
+    "@jupiterone/integration-sdk-runtime": "^8.2.1",
+    "benchmark": "^2.1.4"
+  },
+  "devDependencies": {}
+}
