@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.3.0] - 2022-02-03
+
+### Changed
+
+- Bumped version of `@jupiterone/data-model` to add `state` property to `Host`
+  entity class
+
 ## [8.2.1] - 2022-01-25
 
 ### Changed
@@ -112,7 +119,7 @@ of the support.jupiterone.io site.
 ### Fixed
 
 - Fixed the way that symlinks are created on windows machines. Directories are
-  still created as simlinks, but files are now hardlinks to prevent the  
+  still created as simlinks, but files are now hardlinks to prevent the
   requirement that `yarn start` be run with admin credentials.
 
 ## [7.4.0] - 2021-11-03
