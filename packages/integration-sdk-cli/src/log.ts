@@ -101,6 +101,8 @@ function getStepStatusText(status: StepResultStatus) {
   switch (status) {
     case StepResultStatus.SUCCESS:
       return chalk.green(status);
+    case StepResultStatus.CACHED:
+      return chalk.gray(status);
     case StepResultStatus.FAILURE:
       return chalk.red(status);
     case StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE:

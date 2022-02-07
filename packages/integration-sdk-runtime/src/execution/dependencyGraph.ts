@@ -107,6 +107,10 @@ export function executeStepDependencyGraph<
     return stepStartStates[stepId].disabled === false;
   }
 
+  function isUsingCache(stepId: string) {
+    return stepStartStates[stepId].cacheLoaded ?? false;
+  }
+
   /**
    * Updates the result of a step result with the provided satus
    */
@@ -233,8 +237,31 @@ export function executeStepDependencyGraph<
          *
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
-         */
-        if (isStepEnabled(stepId) && stepDependenciesAreComplete(stepId)) {
+         *
+         * Cached steps are removed and marked status=CACHED.
+         * */
+        if (isUsingCache(stepId) && stepDependenciesAreComplete(stepId)) {
+          removeStepFromWorkingGraph(stepId);
+
+          const existingResult = stepResultsMap.get(stepId);
+          if (existingResult) {
+            stepResultsMap.set(stepId, {
+              ...existingResult,
+              status: StepResultStatus.CACHED,
+              encounteredTypes: typeTracker.getEncounteredTypesForStep(stepId),
+            });
+          }
+
+          executionContext.logger.info(
+            { stepId },
+            `Step "${step.name}" skipped - results loaded from disk.`,
+          );
+
+          enqueueLeafSteps();
+        } else if (
+          isStepEnabled(stepId) &&
+          stepDependenciesAreComplete(stepId)
+        ) {
           removeStepFromWorkingGraph(stepId);
           void promiseQueue.add(() =>
             timeOperation({
@@ -419,9 +446,18 @@ function buildStepResultsMap<
         const hasDisabledDependencies =
           dependencyGraph
             .dependenciesOf(step.id)
-            .filter((id) => stepStartStates[id].disabled).length > 0;
+            .filter(
+              (id) =>
+                stepStartStates[id].disabled &&
+                !stepStartStates[id].cacheLoaded,
+            ).length > 0;
 
         const { declaredTypes, partialTypes } = getDeclaredTypesInStep(step);
+
+        const status =
+          stepStartStates[step.id].disabled || hasDisabledDependencies
+            ? StepResultStatus.DISABLED
+            : StepResultStatus.PENDING_EVALUATION;
 
         return {
           id: step.id,
@@ -430,10 +466,7 @@ function buildStepResultsMap<
           declaredTypes,
           partialTypes,
           encounteredTypes: [],
-          status:
-            stepStartStates[step.id].disabled || hasDisabledDependencies
-              ? StepResultStatus.DISABLED
-              : StepResultStatus.PENDING_EVALUATION,
+          status,
         };
       },
     )

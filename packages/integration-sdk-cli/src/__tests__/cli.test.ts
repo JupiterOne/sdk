@@ -48,6 +48,70 @@ describe('collect', () => {
     loadProjectStructure('instanceWithDependentSteps');
   });
 
+  test('option --ignore-step-dependencies requires option --step', async () => {
+    await expect(
+      createCli().parseAsync([
+        'node',
+        'j1-integration',
+        'collect',
+        '--ignore-step-dependencies',
+      ]),
+    ).rejects.toThrowError(
+      'Invalid option: Option --ignore-step-dependencies requires option --step to also be specified.',
+    );
+  });
+
+  test('option --ignore-step-dependencies limits steps to those specified', async () => {
+    loadProjectStructure('instanceWithDependentIgnoredSteps');
+
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'collect',
+      '--step',
+      'fetch-groups',
+      '--ignore-step-dependencies',
+    ]);
+
+    expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+    expect(log.displayExecutionResults).toHaveBeenCalledWith({
+      integrationStepResults: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          declaredTypes: ['my_account'],
+          dependsOn: undefined,
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.CACHED,
+        },
+        {
+          id: 'fetch-groups',
+          dependsOn: ['fetch-accounts'],
+          name: 'Fetch Groups',
+          declaredTypes: ['my_groups'],
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          declaredTypes: ['my_user'],
+          dependsOn: undefined,
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.DISABLED,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: [],
+        },
+      },
+    });
+  });
+
   test('loads the integration, executes it, and logs the result', async () => {
     await createCli().parseAsync(['node', 'j1-integration', 'collect']);
 

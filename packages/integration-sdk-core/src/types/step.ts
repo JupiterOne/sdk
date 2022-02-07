@@ -14,6 +14,12 @@ export interface StepStartState {
    * executed by the state machine.
    */
   disabled: boolean;
+
+  /**
+   * Indicates the step's results have been loaded
+   * from disk and should be considered successful.
+   */
+  cacheLoaded?: boolean;
 }
 
 export type StepStartStates = Record<string, StepStartState>;
@@ -32,6 +38,7 @@ export type StepExecutionHandlerFunction<
 
 export enum StepResultStatus {
   SUCCESS = 'success',
+  CACHED = 'cached',
   FAILURE = 'failure',
   PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE = 'partial_success_due_to_dependency_failure',
   DISABLED = 'disabled',

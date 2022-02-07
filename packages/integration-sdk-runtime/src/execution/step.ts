@@ -129,6 +129,7 @@ export function determinePartialDatasetsFromStepExecutionResults(
 
 export interface CollectOptions {
   step?: string[];
+  ignoreStepDependencies?: boolean;
 }
 
 export function prepareLocalStepCollection<
@@ -136,7 +137,7 @@ export function prepareLocalStepCollection<
   TStepExecutionContext extends StepExecutionContext
 >(
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
-  { step = [] }: CollectOptions = {},
+  { step = [], ignoreStepDependencies = false }: CollectOptions = {},
 ) {
   const allStepIds = config.integrationSteps.map((step) => step.id);
 
@@ -154,7 +155,11 @@ export function prepareLocalStepCollection<
     dependentSteps.push(...dependencies);
   }
 
-  stepsToRun.push(...dependentSteps);
+  if (!ignoreStepDependencies) {
+    stepsToRun.push(...dependentSteps);
+  }
+  config.dependentSteps = dependentSteps;
+
   const originalGetStepStartStates = config.getStepStartStates;
 
   config.getStepStartStates = stepsToRun.length

@@ -1143,12 +1143,16 @@ For convenience, steps can allow be provided as a comma delimited list.
 
 ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
 
-###### `--ignore-step-dependencies`
+###### `--ignore-step-dependencies` or `-I`
 
 If you only want to run a single step or an explicit list of steps without
 invoking the dependencies of those steps, you can do so via the
 `--ignore-step-dependencies` flag. This is useful for speeding up testing by
 utilizing the data that has already been collected and stored on disk.
+
+###### `--disable-schema-validation` or `-V`
+
+Disables schema validation.
 
 #### `j1-integration sync`
 

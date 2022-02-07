@@ -30,8 +30,18 @@ export function collect() {
       collector,
       [],
     )
+    .option(
+      '-I, --ignore-step-dependencies',
+      'Ignores the dependencies required by the step(s) specified in --step option. Previously captured data found in .j1-integration is loaded for ignored steps.',
+    )
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .action(async (options) => {
+      if (options.ignoreStepDependencies && options.step.length === 0) {
+        throw new Error(
+          'Invalid option: Option --ignore-step-dependencies requires option --step to also be specified.',
+        );
+      }
+
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
       process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
@@ -51,6 +61,8 @@ export function collect() {
       });
 
       const enableSchemaValidation = !options.disableSchemaValidation;
+      const useStorageForIgnoredStepDependencies =
+        options.ignoreStepDependencies;
       const results = await executeIntegrationLocally(
         config,
         {
@@ -60,6 +72,7 @@ export function collect() {
         },
         {
           enableSchemaValidation,
+          useStorageForIgnoredStepDependencies,
           graphObjectStore,
         },
       );

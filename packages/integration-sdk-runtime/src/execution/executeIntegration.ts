@@ -38,6 +38,10 @@ import { getMaskedFields } from './utils/getMaskedFields';
 import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 
+import { walkDirectory, getRootStorageAbsolutePath } from '../fileSystem';
+import { readGraphObjectFile } from '../storage/FileSystemGraphObjectStore/indices';
+import { FlushedEntityData } from '../storage/types';
+
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
   metadata: {
@@ -47,12 +51,14 @@ export interface ExecuteIntegrationResult {
 
 export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
+  useStorageForIgnoredStepDependencies?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }
 
 export interface ExecuteWithContextOptions {
   graphObjectStore?: GraphObjectStore;
+  useStorageForIgnoredStepDependencies?: boolean;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }
 
@@ -82,10 +88,9 @@ export async function executeIntegrationLocally(
     executionHistory,
     {
       ...options,
-      enableSchemaValidation:
-        options?.enableSchemaValidation !== undefined
-          ? options.enableSchemaValidation
-          : true,
+      enableSchemaValidation: options?.enableSchemaValidation ?? true,
+      useStorageForIgnoredStepDependencies:
+        options?.useStorageForIgnoredStepDependencies ?? false,
     },
   );
   unregisterIntegrationLoggerEventHandlers(registeredEventListeners);
@@ -178,8 +183,6 @@ export async function executeWithContext<
   let executionComplete = false;
 
   try {
-    await removeStorageDirectory();
-
     try {
       await config.validateInvocation?.(context);
     } catch (err) {
@@ -219,6 +222,45 @@ export async function executeWithContext<
       graphObjectStore = new FileSystemGraphObjectStore(),
       createStepGraphObjectDataUploader,
     } = options;
+
+    // Load data for ignored step dependencies.
+    if (options.useStorageForIgnoredStepDependencies) {
+      const loadedEntities: string[] = [];
+      for (const stepId of config?.dependentSteps ?? []) {
+        const path = getRootStorageAbsolutePath(`graph/${stepId}/entities`);
+        logger.info(
+          { path },
+          `Attempting to load entities for ignored step dependencies...`,
+        );
+        await walkDirectory({
+          path: path,
+          iteratee: async ({ filePath }) => {
+            const { entities } = await readGraphObjectFile<FlushedEntityData>({
+              filePath,
+            });
+            if (entities) {
+              loadedEntities.push(
+                ...entities.map((entity) => {
+                  return `Type: ${entity._type} | Class: ${entity._class} | Key: ${entity._key}`;
+                }),
+              );
+
+              await graphObjectStore.addEntities(stepId, entities);
+              stepStartStates[stepId].cacheLoaded = true;
+            }
+          },
+        });
+      }
+
+      if (loadedEntities.length > 0) {
+        logger.info(
+          { loadedEntities },
+          `Successfully loaded entities for ignored step dependencies from disk.`,
+        );
+      }
+    }
+
+    await removeStorageDirectory();
 
     const integrationStepResults = await executeSteps({
       executionContext: context,

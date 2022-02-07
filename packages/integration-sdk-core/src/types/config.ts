@@ -36,6 +36,7 @@ export interface InvocationConfig<
 > {
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
+  dependentSteps?: string[];
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
