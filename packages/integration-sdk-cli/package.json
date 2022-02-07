@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@jupiterone/integration-sdk-runtime": "^8.3.0",
+    "chalk": "^4",
     "commander": "^5.0.0",
     "globby": "^11.0.0",
     "js-yaml": "^4.1.0",
