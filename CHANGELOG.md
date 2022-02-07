@@ -9,10 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.3.1] - 2022-02-07
+
 ### Fixed
 
-- Fixed [#603] - Add missing `chalk` production dependency to
-  `@jupiterone/integration-sdk-cli`
+- Fixed [#603](https://github.com/JupiterOne/sdk/issues/603) - Add missing
+  `chalk` production dependency to `@jupiterone/integration-sdk-cli`
 
 ## [8.3.0] - 2022-02-03
 
