@@ -87,10 +87,13 @@ describe('#toMatchGraphObjectSchema', () => {
   }
 
   test('should match custom entity schema with single class', () => {
-    const result = toMatchGraphObjectSchema(generateCollectedEntity(), {
-      _class: 'Service',
-      schema: generateGraphObjectSchema(),
-    });
+    const result = toMatchGraphObjectSchema(
+      generateCollectedEntity({ _class: 'Service' }),
+      {
+        _class: 'Service',
+        schema: generateGraphObjectSchema(),
+      },
+    );
 
     expect(result).toEqual({
       message: expect.any(Function),
@@ -101,9 +104,12 @@ describe('#toMatchGraphObjectSchema', () => {
   });
 
   test('should match class schema with no custom schema', () => {
-    const result = toMatchGraphObjectSchema(generateCollectedEntity(), {
-      _class: 'Service',
-    });
+    const result = toMatchGraphObjectSchema(
+      generateCollectedEntity({ _class: 'Service' }),
+      {
+        _class: 'Service',
+      },
+    );
 
     expect(result).toEqual({
       message: expect.any(Function),
