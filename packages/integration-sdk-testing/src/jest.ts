@@ -316,13 +316,13 @@ export function toMatchGraphObjectSchema<T extends Entity>(
   // NOTE: The data-model should actuall expose a function for generating
   // a new object of the `IntegrationSchema`.
   const dataModelIntegrationSchema = dataModel.IntegrationSchema;
-  _class = Array.isArray(_class) ? _class : [_class];
+  const classSchemasToMatch = Array.isArray(_class) ? _class : [_class];
   schema = schema || {};
 
   let schemas: GraphObjectSchema[] = [];
 
   if (!disableClassMatch) {
-    for (const classInst of _class) {
+    for (const classInst of classSchemasToMatch) {
       try {
         schemas = schemas.concat(
           collectSchemasFromRef(

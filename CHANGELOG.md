@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added ability to disable matching class schema in toMatchGraphObjectSchema
+
 ## [8.3.1] - 2022-02-07
 
 ### Fixed
