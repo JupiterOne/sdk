@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-benchmark",
-  "version": "8.3.1",
+  "version": "8.3.2",
   "private": true,
   "description": "SDK benchmarking scripts",
   "main": "./src/index.js",
@@ -15,8 +15,8 @@
     "benchmark": "node ./src/index.js"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^8.3.1",
-    "@jupiterone/integration-sdk-runtime": "^8.3.1",
+    "@jupiterone/integration-sdk-core": "^8.3.2",
+    "@jupiterone/integration-sdk-runtime": "^8.3.2",
     "benchmark": "^2.1.4"
   }
 }
