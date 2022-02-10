@@ -95,7 +95,14 @@ export interface StepGraphObjectMetadata {
   _type: string;
 
   /**
-   * The schema used to describe the properties assigned to this entity
+   * An optional extension to the JSON schemas defined by the `_class` of this entity
+   * in the @jupiterone/data-model.
+   *
+   * Extensions defined by this schema are in addition to the schemas referenced by the
+   * `_class` values of the entity. These should be considered unique properties for
+   * this integration. Ask yourself, should a property here be considered for promotion
+   * to the @jupiterone/data-model to benefit normalization of all integrations producing
+   * this class of entity?
    */
   schema?: GraphObjectSchema;
 
