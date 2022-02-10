@@ -9,6 +9,51 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `executeStepWithDependencies` utility to
+  `@jupiterone/integration-sdk-testing` package. This allows developers to test
+  specific integration steps in isolation, while assuring that all of its
+  dependencies have indeed executed. Usage:
+
+  ```ts
+  const {
+    collectedEntities,
+    collectedRelationships,
+    collectedData,
+  } = await executeStepWithDependencies({
+    stepId: Steps.FETCH_USERS.id,
+    invocationConfig,
+    instanceConfig,
+  });
+
+  expect(collectedEntities.length).toBeGreaterThan(0);
+  expect(collectedEnities).toMatchGraphObjectSchema({
+    _class: Entities.USER._class,
+    schema: Entities.USER.schema,
+  });
+  // ... additional expectations
+  ```
+
+- Added `MockJobState.collectedData` to capture data that has been collected in
+  the job state. Usage:
+
+  ```ts
+  const jobState = createMockJobState({
+    setData: { existingKey: 'existing-value' },
+  });
+  await executeStepThatAddsAccountEntity();
+
+  expect(jobState.collectedData).toEqual({
+    ACCOUNT_ENTITY: {
+      _type: 'account',
+      _class: 'Account',
+      _key: 'account1',
+    },
+  });
+  expect(jobState.collectedData.existingKey).toBeUndefined();
+  ```
+
 ## [8.3.2] - 2022-02-09
 
 ### Added
