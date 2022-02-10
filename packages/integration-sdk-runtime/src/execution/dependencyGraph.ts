@@ -33,7 +33,7 @@ import { FlushedEntityData, FlushedRelationshipData } from '../storage/types';
  * using the `dependsOn` field from each step.
  */
 export function buildStepDependencyGraph<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(steps: Step<TStepExecutionContext>[]): DepGraph<Step<TStepExecutionContext>> {
   const dependencyGraph = new DepGraph<Step<TStepExecutionContext>>();
 
@@ -72,7 +72,7 @@ export function buildStepDependencyGraph<
  */
 export function executeStepDependencyGraph<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   executionContext,
   inputGraph,
@@ -292,11 +292,10 @@ export function executeStepDependencyGraph<
       await walkDirectory({
         path: relationshipsPath,
         iteratee: async ({ filePath }) => {
-          const {
-            relationships,
-          } = await readGraphObjectFile<FlushedRelationshipData>({
-            filePath,
-          });
+          const { relationships } =
+            await readGraphObjectFile<FlushedRelationshipData>({
+              filePath,
+            });
 
           if (relationships) {
             relationshipCount += relationships.length;
@@ -306,9 +305,15 @@ export function executeStepDependencyGraph<
         },
       });
 
-      executionContext.logger.info(
-        `Loaded ${entitiesCount} entities and  ${relationshipCount} relationship(s) for step "${step.name}".`,
-      );
+      if (entitiesCount || relationshipCount) {
+        executionContext.logger.info(
+          `Loaded ${entitiesCount} entities and  ${relationshipCount} relationship(s) for step "${step.name}".`,
+        );
+      } else {
+        executionContext.logger.warn(
+          `Expected to find entities or relationships for step "${step.name}" but found none.`,
+        );
+      }
 
       updateStepResultStatus(step.id, status, typeTracker);
       enqueueLeafSteps();
@@ -416,7 +421,7 @@ export function executeStepDependencyGraph<
 
 function buildStepContext<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   stepId,
   context,
@@ -469,45 +474,43 @@ function buildStepContext<
 }
 
 function buildStepResultsMap<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(
   dependencyGraph: DepGraph<Step<TStepExecutionContext>>,
   stepStartStates: StepStartStates,
 ) {
   const stepResultMapEntries = dependencyGraph
     .overallOrder()
-    .map(
-      (stepId): IntegrationStepResult => {
-        const step = dependencyGraph.getNodeData(stepId);
+    .map((stepId): IntegrationStepResult => {
+      const step = dependencyGraph.getNodeData(stepId);
 
-        const hasDisabledDependencies =
-          dependencyGraph
-            .dependenciesOf(step.id)
-            .filter((id) => stepStartStates[id].disabled).length > 0;
+      const hasDisabledDependencies =
+        dependencyGraph
+          .dependenciesOf(step.id)
+          .filter((id) => stepStartStates[id].disabled).length > 0;
 
-        const { declaredTypes, partialTypes } = getDeclaredTypesInStep(step);
+      const { declaredTypes, partialTypes } = getDeclaredTypesInStep(step);
 
-        return {
-          id: step.id,
-          name: step.name,
-          dependsOn: step.dependsOn,
-          declaredTypes,
-          partialTypes,
-          encounteredTypes: [],
-          status:
-            stepStartStates[step.id].disabled || hasDisabledDependencies
-              ? StepResultStatus.DISABLED
-              : StepResultStatus.PENDING_EVALUATION,
-        };
-      },
-    )
+      return {
+        id: step.id,
+        name: step.name,
+        dependsOn: step.dependsOn,
+        declaredTypes,
+        partialTypes,
+        encounteredTypes: [],
+        status:
+          stepStartStates[step.id].disabled || hasDisabledDependencies
+            ? StepResultStatus.DISABLED
+            : StepResultStatus.PENDING_EVALUATION,
+      };
+    })
     .map((result): [string, IntegrationStepResult] => [result.id, result]);
 
   return new Map<string, IntegrationStepResult>(stepResultMapEntries);
 }
 
 export function getDeclaredTypesInStep<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(
   step: Step<TStepExecutionContext>,
 ): {

@@ -22,21 +22,20 @@ import { Entity } from './entity';
 export type KeyNormalizationFunction = (_key: string) => string;
 
 export type BeforeAddEntityHookFunction<
-  TExecutionContext extends ExecutionContext
+  TExecutionContext extends ExecutionContext,
 > = (context: TExecutionContext, entity: Entity) => Entity;
 
 export type LoadExecutionConfigFunction<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = (options: { config: TInstanceConfig }) => TExecutionConfig;
 
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 > {
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
-  dependentSteps?: string[];
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
@@ -53,7 +52,7 @@ export interface InvocationConfig<
 }
 
 export interface IntegrationInvocationConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > extends InvocationConfig<
     IntegrationExecutionContext<TConfig>,
     IntegrationStepExecutionContext<TConfig>
@@ -67,5 +66,5 @@ export interface IntegrationInstanceConfigField {
 }
 
 export type IntegrationInstanceConfigFieldMap<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = Record<keyof TConfig, IntegrationInstanceConfigField>;

@@ -62,7 +62,7 @@ describe('collect', () => {
   });
 
   test('option --use-dependencies-cache limits steps to those specified', async () => {
-    loadProjectStructure('instanceWithDependentIgnoredSteps');
+    loadProjectStructure('instanceWithDependentCachedSteps');
 
     await createCli().parseAsync([
       'node',
