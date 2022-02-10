@@ -25,6 +25,7 @@ export interface CreateMockJobStateOptions {
 export interface MockJobState extends JobState {
   collectedEntities: Entity[];
   collectedRelationships: Relationship[];
+  collectedData: { [key: string]: any };
   encounteredTypes: string[];
 }
 
@@ -44,6 +45,7 @@ export function createMockJobState({
 }: CreateMockJobStateOptions = {}): MockJobState {
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
+  const collectedData: { [key: string]: any } = {};
 
   const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
   const typeTracker = new TypeTracker();
@@ -135,12 +137,17 @@ export function createMockJobState({
       return collectedRelationships;
     },
 
+    get collectedData() {
+      return collectedData;
+    },
+
     get encounteredTypes() {
       return typeTracker.getAllEncounteredTypes();
     },
 
     setData: async <T>(key: string, data: T): Promise<void> => {
       dataStore.set(key, data);
+      collectedData[key] = data;
       return Promise.resolve();
     },
 

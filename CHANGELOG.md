@@ -9,6 +9,27 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `MockJobState.collectedData` to capture data that has been collected in
+  the job state. Usage:
+
+  ```ts
+  const jobState = createMockJobState({
+    setData: { existingKey: 'existing-value' },
+  });
+  await executeStepThatAddsAccountEntity();
+
+  expect(jobState.collectedData).toEqual({
+    ACCOUNT_ENTITY: {
+      _type: 'account',
+      _class: 'Account',
+      _key: 'account1',
+    },
+  });
+  expect(jobState.collectedData.existingKey).toBeUndefined();
+  ```
+
 ## [8.3.2] - 2022-02-09
 
 ### Added
