@@ -1,4 +1,7 @@
-import { RelationshipClass } from '@jupiterone/data-model';
+import {
+  RelationshipClass,
+  IntegrationEntitySchema,
+} from '@jupiterone/data-model';
 
 import {
   ExecutionContext,
@@ -81,8 +84,20 @@ export interface GraphObjectIndexMetadata {
   enabled: boolean;
 }
 
+export interface GraphObjectSchema extends IntegrationEntitySchema {
+  $schema?: string;
+  $id?: string;
+  description?: string;
+  additionalProperties?: boolean;
+}
+
 export interface StepGraphObjectMetadata {
   _type: string;
+
+  /**
+   * The schema used to describe the properties assigned to this entity
+   */
+  schema?: GraphObjectSchema;
 
   /**
    * Indicates the set of data represented by this `_type` should always be
