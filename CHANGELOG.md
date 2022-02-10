@@ -11,6 +11,16 @@ and this project adheres to
 
 ### Added
 
+- Added optional `_type` and `_class` arguments to
+  `.toMatchDirectRelationshipSchema` matcher. This enables developers to simply
+  pass the `StepRelationshipMetadata` interface to this matcher. Usage:
+
+  ```ts
+  expect(collectedRelationships).toMatchDirectRelationshipSchema(
+    Relationships.ACCOUNT_HAS_USER,
+  );
+  ```
+
 - Added optional `schema` property to `StepGraphObjectMetadata`. This allows
   developers to provide the property schema to expect on entities,
   relationships, and mapped relationships. This serves two uses:

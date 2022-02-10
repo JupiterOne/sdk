@@ -9,6 +9,7 @@ import {
   IntegrationSpecConfig,
   IntegrationStepExecutionContext,
   MappedRelationship,
+  RelationshipClass,
   Step,
 } from '@jupiterone/integration-sdk-core';
 import { getMatchers } from 'expect/build/jestMatchersObject';
@@ -22,7 +23,7 @@ declare global {
       ): R;
 
       toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
-        params: ToMatchRelationshipSchemaParams,
+        params?: ToMatchRelationshipSchemaParams,
       ): R;
 
       toTargetEntities(entities: Entity[]): R;
@@ -352,6 +353,8 @@ export function toMatchGraphObjectSchema<T extends Entity>(
 }
 
 export interface ToMatchRelationshipSchemaParams {
+  _class?: RelationshipClass;
+  _type?: string;
   /**
    * The schema that should be used to validate the input data against
    */
@@ -394,14 +397,27 @@ export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
     ],
   };
 
-  return toMatchSchema(
-    received,
-    generateGraphObjectSchemaFromDataModelSchemas([
-      ...graphObjectSchemas.reverse(),
-      directRelationshipSchema,
-      schema,
-    ]),
-  );
+  const newRelationshipSchema = generateGraphObjectSchemaFromDataModelSchemas([
+    ...graphObjectSchemas.reverse(),
+    directRelationshipSchema,
+    schema,
+  ]);
+
+  if (params?._class) {
+    if (!newRelationshipSchema.properties) {
+      newRelationshipSchema.properties = {};
+    }
+    newRelationshipSchema.properties._class = { const: params._class };
+  }
+
+  if (params?._type) {
+    if (!newRelationshipSchema.properties) {
+      newRelationshipSchema.properties = {};
+    }
+    newRelationshipSchema.properties._type = { const: params._type };
+  }
+
+  return toMatchSchema(received, newRelationshipSchema);
 }
 
 function toMatchSchema<T extends Entity | ExplicitRelationship>(
