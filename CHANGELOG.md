@@ -9,6 +9,71 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added `executeStepWithDependencies` utility to
+  `@jupiterone/integration-sdk-testing` package. This allows developers to test
+  specific integration steps in isolation, while assuring that all of its
+  dependencies have indeed executed. Usage:
+
+  ```ts
+  const {
+    collectedEntities,
+    collectedRelationships,
+    collectedData,
+  } = await executeStepWithDependencies({
+    stepId: Steps.FETCH_USERS.id,
+    invocationConfig,
+    instanceConfig,
+  });
+
+  expect(collectedEntities.length).toBeGreaterThan(0);
+  expect(collectedEnities).toMatchGraphObjectSchema({
+    _class: Entities.USER._class,
+    schema: Entities.USER.schema,
+  });
+  // ... additional expectations
+  ```
+
+- Added `MockJobState.collectedData` to capture data that has been collected in
+  the job state. Usage:
+
+  ```ts
+  const jobState = createMockJobState({
+    setData: { existingKey: 'existing-value' },
+  });
+  await executeStepThatAddsAccountEntity();
+
+  expect(jobState.collectedData).toEqual({
+    ACCOUNT_ENTITY: {
+      _type: 'account',
+      _class: 'Account',
+      _key: 'account1',
+    },
+  });
+  expect(jobState.collectedData.existingKey).toBeUndefined();
+  ```
+
+## [8.3.2] - 2022-02-09
+
+### Added
+
+- Added ability to disable matching class schema in toMatchGraphObjectSchema
+
+## [8.3.1] - 2022-02-07
+
+### Fixed
+
+- Fixed [#603](https://github.com/JupiterOne/sdk/issues/603) - Add missing
+  `chalk` production dependency to `@jupiterone/integration-sdk-cli`
+
+## [8.3.0] - 2022-02-03
+
+### Changed
+
+- Bumped version of `@jupiterone/data-model` to add `state` property to `Host`
+  entity class
+
 ## [8.2.1] - 2022-01-25
 
 ### Changed
@@ -112,7 +177,7 @@ of the support.jupiterone.io site.
 ### Fixed
 
 - Fixed the way that symlinks are created on windows machines. Directories are
-  still created as simlinks, but files are now hardlinks to prevent the  
+  still created as simlinks, but files are now hardlinks to prevent the
   requirement that `yarn start` be run with admin credentials.
 
 ## [7.4.0] - 2021-11-03

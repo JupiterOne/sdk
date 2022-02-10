@@ -238,6 +238,8 @@ export interface ToMatchGraphObjectSchemaParams {
    * The schema that should be used to validate the input data against
    */
   schema?: GraphObjectSchema;
+
+  disableClassMatch?: boolean;
 }
 
 interface ToTargetEntitiesOptions {
@@ -308,30 +310,32 @@ export function toMatchGraphObjectSchema<T extends Entity>(
    * The data received from the test assertion. (e.g. expect(DATA_HERE).toMatchGraphObjectSchema(...)
    */
   received: T | T[],
-  { _class, schema }: ToMatchGraphObjectSchemaParams,
+  { _class, schema, disableClassMatch }: ToMatchGraphObjectSchemaParams,
 ) {
   // Copy this so that we do not interfere with globals.
   // NOTE: The data-model should actuall expose a function for generating
   // a new object of the `IntegrationSchema`.
   const dataModelIntegrationSchema = dataModel.IntegrationSchema;
-  _class = Array.isArray(_class) ? _class : [_class];
+  const classSchemasToMatch = Array.isArray(_class) ? _class : [_class];
   schema = schema || {};
 
   let schemas: GraphObjectSchema[] = [];
 
-  for (const classInst of _class) {
-    try {
-      schemas = schemas.concat(
-        collectSchemasFromRef(
-          dataModelIntegrationSchema,
-          graphObjectClassToSchemaRef(classInst),
-        ),
-      );
-    } catch (err) {
-      return {
-        message: () => `Error loading schemas for class (err=${err.message})`,
-        pass: false,
-      };
+  if (!disableClassMatch) {
+    for (const classInst of classSchemasToMatch) {
+      try {
+        schemas = schemas.concat(
+          collectSchemasFromRef(
+            dataModelIntegrationSchema,
+            graphObjectClassToSchemaRef(classInst),
+          ),
+        );
+      } catch (err) {
+        return {
+          message: () => `Error loading schemas for class (err=${err.message})`,
+          pass: false,
+        };
+      }
     }
   }
 

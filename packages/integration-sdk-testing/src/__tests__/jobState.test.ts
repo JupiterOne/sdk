@@ -32,6 +32,21 @@ describe('data', () => {
     await jobState.deleteData('my-key');
     await expect(jobState.getData('my-key')).resolves.toEqual(undefined);
   });
+
+  describe('collectedData', () => {
+    test('should return collectedData', async () => {
+      const jobState = createMockJobState();
+      await jobState.setData('my-key', 'whatever');
+      expect(jobState.collectedData).toEqual({ 'my-key': 'whatever' });
+    });
+
+    test('should not include pre-existing relationships in collectedData', () => {
+      const jobState = createMockJobState({
+        setData: { 'my-key': 'whatever' },
+      });
+      expect(jobState.collectedData).toEqual({});
+    });
+  });
 });
 
 describe('entities', () => {
