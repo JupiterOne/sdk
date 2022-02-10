@@ -48,20 +48,20 @@ describe('collect', () => {
     loadProjectStructure('instanceWithDependentSteps');
   });
 
-  test('option --ignore-step-dependencies requires option --step', async () => {
+  test('option --use-dependencies-cache requires option --step', async () => {
     await expect(
       createCli().parseAsync([
         'node',
         'j1-integration',
         'collect',
-        '--ignore-step-dependencies',
+        '--use-dependencies-cache',
       ]),
     ).rejects.toThrowError(
-      'Invalid option: Option --ignore-step-dependencies requires option --step to also be specified.',
+      'Invalid option: Option --use-dependencies-cache requires option --step to also be specified.',
     );
   });
 
-  test('option --ignore-step-dependencies limits steps to those specified', async () => {
+  test('option --use-dependencies-cache limits steps to those specified', async () => {
     loadProjectStructure('instanceWithDependentIgnoredSteps');
 
     await createCli().parseAsync([
@@ -70,7 +70,7 @@ describe('collect', () => {
       'collect',
       '--step',
       'fetch-groups',
-      '--ignore-step-dependencies',
+      '--use-dependencies-cache',
     ]);
 
     expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);

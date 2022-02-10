@@ -1,9 +1,12 @@
 import { createCommand } from 'commander';
 import path from 'path';
+import fs from 'fs-extra';
 
 import {
   executeIntegrationLocally,
   FileSystemGraphObjectStore,
+  getRootCacheDirectory,
+  getRootStorageDirectory,
   prepareLocalStepCollection,
 } from '@jupiterone/integration-sdk-runtime';
 
@@ -31,14 +34,14 @@ export function collect() {
       [],
     )
     .option(
-      '-I, --ignore-step-dependencies',
-      'Ignores the dependencies required by the step(s) specified in --step option. Previously captured data found in .j1-integration is loaded for ignored steps.',
+      '-C, --use-dependencies-cache [filePath]',
+      'Loads cache for the dependencies required by the step(s) specified in --step option. Execution of these steps is skipped. Data found in .j1-integration is used if no filepath is provided.',
     )
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .action(async (options) => {
-      if (options.ignoreStepDependencies && options.step.length === 0) {
+      if (options.useDependenciesCache && options.step.length === 0) {
         throw new Error(
-          'Invalid option: Option --ignore-step-dependencies requires option --step to also be specified.',
+          'Invalid option: Option --use-dependencies-cache requires option --step to also be specified.',
         );
       }
 
@@ -48,6 +51,15 @@ export function collect() {
         options.projectPath,
         '.j1-integration',
       );
+
+      if (
+        typeof options.useDependenciesCache === 'string' ||
+        options.useDependenciesCache instanceof String
+      ) {
+        setupCacheDirectory(options.useDependenciesCache);
+      } else if (options.useDependenciesCache === true) {
+        await copyToCache();
+      }
 
       const config = prepareLocalStepCollection(
         await loadConfig(path.join(options.projectPath, 'src')),
@@ -61,8 +73,6 @@ export function collect() {
       });
 
       const enableSchemaValidation = !options.disableSchemaValidation;
-      const useStorageForIgnoredStepDependencies =
-        options.ignoreStepDependencies;
       const results = await executeIntegrationLocally(
         config,
         {
@@ -72,11 +82,43 @@ export function collect() {
         },
         {
           enableSchemaValidation,
-          useStorageForIgnoredStepDependencies,
+          useDependenciesCache: options.useDependenciesCache,
           graphObjectStore,
         },
       );
 
       log.displayExecutionResults(results);
     });
+}
+
+/**
+ * Sets environment variable JUPITERONE_CACHE_DIRECTORY
+ * to be used in reading & writing to cache.
+ * @param useDependenciesCache
+ */
+function setupCacheDirectory(useDependenciesCache) {
+  process.env.JUPITERONE_CACHE_DIRECTORY = path.resolve(
+    useDependenciesCache,
+    '.j1-cache',
+  );
+
+  log.info(
+    `Set dependencies cache location to ${process.env.JUPITERONE_CACHE_DIRECTORY}`,
+  );
+}
+
+/**
+ * When no filepath is specified, the .j1-integration directory
+ * is copied to .j1-cache
+ */
+async function copyToCache() {
+  const graphDirectory = path.join(getRootStorageDirectory(), 'graph');
+  if (fs.ensureDir(graphDirectory)) {
+    await fs.emptyDir(getRootCacheDirectory());
+    await fs.copy(graphDirectory, getRootCacheDirectory()).catch((error) => {
+      log.error(`Failed to seed .j1-cache from .j1-integration`);
+      log.error(error);
+    });
+    log.info(`Copied graph data in .j1-integration to .j1-cache`);
+  }
 }

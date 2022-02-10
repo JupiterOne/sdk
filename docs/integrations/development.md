@@ -1051,7 +1051,7 @@ For convenience when developing locally, we will also look for a
 Initially, the CLI will support a limited interface consisting of only three
 commands: `collect`, `sync`, and `run`.
 
-#### `j1-integration collect`
+#### Command `j1-integration collect`
 
 `j1-integration collect` will run the js framework locally to _only_ perform
 data collection. The `collect` command is designed to work closely with the
@@ -1100,7 +1100,7 @@ integration expects to see set.
 
 ##### Options
 
-###### `--module` or `-m`
+###### Option `--module` or `-m`
 
 If you prefer not to place your integration configuration in one of the
 supported file paths, you can optionally specify the `--module` or `-m` option
@@ -1108,7 +1108,7 @@ and provide a path to your integration file.
 
 ex: `j1-integration collect --module path/to/my/integration.ts`
 
-###### `--instance` or `-i`
+###### Option `--instance` or `-i`
 
 If you are working with an existing integration instance and would prefer to
 leverage the configuration field values from that instance, you can optionally
@@ -1120,7 +1120,7 @@ input some credentials or provide an `--api-key` option.
 
 ex: `j1-integration collect --instance <integration instance id>`
 
-###### `--api-key` or `-k`
+###### Option `--api-key` or `-k`
 
 For developers that have an API key or prefer to not input credentials, an
 `--api-key` option can be specified to access the synchronization API.
@@ -1128,7 +1128,7 @@ For developers that have an API key or prefer to not input credentials, an
 ex:
 `j1-integration collect --instance <integration instance id> --api-key <my api key>`
 
-###### `--step` or `-s`
+###### Option `--step` or `-s`
 
 For larger integrations, a full collection run may take a long time. To help
 address this, a `--step` option can be provided to selectively run a step along
@@ -1143,18 +1143,45 @@ For convenience, steps can allow be provided as a comma delimited list.
 
 ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
 
-###### `--ignore-step-dependencies` or `-I`
+###### Option `--use-dependencies-cache` or `-C`
 
-If you only want to run a single step or an explicit list of steps without
-invoking the dependencies of those steps, you can do so via the
-`--ignore-step-dependencies` flag. This is useful for speeding up testing by
-utilizing the data that has already been collected and stored on disk.
+Allows preceding steps to skip execution and instead load previously captured results from disk.
+The intent of this is to increase development speed for new integrations.
+When no filepath is specified, an attempt to create a cache is made by
+copying the contents of `./.j1-integrations/graph` directory to `./.j1-cache`. 
+The structure of the cache follows a similar format as the .j1-integration data storage, as described [here](#data-collection).
 
-###### `--disable-schema-validation` or `-V`
+###### And example of the expected cache structure
+```
+.j1-cache/
+   /step-fetch-accounts
+      /entities/
+         11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
+   /step-fetch-users
+      /entities
+         9cb7bee4-c037-4041-83b7-d532488f26a3.json
+         96992893-898d-4cda-8129-4695b0323642.json
+      /relationships
+         8fcc6865-817d-4952-ac53-8248b357b5d8.json
+```
+
+ex: `j1-integration collect --step fetch-users --use-dependencies-cache` - Builds & uses cache from .j1-integration  
+ex: `j1-integration collect --step fetch-users --use-dependencies-cache ./` - Uses .j1-cache found in the root of the project  
+ex: `j1-integration collect --step fetch-users --use-dependencies-cache ./path-to-cache` - Uses .j1-cache found in the path specified 
+
+A common use pattern: 
+1. Execute collection command _without_ the `--use-dependencies-cache` option to gather data in .j1-integration
+2. Execute collection command with `--step` and `--use-dependencies-cache` option _without_ specifying a filepath.
+ This will cause the .j1-integration data to populate the .j1-cache.
+3. Execute collection command with `--step` and `--use-dependencies-cache` option specifying a 
+filepath to the previously created .j1-cache (most commonly `./`).
+
+
+###### Option `--disable-schema-validation` or `-V`
 
 Disables schema validation.
 
-#### `j1-integration sync`
+#### Command `j1-integration sync`
 
 The `sync` command will validate data placed in the `.j1-integration/graph`
 directory has been formatted correctly and later format the data to allow for
@@ -1206,12 +1233,12 @@ framework for developing integrations, let us know!
 
 ##### Options
 
-###### `--module` or `-m`
+###### Option `--module` or `-m`
 
 Much like the `collect` command, you can optionally specify an `--module` or
 `-m` option to specify the path to the integration configuration file.
 
-###### `--instance` or `-i`
+###### Option `--instance` or `-i`
 
 For the `sync` command, an integration instance must be specified to know which
 integration instance data the collected data should be associated with.
@@ -1219,7 +1246,7 @@ integration instance data the collected data should be associated with.
 ex:
 `j1-integration sync --instance <integration instance id> --api-key <my api key>`
 
-###### `--api-key` or `-k`
+###### Option `--api-key` or `-k`
 
 Like the `collect` command, an API key can be optionally passed in to use for
 synchronization.
@@ -1227,14 +1254,14 @@ synchronization.
 ex:
 `j1-integration sync --instance <integration instance id> --api-key <my api key>`
 
-###### `--tail` or `-t`
+###### Option `--tail` or `-t`
 
 If provided this option poll the integration job to and display the status of
 the job run. The polling will stop once the job was marked as complete.
 
 ex: `j1-integration sync --instance <integration instance id> --tail`
 
-#### `j1-integration run`
+#### Command `j1-integration run`
 
 The `j1-integration run` command combines the functionality of the `collect` and
 `sync` commands, essentially running the commands back to back.
@@ -1254,7 +1281,7 @@ the
 `https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/events`
 API.
 
-#### `j1-integration visualize`
+#### Command `j1-integration visualize`
 
 The `j1-integration visualize` command reads JSON files from the
 `.j1-integrations/graph` directory and generates a visualization of the data
@@ -1295,7 +1322,7 @@ files:
 }
 ```
 
-#### `j1-integration visualize-types`
+#### Command `j1-integration visualize-types`
 
 ```
 Usage: j1-integration visualize-types [options]
@@ -1312,7 +1339,7 @@ Options:
 `j1-integration visualize-types` generates a [visjs](http://www.visjs.org) graph
 based on the metadata defined in each step.
 
-#### `j1-integration document`
+#### Command `j1-integration document`
 
 ```
 Usage: j1-integration document [options]
@@ -1329,7 +1356,7 @@ Options:
 on the metadata defined in each step. Documentation for an integration is stored
 in the `{integration-project-dir}/docs/jupiterone.md` file by default.
 
-#### `j1-integration validate-question-file`
+#### Command `j1-integration validate-question-file`
 
 JupiterOne managed question files live under an integration's `/jupiterone`
 directory. For example `/jupiterone/questions.yaml`. The
@@ -1353,7 +1380,7 @@ Options:
 
 ##### More commands and options
 
-###### `j1-integration plan`
+###### Command `j1-integration plan`
 
 We hope to make it easy for developers to understand how an integration collects
 data and the order in which it performs work.
@@ -1361,7 +1388,7 @@ data and the order in which it performs work.
 We hope to support a `j1-integration plan` command to display the dependency
 graph of the steps and types required for a successful integration run.
 
-###### `j1-integration sync --dry-run`
+###### Command `j1-integration sync --dry-run`
 
 A developer may want to have a better understanding of how synchronization of
 collected data may affect their JupiterOne graph. We plan to support a
@@ -1372,7 +1399,7 @@ This dry run function will give metrics about how many creates, updates, and
 deletes will be performed, categoried by the entity and relationhip `_type`
 field.
 
-###### `j1-integration generate`
+###### Command `j1-integration generate`
 
 A project generator might be helpful for getting new integration developers up
 and running quickly. For our own integration developers, it would provide a

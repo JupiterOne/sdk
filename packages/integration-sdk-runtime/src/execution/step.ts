@@ -1,3 +1,5 @@
+import path from 'path';
+
 import uniq from 'lodash/uniq';
 import { pick } from 'lodash';
 
@@ -24,6 +26,7 @@ import {
   DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
   seperateStepsByDependencyGraph,
 } from './utils/seperateStepsByDependencyGraph';
+import { getRootCacheDirectory } from '../fileSystem';
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
@@ -129,7 +132,7 @@ export function determinePartialDatasetsFromStepExecutionResults(
 
 export interface CollectOptions {
   step?: string[];
-  ignoreStepDependencies?: boolean;
+  useDependenciesCache?: string | boolean;
 }
 
 export function prepareLocalStepCollection<
@@ -137,7 +140,7 @@ export function prepareLocalStepCollection<
   TStepExecutionContext extends StepExecutionContext
 >(
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
-  { step = [], ignoreStepDependencies = false }: CollectOptions = {},
+  { step = [], useDependenciesCache = false }: CollectOptions = {},
 ) {
   const allStepIds = config.integrationSteps.map((step) => step.id);
 
@@ -145,7 +148,7 @@ export function prepareLocalStepCollection<
     (step: string | undefined | null) => step !== undefined && step !== null,
   );
 
-  // build out the dependecy graph so we can
+  // build out the dependency graph so we can
   // enable the dependencies of the steps
   // we want to run.
   const depGraph = buildStepDependencyGraph(config.integrationSteps);
@@ -155,11 +158,7 @@ export function prepareLocalStepCollection<
     dependentSteps.push(...dependencies);
   }
 
-  if (!ignoreStepDependencies) {
-    stepsToRun.push(...dependentSteps);
-  }
-  config.dependentSteps = dependentSteps;
-
+  stepsToRun.push(...dependentSteps);
   const originalGetStepStartStates = config.getStepStartStates;
 
   config.getStepStartStates = stepsToRun.length
@@ -174,6 +173,10 @@ export function prepareLocalStepCollection<
             enabledRecord[stepId] = {
               ...originalValue,
               disabled: false,
+              ...(useDependenciesCache &&
+                dependentSteps.includes(stepId) && {
+                  stepCachePath: path.resolve(getRootCacheDirectory(), stepId),
+                }),
             };
           } else {
             enabledRecord[stepId] = {

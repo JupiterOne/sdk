@@ -17,11 +17,19 @@ import { readGraphObjectFile } from './storage/FileSystemGraphObjectStore/indice
 const brotliCompress = promisify(zlib.brotliCompress);
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
-export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
+export const DEFAULT_STORAGE_DIRECTORY_NAME = '.j1-integration';
+export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-cache';
 
 export function getRootStorageDirectory() {
   return (
     process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY ||
+    path.resolve(process.cwd(), DEFAULT_STORAGE_DIRECTORY_NAME)
+  );
+}
+
+export function getRootCacheDirectory() {
+  return (
+    process.env.JUPITERONE_CACHE_DIRECTORY ||
     path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME)
   );
 }
@@ -45,7 +53,7 @@ interface WriteDataToPathInput {
 }
 
 /**
- * Function for writing arbirary data to a path
+ * Function for writing arbitrary data to a path
  * relative to the cache directory.
  *
  * This will ensure that the directories exists or have been
@@ -202,7 +210,7 @@ export async function walkDirectory({
 
 export function iterateParsedGraphFiles(
   iteratee: (parsedData: FlushedGraphObjectData) => Promise<void>,
-  graphPath?: string
+  graphPath?: string,
 ) {
   return walkDirectory({
     path: graphPath || 'graph',

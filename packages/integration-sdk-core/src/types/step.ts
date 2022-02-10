@@ -16,10 +16,10 @@ export interface StepStartState {
   disabled: boolean;
 
   /**
-   * Indicates the step's results have been loaded
-   * from disk and should be considered successful.
+   * Provides a filepath to a cache for the given step.
+   * This cache will be loaded instead of executing the step.
    */
-  cacheLoaded?: boolean;
+  stepCachePath?: string;
 }
 
 export type StepStartStates = Record<string, StepStartState>;

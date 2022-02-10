@@ -21,9 +21,12 @@ import {
   TypeTracker,
 } from './jobState';
 import {
-  StepGraphObjectDataUploader,
   CreateStepGraphObjectDataUploaderFunction,
+  StepGraphObjectDataUploader,
 } from './uploader';
+import { walkDirectory } from '../fileSystem';
+import { readGraphObjectFile } from '../storage/FileSystemGraphObjectStore/indices';
+import { FlushedEntityData, FlushedRelationshipData } from '../storage/types';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -107,8 +110,8 @@ export function executeStepDependencyGraph<
     return stepStartStates[stepId].disabled === false;
   }
 
-  function isUsingCache(stepId: string) {
-    return stepStartStates[stepId].cacheLoaded ?? false;
+  function hasCachePath(stepId: string) {
+    return !!stepStartStates[stepId].stepCachePath ?? false;
   }
 
   /**
@@ -233,35 +236,14 @@ export function executeStepDependencyGraph<
 
         /**
          * We only remove the node from the graph and
-         * execute the step if it is enabled.
+         * execute the step if it is enabled. If a cache filepath
+         * is provided, the execution is replaced with loading
+         * from disk.
          *
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
-         *
-         * Cached steps are removed and marked status=CACHED.
          * */
-        if (isUsingCache(stepId) && stepDependenciesAreComplete(stepId)) {
-          removeStepFromWorkingGraph(stepId);
-
-          const existingResult = stepResultsMap.get(stepId);
-          if (existingResult) {
-            stepResultsMap.set(stepId, {
-              ...existingResult,
-              status: StepResultStatus.CACHED,
-              encounteredTypes: typeTracker.getEncounteredTypesForStep(stepId),
-            });
-          }
-
-          executionContext.logger.info(
-            { stepId },
-            `Step "${step.name}" skipped - results loaded from disk.`,
-          );
-
-          enqueueLeafSteps();
-        } else if (
-          isStepEnabled(stepId) &&
-          stepDependenciesAreComplete(stepId)
-        ) {
+        if (isStepEnabled(stepId) && stepDependenciesAreComplete(stepId)) {
           removeStepFromWorkingGraph(stepId);
           void promiseQueue.add(() =>
             timeOperation({
@@ -269,12 +251,67 @@ export function executeStepDependencyGraph<
               metricName: `duration-step`,
               dimensions: {
                 stepId,
+                cached: hasCachePath(stepId).toString(),
               },
-              operation: () => executeStep(step),
+              operation: () => {
+                if (hasCachePath(stepId)) {
+                  return loadCacheForStep(step);
+                } else {
+                  return executeStep(step);
+                }
+              },
             }).catch(handleUnexpectedError),
           );
         }
       });
+    }
+
+    async function loadCacheForStep(step: Step<TStepExecutionContext>) {
+      let status = StepResultStatus.FAILURE;
+      const stepCacheFilePath = stepStartStates[step.id].stepCachePath;
+      const entitiesPath = `${stepCacheFilePath}/entities`;
+      const relationshipsPath = `${stepCacheFilePath}/relationships`;
+
+      let entitiesCount = 0;
+      await walkDirectory({
+        path: entitiesPath,
+        iteratee: async ({ filePath }) => {
+          const { entities } = await readGraphObjectFile<FlushedEntityData>({
+            filePath,
+          });
+
+          if (entities) {
+            entitiesCount += entities.length;
+            await graphObjectStore.addEntities(step.id, entities);
+            status = StepResultStatus.CACHED;
+          }
+        },
+      });
+
+      let relationshipCount = 0;
+      await walkDirectory({
+        path: relationshipsPath,
+        iteratee: async ({ filePath }) => {
+          const {
+            relationships,
+          } = await readGraphObjectFile<FlushedRelationshipData>({
+            filePath,
+          });
+
+          if (relationships) {
+            relationshipCount += relationships.length;
+            await graphObjectStore.addRelationships(step.id, relationships);
+            status = StepResultStatus.CACHED;
+          }
+        },
+      });
+
+      executionContext.logger.info(
+        `Loaded ${entitiesCount} entities and  ${relationshipCount} relationship(s) for step "${step.name}".`,
+      );
+
+      updateStepResultStatus(step.id, status, typeTracker);
+      enqueueLeafSteps();
     }
 
     /**
@@ -446,18 +483,9 @@ function buildStepResultsMap<
         const hasDisabledDependencies =
           dependencyGraph
             .dependenciesOf(step.id)
-            .filter(
-              (id) =>
-                stepStartStates[id].disabled &&
-                !stepStartStates[id].cacheLoaded,
-            ).length > 0;
+            .filter((id) => stepStartStates[id].disabled).length > 0;
 
         const { declaredTypes, partialTypes } = getDeclaredTypesInStep(step);
-
-        const status =
-          stepStartStates[step.id].disabled || hasDisabledDependencies
-            ? StepResultStatus.DISABLED
-            : StepResultStatus.PENDING_EVALUATION;
 
         return {
           id: step.id,
@@ -466,7 +494,10 @@ function buildStepResultsMap<
           declaredTypes,
           partialTypes,
           encounteredTypes: [],
-          status,
+          status:
+            stepStartStates[step.id].disabled || hasDisabledDependencies
+              ? StepResultStatus.DISABLED
+              : StepResultStatus.PENDING_EVALUATION,
         };
       },
     )
