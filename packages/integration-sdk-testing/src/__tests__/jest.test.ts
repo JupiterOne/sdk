@@ -103,6 +103,35 @@ describe('#toMatchGraphObjectSchema', () => {
     expect(result.message()).toEqual('Success!');
   });
 
+  test('should require matching `_type` if `_type` is provided', () => {
+    const entity = generateCollectedEntity({
+      _class: 'Service',
+      _type: 'entity-type',
+    });
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: entity._class,
+      _type: 'different-entity-type',
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toMatch(`errors=[
+  {
+    "instancePath": "/_type",
+    "schemaPath": "#/properties/_type/const",
+    "keyword": "const",
+    "params": {
+      "allowedValue": "different-entity-type"
+    },
+    "message": "must be equal to constant"
+  }
+]`);
+  });
+
   test('should match class schema with no custom schema', () => {
     const result = toMatchGraphObjectSchema(
       generateCollectedEntity({ _class: 'Service' }),

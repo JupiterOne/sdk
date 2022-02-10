@@ -11,11 +11,17 @@ and this project adheres to
 
 ### Added
 
-- Added optional `_type` and `_class` arguments to
-  `.toMatchDirectRelationshipSchema` matcher. This enables developers to simply
-  pass the `StepRelationshipMetadata` interface to this matcher. Usage:
+- Updated jest matchers in the following way:
+
+  - added optional `_type` argument to `.toMatchGraphObjectSchema` matcher
+  - added optional `_type` and `_class` arguments to
+    `.toMatchDirectRelationshipSchema` matcher
+
+  This enables developers to simply pass the `StepEntityMetadata` and
+  `StepRelationshipMetadata` interfaces to these matchers. Usage:
 
   ```ts
+  expect(collectedEntities).toMatchGraphObjectSchema(Entities.USER);
   expect(collectedRelationships).toMatchDirectRelationshipSchema(
     Relationships.ACCOUNT_HAS_USER,
   );
