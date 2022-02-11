@@ -71,6 +71,7 @@ describe('collect', () => {
       '--step',
       'fetch-groups',
       '--use-dependencies-cache',
+      process.cwd(),
     ]);
 
     expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
@@ -82,7 +83,7 @@ describe('collect', () => {
           declaredTypes: ['my_account'],
           dependsOn: undefined,
           partialTypes: [],
-          encounteredTypes: [],
+          encounteredTypes: ['test_account'],
           status: StepResultStatus.CACHED,
         },
         {

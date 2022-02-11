@@ -304,22 +304,23 @@ import {
 import { IntegrationConfig, IntegrationStepContext } from './types';
 import getStepStartStates from './getStepStartStates';
 
-export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = {
-  instanceConfigFields: {},
-  integrationSteps: [],
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
+  {
+    instanceConfigFields: {},
+    integrationSteps: [],
 
-  beforeAddEntity(
-    context: IntegrationExecutionContext<IntegrationConfig>,
-    entity: Entity,
-  ): Entity {
-    const projectId = context.instance.config.myProjectId;
+    beforeAddEntity(
+      context: IntegrationExecutionContext<IntegrationConfig>,
+      entity: Entity,
+    ): Entity {
+      const projectId = context.instance.config.myProjectId;
 
-    return {
-      ...entity,
-      projectId: entity.projectId || myProjectId,
-    };
-  },
-};
+      return {
+        ...entity,
+        projectId: entity.projectId || myProjectId,
+      };
+    },
+  };
 ```
 
 ### How integrations are executed
@@ -1145,13 +1146,15 @@ ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
 
 ###### Option `--use-dependencies-cache` or `-C`
 
-Allows preceding steps to skip execution and instead load previously captured results from disk.
-The intent of this is to increase development speed for new integrations.
-When no filepath is specified, an attempt to create a cache is made by
-copying the contents of `./.j1-integrations/graph` directory to `./.j1-cache`. 
-The structure of the cache follows a similar format as the .j1-integration data storage, as described [here](#data-collection).
+Allows preceding steps to skip execution and instead load previously captured
+results from disk. The intent of this is to increase development speed for new
+integrations. When no filepath is specified, an attempt to create a cache is
+made by copying the contents of `./.j1-integrations/graph` directory to
+`./.j1-cache`. The structure of the cache follows a similar format as the
+.j1-integration data storage, as described [here](#data-collection).
 
-###### And example of the expected cache structure
+###### An example of the expected cache structure
+
 ```
 .j1-cache/
    /step-fetch-accounts
@@ -1165,17 +1168,24 @@ The structure of the cache follows a similar format as the .j1-integration data 
          8fcc6865-817d-4952-ac53-8248b357b5d8.json
 ```
 
-ex: `j1-integration collect --step fetch-users --use-dependencies-cache` - Builds & uses cache from .j1-integration  
-ex: `j1-integration collect --step fetch-users --use-dependencies-cache ./` - Uses .j1-cache found in the root of the project  
-ex: `j1-integration collect --step fetch-users --use-dependencies-cache ./path-to-cache` - Uses .j1-cache found in the path specified 
+ex: `j1-integration collect --step fetch-users --use-dependencies-cache` -
+Builds & uses cache from .j1-integration  
+ex: `j1-integration collect --step fetch-users --use-dependencies-cache ./` -
+Uses .j1-cache found in the root of the project  
+ex:
+`j1-integration collect --step fetch-users --use-dependencies-cache ./path-to-cache` -
+Uses .j1-cache found in the path specified
 
-A common use pattern: 
-1. Execute collection command _without_ the `--use-dependencies-cache` option to gather data in .j1-integration
-2. Execute collection command with `--step` and `--use-dependencies-cache` option _without_ specifying a filepath.
- This will cause the .j1-integration data to populate the .j1-cache.
-3. Execute collection command with `--step` and `--use-dependencies-cache` option specifying a 
-filepath to the previously created .j1-cache (most commonly `./`).
+A common use pattern:
 
+1. Execute collection command _without_ the `--use-dependencies-cache` option to
+   gather data in .j1-integration
+2. Execute collection command with `--step` and `--use-dependencies-cache`
+   option _without_ specifying a filepath. This will cause the .j1-integration
+   data to populate the .j1-cache.
+3. Execute collection command with `--step` and `--use-dependencies-cache`
+   option specifying a filepath to the previously created .j1-cache (most
+   commonly `./`).
 
 ###### Option `--disable-schema-validation` or `-V`
 

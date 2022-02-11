@@ -47,14 +47,12 @@ export interface ExecuteIntegrationResult {
 
 export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
-  useDependenciesCache?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }
 
 export interface ExecuteWithContextOptions {
   graphObjectStore?: GraphObjectStore;
-  useDependenciesCache?: boolean;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
 }
 
@@ -85,7 +83,6 @@ export async function executeIntegrationLocally(
     {
       ...options,
       enableSchemaValidation: options?.enableSchemaValidation ?? true,
-      useDependenciesCache: options?.useDependenciesCache ?? false,
     },
   );
   unregisterIntegrationLoggerEventHandlers(registeredEventListeners);
@@ -96,7 +93,7 @@ export async function executeIntegrationLocally(
  * Starts execution of an integration instance.
  */
 export async function executeIntegrationInstance<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   logger: IntegrationLogger,
   instance: IntegrationInstance<TIntegrationConfig>,
@@ -142,7 +139,7 @@ function publishDiskUsageMetric<TExecutionContext extends ExecutionContext>(
 }
 
 async function tryPublishDiskUsageMetric<
-  TExecutionContext extends ExecutionContext
+  TExecutionContext extends ExecutionContext,
 >(context: TExecutionContext) {
   if (!(await isRootStorageDirectoryPresent())) {
     return;
@@ -157,7 +154,7 @@ async function tryPublishDiskUsageMetric<
  */
 export async function executeWithContext<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(
   context: TExecutionContext,
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,

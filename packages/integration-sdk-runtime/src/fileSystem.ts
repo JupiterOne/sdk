@@ -18,19 +18,11 @@ const brotliCompress = promisify(zlib.brotliCompress);
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
 export const DEFAULT_STORAGE_DIRECTORY_NAME = '.j1-integration';
-export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-cache';
 
 export function getRootStorageDirectory() {
   return (
     process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY ||
     path.resolve(process.cwd(), DEFAULT_STORAGE_DIRECTORY_NAME)
-  );
-}
-
-export function getRootCacheDirectory() {
-  return (
-    process.env.JUPITERONE_CACHE_DIRECTORY ||
-    path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME)
   );
 }
 

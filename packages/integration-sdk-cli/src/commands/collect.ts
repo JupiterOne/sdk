@@ -5,7 +5,6 @@ import fs from 'fs-extra';
 import {
   executeIntegrationLocally,
   FileSystemGraphObjectStore,
-  getRootCacheDirectory,
   getRootStorageDirectory,
   prepareLocalStepCollection,
 } from '@jupiterone/integration-sdk-runtime';
@@ -52,18 +51,23 @@ export function collect() {
         '.j1-integration',
       );
 
-      if (
-        typeof options.useDependenciesCache === 'string' ||
-        options.useDependenciesCache instanceof String
-      ) {
-        setupCacheDirectory(options.useDependenciesCache);
-      } else if (options.useDependenciesCache === true) {
+      if (options.useDependenciesCache === true) {
+        // true indicates that a filepath was not specified
+        // therefore, copy .j1-integration into .j1-cache
         await copyToCache();
       }
 
       const config = prepareLocalStepCollection(
         await loadConfig(path.join(options.projectPath, 'src')),
-        options,
+        {
+          ...options,
+          ...(options.useDependenciesCache && {
+            dependenciesCache: {
+              enabled: true,
+              filepath: getRootCacheDirectory(options.useDependenciesCache),
+            },
+          }),
+        },
       );
       log.info('\nConfiguration loaded! Running integration...\n');
 
@@ -82,7 +86,6 @@ export function collect() {
         },
         {
           enableSchemaValidation,
-          useDependenciesCache: options.useDependenciesCache,
           graphObjectStore,
         },
       );
@@ -91,34 +94,29 @@ export function collect() {
     });
 }
 
-/**
- * Sets environment variable JUPITERONE_CACHE_DIRECTORY
- * to be used in reading & writing to cache.
- * @param useDependenciesCache
- */
-function setupCacheDirectory(useDependenciesCache) {
-  process.env.JUPITERONE_CACHE_DIRECTORY = path.resolve(
-    useDependenciesCache,
-    '.j1-cache',
-  );
+export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-cache';
 
-  log.info(
-    `Set dependencies cache location to ${process.env.JUPITERONE_CACHE_DIRECTORY}`,
+export function getRootCacheDirectory(filepath?: string) {
+  return path.resolve(
+    typeof filepath === 'string' ? filepath : process.cwd(),
+    DEFAULT_CACHE_DIRECTORY_NAME,
   );
 }
 
 /**
  * When no filepath is specified, the .j1-integration directory
- * is copied to .j1-cache
+ * is moved to .j1-cache
  */
 async function copyToCache() {
   const graphDirectory = path.join(getRootStorageDirectory(), 'graph');
-  if (fs.ensureDir(graphDirectory)) {
-    await fs.emptyDir(getRootCacheDirectory());
-    await fs.copy(graphDirectory, getRootCacheDirectory()).catch((error) => {
-      log.error(`Failed to seed .j1-cache from .j1-integration`);
-      log.error(error);
-    });
-    log.info(`Copied graph data in .j1-integration to .j1-cache`);
+
+  if (fs.pathExistsSync(graphDirectory)) {
+    await fs
+      .move(graphDirectory, getRootCacheDirectory(), { overwrite: true })
+      .catch((error) => {
+        log.error(`Failed to seed .j1-cache from .j1-integration`);
+        log.error(error);
+      });
+    log.info(`Moved graph data from .j1-integration to .j1-cache`);
   }
 }
