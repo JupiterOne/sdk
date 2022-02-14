@@ -111,7 +111,8 @@ async function copyToCache() {
   const sourceGraphDirectory = path.join(getRootStorageDirectory(), 'graph');
   const destinationGraphDirectory = path.join(getRootCacheDirectory(), 'graph');
 
-  if (fs.pathExistsSync(sourceGraphDirectory)) {
+  const sourceExists = await fs.pathExists(sourceGraphDirectory);
+  if (sourceExists) {
     await fs
       .move(sourceGraphDirectory, destinationGraphDirectory, {
         overwrite: true,
