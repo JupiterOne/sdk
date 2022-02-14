@@ -1,4 +1,7 @@
-import { RelationshipClass } from '@jupiterone/data-model';
+import {
+  RelationshipClass,
+  IntegrationEntitySchema,
+} from '@jupiterone/data-model';
 
 import {
   ExecutionContext,
@@ -81,8 +84,27 @@ export interface GraphObjectIndexMetadata {
   enabled: boolean;
 }
 
+export interface GraphObjectSchema extends IntegrationEntitySchema {
+  $schema?: string;
+  $id?: string;
+  description?: string;
+  additionalProperties?: boolean;
+}
+
 export interface StepGraphObjectMetadata {
   _type: string;
+
+  /**
+   * An optional extension to the JSON schemas defined by the `_class` of this entity
+   * in the @jupiterone/data-model.
+   *
+   * Extensions defined by this schema are in addition to the schemas referenced by the
+   * `_class` values of the entity. These should be considered unique properties for
+   * this integration. Ask yourself, should a property here be considered for promotion
+   * to the @jupiterone/data-model to benefit normalization of all integrations producing
+   * this class of entity?
+   */
+  schema?: GraphObjectSchema;
 
   /**
    * Indicates the set of data represented by this `_type` should always be

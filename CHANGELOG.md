@@ -11,6 +11,14 @@ and this project adheres to
 
 ### Added
 
+- Added optional `schema` property to `StepGraphObjectMetadata`. This allows
+  developers to provide the property schema to expect on entities,
+  relationships, and mapped relationships. This serves two uses:
+  1. Schemas can be used at runtime or test-time to verify that an entity has
+     the correct properties
+  2. The `j1-integration document` command could automatically produce consumer
+     documentation about the properties that an entity / relationship is
+     expected to have
 - Added `executeStepWithDependencies` utility to
   `@jupiterone/integration-sdk-testing` package. This allows developers to test
   specific integration steps in isolation, while assuring that all of its

@@ -3,6 +3,7 @@ import * as deepmerge from 'deepmerge';
 import {
   Entity,
   ExplicitRelationship,
+  GraphObjectSchema,
   IntegrationInstanceConfig,
   IntegrationInvocationConfig,
   IntegrationSpecConfig,
@@ -220,13 +221,6 @@ function generateGraphObjectSchemaFromDataModelSchemas(
 
 function graphObjectClassToSchemaRef(_class: string) {
   return `#${_class}`;
-}
-
-export interface GraphObjectSchema extends dataModel.IntegrationEntitySchema {
-  $schema?: string;
-  $id?: string;
-  description?: string;
-  additionalProperties?: boolean;
 }
 
 export interface ToMatchGraphObjectSchemaParams {
