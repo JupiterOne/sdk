@@ -413,8 +413,6 @@ export function executeStepDependencyGraph<
         );
       }
 
-      await jobState.flush();
-
       return status;
     }
 
