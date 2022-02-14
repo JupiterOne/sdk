@@ -104,19 +104,22 @@ export function getRootCacheDirectory(filepath?: string) {
 }
 
 /**
- * When no filepath is specified, the .j1-integration directory
+ * When no filepath is specified, the .j1-integration/graph directory
  * is moved to .j1-cache
  */
 async function copyToCache() {
-  const graphDirectory = path.join(getRootStorageDirectory(), 'graph');
+  const sourceGraphDirectory = path.join(getRootStorageDirectory(), 'graph');
+  const destinationGraphDirectory = path.join(getRootCacheDirectory(), 'graph');
 
-  if (fs.pathExistsSync(graphDirectory)) {
+  if (fs.pathExistsSync(sourceGraphDirectory)) {
     await fs
-      .move(graphDirectory, getRootCacheDirectory(), { overwrite: true })
+      .move(sourceGraphDirectory, destinationGraphDirectory, {
+        overwrite: true,
+      })
       .catch((error) => {
         log.error(`Failed to seed .j1-cache from .j1-integration`);
         log.error(error);
       });
-    log.info(`Moved graph data from .j1-integration to .j1-cache`);
+    log.info(`Populated the .j1-cache from .j1-integration.`);
   }
 }

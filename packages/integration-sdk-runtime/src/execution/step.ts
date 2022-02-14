@@ -186,6 +186,7 @@ export function prepareLocalStepCollection<
                 dependentSteps.includes(stepId) && {
                   stepCachePath: path.resolve(
                     dependenciesCache.filepath,
+                    'graph',
                     stepId,
                   ),
                 }),
