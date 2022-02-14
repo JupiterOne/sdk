@@ -3,6 +3,7 @@ import {
   createMappedRelationship,
   Entity,
   ExplicitRelationship,
+  GraphObjectSchema,
   IntegrationInvocationConfig,
   IntegrationSpecConfig,
   RelationshipClass,
@@ -11,7 +12,6 @@ import {
   toMatchGraphObjectSchema,
   toMatchDirectRelationshipSchema,
   toTargetEntities,
-  GraphObjectSchema,
   registerMatchers,
   toImplementSpec,
 } from '../jest';
