@@ -244,7 +244,7 @@ describe('createIntegrationLogger', () => {
         }),
       ).toEqual({
         anything: '***',
-        masked: '****',
+        masked: '***',
         unmasked: 'this is clear',
       });
     });

@@ -144,7 +144,7 @@ function createInstanceConfigSerializer<
       for (const k of Object.keys(config)) {
         const field = fields && fields[k];
         if (field) {
-          serialized[k] = field.mask ? '****' : config[k];
+          serialized[k] = field.mask ? '***' : config[k];
         } else {
           serialized[k] = '***';
         }
