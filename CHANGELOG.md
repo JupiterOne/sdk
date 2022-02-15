@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Changed logger to fully mask config field values, rather than displaying last
+  4 chars
+
 ### Added
 
 - Updated jest matchers in the following way:
