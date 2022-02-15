@@ -407,7 +407,8 @@ export function executeStepDependencyGraph<
 
       if (entitiesCount || relationshipCount) {
         logger.info(
-          `Loaded ${entitiesCount} entities and  ${relationshipCount} relationship(s) from cache.`,
+          { entitiesCount, relationshipCount },
+          `Loaded entities and relationship(s) from cache.`,
         );
       } else {
         logger.warn(

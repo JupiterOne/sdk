@@ -62,7 +62,7 @@ export function collect() {
 
       if (options.step.length > 0 && options.cache && !options.cachePath) {
         // Step option was used, cache is wanted, and no cache path was provided
-        // therefore, copy .j1-integration into .j1-cache
+        // therefore, copy .j1-integration into .j1-integration-cache
         await buildCacheFromJ1Integration();
       }
 
@@ -101,7 +101,7 @@ export function collect() {
     });
 }
 
-export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-cache';
+export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration-cache';
 
 export function getRootCacheDirectory(filepath?: string) {
   return path.resolve(
@@ -112,7 +112,7 @@ export function getRootCacheDirectory(filepath?: string) {
 
 /**
  * Builds the step cache from the .j1-integration/graph directory
- * by moving the files to .j1-cache.
+ * by moving the files to .j1-integration-cache.
  */
 async function buildCacheFromJ1Integration() {
   const sourceGraphDirectory = path.join(getRootStorageDirectory(), 'graph');
@@ -125,9 +125,9 @@ async function buildCacheFromJ1Integration() {
         overwrite: true,
       })
       .catch((error) => {
-        log.error(`Failed to seed .j1-cache from .j1-integration`);
+        log.error(`Failed to seed .j1-integration-cache from .j1-integration`);
         log.error(error);
       });
-    log.info(`Populated the .j1-cache from .j1-integration.`);
+    log.info(`Populated the .j1-integration-cache from .j1-integration.`);
   }
 }

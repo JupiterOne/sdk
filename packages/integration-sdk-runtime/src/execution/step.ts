@@ -173,17 +173,21 @@ export function prepareLocalStepCollection<
 
         if (dependenciesCache?.enabled) {
           ctx.logger.info(
-            `Using dependencies cache found at ${dependenciesCache.filepath}`,
+            { cacheFilePath: dependenciesCache.filepath },
+            `Using dependencies cache.`,
           );
         }
 
         for (const stepId of allStepIds) {
           const originalValue = originalEnabledRecord[stepId] ?? {};
           if (stepsToRun.includes(stepId)) {
-            const stepCachePath =
-              dependenciesCache?.enabled && dependentSteps.includes(stepId)
-                ? buildStepCachePath(dependenciesCache.filepath, stepId)
-                : null;
+            const stepCachePath = dependenciesCache?.enabled
+              ? buildStepCachePath(
+                  dependenciesCache.filepath,
+                  dependentSteps,
+                  stepId,
+                )
+              : null;
 
             enabledRecord[stepId] = {
               ...originalValue,
@@ -212,15 +216,19 @@ export function prepareLocalStepCollection<
  * If true, returns the path.
  * If false, returns null.
  * @param rootDirectory
+ * @param dependentSteps
  * @param stepId
  */
 function buildStepCachePath(
   rootDirectory: string,
+  dependentSteps: string[],
   stepId: string,
 ): string | null {
-  const stepFilepath = path.resolve(rootDirectory, 'graph', stepId);
+  if (dependentSteps.includes(stepId)) {
+    const stepFilepath = path.resolve(rootDirectory, 'graph', stepId);
+    const stepCacheExists = fs.existsSync(stepFilepath);
+    return stepCacheExists ? stepFilepath : null;
+  }
 
-  const stepCacheExists = fs.existsSync(stepFilepath);
-
-  return stepCacheExists ? stepFilepath : null;
+  return null;
 }

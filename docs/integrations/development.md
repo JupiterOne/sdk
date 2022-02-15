@@ -1150,8 +1150,9 @@ ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
 
 - The Step Cache can be disabled using option `--no-cache`. This will force the
   dependent step(s) to fully execute.
-- The default location of the Step Cache is found at `./.j1-cache`. It is
-  populated by moving `./.j1-integrations/graph` to `./.j1-cache`.
+- The default location of the Step Cache is found at `./.j1-integration-cache`.
+  It is populated by moving `./.j1-integrations/graph` to
+  `./.j1-integration-cache`.
 - The `--cache-path` option allows for a different cache to be used. The
   structure of the cache follows a similar format as the `.j1-integration` data
   storage. An example structure is provided below.
@@ -1171,7 +1172,7 @@ ex: `j1-integration collect --step step-fetch-users --cache-path ./my-cache`
 **Step Cache Structure**
 
 ```
-.j1-cache/
+.j1-integration-cache/
    /graph
       /step-fetch-accounts
          /entities/
