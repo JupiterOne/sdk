@@ -13,6 +13,7 @@ import * as zlib from 'zlib';
 import { promisify } from 'util';
 import { FlushedGraphObjectData } from './storage/types';
 import { readGraphObjectFile } from './storage/FileSystemGraphObjectStore/indices';
+import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 
 const brotliCompress = promisify(zlib.brotliCompress);
 const brotliDecompress = promisify(zlib.brotliDecompress);
@@ -214,6 +215,28 @@ export function iterateParsedGraphFiles(
       await iteratee(parsed);
     },
   });
+}
+
+export async function iterateParsedEntityGraphFiles(
+  iteratee: (entities: Entity[]) => Promise<void>,
+  graphPath?: string,
+) {
+  return iterateParsedGraphFiles(async (data) => {
+    if (data.entities) {
+      await iteratee(data.entities);
+    }
+  }, graphPath);
+}
+
+export async function iterateParsedRelationshipGraphFiles(
+  iteratee: (relationships: Relationship[]) => Promise<void>,
+  graphPath?: string,
+) {
+  return iterateParsedGraphFiles(async (data) => {
+    if (data.relationships) {
+      await iteratee(data.relationships);
+    }
+  }, graphPath);
 }
 
 export function isRootStorageDirectoryPresent(): Promise<boolean> {

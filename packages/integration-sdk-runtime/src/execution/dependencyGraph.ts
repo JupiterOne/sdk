@@ -24,9 +24,10 @@ import {
   CreateStepGraphObjectDataUploaderFunction,
   StepGraphObjectDataUploader,
 } from './uploader';
-import { walkDirectory } from '../fileSystem';
-import { readGraphObjectFile } from '../storage/FileSystemGraphObjectStore/indices';
-import { FlushedEntityData, FlushedRelationshipData } from '../storage/types';
+import {
+  iterateParsedEntityGraphFiles,
+  iterateParsedRelationshipGraphFiles,
+} from '../fileSystem';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -373,37 +374,18 @@ export function executeStepDependencyGraph<
       const { jobState, logger } = context;
 
       let entitiesCount = 0;
-      await walkDirectory({
-        path: entitiesPath,
-        iteratee: async ({ filePath }) => {
-          const { entities } = await readGraphObjectFile<FlushedEntityData>({
-            filePath,
-          });
-
-          if (entities) {
-            entitiesCount += entities.length;
-            await jobState.addEntities(entities);
-            status = StepResultStatus.CACHED;
-          }
-        },
-      });
+      await iterateParsedEntityGraphFiles(async (entities) => {
+        entitiesCount += entities.length;
+        await jobState.addEntities(entities);
+        status = StepResultStatus.CACHED;
+      }, entitiesPath);
 
       let relationshipCount = 0;
-      await walkDirectory({
-        path: relationshipsPath,
-        iteratee: async ({ filePath }) => {
-          const { relationships } =
-            await readGraphObjectFile<FlushedRelationshipData>({
-              filePath,
-            });
-
-          if (relationships) {
-            relationshipCount += relationships.length;
-            await jobState.addRelationships(relationships);
-            status = StepResultStatus.CACHED;
-          }
-        },
-      });
+      await iterateParsedRelationshipGraphFiles(async (relationships) => {
+        relationshipCount += relationships.length;
+        await jobState.addRelationships(relationships);
+        status = StepResultStatus.CACHED;
+      }, relationshipsPath);
 
       if (entitiesCount || relationshipCount) {
         logger.info(
