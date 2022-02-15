@@ -9,6 +9,7 @@ import {
   IntegrationSpecConfig,
   IntegrationStepExecutionContext,
   MappedRelationship,
+  RelationshipClass,
   Step,
 } from '@jupiterone/integration-sdk-core';
 import { getMatchers } from 'expect/build/jestMatchersObject';
@@ -22,7 +23,7 @@ declare global {
       ): R;
 
       toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
-        params: ToMatchRelationshipSchemaParams,
+        params?: ToMatchRelationshipSchemaParams,
       ): R;
 
       toTargetEntities(entities: Entity[]): R;
@@ -228,6 +229,7 @@ export interface ToMatchGraphObjectSchemaParams {
    * The JupiterOne hierarchy class or classes from the data model that will be used to generate a new schema to be validated against. See: https://github.com/JupiterOne/data-model/tree/main/src/schemas
    */
   _class: string | string[];
+  _type?: string;
   /**
    * The schema that should be used to validate the input data against
    */
@@ -304,7 +306,7 @@ export function toMatchGraphObjectSchema<T extends Entity>(
    * The data received from the test assertion. (e.g. expect(DATA_HERE).toMatchGraphObjectSchema(...)
    */
   received: T | T[],
-  { _class, schema, disableClassMatch }: ToMatchGraphObjectSchemaParams,
+  { _class, _type, schema, disableClassMatch }: ToMatchGraphObjectSchemaParams,
 ) {
   // Copy this so that we do not interfere with globals.
   // NOTE: The data-model should actuall expose a function for generating
@@ -346,12 +348,17 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     newEntitySchema.properties._class = {
       const: _class,
     };
+    if (_type) {
+      newEntitySchema.properties._type = { const: _type };
+    }
   }
 
   return toMatchSchema(received, newEntitySchema);
 }
 
 export interface ToMatchRelationshipSchemaParams {
+  _class?: RelationshipClass;
+  _type?: string;
   /**
    * The schema that should be used to validate the input data against
    */
@@ -394,14 +401,27 @@ export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
     ],
   };
 
-  return toMatchSchema(
-    received,
-    generateGraphObjectSchemaFromDataModelSchemas([
-      ...graphObjectSchemas.reverse(),
-      directRelationshipSchema,
-      schema,
-    ]),
-  );
+  const newRelationshipSchema = generateGraphObjectSchemaFromDataModelSchemas([
+    ...graphObjectSchemas.reverse(),
+    directRelationshipSchema,
+    schema,
+  ]);
+
+  if (params?._class) {
+    if (!newRelationshipSchema.properties) {
+      newRelationshipSchema.properties = {};
+    }
+    newRelationshipSchema.properties._class = { const: params._class };
+  }
+
+  if (params?._type) {
+    if (!newRelationshipSchema.properties) {
+      newRelationshipSchema.properties = {};
+    }
+    newRelationshipSchema.properties._type = { const: params._type };
+  }
+
+  return toMatchSchema(received, newRelationshipSchema);
 }
 
 function toMatchSchema<T extends Entity | ExplicitRelationship>(

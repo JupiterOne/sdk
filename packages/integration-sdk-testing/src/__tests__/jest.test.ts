@@ -103,6 +103,35 @@ describe('#toMatchGraphObjectSchema', () => {
     expect(result.message()).toEqual('Success!');
   });
 
+  test('should require matching `_type` if `_type` is provided', () => {
+    const entity = generateCollectedEntity({
+      _class: 'Service',
+      _type: 'entity-type',
+    });
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: entity._class,
+      _type: 'different-entity-type',
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toMatch(`errors=[
+  {
+    "instancePath": "/_type",
+    "schemaPath": "#/properties/_type/const",
+    "keyword": "const",
+    "params": {
+      "allowedValue": "different-entity-type"
+    },
+    "message": "must be equal to constant"
+  }
+]`);
+  });
+
   test('should match class schema with no custom schema', () => {
     const result = toMatchGraphObjectSchema(
       generateCollectedEntity({ _class: 'Service' }),
@@ -596,6 +625,68 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
 
 Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model/tree/main/src/schemas
 `);
+  });
+
+  test('should require matching `_type` if `_type` is provided', () => {
+    const relationship = generateCollectedDirectRelationship({
+      string: 'abc',
+      number: 123,
+      boolean: true,
+      null: null,
+      _type: 'relationship-type',
+    });
+
+    const result = toMatchDirectRelationshipSchema(relationship, {
+      _type: 'different-relationship-type',
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toMatch(`errors=[
+  {
+    "instancePath": "/_type",
+    "schemaPath": "#/properties/_type/const",
+    "keyword": "const",
+    "params": {
+      "allowedValue": "different-relationship-type"
+    },
+    "message": "must be equal to constant"
+  }
+]`);
+  });
+
+  test('should require matching `_class` if `_class` is provided', () => {
+    const relationship = generateCollectedDirectRelationship({
+      string: 'abc',
+      number: 123,
+      boolean: true,
+      null: null,
+      _class: RelationshipClass.HAS,
+    });
+
+    const result = toMatchDirectRelationshipSchema(relationship, {
+      _class: RelationshipClass.IS,
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toMatch(`errors=[
+  {
+    "instancePath": "/_class",
+    "schemaPath": "#/properties/_class/const",
+    "keyword": "const",
+    "params": {
+      "allowedValue": "IS"
+    },
+    "message": "must be equal to constant"
+  }
+]`);
   });
 });
 
