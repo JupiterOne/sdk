@@ -83,6 +83,8 @@ describe('collect', () => {
       'collect',
       '--step',
       'fetch-groups',
+      '--cache-path',
+      process.cwd(),
     ]);
 
     expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
