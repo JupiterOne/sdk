@@ -100,6 +100,7 @@ function logStepStatus(stepResult: IntegrationStepResult) {
 function getStepStatusText(status: StepResultStatus) {
   switch (status) {
     case StepResultStatus.SUCCESS:
+    case StepResultStatus.CACHED:
       return chalk.green(status);
     case StepResultStatus.FAILURE:
       return chalk.red(status);

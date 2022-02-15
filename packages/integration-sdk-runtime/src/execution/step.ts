@@ -1,3 +1,6 @@
+import path from 'path';
+import fs from 'fs';
+
 import uniq from 'lodash/uniq';
 import { pick } from 'lodash';
 
@@ -27,7 +30,7 @@ import {
 
 export async function executeSteps<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   executionContext,
   integrationSteps,
@@ -85,7 +88,7 @@ export async function executeSteps<
 }
 
 export function getDefaultStepStartStates<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(steps: Step<TStepExecutionContext>[]): StepStartStates {
   return steps.reduce(
     (states: StepStartStates, step: Step<TStepExecutionContext>) => {
@@ -129,14 +132,18 @@ export function determinePartialDatasetsFromStepExecutionResults(
 
 export interface CollectOptions {
   step?: string[];
+  dependenciesCache?: {
+    enabled: boolean;
+    filepath: string;
+  };
 }
 
 export function prepareLocalStepCollection<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(
   config: InvocationConfig<TExecutionContext, TStepExecutionContext>,
-  { step = [] }: CollectOptions = {},
+  { step = [], dependenciesCache }: CollectOptions = {},
 ) {
   const allStepIds = config.integrationSteps.map((step) => step.id);
 
@@ -144,7 +151,7 @@ export function prepareLocalStepCollection<
     (step: string | undefined | null) => step !== undefined && step !== null,
   );
 
-  // build out the dependecy graph so we can
+  // build out the dependency graph so we can
   // enable the dependencies of the steps
   // we want to run.
   const depGraph = buildStepDependencyGraph(config.integrationSteps);
@@ -163,12 +170,31 @@ export function prepareLocalStepCollection<
           ctx,
         ) ?? {});
         const enabledRecord: StepStartStates = {};
+
+        if (dependenciesCache?.enabled) {
+          ctx.logger.info(
+            { cacheFilePath: dependenciesCache.filepath },
+            `Using dependencies cache.`,
+          );
+        }
+
         for (const stepId of allStepIds) {
           const originalValue = originalEnabledRecord[stepId] ?? {};
           if (stepsToRun.includes(stepId)) {
+            const stepCachePath = dependenciesCache?.enabled
+              ? buildStepCachePath(
+                  dependenciesCache.filepath,
+                  dependentSteps,
+                  stepId,
+                )
+              : null;
+
             enabledRecord[stepId] = {
               ...originalValue,
               disabled: false,
+              ...(stepCachePath && {
+                stepCachePath,
+              }),
             };
           } else {
             enabledRecord[stepId] = {
@@ -183,4 +209,26 @@ export function prepareLocalStepCollection<
       (async (ctx) => Promise.resolve(originalGetStepStartStates(ctx)));
 
   return config;
+}
+
+/**
+ * Determines if the path to a step cache is valid for the given step.
+ * If true, returns the path.
+ * If false, returns null.
+ * @param rootDirectory
+ * @param dependentSteps
+ * @param stepId
+ */
+function buildStepCachePath(
+  rootDirectory: string,
+  dependentSteps: string[],
+  stepId: string,
+): string | null {
+  if (dependentSteps.includes(stepId)) {
+    const stepFilepath = path.resolve(rootDirectory, 'graph', stepId);
+    const stepCacheExists = fs.existsSync(stepFilepath);
+    return stepCacheExists ? stepFilepath : null;
+  }
+
+  return null;
 }

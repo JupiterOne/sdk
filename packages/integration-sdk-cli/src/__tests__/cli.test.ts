@@ -48,6 +48,84 @@ describe('collect', () => {
     loadProjectStructure('instanceWithDependentSteps');
   });
 
+  test('option --no-cache requires option --step', async () => {
+    await expect(
+      createCli().parseAsync([
+        'node',
+        'j1-integration',
+        'collect',
+        '--no-cache',
+      ]),
+    ).rejects.toThrowError(
+      'Invalid option: Option --no-cache requires option --step to also be specified.',
+    );
+  });
+  test('option --cache-path requires option --step', async () => {
+    await expect(
+      createCli().parseAsync([
+        'node',
+        'j1-integration',
+        'collect',
+        '--cache-path',
+        './',
+      ]),
+    ).rejects.toThrowError(
+      'Invalid option: Option --cache-path requires option --step to also be specified.',
+    );
+  });
+
+  test('Uses cache when --step flag is provided w/out --no-cache', async () => {
+    loadProjectStructure('instanceWithDependentCachedSteps');
+
+    await createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'collect',
+      '--step',
+      'fetch-groups',
+      '--cache-path',
+      process.cwd(),
+    ]);
+
+    expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+    expect(log.displayExecutionResults).toHaveBeenCalledWith({
+      integrationStepResults: [
+        {
+          id: 'fetch-accounts',
+          name: 'Fetch Accounts',
+          declaredTypes: ['my_account'],
+          dependsOn: undefined,
+          partialTypes: [],
+          encounteredTypes: ['test_account'],
+          status: StepResultStatus.CACHED,
+        },
+        {
+          id: 'fetch-groups',
+          dependsOn: ['fetch-accounts'],
+          name: 'Fetch Groups',
+          declaredTypes: ['my_groups'],
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'fetch-users',
+          name: 'Fetch Users',
+          declaredTypes: ['my_user'],
+          dependsOn: undefined,
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.DISABLED,
+        },
+      ],
+      metadata: {
+        partialDatasets: {
+          types: [],
+        },
+      },
+    });
+  });
+
   test('loads the integration, executes it, and logs the result', async () => {
     await createCli().parseAsync(['node', 'j1-integration', 'collect']);
 

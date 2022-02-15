@@ -1,0 +1,13 @@
+{
+  "entities": [
+    {
+      "name": "Test Account",
+      "_type": "test_account",
+      "_class": [
+        "Account"
+      ],
+      "_key": "test",
+      "createdOn": 1642628988458
+    }
+  ]
+}
