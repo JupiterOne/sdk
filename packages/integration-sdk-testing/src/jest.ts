@@ -9,15 +9,22 @@ import {
   IntegrationSpecConfig,
   IntegrationStepExecutionContext,
   MappedRelationship,
+  Relationship,
   RelationshipClass,
   Step,
 } from '@jupiterone/integration-sdk-core';
+import { SyncExpectationResult } from 'expect/build/types';
 import { getMatchers } from 'expect/build/jestMatchersObject';
+import { StepTestConfig } from './config';
+import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
+import { filterGraphObjects } from './filterGraphObjects';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
+      toMatchStepMetadata(testConfig: StepTestConfig): R;
+
       toMatchGraphObjectSchema<T extends Entity>(
         params: ToMatchGraphObjectSchemaParams,
       ): R;
@@ -307,7 +314,7 @@ export function toMatchGraphObjectSchema<T extends Entity>(
    */
   received: T | T[],
   { _class, _type, schema, disableClassMatch }: ToMatchGraphObjectSchemaParams,
-) {
+): SyncExpectationResult {
   // Copy this so that we do not interfere with globals.
   // NOTE: The data-model should actuall expose a function for generating
   // a new object of the `IntegrationSchema`.
@@ -368,7 +375,7 @@ export interface ToMatchRelationshipSchemaParams {
 export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
   received: T | T[],
   params?: ToMatchRelationshipSchemaParams,
-) {
+): SyncExpectationResult {
   const dataModelIntegrationSchema = dataModel.IntegrationSchema;
   const schema = params?.schema || {};
 
@@ -427,7 +434,7 @@ export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
 function toMatchSchema<T extends Entity | ExplicitRelationship>(
   received: T | T[],
   schema: GraphObjectSchema,
-) {
+): SyncExpectationResult {
   const dataModelIntegrationSchema = dataModel.IntegrationSchema;
 
   received = Array.isArray(received) ? received : [received];
@@ -519,8 +526,135 @@ export function toImplementSpec<
   );
 }
 
+export function toMatchStepMetadata(
+  results: {
+    collectedEntities: Entity[];
+    collectedRelationships: Relationship[];
+  },
+  testConfig: StepTestConfig,
+): SyncExpectationResult {
+  const { stepId, invocationConfig } = testConfig;
+  const stepDependencyGraph = buildStepDependencyGraph(
+    invocationConfig.integrationSteps,
+  );
+
+  const step = stepDependencyGraph.getNodeData(stepId);
+
+  let restEntities = results.collectedEntities;
+  for (const entityMetadata of step.entities) {
+    const { targets, rest } = filterGraphObjects(
+      restEntities,
+      (e) => e._type === entityMetadata._type,
+    );
+    if (targets.length === 0) {
+      return {
+        pass: false,
+        message: () =>
+          `Expected >0 entities of _type=${entityMetadata._type}, got 0.`,
+      };
+    }
+    const { pass, message } = toMatchGraphObjectSchema(targets, entityMetadata);
+    if (pass === false) {
+      return {
+        pass,
+        message,
+      };
+    }
+    restEntities = rest;
+  }
+  if (restEntities.length > 0) {
+    const declaredTypes = step.entities.map((e) => e._type);
+    const encounteredTypes = [
+      ...new Set(results.collectedEntities.map((e) => e._type)),
+    ];
+    return {
+      pass: false,
+      message: () =>
+        `Expected 0 additional entities, got ${restEntities.length}. (declaredTypes=${declaredTypes}, encounteredTypes=${encounteredTypes})`,
+    };
+  }
+
+  const {
+    targets: collectedMappedRelationships,
+    rest: collectedDirectRelationships,
+  } = filterGraphObjects(results.collectedRelationships, isMappedRelationship);
+
+  let restDirectRelationships = collectedDirectRelationships;
+  for (const relationshipMetadata of step.relationships) {
+    const { targets, rest } = filterGraphObjects(
+      restDirectRelationships,
+      (r) => r._type === relationshipMetadata._type,
+    );
+    if (targets.length === 0) {
+      return {
+        pass: false,
+        message: () =>
+          `Expected >0 relationships of _type=${relationshipMetadata._type}, got 0.`,
+      };
+    }
+    const { pass, message } = toMatchDirectRelationshipSchema(
+      targets as ExplicitRelationship[],
+      relationshipMetadata,
+    );
+    if (pass === false) {
+      return {
+        pass,
+        message,
+      };
+    }
+    restDirectRelationships = rest;
+  }
+  if (restDirectRelationships.length > 0) {
+    const declaredTypes = step.relationships.map((r) => r._type);
+    const encounteredTypes = [
+      ...new Set(
+        results.collectedRelationships
+          .filter((r) => !isMappedRelationship(r))
+          .map((r) => r._type),
+      ),
+    ];
+    return {
+      pass: false,
+      message: () =>
+        `Expected 0 additional relationships, got ${restDirectRelationships.length}. (declaredTypes=${declaredTypes}, encounteredTypes=${encounteredTypes})`,
+    };
+  }
+
+  if (step.mappedRelationships && step.mappedRelationships.length > 0) {
+    throw new Error(
+      'toMatchStepMetadata does not support mapped relationships.',
+    );
+  }
+
+  if (collectedMappedRelationships.length > 0) {
+    const declaredTypes = step.mappedRelationships?.map((r) => r._type);
+    const encounteredTypes = [
+      ...new Set(
+        results.collectedRelationships
+          .filter(isMappedRelationship)
+          .map((r) => r._type),
+      ),
+    ];
+    return {
+      pass: false,
+      message: () =>
+        `Expected 0 mapped relationships, got ${collectedMappedRelationships.length}. (declaredTypes=${declaredTypes}, encounteredTypes=${encounteredTypes})`,
+    };
+  }
+
+  return {
+    message: () => '',
+    pass: true,
+  };
+}
+
+function isMappedRelationship(r: Relationship): r is MappedRelationship {
+  return !!r._mapping;
+}
+
 export function registerMatchers(expect: jest.Expect) {
   expect.extend({
+    toMatchStepMetadata,
     toMatchGraphObjectSchema,
     toMatchDirectRelationshipSchema,
     toTargetEntities,
