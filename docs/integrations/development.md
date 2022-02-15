@@ -121,7 +121,7 @@ import { J1Ec2Client } from './client';
 import { createVpcEntity } from './converters';
 import { Ec2Entities } from './constants';
 
-function fetchVpcs({
+async function fetchVpcs({
   jobState,
   executionConfig,
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
@@ -171,7 +171,7 @@ import {
 
 import { IntegrationConfig } from './types';
 
-function validateInvocation(
+async function validateInvocation(
   context: IntegrationExecutionContext<IntegrationConfig>,
 ) {
   const { config } = context.instance;
@@ -672,8 +672,8 @@ createMappedRelationship({
   _class: RelationshipClass.ALLOWS,
   source: securityGroupEntity,
   target: DataModel.Internet,
-  relationshipDirection: RelationshipDirection.FORWARD
-}),
+  relationshipDirection: RelationshipDirection.FORWARD,
+});
 ```
 
 ###### `MappedRelationshipLiteralOptions`
@@ -1133,7 +1133,9 @@ ex:
 
 For larger integrations, a full collection run may take a long time. To help
 address this, a `--step` option can be provided to selectively run a step along
-with all of it's dependent steps.
+with all of its dependent steps. If the Step Cache is available for a
+_dependent_ step, it is used instead of the executing the step, again decreasing
+runtimes.
 
 Multiple `--step` options can be provided to allow for more than one step to be
 run.
@@ -1144,48 +1146,43 @@ For convenience, steps can allow be provided as a comma delimited list.
 
 ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
 
-###### Option `--use-dependencies-cache` or `-C`
+**Step Cache Details**
 
-Allows preceding steps to skip execution and instead load previously captured
-results from disk. The intent of this is to increase development speed for new
-integrations. When no filepath is specified, an attempt to create a cache is
-made by copying the contents of `./.j1-integrations/graph` directory to
-`./.j1-cache`. The structure of the cache follows a similar format as the
-.j1-integration data storage, as described [here](#data-collection).
+- The Step Cache can be disabled using option `--no-cache`. This will force the
+  dependent step(s) to fully execute.
+- The default location of the Step Cache is found at `./.j1-cache`. It is
+  populated by moving `./.j1-integrations/graph` to `./.j1-cache`.
+- The `--cache-path` option allows for a different cache to be used. The
+  structure of the cache follows a similar format as the `.j1-integration` data
+  storage. An example structure is provided below.
 
-###### An example of the expected cache structure
+###### Option `--no-cache`
+
+To be used with the `--step` option to disable the Step Cache.
+
+ex: `j1-integration collect --step step-fetch-users --no-cache`
+
+###### Option `--cache-path`
+
+To be used with the `--step` to provide a filepath to a Step Cache to used.
+
+ex: `j1-integration collect --step step-fetch-users --cache-path ./my-cache`
+
+**Step Cache Structure**
 
 ```
 .j1-cache/
-   /step-fetch-accounts
-      /entities/
-         11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
-   /step-fetch-users
-      /entities
-         9cb7bee4-c037-4041-83b7-d532488f26a3.json
-         96992893-898d-4cda-8129-4695b0323642.json
-      /relationships
-         8fcc6865-817d-4952-ac53-8248b357b5d8.json
+   /graph
+      /step-fetch-accounts
+         /entities/
+            11fa25fb-dfbf-43b8-a6e1-017ad369fe98.json
+      /step-fetch-users
+         /entities
+            9cb7bee4-c037-4041-83b7-d532488f26a3.json
+            96992893-898d-4cda-8129-4695b0323642.json
+         /relationships
+            8fcc6865-817d-4952-ac53-8248b357b5d8.json
 ```
-
-ex: `j1-integration collect --step fetch-users --use-dependencies-cache` -
-Builds & uses cache from .j1-integration  
-ex: `j1-integration collect --step fetch-users --use-dependencies-cache ./` -
-Uses .j1-cache found in the root of the project  
-ex:
-`j1-integration collect --step fetch-users --use-dependencies-cache ./path-to-cache` -
-Uses .j1-cache found in the path specified
-
-A common use pattern:
-
-1. Execute collection command _without_ the `--use-dependencies-cache` option to
-   gather data in .j1-integration
-2. Execute collection command with `--step` and `--use-dependencies-cache`
-   option _without_ specifying a filepath. This will cause the .j1-integration
-   data to populate the .j1-cache.
-3. Execute collection command with `--step` and `--use-dependencies-cache`
-   option specifying a filepath to the previously created .j1-cache (most
-   commonly `./`).
 
 ###### Option `--disable-schema-validation` or `-V`
 

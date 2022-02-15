@@ -48,20 +48,33 @@ describe('collect', () => {
     loadProjectStructure('instanceWithDependentSteps');
   });
 
-  test('option --use-dependencies-cache requires option --step', async () => {
+  test('option --no-cache requires option --step', async () => {
     await expect(
       createCli().parseAsync([
         'node',
         'j1-integration',
         'collect',
-        '--use-dependencies-cache',
+        '--no-cache',
       ]),
     ).rejects.toThrowError(
-      'Invalid option: Option --use-dependencies-cache requires option --step to also be specified.',
+      'Invalid option: Option --no-cache requires option --step to also be specified.',
+    );
+  });
+  test('option --cache-path requires option --step', async () => {
+    await expect(
+      createCli().parseAsync([
+        'node',
+        'j1-integration',
+        'collect',
+        '--cache-path',
+        './',
+      ]),
+    ).rejects.toThrowError(
+      'Invalid option: Option --cache-path requires option --step to also be specified.',
     );
   });
 
-  test('option --use-dependencies-cache limits steps to those specified', async () => {
+  test('Uses cache when --step flag is provided w/out --no-cache', async () => {
     loadProjectStructure('instanceWithDependentCachedSteps');
 
     await createCli().parseAsync([
@@ -70,8 +83,6 @@ describe('collect', () => {
       'collect',
       '--step',
       'fetch-groups',
-      '--use-dependencies-cache',
-      process.cwd(),
     ]);
 
     expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);

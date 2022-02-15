@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 
 import uniq from 'lodash/uniq';
 import { pick } from 'lodash';
@@ -179,17 +180,17 @@ export function prepareLocalStepCollection<
         for (const stepId of allStepIds) {
           const originalValue = originalEnabledRecord[stepId] ?? {};
           if (stepsToRun.includes(stepId)) {
+            const stepCachePath =
+              dependenciesCache?.enabled && dependentSteps.includes(stepId)
+                ? buildStepCachePath(dependenciesCache.filepath, stepId)
+                : null;
+
             enabledRecord[stepId] = {
               ...originalValue,
               disabled: false,
-              ...(dependenciesCache?.enabled &&
-                dependentSteps.includes(stepId) && {
-                  stepCachePath: path.resolve(
-                    dependenciesCache.filepath,
-                    'graph',
-                    stepId,
-                  ),
-                }),
+              ...(stepCachePath && {
+                stepCachePath,
+              }),
             };
           } else {
             enabledRecord[stepId] = {
@@ -204,4 +205,22 @@ export function prepareLocalStepCollection<
       (async (ctx) => Promise.resolve(originalGetStepStartStates(ctx)));
 
   return config;
+}
+
+/**
+ * Determines if the path to a step cache is valid for the given step.
+ * If true, returns the path.
+ * If false, returns null.
+ * @param rootDirectory
+ * @param stepId
+ */
+function buildStepCachePath(
+  rootDirectory: string,
+  stepId: string,
+): string | null {
+  const stepFilepath = path.resolve(rootDirectory, 'graph', stepId);
+
+  const stepCacheExists = fs.existsSync(stepFilepath);
+
+  return stepCacheExists ? stepFilepath : null;
 }

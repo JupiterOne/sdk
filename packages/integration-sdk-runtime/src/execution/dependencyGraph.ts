@@ -293,13 +293,15 @@ export function executeStepDependencyGraph<
 
       logger.stepStart(step);
 
-      let status: StepResultStatus;
+      let status: StepResultStatus | undefined;
 
       try {
         if (hasCachePath(stepId)) {
           const stepCacheFilePath = stepStartStates[step.id].stepCachePath!;
           status = await loadCacheForStep(stepCacheFilePath, context);
-        } else {
+        }
+
+        if (status !== StepResultStatus.CACHED) {
           await step.executionHandler(context);
 
           if (stepHasDependencyFailure(stepId)) {

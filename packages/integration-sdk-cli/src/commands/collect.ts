@@ -28,19 +28,28 @@ export function collect() {
     )
     .option(
       '-s, --step <steps>',
-      'step(s) to run, comma separated',
+      'step(s) to run, comma separated. Utilizes available caches to speed up dependent steps.',
       collector,
       [],
     )
     .option(
-      '-C, --use-dependencies-cache [filePath]',
-      'Loads cache for the dependencies required by the step(s) specified in --step option. Execution of these steps is skipped. Data found in .j1-integration is used if no filepath is provided.',
+      '--no-cache',
+      'Can be used with the `--step` flag to disable the use of the cache.',
+    )
+    .option(
+      '--cache-path <filepath>',
+      'Can be used with the `--step` to specify a path to a non-default cache location.',
     )
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .action(async (options) => {
-      if (options.useDependenciesCache && options.step.length === 0) {
+      if (!options.cache && options.step.length === 0) {
         throw new Error(
-          'Invalid option: Option --use-dependencies-cache requires option --step to also be specified.',
+          'Invalid option: Option --no-cache requires option --step to also be specified.',
+        );
+      }
+      if (options.cachePath && options.step.length === 0) {
+        throw new Error(
+          'Invalid option: Option --cache-path requires option --step to also be specified.',
         );
       }
 
@@ -51,22 +60,20 @@ export function collect() {
         '.j1-integration',
       );
 
-      if (options.useDependenciesCache === true) {
-        // true indicates that a filepath was not specified
+      if (options.step.length > 0 && options.cache && !options.cachePath) {
+        // Step option was used, cache is wanted, and no cache path was provided
         // therefore, copy .j1-integration into .j1-cache
-        await copyToCache();
+        await buildCacheFromJ1Integration();
       }
 
       const config = prepareLocalStepCollection(
         await loadConfig(path.join(options.projectPath, 'src')),
         {
           ...options,
-          ...(options.useDependenciesCache && {
-            dependenciesCache: {
-              enabled: true,
-              filepath: getRootCacheDirectory(options.useDependenciesCache),
-            },
-          }),
+          dependenciesCache: {
+            enabled: options.cache,
+            filepath: getRootCacheDirectory(options.cachePath),
+          },
         },
       );
       log.info('\nConfiguration loaded! Running integration...\n');
@@ -104,10 +111,10 @@ export function getRootCacheDirectory(filepath?: string) {
 }
 
 /**
- * When no filepath is specified, the .j1-integration/graph directory
- * is moved to .j1-cache
+ * Builds the step cache from the .j1-integration/graph directory
+ * by moving the files to .j1-cache.
  */
-async function copyToCache() {
+async function buildCacheFromJ1Integration() {
   const sourceGraphDirectory = path.join(getRootStorageDirectory(), 'graph');
   const destinationGraphDirectory = path.join(getRootCacheDirectory(), 'graph');
 
