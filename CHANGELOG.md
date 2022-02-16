@@ -32,8 +32,6 @@ and this project adheres to
   });
   ```
 
-- Added `StepTestConfig` and `StepTestConfigWithCredentials` exports from
-  `@jupiterone/integration-sdk-testing`
 - Updated jest matchers in the following way:
 
   - added optional `_type` argument to `.toMatchGraphObjectSchema` matcher

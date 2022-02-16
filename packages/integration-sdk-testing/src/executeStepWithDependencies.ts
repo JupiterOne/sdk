@@ -1,14 +1,12 @@
 import { IntegrationExecutionConfig } from '@jupiterone/integration-sdk-core';
 import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
-import { StepTestConfigWithCredentials } from './config';
+import { StepTestConfig } from './config';
 import {
   createMockStepExecutionContext,
   MockIntegrationStepExecutionContext,
 } from './context';
 
-export async function executeStepWithDependencies(
-  params: StepTestConfigWithCredentials,
-) {
+export async function executeStepWithDependencies(params: StepTestConfig) {
   const { stepId, invocationConfig, instanceConfig } = params;
 
   if (invocationConfig.dependencyGraphOrder) {

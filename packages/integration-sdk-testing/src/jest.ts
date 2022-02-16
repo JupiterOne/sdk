@@ -531,7 +531,7 @@ export function toMatchStepMetadata(
     collectedEntities: Entity[];
     collectedRelationships: Relationship[];
   },
-  testConfig: StepTestConfig,
+  testConfig: Omit<StepTestConfig, 'instanceConfig'>,
 ): SyncExpectationResult {
   const { stepId, invocationConfig } = testConfig;
   const stepDependencyGraph = buildStepDependencyGraph(
