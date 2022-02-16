@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.4.0] - 2022-02-16
+
 ### Fixed
 
 - Changed logger to fully mask config field values, rather than displaying last
