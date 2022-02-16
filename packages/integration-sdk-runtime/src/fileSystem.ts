@@ -13,16 +13,17 @@ import * as zlib from 'zlib';
 import { promisify } from 'util';
 import { FlushedGraphObjectData } from './storage/types';
 import { readGraphObjectFile } from './storage/FileSystemGraphObjectStore/indices';
+import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 
 const brotliCompress = promisify(zlib.brotliCompress);
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
-export const DEFAULT_CACHE_DIRECTORY_NAME = '.j1-integration';
+export const DEFAULT_STORAGE_DIRECTORY_NAME = '.j1-integration';
 
 export function getRootStorageDirectory() {
   return (
     process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY ||
-    path.resolve(process.cwd(), DEFAULT_CACHE_DIRECTORY_NAME)
+    path.resolve(process.cwd(), DEFAULT_STORAGE_DIRECTORY_NAME)
   );
 }
 
@@ -45,7 +46,7 @@ interface WriteDataToPathInput {
 }
 
 /**
- * Function for writing arbirary data to a path
+ * Function for writing arbitrary data to a path
  * relative to the cache directory.
  *
  * This will ensure that the directories exists or have been
@@ -202,7 +203,7 @@ export async function walkDirectory({
 
 export function iterateParsedGraphFiles(
   iteratee: (parsedData: FlushedGraphObjectData) => Promise<void>,
-  graphPath?: string
+  graphPath?: string,
 ) {
   return walkDirectory({
     path: graphPath || 'graph',
@@ -214,6 +215,28 @@ export function iterateParsedGraphFiles(
       await iteratee(parsed);
     },
   });
+}
+
+export async function iterateParsedEntityGraphFiles(
+  iteratee: (entities: Entity[]) => Promise<void>,
+  graphPath?: string,
+) {
+  return iterateParsedGraphFiles(async (data) => {
+    if (data.entities) {
+      await iteratee(data.entities);
+    }
+  }, graphPath);
+}
+
+export async function iterateParsedRelationshipGraphFiles(
+  iteratee: (relationships: Relationship[]) => Promise<void>,
+  graphPath?: string,
+) {
+  return iterateParsedGraphFiles(async (data) => {
+    if (data.relationships) {
+      await iteratee(data.relationships);
+    }
+  }, graphPath);
 }
 
 export function isRootStorageDirectoryPresent(): Promise<boolean> {

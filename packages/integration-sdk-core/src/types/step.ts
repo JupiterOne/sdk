@@ -17,6 +17,12 @@ export interface StepStartState {
    * executed by the state machine.
    */
   disabled: boolean;
+
+  /**
+   * Provides a filepath to a cache for the given step.
+   * This cache will be loaded instead of executing the step.
+   */
+  stepCachePath?: string;
 }
 
 export type StepStartStates = Record<string, StepStartState>;
@@ -35,6 +41,7 @@ export type StepExecutionHandlerFunction<
 
 export enum StepResultStatus {
   SUCCESS = 'success',
+  CACHED = 'cached',
   FAILURE = 'failure',
   PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE = 'partial_success_due_to_dependency_failure',
   DISABLED = 'disabled',

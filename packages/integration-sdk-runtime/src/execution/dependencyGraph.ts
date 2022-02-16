@@ -21,16 +21,20 @@ import {
   TypeTracker,
 } from './jobState';
 import {
-  StepGraphObjectDataUploader,
   CreateStepGraphObjectDataUploaderFunction,
+  StepGraphObjectDataUploader,
 } from './uploader';
+import {
+  iterateParsedEntityGraphFiles,
+  iterateParsedRelationshipGraphFiles,
+} from '../fileSystem';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
  * using the `dependsOn` field from each step.
  */
 export function buildStepDependencyGraph<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(steps: Step<TStepExecutionContext>[]): DepGraph<Step<TStepExecutionContext>> {
   const dependencyGraph = new DepGraph<Step<TStepExecutionContext>>();
 
@@ -69,7 +73,7 @@ export function buildStepDependencyGraph<
  */
 export function executeStepDependencyGraph<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   executionContext,
   inputGraph,
@@ -105,6 +109,10 @@ export function executeStepDependencyGraph<
 
   function isStepEnabled(stepId: string) {
     return stepStartStates[stepId].disabled === false;
+  }
+
+  function hasCachePath(stepId: string) {
+    return !!stepStartStates[stepId].stepCachePath ?? false;
   }
 
   /**
@@ -229,7 +237,9 @@ export function executeStepDependencyGraph<
 
         /**
          * We only remove the node from the graph and
-         * execute the step if it is enabled.
+         * execute the step if it is enabled. If a cache filepath
+         * is provided, the execution is replaced with loading
+         * from disk.
          *
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
@@ -242,6 +252,7 @@ export function executeStepDependencyGraph<
               metricName: `duration-step`,
               dimensions: {
                 stepId,
+                cached: hasCachePath(stepId).toString(),
               },
               operation: () => executeStep(step),
             }).catch(handleUnexpectedError),
@@ -283,18 +294,25 @@ export function executeStepDependencyGraph<
 
       logger.stepStart(step);
 
-      let status: StepResultStatus;
+      let status: StepResultStatus | undefined;
 
       try {
-        await step.executionHandler(context);
-        context.logger.stepSuccess(step);
-
-        if (stepHasDependencyFailure(stepId)) {
-          status = StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
-        } else {
-          status = StepResultStatus.SUCCESS;
-          maybeLogUndeclaredTypes(context, step, typeTracker);
+        if (hasCachePath(stepId)) {
+          const stepCacheFilePath = stepStartStates[step.id].stepCachePath!;
+          status = await loadCacheForStep(stepCacheFilePath, context);
         }
+
+        if (status !== StepResultStatus.CACHED) {
+          await step.executionHandler(context);
+
+          if (stepHasDependencyFailure(stepId)) {
+            status = StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
+          } else {
+            status = StepResultStatus.SUCCESS;
+            maybeLogUndeclaredTypes(context, step, typeTracker);
+          }
+        }
+        context.logger.stepSuccess(step);
 
         logger.info(
           {
@@ -340,6 +358,49 @@ export function executeStepDependencyGraph<
       enqueueLeafSteps();
     }
 
+    /**
+     * Loads cached step data.
+     * @param stepCacheFilePath
+     * @param context
+     */
+    async function loadCacheForStep(
+      stepCacheFilePath: string,
+      context: TStepExecutionContext,
+    ) {
+      let status = StepResultStatus.FAILURE;
+      const entitiesPath = `${stepCacheFilePath}/entities`;
+      const relationshipsPath = `${stepCacheFilePath}/relationships`;
+
+      const { jobState, logger } = context;
+
+      let entitiesCount = 0;
+      await iterateParsedEntityGraphFiles(async (entities) => {
+        entitiesCount += entities.length;
+        await jobState.addEntities(entities);
+        status = StepResultStatus.CACHED;
+      }, entitiesPath);
+
+      let relationshipCount = 0;
+      await iterateParsedRelationshipGraphFiles(async (relationships) => {
+        relationshipCount += relationships.length;
+        await jobState.addRelationships(relationships);
+        status = StepResultStatus.CACHED;
+      }, relationshipsPath);
+
+      if (entitiesCount || relationshipCount) {
+        logger.info(
+          { entitiesCount, relationshipCount },
+          `Loaded entities and relationship(s) from cache.`,
+        );
+      } else {
+        logger.warn(
+          `Expected to find entities or relationships for step but found none.`,
+        );
+      }
+
+      return status;
+    }
+
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 
@@ -352,7 +413,7 @@ export function executeStepDependencyGraph<
 
 function buildStepContext<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   stepId,
   context,
@@ -405,45 +466,43 @@ function buildStepContext<
 }
 
 function buildStepResultsMap<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(
   dependencyGraph: DepGraph<Step<TStepExecutionContext>>,
   stepStartStates: StepStartStates,
 ) {
   const stepResultMapEntries = dependencyGraph
     .overallOrder()
-    .map(
-      (stepId): IntegrationStepResult => {
-        const step = dependencyGraph.getNodeData(stepId);
+    .map((stepId): IntegrationStepResult => {
+      const step = dependencyGraph.getNodeData(stepId);
 
-        const hasDisabledDependencies =
-          dependencyGraph
-            .dependenciesOf(step.id)
-            .filter((id) => stepStartStates[id].disabled).length > 0;
+      const hasDisabledDependencies =
+        dependencyGraph
+          .dependenciesOf(step.id)
+          .filter((id) => stepStartStates[id].disabled).length > 0;
 
-        const { declaredTypes, partialTypes } = getDeclaredTypesInStep(step);
+      const { declaredTypes, partialTypes } = getDeclaredTypesInStep(step);
 
-        return {
-          id: step.id,
-          name: step.name,
-          dependsOn: step.dependsOn,
-          declaredTypes,
-          partialTypes,
-          encounteredTypes: [],
-          status:
-            stepStartStates[step.id].disabled || hasDisabledDependencies
-              ? StepResultStatus.DISABLED
-              : StepResultStatus.PENDING_EVALUATION,
-        };
-      },
-    )
+      return {
+        id: step.id,
+        name: step.name,
+        dependsOn: step.dependsOn,
+        declaredTypes,
+        partialTypes,
+        encounteredTypes: [],
+        status:
+          stepStartStates[step.id].disabled || hasDisabledDependencies
+            ? StepResultStatus.DISABLED
+            : StepResultStatus.PENDING_EVALUATION,
+      };
+    })
     .map((result): [string, IntegrationStepResult] => [result.id, result]);
 
   return new Map<string, IntegrationStepResult>(stepResultMapEntries);
 }
 
 export function getDeclaredTypesInStep<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(
   step: Step<TStepExecutionContext>,
 ): {
