@@ -6,7 +6,11 @@ import {
   GraphObjectSchema,
   IntegrationInvocationConfig,
   IntegrationSpecConfig,
+  IntegrationStep,
+  MappedRelationship,
+  Relationship,
   RelationshipClass,
+  RelationshipDirection,
 } from '@jupiterone/integration-sdk-core';
 import {
   toMatchGraphObjectSchema,
@@ -16,6 +20,7 @@ import {
   toImplementSpec,
 } from '../jest';
 import { v4 as uuid } from 'uuid';
+import { toMatchStepMetadata } from '..';
 
 describe('#toMatchGraphObjectSchema', () => {
   function generateCollectedEntity(partial?: Partial<Entity>): Entity {
@@ -1032,6 +1037,406 @@ describe('#toImplementSpec', () => {
   });
 });
 
+describe('#toMatchStepMetadata', () => {
+  function getMockInvocationConfig(
+    config?: Partial<IntegrationInvocationConfig>,
+  ): IntegrationInvocationConfig {
+    return {
+      integrationSteps: [],
+      ...config,
+    };
+  }
+
+  function getMockIntegrationStep(
+    config?: Partial<IntegrationStep>,
+  ): IntegrationStep {
+    return {
+      id: 'id',
+      name: 'name',
+      entities: [],
+      relationships: [],
+      executionHandler: () => undefined,
+      ...config,
+    };
+  }
+
+  test('should pass with no declared entities or relationships', () => {
+    const result = toMatchStepMetadata(
+      { collectedEntities: [], collectedRelationships: [] },
+      {
+        stepId: 'step-id',
+        invocationConfig: getMockInvocationConfig({
+          integrationSteps: [
+            getMockIntegrationStep({
+              id: 'step-id',
+              entities: [],
+              relationships: [],
+            }),
+          ],
+        }),
+      },
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
+  test('should throw if stepId is not present in invocation config', () => {
+    expect(() =>
+      toMatchStepMetadata(
+        { collectedEntities: [], collectedRelationships: [] },
+        {
+          stepId: 'missing-step-id',
+          invocationConfig: getMockInvocationConfig(),
+        },
+      ),
+    ).toThrow('Node does not exist: missing-step-id');
+  });
+
+  describe('entities', () => {
+    function getMockEntity(e?: Partial<Entity>): Entity {
+      return {
+        _class: 'Record',
+        _type: 'entity-type',
+        _key: uuid(),
+        name: '',
+        displayName: '',
+        ...e,
+      };
+    }
+
+    test('should pass if encountered entity type has been declared', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [
+            getMockEntity({ _type: 'declared-type', _class: 'Record' }),
+          ],
+          collectedRelationships: [],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                entities: [
+                  {
+                    resourceName: '',
+                    _class: 'Record',
+                    _type: 'declared-type',
+                  },
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: true });
+    });
+
+    test('should fail if declared entity type has not been encountered', () => {
+      const result = toMatchStepMetadata(
+        { collectedEntities: [], collectedRelationships: [] },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                entities: [
+                  {
+                    resourceName: '',
+                    _class: 'Record',
+                    _type: 'declared-type',
+                  },
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toBe(
+        'Expected >0 entities of _type=declared-type, got 0.',
+      );
+    });
+
+    test('should fail if undeclared entity type has been encountered', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [getMockEntity({ _type: 'undeclared-type' })],
+          collectedRelationships: [],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                entities: [],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toBe(
+        'Expected 0 additional entities, got 1. (declaredTypes=, encounteredTypes=undeclared-type)',
+      );
+    });
+
+    test('should fail if declared entity type does not match schema', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [
+            getMockEntity({ _type: 'declared-type', _class: 'Record' }),
+          ],
+          collectedRelationships: [],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                entities: [
+                  {
+                    resourceName: '',
+                    _class: 'Entity',
+                    _type: 'declared-type',
+                  },
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toMatch(
+        'Error validating graph object against schema',
+      );
+    });
+  });
+
+  describe('relationships', () => {
+    function getMockRelationship(r?: Partial<Relationship>): Relationship {
+      return {
+        _class: RelationshipClass.HAS,
+        _type: 'relationship-type',
+        _key: uuid(),
+        _fromEntityKey: uuid(),
+        _toEntityKey: uuid(),
+        ...r,
+      };
+    }
+
+    test('should pass if encountered relationship type has been declared', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [],
+          collectedRelationships: [
+            getMockRelationship({
+              _type: 'declared-type',
+              _class: RelationshipClass.HAS,
+            }),
+          ],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                relationships: [
+                  {
+                    _type: 'declared-type',
+                    _class: RelationshipClass.HAS,
+                    sourceType: 'source-entity-type',
+                    targetType: 'target-entity-type',
+                  },
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: true });
+    });
+
+    test('should fail if declared relationship type has not been encountered', () => {
+      const result = toMatchStepMetadata(
+        { collectedEntities: [], collectedRelationships: [] },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                relationships: [
+                  {
+                    _type: 'declared-type',
+                    _class: RelationshipClass.HAS,
+                    sourceType: 'source-entity-type',
+                    targetType: 'target-entity-type',
+                  },
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toBe(
+        'Expected >0 relationships of _type=declared-type, got 0.',
+      );
+    });
+
+    test('should fail if undeclared relationship type has been encountered', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [],
+          collectedRelationships: [
+            getMockRelationship({ _type: 'undeclared-type' }),
+          ],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                relationships: [],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toBe(
+        'Expected 0 additional relationships, got 1. (declaredTypes=, encounteredTypes=undeclared-type)',
+      );
+    });
+
+    test('should fail if declared relationship type does not match schema', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [],
+          collectedRelationships: [
+            getMockRelationship({
+              _type: 'declared-type',
+              _class: RelationshipClass.IS,
+            }),
+          ],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+                relationships: [
+                  {
+                    _type: 'declared-type',
+                    _class: RelationshipClass.HAS,
+                    sourceType: 'source-entity-type',
+                    targetType: 'target-entity-type',
+                  },
+                ],
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toMatch(
+        'Error validating graph object against schema',
+      );
+    });
+  });
+
+  describe('mappedRelationships', () => {
+    function getMockMappedRelationship(
+      mr?: Partial<MappedRelationship>,
+    ): MappedRelationship {
+      return {
+        _class: RelationshipClass.HAS,
+        _type: 'mapped-relationship-type',
+        _key: uuid(),
+        _mapping: {
+          relationshipDirection: RelationshipDirection.FORWARD,
+          sourceEntityKey: uuid(),
+          targetFilterKeys: [['_key']],
+          targetEntity: {},
+        },
+        ...mr,
+      };
+    }
+
+    test('should throw if step.mappedRelationships exists', () => {
+      expect(() =>
+        toMatchStepMetadata(
+          { collectedEntities: [], collectedRelationships: [] },
+          {
+            stepId: 'step-id',
+            invocationConfig: getMockInvocationConfig({
+              integrationSteps: [
+                getMockIntegrationStep({
+                  id: 'step-id',
+                  mappedRelationships: [
+                    {
+                      _class: RelationshipClass.IS,
+                      _type: 'type',
+                      sourceType: 'source-type',
+                      targetType: 'target-type',
+                      direction: RelationshipDirection.FORWARD,
+                    },
+                  ],
+                }),
+              ],
+            }),
+          },
+        ),
+      ).toThrow('toMatchStepMetadata does not support mapped relationships.');
+    });
+
+    test('should fail if collectedRelationships contains mapped relationships', () => {
+      const result = toMatchStepMetadata(
+        {
+          collectedEntities: [],
+          collectedRelationships: [
+            getMockMappedRelationship({ _type: 'undeclared-type' }),
+          ],
+        },
+        {
+          stepId: 'step-id',
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-id',
+              }),
+            ],
+          }),
+        },
+      );
+
+      expect(result).toMatchObject({ pass: false });
+      expect(result.message()).toBe(
+        'Expected 0 mapped relationships, got 1. (declaredTypes=undefined, encounteredTypes=undeclared-type)',
+      );
+    });
+  });
+});
+
 describe('#registerMatchers', () => {
   test('should register all test matchers', () => {
     const mockJestExtendFn = jest.fn();
@@ -1043,10 +1448,11 @@ describe('#registerMatchers', () => {
 
     expect(mockJestExtendFn).toHaveBeenCalledTimes(1);
     expect(mockJestExtendFn).toHaveBeenCalledWith({
-      toMatchGraphObjectSchema,
-      toMatchDirectRelationshipSchema,
-      toTargetEntities,
       toImplementSpec,
+      toMatchDirectRelationshipSchema,
+      toMatchGraphObjectSchema,
+      toMatchStepMetadata,
+      toTargetEntities,
     });
   });
 });

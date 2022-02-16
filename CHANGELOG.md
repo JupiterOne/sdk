@@ -16,6 +16,22 @@ and this project adheres to
 
 ### Added
 
+- Added `.toMatchStepMetadata` jest matcher. This matcher complements the
+  `executeStepWithDependencies` utility. Usage:
+
+  ```ts
+  const stepResult = await executeStepWithDependencies({
+    stepId: Steps.FETCH_USERS.id,
+    invocationConfig,
+    instanceConfig,
+  });
+
+  expect(stepResult).toMatchStepMetadata({
+    stepId: Steps.FETCH_USERS.id,
+    invocationConfig,
+  });
+  ```
+
 - Updated jest matchers in the following way:
 
   - added optional `_type` argument to `.toMatchGraphObjectSchema` matcher
