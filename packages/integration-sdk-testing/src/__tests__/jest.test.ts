@@ -1431,7 +1431,7 @@ describe('#toMatchStepMetadata', () => {
 
       expect(result).toMatchObject({ pass: false });
       expect(result.message()).toBe(
-        'Expected 0 mapped relationships, got 1. (declaredTypes=undefined, encounteredTypes=undeclared-type',
+        'Expected 0 mapped relationships, got 1. (declaredTypes=undefined, encounteredTypes=undeclared-type)',
       );
     });
   });
@@ -1448,10 +1448,11 @@ describe('#registerMatchers', () => {
 
     expect(mockJestExtendFn).toHaveBeenCalledTimes(1);
     expect(mockJestExtendFn).toHaveBeenCalledWith({
-      toMatchGraphObjectSchema,
-      toMatchDirectRelationshipSchema,
-      toTargetEntities,
       toImplementSpec,
+      toMatchDirectRelationshipSchema,
+      toMatchGraphObjectSchema,
+      toMatchStepMetadata,
+      toTargetEntities,
     });
   });
 });
