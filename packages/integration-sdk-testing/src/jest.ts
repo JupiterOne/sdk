@@ -23,18 +23,127 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
+      /**
+       * Used to verify that the full result of an integration step is compliant
+       * with the metadata defined for the step. For each entity and
+       * relationship defined in the metadata, the matcher checks:
+       *   - at least 1 graph object has been produced by the execution handler,
+       *   - all graph objects comply with `toMatchGraphObjectSchema` or
+       *     `toMatchDirectRelationshipSchema`
+       *
+       * `toMatchStepMetadata` does not support Mapped Relationships
+       *
+       * @example
+       * ```ts
+       * const stepResult = await executeStepWithDependencies({
+       *   stepId: Steps.FETCH_USERS.id,
+       *   invocationConfig,
+       *   instanceConfig,
+       * });
+       *
+       * expect(stepResult).toMatchStepMetadata({
+       *   stepId: Steps.FETCH_USERS.id,
+       *   invocationConfig,
+       * });
+       * ```
+       */
       toMatchStepMetadata(testConfig: StepTestConfig): R;
 
-      toMatchGraphObjectSchema<T extends Entity>(
-        params: ToMatchGraphObjectSchemaParams,
-      ): R;
+      /**
+       * Used to verify that a collection of Entities matches the _type, _class,
+       * and schema defined for the collection, as well as any additional schema
+       * defined for the _class in the @jupiterone/data-model project
+       *
+       * @example
+       * ```ts
+       * const { collectedEntities } = await executeStepWithDependencies({
+       *   stepId: Steps.FETCH_USERS.id,
+       *   invocationConfig,
+       *   instanceConfig,
+       * });
+       *
+       * expect(collectedEntities).toMatchGraphObjectSchema({
+       *   _class: 'User',
+       *   _type: 'acme_user',
+       *   schema: {
+       *     properties: {
+       *       admin: { type: 'boolean' }
+       *     }
+       *   }
+       * })
+       * ```
+       */
+      toMatchGraphObjectSchema(params: ToMatchGraphObjectSchemaParams): R;
 
-      toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
+      /**
+       * Used to verify that a collection of Direct Relationships matches the
+       * _type, _class, and schema defined for the collection, as well as any
+       * additional schema common to _all_ direct relationships.
+       *
+       * @example
+       * ```ts
+       * const { collectedRelationships } = await executeStepWithDependencies({
+       *   stepId: Steps.FETCH_USERS.id,
+       *   invocationConfig,
+       *   instanceConfig,
+       * });
+       *
+       * expect(collectedRelationships).toMatchGraphObjectSchema({
+       *   _class: RelationshipClass.HAS,
+       *   _type: 'acme_account_has_user',
+       *   schema: {
+       *     properties: {
+       *       displayName: { const: 'HAS' }
+       *     }
+       *   }
+       * })
+       * ```
+       */
+      toMatchDirectRelationshipSchema(
         params?: ToMatchRelationshipSchemaParams,
       ): R;
 
-      toTargetEntities(entities: Entity[]): R;
+      /**
+       * Used to verify that a collection of Mapped Relationships is able to
+       * create actual relationships to a set of Entities by matching on the
+       * `targetEntity` and `targetFilterKeys` properties.
+       *
+       * @example
+       * ```ts
+       * const {
+       *   collectedRelationships: firewallRuleMappedRelationships,
+       * } = await executeStepWithDependencies({
+       *   stepId: Steps.FETCH_USERS.id,
+       *   invocationConfig,
+       *   instanceConfig,
+       * });
+       *
+       * const globalInternetEntity = buildGlobalInternetEntity();
+       *
+       * expect(firewallRuleMappedRelationships).toTargetEntities(
+       *   [globalInternetEntity],
+       * )
+       * ```
+       */
+      toTargetEntities(
+        entities: Entity[],
+        options?: ToTargetEntitiesOptions,
+      ): R;
 
+      /**
+       * Used to verify that an implemented `IntegrationInvocationConfig`
+       * matches a specified `IntegrationSpecConfig`
+       *
+       * @example
+       * ```ts
+       * import { invocationConfig as implementedConfig } from '.';
+       * import { invocationConfig as specConfig } from '../docs/spec/src';
+       *
+       * test('implemented integration should match spec', () => {
+       *   expect(implementedConfig).toImplementSpec(specConfig);
+       * });
+       * ```
+       */
       toImplementSpec<T extends IntegrationInstanceConfig>(
         spec: IntegrationSpecConfig<T>,
       ): R;
