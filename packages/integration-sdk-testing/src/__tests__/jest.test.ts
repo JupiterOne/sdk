@@ -1095,7 +1095,7 @@ describe('#toMatchStepMetadata', () => {
     ).toThrow('Node does not exist: missing-step-id');
   });
 
-  describe.only('entities', () => {
+  describe('entities', () => {
     function getMockEntity(e?: Partial<Entity>): Entity {
       return {
         _class: 'Record',
@@ -1224,7 +1224,7 @@ describe('#toMatchStepMetadata', () => {
     });
   });
 
-  describe.only('relationships', () => {
+  describe('relationships', () => {
     function getMockRelationship(r?: Partial<Relationship>): Relationship {
       return {
         _class: RelationshipClass.HAS,
