@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Bumped `@types/jest@^27.1.0` in order to fix **Namespace 'NodeJS' has no exported member 'Global'.** issues captured here: https://github.com/facebook/jest/issues/11640 
+
 ## [8.4.0] - 2022-02-16
 
 ### Fixed
