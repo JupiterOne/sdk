@@ -198,76 +198,63 @@ test('disables "fetch-accounts" step if "skipAccounts" is set to true on the ins
 });
 ```
 
-#### `createMockStepExecutionContext`
+#### Testing steps using `executeStepWithDependencies`
 
-To assist with unit testing steps, we expose a utility for creating a mocked
-version of the step execution context.
+To assist with integration step unit testing, this project exposes a utility for
+invoking an integration step along with all of its dependencies. The
+`executeStepWithDependencies` utility returns a `stepResult` response, which
+includes entities, relationships, and data collected in the target step, but
+excludes entities, relationships, and data from any previous dependency steps.
 
-This version of the context object stores the entities and relationships
-collected via the `jobState` in memory.
+The SDK also exports a Jest matcher, `.toMatchStepMetadata`, that verifies that
+entities and relationships produced by an integration step match the `_type`s,
+`_class`es, and `schema`s defined in that step's metadata.
 
-For convenience, the `jobState` created by the mocked context exposes a slightly
-different interface than the regular `jobState` object and allows for data
-collected via the `addEntities` and `addRelationships` functions to be accessed
-via `collectedEntities` and `collectedRelationships` properties.
+Integration steps should be tested by first executing
+`executeStepWithDependencies`, then verifying the results by using the
+`.toMatchStepMetadata` matcher.
 
-Example usage in a test:
+Example:
 
 ```typescript
-import step from './my-step';
-import { createMockStepExecutionContext } from '@jupiterone/integration-sdk-testing';
+import {
+  executeStepWithDependencies,
+  Recording,
+  setupRecording,
+} from '@jupiterone/integration-sdk-testing';
+import { invocationConfig } from '../index';
 
-test('should generate the expected entities and relationships', () => {
-  const entities = [expectedEntityA];
-  const relationships = [expectedRelationshipA, expectedRelationshipB];
-  const context = createMockStepExecutionContext({
-    instanceConfig: {
-      apiKey: 'test',
-    },
+let recording: Recording;
+afterEach(async () => {
+  await recording.stop();
+});
+
+test('fetch-users', async () => {
+  recording = setupRecording({
+    directory: __dirname,
+    name: 'fetch-users',
   });
 
-  await step.executionHandler(context);
-
-  expect(context.jobState.collectedEntities).toEqual(entities);
-  expect(context.jobState.collectedRelationships).toEqual(relationships);
+  const stepResult = await executeStepWithDependencies({
+    stepId: 'fetch-users',
+    invocationConfig,
+    instanceConfig: { apiKey: process.env.API_KEY },
+  });
+  expect(stepResult).toMatchStepMetadata({
+    stepId: 'fetch-users',
+    invocationConfig,
+  });
 });
 ```
 
-This function accepts the same options as `createMockExecutionContext` but also
-allows passing `entities` and `relationships`. This is helpful for setting up
-tests for steps that rely on data from another step. The `entities` and
-`relationships` passed in via the options are _not_ included in the
-`collectedEntities` and `collectedRelationships` arrays.
-
-Input data is omitted from the `collected*` properties because step tests should
-only have to focus on asserting the generation of new data from based on the
-previous set of data.
-
-For example:
+The `stepResult` response includes entities, relationships, and data collected
+in the target step, but excludes entities, relationships, and data from any
+previous dependency steps. These can be extracted if any additional assertions
+need to be made:
 
 ```typescript
-import step from './my-step';
-import { createMockStepExecutionContext } from '@jupiterone/integration-sdk-testing';
-
-test('should generate the expected entities and relationships', () => {
-  const previousStepEntities = [entityA];
-  const previousStepRelationships = [relationshipA, relationshipB];
-
-  const expectedGeneratedEntities = [expectedEntityA];
-  const expectedGeneratedRelationships = [expectedRelationshipA];
-
-  const context = createMockStepExecutionContext({
-    entities: previousStepEntities,
-    relationships: previousStepRelationships,
-  });
-
-  await step.executionHandler(context);
-
-  expect(context.jobState.collectedEntities).toEqual(expectedGeneratedEntities);
-  expect(context.jobState.collectedRelationships).toEqual(
-    expectedGeneratedRelationships,
-  );
-});
+const { collectedEntities, collectedRelationships, collectedData } = stepResult;
+expect(collectedData).toEqual({ setDataKey: 'set-data-value' });
 ```
 
 #### `setupRecording`
