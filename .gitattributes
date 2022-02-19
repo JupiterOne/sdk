@@ -1,0 +1,6 @@
+# Ensure that Windows users are using LF line endings. GitHub action runners
+# respect properties of the `.gitattributes` file. Without this, 
+# `prettier --check` will fail on Windows.
+# 
+# See: https://prettier.io/docs/en/options.html#end-of-line
+* text=auto eol=lf
