@@ -42,13 +42,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {
@@ -71,13 +69,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {
@@ -110,13 +106,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {
@@ -184,13 +178,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {
@@ -264,13 +256,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {
@@ -328,13 +318,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {
@@ -389,13 +377,11 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       },
     ];
 
-    const {
-      mappedRelationshipEdges,
-      mappedRelationshipNodes,
-    } = createMappedRelationshipNodesAndEdges({
-      mappedRelationships,
-      explicitEntities,
-    });
+    const { mappedRelationshipEdges, mappedRelationshipNodes } =
+      createMappedRelationshipNodesAndEdges({
+        mappedRelationships,
+        explicitEntities,
+      });
 
     expect(mappedRelationshipEdges).toEqual([
       {

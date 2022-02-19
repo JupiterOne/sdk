@@ -43,7 +43,8 @@ export function loadInvocationConfig(
     integrationModule = require(path.resolve(projectSourceDirectory, 'index'));
   } catch (err) {
     throw new IntegrationInvocationConfigLoadError(
-      'Error loading integration invocation configuration. Ensure "invocationConfig" is exported from "src/index". Additional details: ' + err,
+      'Error loading integration invocation configuration. Ensure "invocationConfig" is exported from "src/index". Additional details: ' +
+        err,
     );
   }
 

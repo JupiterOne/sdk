@@ -41,7 +41,7 @@ const bunyanFormat = require('bunyan-format');
 
 interface CreateLoggerInput<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 > {
   name: string;
   invocationConfig?: InvocationConfig<TExecutionContext, TStepExecutionContext>;
@@ -51,7 +51,7 @@ interface CreateLoggerInput<
 }
 
 interface CreateIntegrationLoggerInput<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > extends CreateLoggerInput<
     IntegrationExecutionContext<TIntegrationConfig>,
     IntegrationStepExecutionContext<TIntegrationConfig>
@@ -61,7 +61,7 @@ interface CreateIntegrationLoggerInput<
 
 export function createLogger<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   name,
   pretty,
@@ -103,7 +103,7 @@ export function createLogger<
  * serializers common to all integrations.
  */
 export function createIntegrationLogger<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >({
   name,
   invocationConfig,
@@ -134,7 +134,7 @@ export function createIntegrationLogger<
 }
 
 function createInstanceConfigSerializer<
-  TConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig,
 >(fields?: IntegrationInstanceConfigFieldMap<TConfig>) {
   return (config: any) => {
     if (!config) {
@@ -173,7 +173,8 @@ interface IntegrationLoggerInput {
 
 export class IntegrationLogger
   extends EventEmitter
-  implements IntegrationLoggerType {
+  implements IntegrationLoggerType
+{
   private _logger: Logger;
   private _errorSet: Set<Error>;
   readonly onFailure: OnFailureFunction;

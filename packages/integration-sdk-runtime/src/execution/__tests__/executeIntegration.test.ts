@@ -43,7 +43,7 @@ function sleep(ms: number) {
 }
 
 export interface InstanceConfigurationData<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   validateInvocation: IntegrationInvocationValidationFunction<TIntegrationConfig>;
   instance: IntegrationInstance<TIntegrationConfig>;
@@ -60,7 +60,7 @@ describe('executeIntegrationInstance', () => {
   const executionStartedOn = Date.now();
 
   async function executeIntegrationInstanceWithConfig<
-    TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+    TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   >(
     config: InstanceConfigurationData<TIntegrationConfig>,
     options: ExecuteIntegrationOptions = {},
@@ -1119,12 +1119,13 @@ describe('executeIntegrationInstance', () => {
       expectedResults,
     );
 
-    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(
-        integrationFileSystem.getRootStorageDirectory(),
-        'summary.json',
-      ),
-    );
+    const writtenSummary =
+      await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
+        path.resolve(
+          integrationFileSystem.getRootStorageDirectory(),
+          'summary.json',
+        ),
+      );
 
     expect(writtenSummary).toEqual(expectedResults);
   });
@@ -1213,12 +1214,13 @@ describe('executeIntegrationInstance', () => {
       expectedResults,
     );
 
-    const writtenSummary = await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(
-        integrationFileSystem.getRootStorageDirectory(),
-        'summary.json',
-      ),
-    );
+    const writtenSummary =
+      await integrationFileSystem.readJsonFromPath<ExecuteIntegrationResult>(
+        path.resolve(
+          integrationFileSystem.getRootStorageDirectory(),
+          'summary.json',
+        ),
+      );
 
     expect(writtenSummary).toEqual(expectedResults);
   });

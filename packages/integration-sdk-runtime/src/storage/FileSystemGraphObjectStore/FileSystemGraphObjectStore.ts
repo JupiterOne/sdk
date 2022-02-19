@@ -136,9 +136,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.prettifyFiles = params?.prettifyFiles || false;
 
     if (params?.integrationSteps) {
-      this.stepIdToGraphObjectIndexMetadataMap = integrationStepsToGraphObjectIndexMetadataMap(
-        params.integrationSteps,
-      );
+      this.stepIdToGraphObjectIndexMetadataMap =
+        integrationStepsToGraphObjectIndexMetadataMap(params.integrationSteps);
     }
   }
 

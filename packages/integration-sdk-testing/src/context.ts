@@ -20,27 +20,27 @@ import {
 import { createMockIntegrationLogger } from './logger';
 
 export type CreateMockExecutionContextOptions<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > =
   | CreateMockExecutionContextOptionsWithInstanceConfig<TConfig>
   | CreateMockExecutionContextOptionsWithInstanceConfigFields<TConfig>;
 
 interface CreateMockExecutionContextOptionsWithInstanceConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   instanceConfig: TConfig;
   executionHistory?: ExecutionHistory;
 }
 
 interface CreateMockExecutionContextOptionsWithInstanceConfigFields<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   instanceConfigFields: IntegrationInstanceConfigFieldMap<TConfig>;
   executionHistory?: ExecutionHistory;
 }
 
 export function createMockExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   options: CreateMockExecutionContextOptions<TConfig> = {
     instanceConfigFields: {} as IntegrationInstanceConfigFieldMap<TConfig>,
@@ -92,7 +92,7 @@ export function createMockExecutionContext<
 }
 
 function isOptionsWithInstanceConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   options: CreateMockExecutionContextOptions<TConfig>,
 ): options is CreateMockExecutionContextOptionsWithInstanceConfig<TConfig> {
@@ -100,17 +100,17 @@ function isOptionsWithInstanceConfig<
 }
 
 export type CreateMockStepExecutionContextOptions<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = CreateMockExecutionContextOptions<TConfig> & CreateMockJobStateOptions;
 
 export interface MockIntegrationStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > extends IntegrationStepExecutionContext<TConfig> {
   jobState: MockJobState;
 }
 
 export function createMockStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   options: CreateMockStepExecutionContextOptions<TConfig> = {
     instanceConfigFields: {} as IntegrationInstanceConfigFieldMap<TConfig>,
@@ -123,7 +123,7 @@ export function createMockStepExecutionContext<
 }
 
 function generateInstanceConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(configFields: IntegrationInstanceConfigFieldMap<TConfig>): TConfig {
   return Object.entries(configFields).reduce(
     (acc: IntegrationInstance['config'], [field, config]) => {

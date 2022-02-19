@@ -12,7 +12,7 @@ export interface StepSpec<TConfig extends IntegrationInstanceConfig>
 }
 
 export interface IntegrationSpecConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > extends Omit<IntegrationInvocationConfig, 'integrationSteps'> {
   integrationSteps: StepSpec<TConfig>[];
 }

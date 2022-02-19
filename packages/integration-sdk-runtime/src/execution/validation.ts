@@ -7,7 +7,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 export function validateStepStartStates<
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >(steps: Step<TStepExecutionContext>[], stepStartStates: StepStartStates) {
   const stepSet = new Set<string>(steps.map((step) => step.id));
 

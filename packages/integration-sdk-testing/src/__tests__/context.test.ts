@@ -72,7 +72,9 @@ const instanceConfigFields: IntegrationInstanceConfigFieldMap<Config> = {
       });
 
       test('generates an execution context with the integration instance used for local development with custom account id from environment variable', () => {
-        const accountId = (process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID = uuid());
+        const accountId =
+          (process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID =
+            uuid());
         const { instance } = createContext();
         expect(instance).toEqual({
           ...LOCAL_INTEGRATION_INSTANCE,

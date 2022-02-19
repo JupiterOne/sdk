@@ -17,7 +17,8 @@ test('getMaskedFields', () => {
       },
     },
   };
-  const testConfig = createInstanceConfiguration({ invocationConfig })
-    .invocationConfig;
+  const testConfig = createInstanceConfiguration({
+    invocationConfig,
+  }).invocationConfig;
   expect(getMaskedFields(testConfig)).toEqual(['a', 'd']);
 });

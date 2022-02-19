@@ -28,8 +28,7 @@ describe('#toMatchGraphObjectSchema', () => {
       name: 'appengine.googleapis.com',
       _class: ['Service'],
       _type: 'google_cloud_api_service',
-      _key:
-        'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+      _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
       displayName: 'App Engine Admin API',
       category: ['infrastructure'],
       description:
@@ -174,8 +173,7 @@ describe('#toMatchGraphObjectSchema', () => {
       status: 'READY',
       _class: ['DataStore', 'Disk'],
       _type: 'google_compute_disk',
-      _key:
-        'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/disks/testvm',
+      _key: 'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/disks/testvm',
       displayName: 'testvm',
       createdOn: 1597245605930,
       zone: 'us-central1-a',
@@ -204,16 +202,14 @@ describe('#toMatchGraphObjectSchema', () => {
             creationTimestamp: '2020-08-12T08:20:05.930-07:00',
             name: 'testvm',
             sizeGb: '10',
-            zone:
-              'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a',
+            zone: 'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a',
             status: 'READY',
             selfLink:
               'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/disks/testvm',
             sourceImage:
               'https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/debian-9-stretch-v20200805',
             sourceImageId: '6709658075886210235',
-            type:
-              'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/diskTypes/pd-standard',
+            type: 'https://www.googleapis.com/compute/v1/projects/j1-gc-integration-dev/zones/us-central1-a/diskTypes/pd-standard',
             licenses: [
               'https://www.googleapis.com/compute/v1/projects/debian-cloud/global/licenses/debian-9-stretch',
             ],
@@ -1440,9 +1436,9 @@ describe('#toMatchStepMetadata', () => {
 describe('#registerMatchers', () => {
   test('should register all test matchers', () => {
     const mockJestExtendFn = jest.fn();
-    const mockExpect = ({
+    const mockExpect = {
       extend: mockJestExtendFn,
-    } as unknown) as jest.Expect;
+    } as unknown as jest.Expect;
 
     registerMatchers(mockExpect);
 

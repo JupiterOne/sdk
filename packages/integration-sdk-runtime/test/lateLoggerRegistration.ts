@@ -8,7 +8,7 @@ import {
   createMockIntegrationLogger,
   LOCAL_EXECUTION_HISTORY,
 } from './util/fixtures';
-import { expect } from './util/expect'
+import { expect } from './util/expect';
 
 function throwsUnhandledRejection() {
   async function throwsException() {
@@ -31,9 +31,12 @@ export async function executeIntegrationInstanceWithLateRegisteredLogger() {
     error: () => {
       wasPseudoLoggerCalled = true;
     },
-  };registerIntegrationLoggerEventHandlers
+  };
+  registerIntegrationLoggerEventHandlers;
   let logger: any = pseudoLogger;
-  const registeredEventHandlers = registerIntegrationLoggerEventHandlers(() => logger);
+  const registeredEventHandlers = registerIntegrationLoggerEventHandlers(
+    () => logger,
+  );
 
   // later in execution, reset logger to the desirable version.
   let wasIntegrationLoggerCalled = false;
@@ -44,17 +47,22 @@ export async function executeIntegrationInstanceWithLateRegisteredLogger() {
   });
   logger = integrationLogger;
 
-  await executeIntegrationInstance(logger, LOCAL_INTEGRATION_INSTANCE, {
-    integrationSteps: [
-      {
-        id: '',
-        name: '',
-        entities: [],
-        relationships: [],
-        executionHandler: throwsUnhandledRejection,
-      },
-    ],
-  }, LOCAL_EXECUTION_HISTORY);
+  await executeIntegrationInstance(
+    logger,
+    LOCAL_INTEGRATION_INSTANCE,
+    {
+      integrationSteps: [
+        {
+          id: '',
+          name: '',
+          entities: [],
+          relationships: [],
+          executionHandler: throwsUnhandledRejection,
+        },
+      ],
+    },
+    LOCAL_EXECUTION_HISTORY,
+  );
   unregisterIntegrationLoggerEventHandlers(registeredEventHandlers);
   expect(wasPseudoLoggerCalled).toBe(false);
   expect(wasIntegrationLoggerCalled).toBe(true);

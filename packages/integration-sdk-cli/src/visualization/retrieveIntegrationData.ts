@@ -18,11 +18,9 @@ export async function retrieveIntegrationData(
   const mappedRelationships: MappedRelationship[] = [];
 
   const entitiesAndRelationships = await Promise.all(
-    entitiesAndRelationshipPaths.map(
-      async (path): Promise<any> => {
-        return await readJsonFromPath<any>(path);
-      },
-    ),
+    entitiesAndRelationshipPaths.map(async (path): Promise<any> => {
+      return await readJsonFromPath<any>(path);
+    }),
   );
 
   for (const item of entitiesAndRelationships) {

@@ -31,7 +31,7 @@ export type IntegrationExecutionConfig = object;
  * property
  */
 export type IntegrationLoadExecutionConfigContext<
-  TConfig extends IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig,
 > = ExecutionContext & {
   instance: IntegrationInstance<TConfig>;
 };
@@ -44,7 +44,7 @@ export type IntegrationLoadExecutionConfigContext<
  */
 export type IntegrationExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = IntegrationLoadExecutionConfigContext<TConfig> & {
   executionConfig: TExecutionConfig;
 };
@@ -61,6 +61,6 @@ export type StepExecutionContext = ExecutionContext & {
  */
 export interface IntegrationStepExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > extends IntegrationExecutionContext<TConfig, TExecutionConfig>,
     StepExecutionContext {}

@@ -254,9 +254,8 @@ export function createStepJobState({
 
     findEntity: async (_key: string | undefined) => {
       if (!_key) return null;
-      const graphObjectMetadata = duplicateKeyTracker.getGraphObjectMetadata(
-        _key,
-      );
+      const graphObjectMetadata =
+        duplicateKeyTracker.getGraphObjectMetadata(_key);
 
       if (!graphObjectMetadata) {
         return null;

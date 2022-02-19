@@ -138,15 +138,13 @@ export function getNodesAndEdgesFromStepMetadata(
       types: options?.types,
     },
   );
-  const {
-    placeholderEntityNodes,
-    mappedRelationshipEdges,
-  } = getNodesAndEdgesFromStepMappedRelationshipMetadata(
-    metadata.mappedRelationships || [],
-    {
-      types: options?.types,
-    },
-  );
+  const { placeholderEntityNodes, mappedRelationshipEdges } =
+    getNodesAndEdgesFromStepMappedRelationshipMetadata(
+      metadata.mappedRelationships || [],
+      {
+        types: options?.types,
+      },
+    );
   const entityNodes = getNodesFromStepEntityMetadata(metadata.entities, {
     types: options?.types,
     edges: [...relationshipEdges, ...mappedRelationshipEdges],

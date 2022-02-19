@@ -24,7 +24,8 @@ describe('createIntegrationInstanceForLocalExecution', () => {
   });
 
   test('should allow specifying local JupiterOne account id through environment variable', () => {
-    const accountId = (process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID = uuid());
+    const accountId =
+      (process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID = uuid());
 
     const instance = createIntegrationInstanceForLocalExecution({
       validateInvocation: jest.fn(),

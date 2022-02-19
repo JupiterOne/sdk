@@ -11,9 +11,12 @@ export async function ensureDirectoryExists(pathToWrite: string) {
   await fs.mkdir(directoryPath, { recursive: true });
 }
 
-export async function writeFileToPath({ filePath, content }: {
-  filePath: string,
-  content: string
+export async function writeFileToPath({
+  filePath,
+  content,
+}: {
+  filePath: string;
+  content: string;
 }) {
   await ensureDirectoryExists(filePath);
   await fs.writeFile(filePath, content, 'utf8');

@@ -28,11 +28,8 @@ export async function generateVisualization(
     log.warn(`Unable to find any files under path: ${graphDataPath}`);
   }
 
-  const {
-    entities,
-    relationships,
-    mappedRelationships,
-  } = await retrieveIntegrationData(entitiesAndRelationshipPaths);
+  const { entities, relationships, mappedRelationships } =
+    await retrieveIntegrationData(entitiesAndRelationshipPaths);
 
   const nodeDataSets = entities.map((entity) => ({
     id: getNodeIdFromEntity(entity, []),
@@ -47,13 +44,11 @@ export async function generateVisualization(
     }),
   );
 
-  const {
-    mappedRelationshipEdges,
-    mappedRelationshipNodes,
-  } = createMappedRelationshipNodesAndEdges({
-    mappedRelationships,
-    explicitEntities: entities,
-  });
+  const { mappedRelationshipEdges, mappedRelationshipNodes } =
+    createMappedRelationshipNodesAndEdges({
+      mappedRelationships,
+      explicitEntities: entities,
+    });
 
   await writeFileToPath({
     path: visualizationOutputPath,

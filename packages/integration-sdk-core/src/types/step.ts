@@ -36,7 +36,7 @@ export type ExecutionHandlerFunction<T extends StepExecutionContext> = (
 ) => Promise<void> | void;
 
 export type StepExecutionHandlerFunction<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = ExecutionHandlerFunction<IntegrationStepExecutionContext<TConfig>>;
 
 export enum StepResultStatus {
@@ -79,7 +79,7 @@ export type IntegrationStepResult = Omit<
 };
 
 export type IntegrationStep<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = StepMetadata & Step<IntegrationStepExecutionContext<TConfig>>;
 
 export interface GraphObjectIndexMetadata {
