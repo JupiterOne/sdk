@@ -13,7 +13,9 @@ and this project adheres to
 
 ### Fixed
 
-- Bumped `@types/jest@^27.1.0` in order to fix **Namespace 'NodeJS' has no exported member 'Global'.** issues captured here: https://github.com/facebook/jest/issues/11640 
+- Bumped `@types/jest@^27.1.0` in order to fix **Namespace 'NodeJS' has no
+  exported member 'Global'.** issues captured here:
+  https://github.com/facebook/jest/issues/11640
 
 ## [8.4.0] - 2022-02-16
 
@@ -70,15 +72,12 @@ and this project adheres to
   dependencies have indeed executed. Usage:
 
   ```ts
-  const {
-    collectedEntities,
-    collectedRelationships,
-    collectedData,
-  } = await executeStepWithDependencies({
-    stepId: Steps.FETCH_USERS.id,
-    invocationConfig,
-    instanceConfig,
-  });
+  const { collectedEntities, collectedRelationships, collectedData } =
+    await executeStepWithDependencies({
+      stepId: Steps.FETCH_USERS.id,
+      invocationConfig,
+      instanceConfig,
+    });
 
   expect(collectedEntities.length).toBeGreaterThan(0);
   expect(collectedEnities).toMatchGraphObjectSchema({

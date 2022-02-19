@@ -317,16 +317,12 @@ describe('synchronizeCollectedData', () => {
       },
     );
 
-    expect(
-      postSpy,
-    ).toHaveBeenCalledWith(
+    expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/entities`,
       { entities: expect.any(Array) },
     );
 
-    expect(
-      postSpy,
-    ).toHaveBeenCalledWith(
+    expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/relationships`,
       { relationships: expect.any(Array) },
     );
@@ -383,18 +379,20 @@ describe('uploadDataChunk', () => {
     const context = createTestContext();
     const job = generateSynchronizationJob();
 
-    const requestTooLargeError = new Error("Request must be smaller than 6291456 bytes for the InvokeFunction operation")
-    requestTooLargeError.name = "RequestEntityTooLargeException"
-    requestTooLargeError['code'] = "RequestEntityTooLargeException"
+    const requestTooLargeError = new Error(
+      'Request must be smaller than 6291456 bytes for the InvokeFunction operation',
+    );
+    requestTooLargeError.name = 'RequestEntityTooLargeException';
+    requestTooLargeError['code'] = 'RequestEntityTooLargeException';
 
-    const type = 'entities'
-    const batch = []
+    const type = 'entities';
+    const batch = [];
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
       .mockImplementation((path: string): any => {
         if (path === `/persister/synchronization/jobs/${job.id}/${type}`) {
-          throw requestTooLargeError
+          throw requestTooLargeError;
         }
         return {
           data: {
@@ -402,17 +400,19 @@ describe('uploadDataChunk', () => {
           },
         };
       });
-    await expect(uploadDataChunk({
-      logger: context.logger,
-      apiClient: context.apiClient,
-      jobId: job.id,
-      type,
-      batch
-    })).rejects.toThrow(requestTooLargeError)
-    
-    expect(postSpy).toHaveBeenCalledTimes(1)
-  })
-})
+    await expect(
+      uploadDataChunk({
+        logger: context.logger,
+        apiClient: context.apiClient,
+        jobId: job.id,
+        type,
+        batch,
+      }),
+    ).rejects.toThrow(requestTooLargeError);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+  });
+});
 
 function createTestContext() {
   const apiClient = createApiClient({

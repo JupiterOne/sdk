@@ -11,18 +11,16 @@ jest.mock('fs');
 
 test('should write assets to csv files by given types', async () => {
   vol.fromJSON({
-    [`${TEST_STORAGE_LOCATION}/json/entities/entity_type_1/${uuid()}.json`]: JSON.stringify(
-      [
+    [`${TEST_STORAGE_LOCATION}/json/entities/entity_type_1/${uuid()}.json`]:
+      JSON.stringify([
         createEntity({ id: '1', type: '1' }),
         createEntity({ id: '2', type: '1' }),
-      ],
-    ),
-    [`${TEST_STORAGE_LOCATION}/json/entities/entity_type_2/${uuid()}.json`]: JSON.stringify(
-      [
+      ]),
+    [`${TEST_STORAGE_LOCATION}/json/entities/entity_type_2/${uuid()}.json`]:
+      JSON.stringify([
         createEntity({ id: '3', type: '2' }),
         createEntity({ id: '4', type: '2' }),
-      ],
-    ),
+      ]),
   });
 
   await writeAssetsToCsv({

@@ -1,18 +1,21 @@
 import { v4 as uuid } from 'uuid';
-import { Entity } from "@jupiterone/integration-sdk-core";
+import { Entity } from '@jupiterone/integration-sdk-core';
 
 export type NodeEntity = Partial<Entity> & { nodeId: string };
 
 /**
  * The nodeId should map back to _key, which ought to be globally unique.
  * Entities set their node ID once, and return if available.
- * 
+ *
  * If nodeId is not set, first check that the _key isn't already a nodeId for another entity.
  * Duplicates will break vis.js, so we will set nodeId to a UUID (this makes isNodeDuplicate(nodeEntity) === true)
- * 
+ *
  * If node is not a duplicate, return either the entity _key, or, if unavailable, return a new UUID.
  */
-export function getNodeIdFromEntity(entity: Partial<NodeEntity>, existingEntities: NodeEntity[]): string {
+export function getNodeIdFromEntity(
+  entity: Partial<NodeEntity>,
+  existingEntities: NodeEntity[],
+): string {
   if (entity.nodeId !== undefined) {
     return entity.nodeId;
   }

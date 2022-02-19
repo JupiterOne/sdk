@@ -133,9 +133,9 @@ describe('createIntegrationLogger', () => {
 
   beforeEach(() => {
     addSerializers = jest.fn();
-    jest.spyOn(Logger, 'createLogger').mockReturnValue(({
+    jest.spyOn(Logger, 'createLogger').mockReturnValue({
       addSerializers,
-    } as unknown) as Logger);
+    } as unknown as Logger);
   });
 
   test('installs expected properties', () => {

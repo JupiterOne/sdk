@@ -173,9 +173,8 @@ function collectSchemasFromRef(
   dataModelIntegrationSchema: typeof dataModel.IntegrationSchema,
   classSchemaRef: string,
 ): GraphObjectSchema[] {
-  const dataModelClassSchema = dataModelIntegrationSchema.getSchema(
-    classSchemaRef,
-  );
+  const dataModelClassSchema =
+    dataModelIntegrationSchema.getSchema(classSchemaRef);
 
   if (!dataModelClassSchema || !dataModelClassSchema.schema) {
     throw new Error(
@@ -183,7 +182,8 @@ function collectSchemasFromRef(
     );
   }
 
-  const dataModelValidationSchema = dataModelClassSchema.schema as dataModel.IntegrationEntitySchema;
+  const dataModelValidationSchema =
+    dataModelClassSchema.schema as dataModel.IntegrationEntitySchema;
   let schemas: GraphObjectSchema[] = [dataModelValidationSchema];
 
   if (!dataModelValidationSchema.allOf) {
@@ -451,14 +451,13 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     }
   }
 
-  const newEntitySchema: GraphObjectSchema = generateGraphObjectSchemaFromDataModelSchemas(
-    [
+  const newEntitySchema: GraphObjectSchema =
+    generateGraphObjectSchemaFromDataModelSchemas([
       // Merging should have the highest-level schemas at the end of the array
       // so that they can override the parent classes
       ...schemas.reverse(),
       schema,
-    ],
-  );
+    ]);
 
   if (newEntitySchema.properties) {
     newEntitySchema.properties._class = {
@@ -588,7 +587,7 @@ type StepBase<TConfig extends IntegrationInstanceConfig> = Omit<
 >;
 
 export function toImplementSpec<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   integration: IntegrationInvocationConfig<TConfig>,
   spec: IntegrationSpecConfig<TConfig>,

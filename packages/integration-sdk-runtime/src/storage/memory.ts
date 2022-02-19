@@ -58,10 +58,8 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
    *   }
    * }
    */
-  private readonly entityTypeToKeysMap: Map<
-    string,
-    Map<string, boolean>
-  > = new Map();
+  private readonly entityTypeToKeysMap: Map<string, Map<string, boolean>> =
+    new Map();
   private readonly relationshipTypeToKeysMap: Map<
     string,
     Map<string, boolean>

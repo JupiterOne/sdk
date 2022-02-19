@@ -6,5 +6,5 @@ export type InvocationValidationFunction<T extends ExecutionContext> = (
 ) => Promise<void> | void;
 
 export type IntegrationInvocationValidationFunction<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = InvocationValidationFunction<IntegrationExecutionContext<TConfig>>;

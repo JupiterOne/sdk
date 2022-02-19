@@ -1,6 +1,14 @@
-import { Entity } from "@jupiterone/integration-sdk-core";
+import { Entity } from '@jupiterone/integration-sdk-core';
 
-export function createEntity({ type, id, optionalProps }: { type: string, id: string, optionalProps?: object }) {
+export function createEntity({
+  type,
+  id,
+  optionalProps,
+}: {
+  type: string;
+  id: string;
+  optionalProps?: object;
+}) {
   return {
     id: `entity-${id}`,
     name: `Entity ${id}`,
@@ -9,6 +17,6 @@ export function createEntity({ type, id, optionalProps }: { type: string, id: st
     _class: 'Entity',
     _type: `entity_type_${type}`,
     _key: `entity-${id}`,
-    ...optionalProps
-  } as Entity
+    ...optionalProps,
+  } as Entity;
 }

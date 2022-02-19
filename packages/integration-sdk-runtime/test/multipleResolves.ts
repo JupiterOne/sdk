@@ -1,4 +1,4 @@
-import { LOCAL_EXECUTION_HISTORY } from "./util/fixtures";
+import { LOCAL_EXECUTION_HISTORY } from './util/fixtures';
 
 import {
   executeIntegrationInstance,
@@ -8,7 +8,7 @@ import {
 import {
   LOCAL_INTEGRATION_INSTANCE,
   createMockIntegrationLogger,
-} from './util/fixtures'
+} from './util/fixtures';
 import { expect } from './util/expect';
 
 function callbackThrowsMultipleResolves(err) {
@@ -33,18 +33,25 @@ export async function executeIntegrationInstanceWithMultipleResolves() {
     loggerErrorCalledWith.push([...params]);
   }
   const logger = createMockIntegrationLogger({ error: loggerError });
-  const registeredEventHandlers = registerIntegrationLoggerEventHandlers(() => logger);
-  await executeIntegrationInstance(logger, LOCAL_INTEGRATION_INSTANCE, {
-    integrationSteps: [
-      {
-        id: '',
-        name: '',
-        entities: [],
-        relationships: [],
-        executionHandler: callbackThrowsMultipleResolves(err),
-      },
-    ],
-  }, LOCAL_EXECUTION_HISTORY);
+  const registeredEventHandlers = registerIntegrationLoggerEventHandlers(
+    () => logger,
+  );
+  await executeIntegrationInstance(
+    logger,
+    LOCAL_INTEGRATION_INSTANCE,
+    {
+      integrationSteps: [
+        {
+          id: '',
+          name: '',
+          entities: [],
+          relationships: [],
+          executionHandler: callbackThrowsMultipleResolves(err),
+        },
+      ],
+    },
+    LOCAL_EXECUTION_HISTORY,
+  );
   unregisterIntegrationLoggerEventHandlers(registeredEventHandlers);
   expect(loggerErrorCalledWith.length).toBe(1);
   expect(loggerErrorCalledWith[0][0].err).toBe(err);

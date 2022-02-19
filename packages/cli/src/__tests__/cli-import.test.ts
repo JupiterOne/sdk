@@ -61,15 +61,12 @@ beforeEach(async () => {
   mockedCreateApiClient.mockReturnValue(axios);
   vol.reset();
   vol.fromJSON({
-    [`${TEST_STORAGE_LOCATION}/csv/entities/entity_type_1/${uuid()}.csv`]: await parseToCsv(
-      type1Entities,
-    ),
-    [`${TEST_STORAGE_LOCATION}/csv/entities/entity_type_2/${uuid()}.csv`]: await parseToCsv(
-      type2Entities,
-    ),
-    [`${TEST_STORAGE_LOCATION}/csv/relationships/relationship_type_1/${uuid()}.csv`]: await parseToCsv(
-      type1Relationships,
-    ),
+    [`${TEST_STORAGE_LOCATION}/csv/entities/entity_type_1/${uuid()}.csv`]:
+      await parseToCsv(type1Entities),
+    [`${TEST_STORAGE_LOCATION}/csv/entities/entity_type_2/${uuid()}.csv`]:
+      await parseToCsv(type2Entities),
+    [`${TEST_STORAGE_LOCATION}/csv/relationships/relationship_type_1/${uuid()}.csv`]:
+      await parseToCsv(type1Relationships),
   });
   mockedGlobby.mockImplementation((path) => {
     let paths: string[] = [];

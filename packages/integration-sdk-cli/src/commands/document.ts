@@ -68,9 +68,8 @@ async function executeDocumentAction(
   );
   log.info('\nExisting documentation file successfully loaded!\n');
 
-  const newGeneratedDocumentationSection = generateGraphObjectDocumentationFromStepsMetadata(
-    metadata,
-  );
+  const newGeneratedDocumentationSection =
+    generateGraphObjectDocumentationFromStepsMetadata(metadata);
 
   log.info('\nGenerated integration documentation section:');
   log.info('---------------------------------------------\n');
@@ -187,9 +186,10 @@ ${generatedEntityTable}`;
   }
 
   if (metadata.relationships.length) {
-    const generatedRelationshipTable = generateRelationshipTableFromAllStepEntityMetadata(
-      metadata.relationships,
-    );
+    const generatedRelationshipTable =
+      generateRelationshipTableFromAllStepEntityMetadata(
+        metadata.relationships,
+      );
 
     relationshipSection += `
 
@@ -201,9 +201,10 @@ ${generatedRelationshipTable}`;
   }
 
   if (metadata.mappedRelationships?.length) {
-    const generatedMappedRelationshipTable = generateMappedRelationshipTableFromAllStepEntityMetadata(
-      metadata.mappedRelationships,
-    );
+    const generatedMappedRelationshipTable =
+      generateMappedRelationshipTableFromAllStepEntityMetadata(
+        metadata.mappedRelationships,
+      );
 
     mappedRelationshipSection += `
 

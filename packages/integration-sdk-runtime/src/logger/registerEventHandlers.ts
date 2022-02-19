@@ -62,11 +62,13 @@ interface RegisteredEventListeners {
  * as possible in the node process in order to handle any instrumentation exceptions.
  *
  * Before exiting the node process, unregister these event handlers using `unregisterEventHandlers`
- * 
+ *
  * @param callback
  * @returns {RegisteredEventListeners} Pass these listeners into `unregisterEventHandlers`
  */
-export function registerEventHandlers(callback: LifecycleErrorCallback): RegisteredEventListeners {
+export function registerEventHandlers(
+  callback: LifecycleErrorCallback,
+): RegisteredEventListeners {
   const multipleResolveListener = createMultipleResolveListener(callback);
   process.on('multipleResolves', multipleResolveListener);
   const unhandledRejectionListener = createUnhandledRejectionListener(callback);
@@ -123,15 +125,17 @@ function integrationLoggerEventHandlerCallback(
 export function registerIntegrationLoggerEventHandlers(
   getErrorLogger: () => ErrorLogger,
 ): RegisteredEventListeners {
-  return registerEventHandlers(integrationLoggerEventHandlerCallback(getErrorLogger));
+  return registerEventHandlers(
+    integrationLoggerEventHandlerCallback(getErrorLogger),
+  );
 }
 
 /**
  * Call this function before exiting the node process when using `registerIntegrationLoggerEventHandlers`
- * 
- * This function is an alias for `unregisterEventHandlers`, useful for maintaining consistency in 
+ *
+ * This function is an alias for `unregisterEventHandlers`, useful for maintaining consistency in
  * `register*` / `unregister*` functions in calling code.
- * 
+ *
  * @see unregisterEventHandlers
  */
 export const unregisterIntegrationLoggerEventHandlers = unregisterEventHandlers;

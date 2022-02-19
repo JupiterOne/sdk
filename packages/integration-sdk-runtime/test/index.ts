@@ -1,23 +1,16 @@
 require('./mocks/mockWriteJsonToPath');
 
-import { 
-  executeIntegrationInstanceWithUnhandledRejection 
-} from './unhandledRejection';
-import {
-  executeIntegrationInstanceWithMultipleResolves,
-} from './multipleResolves';
-import {
-  executeIntegrationInstanceWithLateRegisteredLogger,
-} from './lateLoggerRegistration';
-import {
-  executeIntegrationInstanceWithUnregisteredEventHandlers,
-} from './unregisterEventHandlers';
+import { executeIntegrationInstanceWithUnhandledRejection } from './unhandledRejection';
+import { executeIntegrationInstanceWithMultipleResolves } from './multipleResolves';
+import { executeIntegrationInstanceWithLateRegisteredLogger } from './lateLoggerRegistration';
+import { executeIntegrationInstanceWithUnregisteredEventHandlers } from './unregisterEventHandlers';
 
 const eventEmitterTests = {
   unhandledRejection: executeIntegrationInstanceWithUnhandledRejection,
   multipleResolves: executeIntegrationInstanceWithMultipleResolves,
   lateRegisteredLogger: executeIntegrationInstanceWithLateRegisteredLogger,
-  unregisterEventHandlers: executeIntegrationInstanceWithUnregisteredEventHandlers,
+  unregisterEventHandlers:
+    executeIntegrationInstanceWithUnregisteredEventHandlers,
 };
 
 void (async () => {

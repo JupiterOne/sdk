@@ -48,7 +48,7 @@ export async function iterateEntityTypeIndex<T extends Entity = Entity>({
 }
 
 export async function iterateRelationshipTypeIndex<
-  T extends Relationship = Relationship
+  T extends Relationship = Relationship,
 >({ type, iteratee }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,

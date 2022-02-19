@@ -176,7 +176,8 @@ describe('#hasKey', () => {
 
 describe('upload callbacks', () => {
   test('#addEntities should call uploader enqueue on flushed', async () => {
-    const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
+    const uploadCollector =
+      createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 2,
@@ -201,7 +202,8 @@ describe('upload callbacks', () => {
   });
 
   test('#addRelationships should call uploader enqueue on flushed', async () => {
-    const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
+    const uploadCollector =
+      createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 2,
@@ -226,7 +228,8 @@ describe('upload callbacks', () => {
   });
 
   test('#flush should call uploader enqueue for entities and relationships', async () => {
-    const uploadCollector = createInMemoryStepGraphObjectDataUploaderCollector();
+    const uploadCollector =
+      createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
         graphObjectBufferThreshold: 5,

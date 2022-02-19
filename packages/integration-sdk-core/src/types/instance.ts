@@ -7,7 +7,7 @@ export type IntegrationInstanceConfig = Record<string, any>;
  * @param TConfig the integration specific type of the `config` property
  */
 export interface IntegrationInstance<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   /**
    * Unique identifier for the activated integration instance.

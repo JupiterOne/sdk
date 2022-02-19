@@ -7,8 +7,8 @@ export interface Neo4jGraphObjectStoreParams {
   uri: string;
   username: string;
   password: string;
-  integrationInstanceID: string,
-  session?: neo4j.Session
+  integrationInstanceID: string;
+  session?: neo4j.Session;
 }
 
 export class Neo4jGraphStore {
@@ -19,10 +19,9 @@ export class Neo4jGraphStore {
   private integrationInstanceID: string;
 
   constructor(params: Neo4jGraphObjectStoreParams) {
-    if(params.session) {
+    if (params.session) {
       this.persistedSession = params.session;
-    }
-    else {
+    } else {
       this.neo4jDriver = neo4j.driver(
         params.uri,
         neo4j.auth.basic(params.username, params.password),
@@ -31,12 +30,14 @@ export class Neo4jGraphStore {
     this.integrationInstanceID = params.integrationInstanceID;
   }
 
-  private async runCypherCommand(cypherCommand: string, cypherParameters?: any): Promise<neo4j.Result> {
-    if(this.persistedSession) {
+  private async runCypherCommand(
+    cypherCommand: string,
+    cypherParameters?: any,
+  ): Promise<neo4j.Result> {
+    if (this.persistedSession) {
       const result = await this.persistedSession.run(cypherCommand);
       return result;
-    }
-    else {
+    } else {
       const session = this.neo4jDriver.session({
         database: this.databaseName,
         defaultAccessMode: neo4j.session.WRITE,
@@ -65,9 +66,9 @@ export class Neo4jGraphStore {
         SET ${nodeAlias} += $propertyParameters
         SET ${nodeAlias}:${entity._type};`;
       await this.runCypherCommand(buildCommand, {
-        propertyParameters: propertyParameters, 
-        finalKeyValue: finalKeyValue, 
-        integrationInstanceID: this.integrationInstanceID
+        propertyParameters: propertyParameters,
+        finalKeyValue: finalKeyValue,
+        integrationInstanceID: this.integrationInstanceID,
       });
     }
   }
@@ -84,24 +85,37 @@ export class Neo4jGraphStore {
       if (relationship._fromEntityKey) {
         startEntityKey = sanitizeValue(relationship._fromEntityKey.toString());
       }
-      if(relationship._toEntityKey) {
+      if (relationship._toEntityKey) {
         endEntityKey = sanitizeValue(relationship._toEntityKey.toString());
       }
 
-      if(relationship._mapping) { //Mapped Relationship
-        if(relationship._mapping['skipTargetCreation'] === false) {
+      if (relationship._mapping) {
+        //Mapped Relationship
+        if (relationship._mapping['skipTargetCreation'] === false) {
           //Create target entity first
           const tempEntity: Entity = {
             _class: relationship._mapping['targetEntity']._class,
             //TODO, I think this key is wrong, but not sure what else to use
-            _key:  sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], '')),
+            _key: sanitizeValue(
+              relationship._key.replace(
+                relationship._mapping['sourceEntityKey'],
+                '',
+              ),
+            ),
             _type: relationship._mapping['targetEntity']._type,
-          }
+          };
           await this.addEntities([tempEntity]);
         }
-        startEntityKey = sanitizeValue(relationship._mapping['sourceEntityKey']);
+        startEntityKey = sanitizeValue(
+          relationship._mapping['sourceEntityKey'],
+        );
         // TODO, see above.  This key might also be an issue for the same reason
-        endEntityKey = sanitizeValue(relationship._key.replace(relationship._mapping['sourceEntityKey'], ''));
+        endEntityKey = sanitizeValue(
+          relationship._key.replace(
+            relationship._mapping['sourceEntityKey'],
+            '',
+          ),
+        );
       }
 
       const buildCommand = `
@@ -110,17 +124,17 @@ export class Neo4jGraphStore {
       MERGE (start)-[${relationshipAlias}:${relationship._type}]->(end)
       SET ${relationshipAlias} += $propertyParameters;`;
       await this.runCypherCommand(buildCommand, {
-        propertyParameters: propertyParameters, 
-        startEntityKey: startEntityKey, 
+        propertyParameters: propertyParameters,
+        startEntityKey: startEntityKey,
         endEntityKey: endEntityKey,
-        integrationInstanceID: this.integrationInstanceID
+        integrationInstanceID: this.integrationInstanceID,
       });
     }
   }
 
   // TODO, if we get to very large databases we could reach a size where
-  // one or both both of the below wipe commands can't be easily executed 
-  // in memory.  At that time, we should consider requiring/using the APOC 
+  // one or both both of the below wipe commands can't be easily executed
+  // in memory.  At that time, we should consider requiring/using the APOC
   // library so we can use apoc.periodic.iterate.  Leaving out for now,
   // since that would further complicate the Neo4j database setup.
   async wipeInstanceIdData() {

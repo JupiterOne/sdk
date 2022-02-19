@@ -70,15 +70,15 @@ async function getStorageDirectoryDataForStep(
       );
 
       if (writtenStepData.entities) {
-        accumulatedWrittenStepData.entities = accumulatedWrittenStepData.entities.concat(
-          writtenStepData.entities,
-        );
+        accumulatedWrittenStepData.entities =
+          accumulatedWrittenStepData.entities.concat(writtenStepData.entities);
       }
 
       if (writtenStepData.relationships) {
-        accumulatedWrittenStepData.relationships = accumulatedWrittenStepData.relationships.concat(
-          writtenStepData.relationships,
-        );
+        accumulatedWrittenStepData.relationships =
+          accumulatedWrittenStepData.relationships.concat(
+            writtenStepData.relationships,
+          );
       }
     }
   }
@@ -631,9 +631,8 @@ describe('flush callbacks', () => {
       async (relationships) => {
         // Should not call first time because `graphObjectBufferThreshold` = 2
         addRelationshipsFlushCalledTimes++;
-        flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
-          relationships,
-        );
+        flushedRelationshipsCollected =
+          flushedRelationshipsCollected.concat(relationships);
         return Promise.resolve();
       },
     );
@@ -644,9 +643,8 @@ describe('flush callbacks', () => {
       async (relationships) => {
         // Should not call first time because `graphObjectBufferThreshold` = 2
         addRelationshipsFlushCalledTimes++;
-        flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
-          relationships,
-        );
+        flushedRelationshipsCollected =
+          flushedRelationshipsCollected.concat(relationships);
         return Promise.resolve();
       },
     );
@@ -856,9 +854,8 @@ describe('flush callbacks', () => {
 
     async function onRelationshipsFlushed(relationships) {
       addRelationshipsFlushedCalledTimes++;
-      flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
-        relationships,
-      );
+      flushedRelationshipsCollected =
+        flushedRelationshipsCollected.concat(relationships);
       return Promise.resolve();
     }
 
@@ -901,9 +898,8 @@ describe('flush callbacks', () => {
 
     async function onRelationshipsFlushed(relationships) {
       addRelationshipsFlushedCalledTimes++;
-      flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
-        relationships,
-      );
+      flushedRelationshipsCollected =
+        flushedRelationshipsCollected.concat(relationships);
       return Promise.resolve();
     }
 
@@ -944,9 +940,8 @@ describe('flush callbacks', () => {
 
     async function onRelationshipsFlushed(relationships) {
       addRelationshipsFlushedCalledTimes++;
-      flushedRelationshipsCollected = flushedRelationshipsCollected.concat(
-        relationships,
-      );
+      flushedRelationshipsCollected =
+        flushedRelationshipsCollected.concat(relationships);
       return Promise.resolve();
     }
 

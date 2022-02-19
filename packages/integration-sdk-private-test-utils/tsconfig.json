@@ -5,7 +5,5 @@
     "rootDir": "src"
   },
   "exclude": ["__fixtures__", "dist"],
-  "references": [
-    { "path": "../integration-sdk-core" }
-  ]
+  "references": [{ "path": "../integration-sdk-core" }]
 }

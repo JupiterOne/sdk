@@ -1,5 +1,8 @@
 import { Neo4jGraphStore } from './neo4jGraphStore';
-import { iterateParsedGraphFiles, isDirectoryPresent } from '@jupiterone/integration-sdk-runtime';
+import {
+  iterateParsedGraphFiles,
+  isDirectoryPresent,
+} from '@jupiterone/integration-sdk-runtime';
 import { FlushedGraphObjectData } from '@jupiterone/integration-sdk-runtime/src/storage/types';
 
 type UploadToNeo4jParams = {
