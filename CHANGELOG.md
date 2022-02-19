@@ -9,6 +9,40 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.4.2] - 2022-02-19
+
+### Fixed
+
+Fix [#629](https://github.com/JupiterOne/sdk/issues/629) - Create relationships
+from Neo4j store using `_class` as the label instead of `_type`
+
+> Which GitHub repositories are accessible to outside collaborators?
+
+Old query:
+
+```cy
+MATCH (n:github_repo)-[r:github_repo_allows_user]->(u:github_user{role:"OUTSIDE"})
+RETURN n, u
+
+MATCH (account:github_account)-[github_account_owns_repo]->
+  (repo:github_repo)-[github_repo_allows_user]->
+  (user:github_user {
+    role:"OUTSIDE"
+  })
+RETURN account, repo, user
+```
+
+New query:
+
+```cy
+MATCH (account:github_account)-[OWNS]->
+  (repo:github_repo)-[ALLOWS]->
+  (user:github_user {
+    role:"OUTSIDE"
+  })
+RETURN account, repo, user
+```
+
 ## [8.4.1] - 2022-02-17
 
 ### Fixed
