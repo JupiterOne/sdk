@@ -64,7 +64,8 @@ export class Neo4jGraphStore {
       const buildCommand = `
         MERGE (${nodeAlias} {_key: $finalKeyValue, _integrationInstanceID: $integrationInstanceID}) 
         SET ${nodeAlias} += $propertyParameters
-        SET ${nodeAlias}:${entity._type};`;
+        SET ${nodeAlias}:${entity._type}
+        SET ${nodeAlias}:${entity._class};`;
       await this.runCypherCommand(buildCommand, {
         propertyParameters: propertyParameters,
         finalKeyValue: finalKeyValue,
