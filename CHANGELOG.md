@@ -9,6 +9,33 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- [#633](https://github.com/JupiterOne/sdk/issues/633) Support `_class` as a
+  node label property for entities created by the Neo4j store.
+
+Example query by `_type`:
+
+```cy
+MATCH (account:github_account)-[OWNS]->
+  (repo:github_repo)-[ALLOWS]->
+  (user:github_user {
+    role:"OUTSIDE"
+  })
+RETURN account, repo, user
+```
+
+Example query by `_class`:
+
+```cy
+MATCH (account:Account)-[OWNS]->
+  (repo:CodeRepo)-[ALLOWS]->
+  (user:User {
+    role:"OUTSIDE"
+  })
+RETURN account, repo, user
+```
+
 ## [8.4.2] - 2022-02-19
 
 ### Fixed
