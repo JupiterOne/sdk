@@ -88,7 +88,7 @@ declare global {
        *   instanceConfig,
        * });
        *
-       * expect(collectedRelationships).toMatchGraphObjectSchema({
+       * expect(collectedRelationships).toMatchDirectRelationshipSchema({
        *   _class: RelationshipClass.HAS,
        *   _type: 'acme_account_has_user',
        *   schema: {
