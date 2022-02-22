@@ -1,5 +1,9 @@
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
-import { sanitizeValue, buildPropertyParameters, sanitizePropertyName } from './neo4jUtilities';
+import {
+  sanitizeValue,
+  buildPropertyParameters,
+  sanitizePropertyName,
+} from './neo4jUtilities';
 
 import * as neo4j from 'neo4j-driver';
 
@@ -53,11 +57,10 @@ export class Neo4jGraphStore {
     for (const entity of newEntities) {
       let classLabels = '';
       if (entity._class) {
-        if(typeof(entity._class) === 'string') {
+        if (typeof entity._class === 'string') {
           classLabels += `:${sanitizePropertyName(entity._class)}`;
-        }
-        else {
-          for(const className of entity._class) { 
+        } else {
+          for (const className of entity._class) {
             classLabels += `:${sanitizePropertyName(className)}`;
           }
         }
@@ -132,10 +135,14 @@ export class Neo4jGraphStore {
         );
       }
 
+      const sanitizedRelationshipClass = sanitizePropertyName(
+        relationship._class,
+      );
+
       const buildCommand = `
       MERGE (start {_key: $startEntityKey, _integrationInstanceID: $integrationInstanceID})
       MERGE (end {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
-      MERGE (start)-[${relationshipAlias}:${relationship._class}]->(end)
+      MERGE (start)-[${relationshipAlias}:${sanitizedRelationshipClass}]->(end)
       SET ${relationshipAlias} += $propertyParameters;`;
       await this.runCypherCommand(buildCommand, {
         propertyParameters: propertyParameters,
