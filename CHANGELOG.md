@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.4.3] - 2022-02-22
+
 ### Added
 
 - [#633](https://github.com/JupiterOne/sdk/issues/633) Support `_class` as a
@@ -35,6 +37,10 @@ MATCH (account:Account)-[OWNS]->
   })
 RETURN account, repo, user
 ```
+
+### Fixed
+
+- All types and classes used for labels are now being sanitized.
 
 ## [8.4.2] - 2022-02-19
 
