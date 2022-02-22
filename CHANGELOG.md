@@ -9,6 +9,19 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.4.4] - 2022-02-22
+
+Fix #638 - The Neo4j ingestion tool was ignoring properties with the value
+`false`.
+
+With this fix, the following query is supported:
+
+```cy
+MATCH (user:User {
+  mfaEnabled: false
+}) RETURN user
+```
+
 ## [8.4.3] - 2022-02-22
 
 ### Added
