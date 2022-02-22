@@ -60,7 +60,7 @@ describe('#buildPropertyParameters', () => {
     expect(
       buildPropertyParameters({
         test: '123',
-        ignore: undefined,
+        ignore: null,
       }),
     ).toEqual({
       test: '123',

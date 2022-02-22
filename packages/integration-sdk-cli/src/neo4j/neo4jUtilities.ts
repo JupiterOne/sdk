@@ -32,7 +32,7 @@ export function buildPropertyParameters(propList: Object) {
       // Sanitize out characters that aren't allowed in property names
       const propertyName = sanitizePropertyName(key);
 
-      if (typeof propVal === 'undefined' || propVal === null) {
+      if (propVal === undefined || propVal === null) {
         // Ignore properties that have the value `undefined` or `null`.
         continue;
       }
