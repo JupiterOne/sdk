@@ -30,14 +30,52 @@ describe('#neo4jUtilities', () => {
       '1a!b@c#d$e%f^g&h*i(j)k-l=m+n\\o|p\'q\\"r;s:t/u?v.w,x>y<z`1~2\t3\n4[5]6{7}8 90',
     );
   });
+});
+
+describe('#buildPropertyParameters', () => {
   test('should build property string correctly including sanitization', () => {
-    const testPropResults: Object = buildPropertyParameters({
-      test: '123',
-      '1sanitize1hi&$abc d': '1h"i&$abc d',
-    });
-    expect(testPropResults).toEqual({
+    expect(
+      buildPropertyParameters({
+        test: '123',
+        '1sanitize1hi&$abc d': '1h"i&$abc d',
+      }),
+    ).toEqual({
       test: '123',
       n1sanitize1hi__abc_d: '1h\\"i&$abc d',
+    });
+  });
+
+  test('should ignore properties with the value "undefined"', () => {
+    expect(
+      buildPropertyParameters({
+        test: '123',
+        ignore: undefined,
+      }),
+    ).toEqual({
+      test: '123',
+    });
+  });
+
+  test('should ignore properties with the value "null"', () => {
+    expect(
+      buildPropertyParameters({
+        test: '123',
+        ignore: null,
+      }),
+    ).toEqual({
+      test: '123',
+    });
+  });
+
+  test('should not ignore "false" property values', () => {
+    expect(
+      buildPropertyParameters({
+        test: '123',
+        include: false,
+      }),
+    ).toEqual({
+      test: '123',
+      include: false,
     });
   });
 });
