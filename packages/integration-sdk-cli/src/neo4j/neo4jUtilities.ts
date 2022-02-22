@@ -21,28 +21,29 @@ export function sanitizeValue(value: string): string {
 
 export function buildPropertyParameters(propList: Object) {
   const propertyParameters = {};
+
   for (const key in propList) {
+    const propVal = propList[key];
+
     if (key === '_rawData') {
-      //stringify JSON in rawData so we can store it.
-      propertyParameters[key] = `"${JSON.stringify(propList[key])}"`;
+      // stringify JSON in rawData so we can store it.
+      propertyParameters[key] = `"${JSON.stringify(propVal)}"`;
     } else {
       // Sanitize out characters that aren't allowed in property names
       const propertyName = sanitizePropertyName(key);
 
-      //If we're dealing with a number or boolean, leave alone, otherwise
-      //wrap in single quotes to convert to a string and escape all
-      //other single quotes so they don't terminate strings prematurely.
-      if (propList[key]) {
-        if (
-          typeof propList[key] == 'number' ||
-          typeof propList[key] == 'boolean'
-        ) {
-          propertyParameters[propertyName] = propList[key];
-        } else {
-          propertyParameters[propertyName] = sanitizeValue(
-            propList[key].toString(),
-          );
-        }
+      if (typeof propVal === 'undefined' || propVal === null) {
+        // Ignore properties that have the value `undefined` or `null`.
+        continue;
+      }
+
+      // If we're dealing with a number or boolean, leave alone, otherwise
+      // wrap in single quotes to convert to a string and escape all
+      // other single quotes so they don't terminate strings prematurely.
+      if (typeof propVal == 'number' || typeof propVal == 'boolean') {
+        propertyParameters[propertyName] = propVal;
+      } else {
+        propertyParameters[propertyName] = sanitizeValue(propVal.toString());
       }
     }
   }
