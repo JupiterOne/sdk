@@ -39,7 +39,9 @@ RETURN account, repo, user
 ```
 
 ### Fixed
+
 - All types and classes used for labels are now being sanitized.
+
 ## [8.4.2] - 2022-02-19
 
 ### Fixed
