@@ -1,5 +1,5 @@
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
-import { sanitizeValue, buildPropertyParameters } from './neo4jUtilities';
+import { sanitizeValue, buildPropertyParameters, sanitizePropertyName } from './neo4jUtilities';
 
 import * as neo4j from 'neo4j-driver';
 
@@ -51,21 +51,34 @@ export class Neo4jGraphStore {
   async addEntities(newEntities: Entity[]) {
     const nodeAlias: string = 'entityNode';
     for (const entity of newEntities) {
-      //Add index if not already in types.  This will optimize future
-      //MATCH/MERGE calls.
+      let classLabels = '';
+      if (entity._class) {
+        if(typeof(entity._class) === 'string') {
+          classLabels += `:${sanitizePropertyName(entity._class)}`;
+        }
+        else {
+          for(const className of entity._class) { 
+            classLabels += `:${sanitizePropertyName(className)}`;
+          }
+        }
+      }
+      // I believe we currently can't use parameters for node labels, hence the use of string
+      // interpolation in the below commands.
+      // Add index if not already in types.  This will optimize future
+      // MATCH/MERGE calls.
       if (!this.typeList.has(entity._type)) {
         await this.runCypherCommand(
           `CREATE INDEX index_${entity._type} IF NOT EXISTS FOR (n:${entity._type}) ON (n._key, n._integrationInstanceID);`,
         );
         this.typeList.add(entity._type);
       }
+      const sanitizedType = sanitizePropertyName(entity._type);
       const propertyParameters = buildPropertyParameters(entity);
       const finalKeyValue = sanitizeValue(entity._key.toString());
       const buildCommand = `
         MERGE (${nodeAlias} {_key: $finalKeyValue, _integrationInstanceID: $integrationInstanceID}) 
         SET ${nodeAlias} += $propertyParameters
-        SET ${nodeAlias}:${entity._type}
-        SET ${nodeAlias}:${entity._class};`;
+        SET ${nodeAlias}:${sanitizedType}${classLabels};`;
       await this.runCypherCommand(buildCommand, {
         propertyParameters: propertyParameters,
         finalKeyValue: finalKeyValue,
