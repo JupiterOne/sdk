@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.4.5] - 2022-02-23
+
+Export EntityCoreProperties to all type inference to work outside this project.
+
 ## [8.4.4] - 2022-02-22
 
 Fix #638 - The Neo4j ingestion tool was ignoring properties with the value
