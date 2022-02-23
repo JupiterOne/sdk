@@ -1,7 +1,7 @@
 {
   "name": "@jupiterone/integration-sdk-private-test-utils",
   "private": true,
-  "version": "8.4.4",
+  "version": "8.4.5",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
