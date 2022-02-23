@@ -44,7 +44,7 @@ export type Entity = EntityCoreProperties &
   RawDataTracking &
   EntityAdditionalProperties;
 
-interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
+export interface EntityCoreProperties extends Omit<PersistedObject, '_class'> {
   /**
    * Relationships are allowed a single `_class` value; entities are
    * allowed multiple values.
