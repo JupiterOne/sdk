@@ -197,7 +197,7 @@ const fetchGroupUserRelationships: Step = {
       { _type: 'acme_group' },
       async (groupEntity) => {
         // Use `getRawData` to convert `groupEntity` back to the typed interface for AcmeGroup
-        const group = await getRawData<AcmeGroup>(groupEntity);
+        const group = getRawData<AcmeGroup>(groupEntity);
 
         await client.iterateGroupUsers(
           { groupId: group.id },
@@ -244,7 +244,7 @@ const fetchDeviceApplications: Step = {
     await jobState.iterateEntities(
       { _type: 'acme_device' },
       async (deviceEntity) => {
-        const device = await getRawData<AcmeDevice>(deviceEntity);
+        const device = getRawData<AcmeDevice>(deviceEntity);
 
         await client.iterateDeviceApplications(
           { deviceId: device.id },
