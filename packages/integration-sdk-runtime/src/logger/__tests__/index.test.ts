@@ -669,17 +669,21 @@ describe('#publishEvent', () => {
 
     logger.on('event', onEmitEvent);
 
-    logger.publishWarnEvent({
-      name: IntegrationWarnEventName.MissingPermission,
-      description: 'the description',
-    });
+    let numEventsTypes = 0;
+    for (const key in IntegrationWarnEventName) {
+      numEventsTypes++;
+      logger.publishWarnEvent({
+        name: IntegrationWarnEventName[key],
+        description: 'the description',
+      });
+      expect(onEmitEvent).toHaveBeenNthCalledWith(numEventsTypes, {
+        name: IntegrationWarnEventName[key],
+        level: PublishEventLevel.Warn,
+        description: 'the description',
+      });
+    }
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(1);
-    expect(onEmitEvent).toHaveBeenCalledWith({
-      name: IntegrationWarnEventName.MissingPermission,
-      level: PublishEventLevel.Warn,
-      description: 'the description',
-    });
+    expect(onEmitEvent).toHaveBeenCalledTimes(numEventsTypes);
   });
 
   test('should support publishErrorEvent(...) function', () => {
@@ -692,17 +696,21 @@ describe('#publishEvent', () => {
 
     logger.on('event', onEmitEvent);
 
-    logger.publishErrorEvent({
-      name: IntegrationErrorEventName.MissingPermission,
-      description: 'the description',
-    });
+    let numEventsTypes = 0;
+    for (const key in IntegrationErrorEventName) {
+      numEventsTypes++;
+      logger.publishErrorEvent({
+        name: IntegrationErrorEventName[key],
+        description: 'the description',
+      });
+      expect(onEmitEvent).toHaveBeenNthCalledWith(numEventsTypes, {
+        name: IntegrationErrorEventName[key],
+        level: PublishEventLevel.Error,
+        description: 'the description',
+      });
+    }
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(1);
-    expect(onEmitEvent).toHaveBeenCalledWith({
-      name: IntegrationErrorEventName.MissingPermission,
-      level: PublishEventLevel.Error,
-      description: 'the description',
-    });
+    expect(onEmitEvent).toHaveBeenCalledTimes(numEventsTypes);
   });
 });
 

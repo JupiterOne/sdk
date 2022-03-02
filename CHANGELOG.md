@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+Added `IngestionLimitEncountered` type to IntegrationErrorEventName and
+IntegrationWarnEventName.
+
 ## [8.4.5] - 2022-02-23
 
 Export EntityCoreProperties to all type inference to work outside this project.

@@ -44,6 +44,7 @@ export interface PublishInfoEventInput extends PublishEventInput {
 
 export enum IntegrationWarnEventName {
   MissingPermission = 'warn_missing_permission',
+  IngestionLimitEncountered = 'warn_ingestion_limit_encountered',
 }
 
 export interface PublishWarnEventInput extends PublishEventInput {
@@ -56,6 +57,7 @@ export interface PublishWarnEventInput extends PublishEventInput {
  */
 export enum IntegrationErrorEventName {
   MissingPermission = 'error_missing_permission',
+  IngestionLimitEncountered = 'error_ingestion_limit_encountered',
 }
 
 export interface PublishErrorEventInput extends PublishEventInput {
