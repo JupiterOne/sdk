@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.4.6] - 2022-03-03
+
+Add support for empty string values to assignTags.
+
 ## [8.4.5] - 2022-02-23
 
 Export EntityCoreProperties to all type inference to work outside this project.
