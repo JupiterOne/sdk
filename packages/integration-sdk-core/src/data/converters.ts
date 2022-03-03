@@ -9,7 +9,7 @@ const FLOAT_NUMBER_REGEX = /^\d+\.\d+$/;
 export function parseStringPropertyValue(
   value: string | undefined | null,
 ): string | boolean | number | undefined {
-  if (!value) {
+  if (value == null) {
     return undefined;
   }
   if (TRUE_REGEX.test(value)) {
