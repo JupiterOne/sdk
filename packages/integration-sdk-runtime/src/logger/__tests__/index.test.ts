@@ -659,59 +659,56 @@ describe('#publishEvent', () => {
     });
   });
 
-  test('should support publishWarnEvent(...) function', () => {
-    const onEmitEvent = jest.fn();
+  test.each(Object.keys(IntegrationWarnEventName))(
+    'should support publishWarnEvent(...) function using %p event type',
+    (key) => {
+      const onEmitEvent = jest.fn();
 
-    const logger = createIntegrationLogger({
-      name,
-      invocationConfig,
-    });
+      const logger = createIntegrationLogger({
+        name,
+        invocationConfig,
+      });
 
-    logger.on('event', onEmitEvent);
-
-    let numEventsTypes = 0;
-    for (const key in IntegrationWarnEventName) {
-      numEventsTypes++;
+      logger.on('event', onEmitEvent);
       logger.publishWarnEvent({
         name: IntegrationWarnEventName[key],
         description: 'the description',
       });
-      expect(onEmitEvent).toHaveBeenNthCalledWith(numEventsTypes, {
+
+      expect(onEmitEvent).toHaveBeenCalledTimes(1);
+      expect(onEmitEvent).toHaveBeenCalledWith({
         name: IntegrationWarnEventName[key],
         level: PublishEventLevel.Warn,
         description: 'the description',
       });
-    }
+    },
+  );
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(numEventsTypes);
-  });
+  test.each(Object.keys(IntegrationErrorEventName))(
+    'should support publishErrorEvent(...) function using %p event type',
+    (key) => {
+      const onEmitEvent = jest.fn();
 
-  test('should support publishErrorEvent(...) function', () => {
-    const onEmitEvent = jest.fn();
+      const logger = createIntegrationLogger({
+        name,
+        invocationConfig,
+      });
 
-    const logger = createIntegrationLogger({
-      name,
-      invocationConfig,
-    });
-
-    logger.on('event', onEmitEvent);
-
-    let numEventsTypes = 0;
-    for (const key in IntegrationErrorEventName) {
-      numEventsTypes++;
+      logger.on('event', onEmitEvent);
       logger.publishErrorEvent({
         name: IntegrationErrorEventName[key],
         description: 'the description',
       });
-      expect(onEmitEvent).toHaveBeenNthCalledWith(numEventsTypes, {
+
+      expect(onEmitEvent).toHaveBeenCalledTimes(1);
+
+      expect(onEmitEvent).toHaveBeenCalledWith({
         name: IntegrationErrorEventName[key],
         level: PublishEventLevel.Error,
         description: 'the description',
       });
-    }
-
-    expect(onEmitEvent).toHaveBeenCalledTimes(numEventsTypes);
-  });
+    },
+  );
 });
 
 describe('#handleFailure', () => {

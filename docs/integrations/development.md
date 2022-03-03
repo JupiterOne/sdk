@@ -376,8 +376,44 @@ via the integration job event log, but there are some special messages that need
 to be displayed to customers to allow them to know if there are issues
 preventing integrations from collecting data.
 
-For these cases, we will provide specialized functions on the `logger` to assist
-with displaying those kinds of messages.
+For these cases, we provide the `logger.publishInfoEvent`,
+`logger.publishWarnEvent`, and `logger.publishErrorEvent` functions.
+
+`logger.publishInfoEvent` is used for purely informational purposes. Example
+usage:
+
+```typescript
+logger.publishInfoEvent({
+  name: IntegrationInfoEventName.Stats,
+  description: 'Fetched 10000 records',
+});
+```
+
+`logger.publishWarnEvent` is used primarily to indicate to the end-user that
+some notable issue/event has occured that isn't significant enough to mark the
+ingestion as a failure, but is still actionable Example usage:
+
+```typescript
+  logger.publishWarnEvent({
+    name: IntegrationWarnEventName.MissingPermission,
+    description: `Missing permissions to read X from Y. In ${platform}, please do Z to remedy this issue. More information can be found here: ${link to docs}`
+  });
+```
+
+`logger.publishErrorEvent` is much like warn, except that this is a case where
+the issue/event that occured **is** significant enough to mark the ingestion as
+a failure. Execution will continue as planned (as it is expected that you would
+not throw an error in your step in this case), but the execution will still be
+marked a failure on completion.
+
+Example usage:
+
+```typescript
+  logger.publishErrorEvent({
+    name: IntegrationErrorEventName.MissingPermission,
+    description: `Missing permissions to read W from X. Since this integration relies on the last successful execution timestamp to do Y, this execution will be marked as a failure. In ${platform}, please do Z to remedy this issue. More information can be found here: ${link to docs}`
+  });
+```
 
 A `logger.auth` function for displaying authorization related warnings or errors
 encountered while data is being collected in the steps.
