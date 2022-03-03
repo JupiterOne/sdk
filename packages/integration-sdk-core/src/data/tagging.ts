@@ -87,7 +87,7 @@ export function assignTags<T extends object>(
           (m: ResourceTagMap, t) => {
             const k = t.Key || t.key;
             const v = t.Value || t.value;
-            if (k && v) {
+            if (k && v != null) {
               m[k] = v;
             }
             return m;
@@ -114,7 +114,7 @@ function assignTagMap(
 
   for (const key of Object.keys(tagMap)) {
     const value = tagMap[key];
-    if (value) {
+    if (value != null) {
       if (TRUE_BOOLEAN_REGEX.test(value)) {
         tags.push(key);
       }

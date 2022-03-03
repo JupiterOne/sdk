@@ -202,4 +202,18 @@ describe('assignTags', () => {
       displayName: 'The Special',
     });
   });
+
+  test('tags with empty string values provided are assigned as empty strings', () => {
+    assignTags(entity, [{ key: 'empty', value: '' }]);
+    expect(entity).toMatchObject({
+      'tag.empty': '',
+    });
+  });
+
+  test('tags with " " string values provided are assigned as " " strings', () => {
+    assignTags(entity, [{ key: 'empty', value: ' ' }]);
+    expect(entity).toMatchObject({
+      'tag.empty': ' ',
+    });
+  });
 });
