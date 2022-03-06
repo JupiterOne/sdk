@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.5.0] - 2022-03-05
+
+### Changed
+
+- Bumped version of `@jupiterone/data-model` to v0.45.0
+
 ## [8.4.6] - 2022-03-03
 
 Add support for empty string values to assignTags.
