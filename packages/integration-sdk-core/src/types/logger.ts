@@ -44,6 +44,12 @@ export interface PublishInfoEventInput extends PublishEventInput {
 
 export enum IntegrationWarnEventName {
   MissingPermission = 'warn_missing_permission',
+  /**
+   * Some J1 integrations are configured to only ingest up to a set number
+   * of entities in a given integration job.
+   * We would like to indicate to the end-user when this limit is encountered
+   */
+  IngestionLimitEncountered = 'warn_ingestion_limit_encountered',
 }
 
 export interface PublishWarnEventInput extends PublishEventInput {
@@ -56,6 +62,13 @@ export interface PublishWarnEventInput extends PublishEventInput {
  */
 export enum IntegrationErrorEventName {
   MissingPermission = 'error_missing_permission',
+  /**
+   * Some J1 integrations are configured to only ingest up to a set number
+   * of entities in a given integration job.
+   * Additionally, some integrations rely on the last successful execution to determine what issues to ingest.
+   * We would like to indicate to the end-user when this limit is encountered, and then fail the execution on completion.
+   */
+  IngestionLimitEncountered = 'error_ingestion_limit_encountered',
 }
 
 export interface PublishErrorEventInput extends PublishEventInput {
