@@ -9,7 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
-Added `IngestionLimitEncountered` type to IntegrationErrorEventName and
+## [8.6.0] - 2022-03-07
+
+### Added
+
+`IngestionLimitEncountered` type to IntegrationErrorEventName and
 IntegrationWarnEventName.
 
 ## [8.5.0] - 2022-03-05
