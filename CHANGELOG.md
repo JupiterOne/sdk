@@ -12,6 +12,7 @@ and this project adheres to
 ## [8.6.1] - 2022-03-14
 
 ### Fixed
+
 - Neo4j uploads now include all properties for mapped entities.
 
 ## [8.6.0] - 2022-03-07
