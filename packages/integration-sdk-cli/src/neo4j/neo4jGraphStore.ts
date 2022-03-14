@@ -109,9 +109,11 @@ export class Neo4jGraphStore {
       if (relationship._mapping) {
         //Mapped Relationship
         if (relationship._mapping['skipTargetCreation'] === false) {
+          const targetEntity = relationship._mapping['targetEntity'];
           //Create target entity first
           const tempEntity: Entity = {
-            _class: relationship._mapping['targetEntity']._class,
+            ...targetEntity,
+            _class: targetEntity._class,
             //TODO, I think this key is wrong, but not sure what else to use
             _key: sanitizeValue(
               relationship._key.replace(
@@ -119,7 +121,7 @@ export class Neo4jGraphStore {
                 '',
               ),
             ),
-            _type: relationship._mapping['targetEntity']._type,
+            _type: targetEntity._type,
           };
           await this.addEntities([tempEntity]);
         }
