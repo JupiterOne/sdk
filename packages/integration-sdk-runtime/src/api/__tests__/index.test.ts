@@ -78,8 +78,6 @@ describe('getApiKeyFromEnvironment', () => {
 
 describe('createApiClient', () => {
   test('successfully creates apiClient', () => {
-    process.env.SDK_API_CLIENT_MAX_TIMEOUT = '20000';
-
     const apiBaseUrl = getApiBaseUrl();
 
     const client = createApiClient({
