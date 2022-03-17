@@ -7,6 +7,7 @@ import {
   createApiClient,
   getAccountFromEnvironment,
 } from '../index';
+import { IntegrationMaxTimeoutBadValueError } from '../error';
 
 jest.mock('@lifeomic/alpha');
 
@@ -76,24 +77,52 @@ describe('getApiKeyFromEnvironment', () => {
   });
 });
 
-test('createApiClient', () => {
-  const apiBaseUrl = getApiBaseUrl();
-
-  const client = createApiClient({
-    apiBaseUrl,
-    account: 'test-account',
-    accessToken: 'test-key',
+describe('createApiClient', () => {
+  afterEach(() => {
+    delete process.env.SDK_API_CLIENT_MAX_TIMEOUT;
   });
 
-  expect(client).toBeInstanceOf(AlphaMock);
+  test('successfully creates apiClient', () => {
+    process.env.SDK_API_CLIENT_MAX_TIMEOUT = '20000';
 
-  expect(AlphaMock).toHaveReturnedTimes(1);
-  expect(AlphaMock).toHaveBeenCalledWith({
-    baseURL: apiBaseUrl,
-    headers: {
-      Authorization: 'Bearer test-key',
-      'Content-Type': 'application/json',
-      'LifeOmic-Account': 'test-account',
-    },
+    const apiBaseUrl = getApiBaseUrl();
+
+    const client = createApiClient({
+      apiBaseUrl,
+      account: 'test-account',
+      accessToken: 'test-key',
+    });
+
+    expect(client).toBeInstanceOf(AlphaMock);
+
+    expect(AlphaMock).toHaveReturnedTimes(1);
+    expect(AlphaMock).toHaveBeenCalledWith({
+      baseURL: apiBaseUrl,
+      headers: {
+        Authorization: 'Bearer test-key',
+        'Content-Type': 'application/json',
+        'LifeOmic-Account': 'test-account',
+      },
+      retry: {
+        maxTimeout: 20000,
+      },
+    });
+  });
+
+  test('bad SDK_API_CLIENT_MAX_TIMEOUT throws error', () => {
+    process.env.SDK_API_CLIENT_MAX_TIMEOUT = '10000x';
+    const apiBaseUrl = getApiBaseUrl();
+    try {
+      createApiClient({
+        apiBaseUrl,
+        account: 'test-account',
+        accessToken: 'test-key',
+      });
+    } catch (err) {
+      expect(err).toBeInstanceOf(IntegrationMaxTimeoutBadValueError);
+      expect(err.message).toBe(
+        'The SDK_API_CLIENT_MAX_TIMEOUT environment variable is not a number',
+      );
+    }
   });
 });

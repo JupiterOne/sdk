@@ -8,6 +8,7 @@ import dotenvExpand from 'dotenv-expand';
 import {
   IntegrationApiKeyRequiredError,
   IntegrationAccountRequiredError,
+  IntegrationMaxTimeoutBadValueError,
 } from './error';
 
 export type ApiClient = AxiosInstance;
@@ -41,9 +42,19 @@ export function createApiClient({
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
+  const maxTimeout = process.env.SDK_API_CLIENT_MAX_TIMEOUT
+    ? Number(process.env.SDK_API_CLIENT_MAX_TIMEOUT)
+    : 10000;
+  if (isNaN(maxTimeout)) {
+    throw new IntegrationMaxTimeoutBadValueError();
+  }
+
   return new Alpha({
     baseURL: apiBaseUrl,
     headers,
+    retry: {
+      maxTimeout: maxTimeout,
+    },
   }) as ApiClient;
 }
 

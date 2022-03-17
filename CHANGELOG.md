@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.6.2] - 2022-03-17
+
+### Added
+
+- New `SDK_API_CLIENT_MAX_TIMEOUT` variable added to configure `maxTimeout` for
+  the sdk's `ApiClient`.
+
 ## [8.6.1] - 2022-03-14
 
 ### Fixed

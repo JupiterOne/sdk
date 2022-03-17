@@ -17,3 +17,13 @@ export class IntegrationAccountRequiredError extends IntegrationError {
     });
   }
 }
+
+export class IntegrationMaxTimeoutBadValueError extends IntegrationError {
+  constructor() {
+    super({
+      code: 'SDK_API_CLIENT_MAX_TIMEOUT_BAD_VALUE',
+      message:
+        'The SDK_API_CLIENT_MAX_TIMEOUT environment variable is not a number',
+    });
+  }
+}
