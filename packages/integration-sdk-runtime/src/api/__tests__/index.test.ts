@@ -77,10 +77,6 @@ describe('getApiKeyFromEnvironment', () => {
 });
 
 describe('createApiClient', () => {
-  afterEach(() => {
-    delete process.env.SDK_API_CLIENT_MAX_TIMEOUT;
-  });
-
   test('successfully creates apiClient', () => {
     process.env.SDK_API_CLIENT_MAX_TIMEOUT = '20000';
 
