@@ -7,7 +7,6 @@ import {
   createApiClient,
   getAccountFromEnvironment,
 } from '../index';
-import { IntegrationMaxTimeoutBadValueError } from '../error';
 
 jest.mock('@lifeomic/alpha');
 
@@ -91,6 +90,9 @@ describe('createApiClient', () => {
       apiBaseUrl,
       account: 'test-account',
       accessToken: 'test-key',
+      retryOptions: {
+        maxTimeout: 20000,
+      },
     });
 
     expect(client).toBeInstanceOf(AlphaMock);
@@ -107,22 +109,5 @@ describe('createApiClient', () => {
         maxTimeout: 20000,
       },
     });
-  });
-
-  test('bad SDK_API_CLIENT_MAX_TIMEOUT throws error', () => {
-    process.env.SDK_API_CLIENT_MAX_TIMEOUT = '10000x';
-    const apiBaseUrl = getApiBaseUrl();
-    try {
-      createApiClient({
-        apiBaseUrl,
-        account: 'test-account',
-        accessToken: 'test-key',
-      });
-    } catch (err) {
-      expect(err).toBeInstanceOf(IntegrationMaxTimeoutBadValueError);
-      expect(err.message).toBe(
-        'The SDK_API_CLIENT_MAX_TIMEOUT environment variable is not a number',
-      );
-    }
   });
 });

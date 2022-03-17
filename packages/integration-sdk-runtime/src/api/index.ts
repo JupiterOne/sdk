@@ -1,14 +1,12 @@
 import { AxiosInstance } from 'axios';
 import Alpha from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
-
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 
 import {
   IntegrationApiKeyRequiredError,
   IntegrationAccountRequiredError,
-  IntegrationMaxTimeoutBadValueError,
 } from './error';
 
 export type ApiClient = AxiosInstance;
@@ -17,6 +15,14 @@ interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
+  retryOptions?: RetryOptions;
+}
+
+interface RetryOptions {
+  attempts?: number;
+  factor?: number;
+  maxTimeout?: number;
+  retryCondition?: (err: Error) => boolean;
 }
 
 /**
@@ -32,6 +38,7 @@ export function createApiClient({
   apiBaseUrl,
   account,
   accessToken,
+  retryOptions,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
     'LifeOmic-Account': account,
@@ -42,19 +49,10 @@ export function createApiClient({
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const maxTimeout = process.env.SDK_API_CLIENT_MAX_TIMEOUT
-    ? Number(process.env.SDK_API_CLIENT_MAX_TIMEOUT)
-    : 10000;
-  if (isNaN(maxTimeout)) {
-    throw new IntegrationMaxTimeoutBadValueError();
-  }
-
   return new Alpha({
     baseURL: apiBaseUrl,
     headers,
-    retry: {
-      maxTimeout: maxTimeout,
-    },
+    retry: retryOptions,
   }) as ApiClient;
 }
 

@@ -13,8 +13,8 @@ and this project adheres to
 
 ### Added
 
-- New `SDK_API_CLIENT_MAX_TIMEOUT` variable added to configure `maxTimeout` for
-  the sdk's `ApiClient`.
+- `retryOptions` parameter to `createApiClient` to allow configuration of the
+  retry behavior for `Alpha`
 
 ## [8.6.1] - 2022-03-14
 
