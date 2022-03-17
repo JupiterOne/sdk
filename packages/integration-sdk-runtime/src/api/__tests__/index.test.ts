@@ -76,24 +76,32 @@ describe('getApiKeyFromEnvironment', () => {
   });
 });
 
-test('createApiClient', () => {
-  const apiBaseUrl = getApiBaseUrl();
+describe('createApiClient', () => {
+  test('successfully creates apiClient', () => {
+    const apiBaseUrl = getApiBaseUrl();
 
-  const client = createApiClient({
-    apiBaseUrl,
-    account: 'test-account',
-    accessToken: 'test-key',
-  });
+    const client = createApiClient({
+      apiBaseUrl,
+      account: 'test-account',
+      accessToken: 'test-key',
+      retryOptions: {
+        maxTimeout: 20000,
+      },
+    });
 
-  expect(client).toBeInstanceOf(AlphaMock);
+    expect(client).toBeInstanceOf(AlphaMock);
 
-  expect(AlphaMock).toHaveReturnedTimes(1);
-  expect(AlphaMock).toHaveBeenCalledWith({
-    baseURL: apiBaseUrl,
-    headers: {
-      Authorization: 'Bearer test-key',
-      'Content-Type': 'application/json',
-      'LifeOmic-Account': 'test-account',
-    },
+    expect(AlphaMock).toHaveReturnedTimes(1);
+    expect(AlphaMock).toHaveBeenCalledWith({
+      baseURL: apiBaseUrl,
+      headers: {
+        Authorization: 'Bearer test-key',
+        'Content-Type': 'application/json',
+        'LifeOmic-Account': 'test-account',
+      },
+      retry: {
+        maxTimeout: 20000,
+      },
+    });
   });
 });

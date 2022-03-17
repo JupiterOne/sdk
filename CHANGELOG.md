@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.6.2] - 2022-03-17
+
+### Added
+
+- `retryOptions` parameter to `createApiClient` to allow configuration of the
+  retry behavior for `Alpha`
+
 ## [8.6.1] - 2022-03-14
 
 ### Fixed
