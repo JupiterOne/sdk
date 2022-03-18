@@ -29,6 +29,9 @@ export { createEventPublishingQueue } from './events';
 const UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 6;
 
+// Let's max at 5 meg even though 6 will technically work
+const UPLOAD_SIZE_MAX = 5000000
+
 interface SynchronizeInput {
   logger: IntegrationLogger;
   apiClient: ApiClient;
@@ -275,7 +278,10 @@ export async function uploadDataChunk<
       delay: 200,
       factor: 1.05,
       handleError(err, attemptContext) {
-        if (err.code === 'RequestEntityTooLargeException') {
+        // Did err.code ever work?  I see it as undefined if I console.log its 
+        // value.  Using err.response.status seems like the more appropriate way 
+        // to handle an Axios response
+        if (err.code === 'RequestEntityTooLargeException' || err.response.status === 413) {
           // No reason to retry these errors as the request size ain't gonna change.
           throw err;
         }
@@ -305,22 +311,83 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
   uploadBatchSize?: number,
 ) {
-  const batches = chunk(data, uploadBatchSize || UPLOAD_BATCH_SIZE);
-  await pMap(
-    batches,
-    async (batch: T[K][]) => {
-      if (batch.length) {
-        await uploadDataChunk({
-          apiClient,
-          logger,
-          jobId: job.id,
-          type,
-          batch,
-        });
+  let retryAfterTruncate: Boolean;
+  do {
+    // Set/Reset retry flag
+    retryAfterTruncate = false;
+    try {
+      const batches = chunk(data, uploadBatchSize || UPLOAD_BATCH_SIZE);
+      await pMap(
+        batches,
+        async (batch: T[K][]) => {
+          if (batch.length) {
+            await uploadDataChunk({
+              apiClient,
+              logger,
+              jobId: job.id,
+              type,
+              batch,
+            });
+          }
+        },
+        { concurrency: UPLOAD_CONCURRENCY },
+      );
+    } 
+    catch (err) {
+      if (err.code === 'RequestEntityTooLargeException' || err.response.status === 413) {
+        logger.info(`Attempting to shrink raw_data`);
+        shrinkRawData(data);
+        retryAfterTruncate = true;
       }
-    },
-    { concurrency: UPLOAD_CONCURRENCY },
-  );
+      else {
+        throw err;
+      }
+    }
+  } while(retryAfterTruncate)
+}
+
+function shrinkRawData<T extends UploadDataLookup, K extends keyof T> (data: T[K][]): Boolean {
+  let totalSize = Buffer.byteLength(JSON.stringify(data));
+
+  while(totalSize > UPLOAD_SIZE_MAX) {
+    let largestEntryKey = '';
+    let largestEntrySize = 0;
+    let largestRawDataEntryKey = '';
+    let largestRawDataEntrySize = 0;
+    let largestItemKey = '';
+    let largestItemSize = 0;
+
+    // Find largest Entity
+    for ( const entry in data) {
+      if(JSON.stringify(data[entry]).length > largestEntrySize) {
+        largestEntrySize = JSON.stringify(data[entry]).length;
+        largestEntryKey = entry;
+      }
+    }
+
+    // Find largest _rawData entry (typically 0, but check to be certain)
+    for ( const rawEntry in data[largestEntryKey]["_rawData"]) {
+      if(JSON.stringify(data[largestEntryKey]["_rawData"][rawEntry]).length > largestRawDataEntrySize) {
+        largestRawDataEntrySize = JSON.stringify(data[largestEntryKey]["_rawData"][rawEntry]).length;
+        largestRawDataEntryKey = rawEntry;
+      }
+    }
+    
+    // Find largest item within rawData
+    for ( const item in data[largestEntryKey]["_rawData"][largestRawDataEntryKey]["rawData"]) {
+      if (data[largestEntryKey]["_rawData"][largestRawDataEntryKey]["rawData"][item] &&
+          data[largestEntryKey]["_rawData"][largestRawDataEntryKey]["rawData"][item].length > largestItemSize) {
+        largestItemKey = item;
+        largestItemSize = data[largestEntryKey]["_rawData"][largestRawDataEntryKey]["rawData"][item].length;
+      }
+    }
+
+    console.log(`SHRINKING RAW DATA BY TRUNCATING ${largestItemKey} in rawData`);
+    data[largestEntryKey]["_rawData"][largestRawDataEntryKey]["rawData"][largestItemKey] = "TRUNCATED"
+    
+    totalSize = Buffer.byteLength(JSON.stringify(data));
+  }
+  return true;
 }
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {
