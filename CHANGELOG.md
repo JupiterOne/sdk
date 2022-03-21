@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.6.3] - 2022-03-17
+
+### Fixed
+
+- Fixed an error where if `retryOptions` was `undefined` default options would
+  not be adopted
+
 ## [8.6.2] - 2022-03-17
 
 ### Added

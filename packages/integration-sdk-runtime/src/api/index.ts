@@ -52,7 +52,7 @@ export function createApiClient({
   return new Alpha({
     baseURL: apiBaseUrl,
     headers,
-    retry: retryOptions,
+    retry: retryOptions ?? {},
   }) as ApiClient;
 }
 
