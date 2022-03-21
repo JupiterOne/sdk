@@ -404,9 +404,6 @@ function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
       }
     }
 
-    logger.info(
-      `SHRINKING RAW DATA BY TRUNCATING ${largestItemKey} in rawData`,
-    );
     data[largestEntryKey]['_rawData'][largestRawDataEntryKey]['rawData'][
       largestItemKey
     ] = 'TRUNCATED';
