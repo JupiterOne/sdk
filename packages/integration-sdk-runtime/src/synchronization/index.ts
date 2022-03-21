@@ -29,8 +29,11 @@ export { createEventPublishingQueue } from './events';
 const UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 6;
 
-// Let's max at 5 meg even though 6 will technically work
-const UPLOAD_SIZE_MAX = 5000000;
+// Uploads above 6 MB will fail.  This is technically
+// 6291456 bytes, but we need header space.  Most web
+// servers will only allow 8KB or 16KB as a max header
+// size, so 6291456 - 16384 = 6275072
+const UPLOAD_SIZE_MAX = 6275072;
 
 interface SynchronizeInput {
   logger: IntegrationLogger;
@@ -331,67 +334,75 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   );
 }
 
+/**
+ * Removes data from the rawData of the largest entity until the overall size
+ * of the data object is less than UPLOAD_SIZE_MAX.
+ *
+ * @param data
+ */
 export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
-): Boolean {
+) {
   let totalSize = Buffer.byteLength(JSON.stringify(data));
 
   while (totalSize > UPLOAD_SIZE_MAX) {
-    let largestEntryKey = '';
-    let largestEntrySize = 0;
+    let largestEntityKey = '';
+    let largestEntitySize = 0;
     let largestRawDataEntryKey = '';
     let largestRawDataEntrySize = 0;
     let largestItemKey = '';
     let largestItemSize = 0;
 
     // Find largest Entity
-    for (const entry in data) {
-      if (JSON.stringify(data[entry]).length > largestEntrySize) {
-        largestEntrySize = JSON.stringify(data[entry]).length;
-        largestEntryKey = entry;
+    for (const entity in data) {
+      if (JSON.stringify(data[entity]).length > largestEntitySize) {
+        largestEntitySize = JSON.stringify(data[entity]).length;
+        largestEntityKey = entity;
       }
     }
 
     // Find largest _rawData entry (typically 0, but check to be certain)
-    for (const rawEntry in data[largestEntryKey]['_rawData']) {
+    for (const rawEntry in data[largestEntityKey]['_rawData']) {
       if (
-        JSON.stringify(data[largestEntryKey]['_rawData'][rawEntry]).length >
+        JSON.stringify(data[largestEntityKey]['_rawData'][rawEntry]).length >
         largestRawDataEntrySize
       ) {
         largestRawDataEntrySize = JSON.stringify(
-          data[largestEntryKey]['_rawData'][rawEntry],
+          data[largestEntityKey]['_rawData'][rawEntry],
         ).length;
         largestRawDataEntryKey = rawEntry;
       }
     }
 
     // Find largest item within rawData
-    for (const item in data[largestEntryKey]['_rawData'][
+    for (const item in data[largestEntityKey]['_rawData'][
       largestRawDataEntryKey
     ]['rawData']) {
       if (
-        data[largestEntryKey]['_rawData'][largestRawDataEntryKey]['rawData'][
+        data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
           item
         ] &&
-        data[largestEntryKey]['_rawData'][largestRawDataEntryKey]['rawData'][
-          item
-        ].length > largestItemSize
+        JSON.stringify(
+          data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
+            item
+          ],
+        ).length > largestItemSize
       ) {
         largestItemKey = item;
-        largestItemSize =
-          data[largestEntryKey]['_rawData'][largestRawDataEntryKey]['rawData'][
+        largestItemSize = JSON.stringify(
+          data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
             item
-          ].length;
+          ],
+        ).length;
       }
     }
 
-    data[largestEntryKey]['_rawData'][largestRawDataEntryKey]['rawData'][
+    data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
       largestItemKey
     ] = 'TRUNCATED';
 
     totalSize = Buffer.byteLength(JSON.stringify(data));
   }
-  return true;
 }
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {
