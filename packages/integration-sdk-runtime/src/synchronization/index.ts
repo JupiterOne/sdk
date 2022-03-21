@@ -285,10 +285,9 @@ export async function uploadDataChunk<
           err.code === 'RequestEntityTooLargeException' ||
           err.response?.status === 413
         ) {
-          // No reason to retry these errors as the request size ain't gonna change.
-          throw err;
-        }
-        if (
+          logger.info(`Attempting to shrink raw_data in chunk`);
+          shrinkRawData(batch);
+        } else if (
           attemptContext.attemptsRemaining &&
           // There are sometimes intermittent credentials errors when running
           // a managed integration on AWS Fargate. They consistently succeed
@@ -314,43 +313,25 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
   uploadBatchSize?: number,
 ) {
-  let retryAfterTruncate: Boolean;
-  do {
-    // Set/Reset retry flag
-    retryAfterTruncate = false;
-    try {
-      const batches = chunk(data, uploadBatchSize || UPLOAD_BATCH_SIZE);
-      await pMap(
-        batches,
-        async (batch: T[K][]) => {
-          if (batch.length) {
-            await uploadDataChunk({
-              apiClient,
-              logger,
-              jobId: job.id,
-              type,
-              batch,
-            });
-          }
-        },
-        { concurrency: UPLOAD_CONCURRENCY },
-      );
-    } catch (err) {
-      if (
-        err.code === 'RequestEntityTooLargeException' ||
-        err.response?.status === 413
-      ) {
-        logger.info(`Attempting to shrink raw_data`);
-        shrinkRawData(data);
-        retryAfterTruncate = true;
-      } else {
-        throw err;
+  const batches = chunk(data, uploadBatchSize || UPLOAD_BATCH_SIZE);
+  await pMap(
+    batches,
+    async (batch: T[K][]) => {
+      if (batch.length) {
+        await uploadDataChunk({
+          apiClient,
+          logger,
+          jobId: job.id,
+          type,
+          batch,
+        });
       }
-    }
-  } while (retryAfterTruncate);
+    },
+    { concurrency: UPLOAD_CONCURRENCY },
+  );
 }
 
-function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
+export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
 ): Boolean {
   let totalSize = Buffer.byteLength(JSON.stringify(data));

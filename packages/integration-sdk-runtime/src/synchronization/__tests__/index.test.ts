@@ -18,6 +18,7 @@ import {
   synchronizeCollectedData,
   abortSynchronization,
   uploadDataChunk,
+  shrinkRawData,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -375,7 +376,7 @@ describe('synchronizeCollectedData', () => {
 });
 
 describe('uploadDataChunk', () => {
-  it('should not retry uploading data when a "RequestEntityTooLargeException" is returned', async () => {
+  it('should retry uploading data when a "RequestEntityTooLargeException" is returned', async () => {
     const context = createTestContext();
     const job = generateSynchronizationJob();
 
@@ -410,7 +411,52 @@ describe('uploadDataChunk', () => {
       }),
     ).rejects.toThrow(requestTooLargeError);
 
-    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledTimes(5);
+  });
+});
+
+describe('shrinkLargeUpload', () => {
+  it('should shrink rawData', () => {
+    const largeData = new Array(700000).join('aaaaaaaaaa');
+
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: largeData,
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+    const finalData = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: 'TRUNCATED',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+
+    shrinkRawData(data);
+
+    expect(data).toEqual(finalData);
   });
 });
 
