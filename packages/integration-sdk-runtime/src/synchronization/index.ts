@@ -377,22 +377,13 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
     for (const item in data[largestEntityKey]['_rawData'][
       largestRawDataEntryKey
     ]['rawData']) {
-      if (
-        data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
-          item
-        ] &&
-        JSON.stringify(
-          data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
-            item
-          ],
-        ).length > largestItemSize
-      ) {
+      const length =
+        data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][item] ?
+        JSON.stringify(data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][item]).length :
+        0;
+      if (length > largestItemSize) {
         largestItemKey = item;
-        largestItemSize = JSON.stringify(
-          data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
-            item
-          ],
-        ).length;
+        largestItemSize = length;
       }
     }
 
