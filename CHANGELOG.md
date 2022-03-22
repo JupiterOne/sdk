@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Log error `code` when an integration logs an error
+- Throw an `IntegrationError` with code `INTEGRATION_UPLOAD_FAILED` when the
+  JupiterOne system responds with `RequestEntityTooLargeException`
+
+### Fixed
+
+- [#660] - Trigger fatal error when JupiterOne system responds with
+  `JOB_NOT_AWAITING_UPLOADS`
+
 ## [8.6.3] - 2022-03-17
 
 ### Fixed

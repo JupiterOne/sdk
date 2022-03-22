@@ -335,11 +335,17 @@ export class IntegrationLogger
     description: string;
   }) {
     const { eventName, errorId, err, description } = options;
+
+    // If there is a `code` property on the `Error`, we should include this
+    // in our log. This is helpful for when we receive an HTTP response error
+    // and the service includes specific codes (e.g. the JupiterOne system).
+    const code = (err as any).code;
+
     if (shouldReportErrorToOperator(err)) {
-      this.error({ errorId, err }, description);
+      this.error({ errorId, err, code }, description);
       this.onFailure({ err });
     } else {
-      this.warn({ errorId, err }, description);
+      this.warn({ errorId, err, code }, description);
     }
 
     this.publishEvent({

@@ -3,6 +3,7 @@ import times from 'lodash/times';
 import noop from 'lodash/noop';
 
 import {
+  IntegrationError,
   PartialDatasets,
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
@@ -400,16 +401,78 @@ describe('uploadDataChunk', () => {
           },
         };
       });
-    await expect(
-      uploadDataChunk({
+
+    let uploadDataChunkErr: any;
+
+    try {
+      await uploadDataChunk({
         logger: context.logger,
         apiClient: context.apiClient,
         jobId: job.id,
         type,
         batch,
-      }),
-    ).rejects.toThrow(requestTooLargeError);
+      });
+    } catch (err) {
+      uploadDataChunkErr = err;
 
+      expect(uploadDataChunkErr instanceof IntegrationError).toEqual(true);
+      expect(uploadDataChunkErr.message).toEqual(
+        'Failed to upload integration data because payload is too large',
+      );
+      expect(uploadDataChunkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
+    }
+
+    expect(uploadDataChunkErr).not.toBe(undefined);
+    expect(postSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not retry uploading data when a "JOB_NOT_AWAITING_UPLOADS" is returned', async () => {
+    const context = createTestContext();
+    const job = generateSynchronizationJob();
+
+    const jobNotAwaitingUploadsError = new Error('Job is not awaiting uploads');
+    jobNotAwaitingUploadsError.name = 'JOB_NOT_AWAITING_UPLOADS';
+    jobNotAwaitingUploadsError['code'] = 'JOB_NOT_AWAITING_UPLOADS';
+
+    const type = 'entities';
+    const batch = [];
+
+    const postSpy = jest
+      .spyOn(context.apiClient, 'post')
+      .mockImplementation((path: string): any => {
+        if (path === `/persister/synchronization/jobs/${job.id}/${type}`) {
+          throw jobNotAwaitingUploadsError;
+        }
+        return {
+          data: {
+            job,
+          },
+        };
+      });
+
+    let uploadDataChunkErr: any;
+
+    try {
+      await uploadDataChunk({
+        logger: context.logger,
+        apiClient: context.apiClient,
+        jobId: job.id,
+        type,
+        batch,
+      });
+    } catch (err) {
+      uploadDataChunkErr = err;
+
+      expect(uploadDataChunkErr instanceof IntegrationError).toEqual(true);
+      expect(uploadDataChunkErr.message).toEqual(
+        'Failed to upload integration data because job has already ended',
+      );
+      expect(uploadDataChunkErr.code).toEqual(
+        'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
+      );
+    }
+
+    expect(uploadDataChunkErr).not.toBe(undefined);
     expect(postSpy).toHaveBeenCalledTimes(1);
   });
 });

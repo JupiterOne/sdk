@@ -282,6 +282,7 @@ describe('step event publishing', () => {
       1,
       {
         err: error,
+        code: 'LOCAL_CONFIG_FIELD_MISSING',
         errorId: expect.any(String),
       },
       expect.stringContaining(
@@ -502,7 +503,11 @@ describe('validation failure logging', () => {
 
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).toHaveBeenCalledWith(
-      { errorId: expect.any(String), err: error },
+      {
+        errorId: expect.any(String),
+        err: error,
+        code: 'CONFIG_VALIDATION_ERROR',
+      },
       expect.stringMatching(expectedDescriptionRegex),
     );
   });

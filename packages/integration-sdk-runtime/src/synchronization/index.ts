@@ -7,6 +7,7 @@ import {
   Entity,
   Relationship,
   SynchronizationJob,
+  IntegrationError,
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationLogger } from '../logger';
@@ -18,7 +19,7 @@ import { synchronizationApiError } from './error';
 import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
-import { retry } from '@lifeomic/attempt';
+import { AttemptContext, retry } from '@lifeomic/attempt';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
@@ -260,6 +261,53 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
+type HandleUploadDataChunkErrorParams = {
+  err: any;
+  attemptContext: AttemptContext;
+  logger: IntegrationLogger;
+};
+
+function handleUploadDataChunkError({
+  err,
+  attemptContext,
+  logger,
+}: HandleUploadDataChunkErrorParams): void {
+  if (err.code === 'RequestEntityTooLargeException') {
+    // No reason to retry these errors as the request size ain't gonna change.
+    throw new IntegrationError({
+      code: 'INTEGRATION_UPLOAD_FAILED',
+      cause: err,
+      fatal: false,
+      message: 'Failed to upload integration data because payload is too large',
+    });
+  } else if (err.code === 'JOB_NOT_AWAITING_UPLOADS') {
+    throw new IntegrationError({
+      code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
+      cause: err,
+      fatal: true,
+      message:
+        'Failed to upload integration data because job has already ended',
+    });
+  }
+
+  if (
+    attemptContext.attemptsRemaining &&
+    // There are sometimes intermittent credentials errors when running
+    // a managed integration on AWS Fargate. They consistently succeed
+    // with retry logic, so we don't want to log a warn.
+    err.code !== 'CredentialsError'
+  ) {
+    logger.warn(
+      {
+        err,
+        code: err.code,
+        attemptNum: attemptContext.attemptNum,
+      },
+      'Failed to upload integration data chunk (will retry)',
+    );
+  }
+}
+
 export async function uploadDataChunk<
   T extends UploadDataLookup,
   K extends keyof T,
@@ -275,25 +323,11 @@ export async function uploadDataChunk<
       delay: 200,
       factor: 1.05,
       handleError(err, attemptContext) {
-        if (err.code === 'RequestEntityTooLargeException') {
-          // No reason to retry these errors as the request size ain't gonna change.
-          throw err;
-        }
-        if (
-          attemptContext.attemptsRemaining &&
-          // There are sometimes intermittent credentials errors when running
-          // a managed integration on AWS Fargate. They consistently succeed
-          // with retry logic, so we don't want to log a warn.
-          err.code !== 'CredentialsError'
-        ) {
-          logger.warn(
-            {
-              err,
-              attemptNum: attemptContext.attemptNum,
-            },
-            'Failed to upload integration data chunk (will retry)',
-          );
-        }
+        handleUploadDataChunkError({
+          err,
+          attemptContext,
+          logger,
+        });
       },
     },
   );
