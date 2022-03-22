@@ -364,13 +364,11 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
 
     // Find largest _rawData entry (typically 0, but check to be certain)
     for (const rawEntry in data[largestEntityKey]['_rawData']) {
+      const length = JSON.stringify(data[largestEntityKey]['_rawData'][rawEntry]).length;
       if (
-        JSON.stringify(data[largestEntityKey]['_rawData'][rawEntry]).length >
-        largestRawDataEntrySize
+        length > largestRawDataEntrySize
       ) {
-        largestRawDataEntrySize = JSON.stringify(
-          data[largestEntityKey]['_rawData'][rawEntry],
-        ).length;
+        largestRawDataEntrySize = length;
         largestRawDataEntryKey = rawEntry;
       }
     }
