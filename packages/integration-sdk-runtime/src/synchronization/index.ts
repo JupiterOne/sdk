@@ -355,8 +355,9 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
 
     // Find largest Entity
     for (const entity in data) {
-      if (JSON.stringify(data[entity]).length > largestEntitySize) {
-        largestEntitySize = JSON.stringify(data[entity]).length;
+      const length = JSON.stringify(data[entity]).length
+      if (length > largestEntitySize) {
+        largestEntitySize = length;
         largestEntityKey = entity;
       }
     }
