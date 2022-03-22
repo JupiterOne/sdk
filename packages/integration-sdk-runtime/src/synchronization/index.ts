@@ -261,6 +261,35 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
+type SystemErrorResponseData = {
+  /**
+   * The specific system-level error code (e.g. `ENTITY_IS_NOT_ARRAY`)
+   */
+  code: string;
+  /**
+   * The specific system-level error message
+   * (e.g. `"\"entities\" should be an array"`)
+   */
+  message: string;
+};
+
+/**
+ * The JupiterOne system will encapsulate error details in the response in
+ * some situations. For example:
+ *
+ * {
+ *   "error": {
+ *     "code": "ENTITY_IS_NOT_ARRAY",
+ *     "message": "\"entities\" should be an array"
+ *   }
+ * }
+ */
+function getSystemErrorResponseData(
+  err: any,
+): SystemErrorResponseData | undefined {
+  return err.response?.data?.error;
+}
+
 type HandleUploadDataChunkErrorParams = {
   err: any;
   attemptContext: AttemptContext;
@@ -272,6 +301,19 @@ function handleUploadDataChunkError({
   attemptContext,
   logger,
 }: HandleUploadDataChunkErrorParams): void {
+  /**
+   * The JupiterOne system will encapsulate error details in the response in
+   * some situations. For example:
+   *
+   * {
+   *   "error": {
+   *     "code": "ENTITY_IS_NOT_ARRAY",
+   *     "message": "\"entities\" should be an array"
+   *   }
+   * }
+   */
+  const systemErrorResponseData = getSystemErrorResponseData(err);
+
   if (err.code === 'RequestEntityTooLargeException') {
     // No reason to retry these errors as the request size ain't gonna change.
     throw new IntegrationError({
@@ -280,7 +322,7 @@ function handleUploadDataChunkError({
       fatal: false,
       message: 'Failed to upload integration data because payload is too large',
     });
-  } else if (err.code === 'JOB_NOT_AWAITING_UPLOADS') {
+  } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
       code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
       cause: err,
