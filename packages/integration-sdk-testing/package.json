@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-testing",
-  "version": "8.6.4",
+  "version": "8.7.0",
   "description": "Testing utilities for JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -23,8 +23,8 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^8.6.4",
-    "@jupiterone/integration-sdk-runtime": "^8.6.4",
+    "@jupiterone/integration-sdk-core": "^8.7.0",
+    "@jupiterone/integration-sdk-runtime": "^8.7.0",
     "@pollyjs/adapter-node-http": "^5.1.1",
     "@pollyjs/core": "^5.1.1",
     "@pollyjs/persister-fs": "^5.1.1",
@@ -36,7 +36,7 @@
     "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^8.6.4",
+    "@jupiterone/integration-sdk-private-test-utils": "^8.7.0",
     "@types/lodash": "^4.14.149",
     "get-port": "^5.1.1",
     "memfs": "^3.2.0"
