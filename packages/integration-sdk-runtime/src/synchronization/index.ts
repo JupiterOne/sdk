@@ -355,7 +355,7 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
 
     // Find largest Entity
     for (const entity in data) {
-      const length = JSON.stringify(data[entity]).length
+      const length = JSON.stringify(data[entity]).length;
       if (length > largestEntitySize) {
         largestEntitySize = length;
         largestEntityKey = entity;
@@ -364,10 +364,10 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
 
     // Find largest _rawData entry (typically 0, but check to be certain)
     for (const rawEntry in data[largestEntityKey]['_rawData']) {
-      const length = JSON.stringify(data[largestEntityKey]['_rawData'][rawEntry]).length;
-      if (
-        length > largestRawDataEntrySize
-      ) {
+      const length = JSON.stringify(
+        data[largestEntityKey]['_rawData'][rawEntry],
+      ).length;
+      if (length > largestRawDataEntrySize) {
         largestRawDataEntrySize = length;
         largestRawDataEntryKey = rawEntry;
       }
@@ -377,10 +377,15 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
     for (const item in data[largestEntityKey]['_rawData'][
       largestRawDataEntryKey
     ]['rawData']) {
-      const length =
-        data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][item] ?
-        JSON.stringify(data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][item]).length :
-        0;
+      const length = data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
+        'rawData'
+      ][item]
+        ? JSON.stringify(
+            data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
+              'rawData'
+            ][item],
+          ).length
+        : 0;
       if (length > largestItemSize) {
         largestItemKey = item;
         largestItemSize = length;
