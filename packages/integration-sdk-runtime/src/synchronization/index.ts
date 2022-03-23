@@ -266,6 +266,17 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
+function isRequestUploadTooLargeError(err): boolean {
+  if (
+    err.code === 'RequestEntityTooLargeException' ||
+    err.response?.status === 413
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 export async function uploadDataChunk<
   T extends UploadDataLookup,
   K extends keyof T,
@@ -284,12 +295,9 @@ export async function uploadDataChunk<
         // Did err.code ever work?  I see it as undefined if I console.log its
         // value.  Using err.response.status seems like the more appropriate way
         // to handle an Axios response
-        if (
-          err.code === 'RequestEntityTooLargeException' ||
-          err.response?.status === 413
-        ) {
-          logger.info(`Attempting to shrink raw_data in chunk`);
-          shrinkRawData(batch);
+        if (isRequestUploadTooLargeError(err)) {
+          logger.info(`Attempting to shrink rawData`);
+          shrinkRawData(batch, logger);
         } else if (
           attemptContext.attemptsRemaining &&
           // There are sometimes intermittent credentials errors when running
@@ -336,16 +344,21 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
 
 /**
  * Removes data from the rawData of the largest entity until the overall size
- * of the data object is less than UPLOAD_SIZE_MAX.
+ * of the data object is less than maxSize (defaulted to UPLOAD_SIZE_MAX).
  *
  * @param data
  */
 export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
+  logger,
+  maxSize = UPLOAD_SIZE_MAX,
 ) {
+  const startTimeInMilliseconds = Date.now();
   let totalSize = Buffer.byteLength(JSON.stringify(data));
+  const initialSize = totalSize;
+  let itemsRemoved = 0;
 
-  while (totalSize > UPLOAD_SIZE_MAX) {
+  while (totalSize > maxSize) {
     let largestEntityKey = '';
     let largestEntitySize = 0;
     let largestRawDataEntryKey = '';
@@ -395,9 +408,16 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
     data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
       largestItemKey
     ] = 'TRUNCATED';
-
+    itemsRemoved += 1;
     totalSize = Buffer.byteLength(JSON.stringify(data));
   }
+  const endTimeInMilliseconds = Date.now();
+
+  logger.info(
+    `shrinkRawData: raw data reduced from ${initialSize} to ${totalSize} truncating ${itemsRemoved} rawData items in ${
+      endTimeInMilliseconds - startTimeInMilliseconds
+    } ms`,
+  );
 }
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {

@@ -417,6 +417,8 @@ describe('uploadDataChunk', () => {
 
 describe('shrinkLargeUpload', () => {
   it('should shrink rawData', () => {
+    const context = createTestContext();
+
     const largeData = new Array(700000).join('aaaaaaaaaa');
 
     const data = [
@@ -427,6 +429,36 @@ describe('shrinkLargeUpload', () => {
         _rawData: [
           {
             name: 'test',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: largeData,
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: largeData,
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey3',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test3',
             rawData: {
               testRawData: 'test123',
               testLargeRawData: largeData,
@@ -452,9 +484,39 @@ describe('shrinkLargeUpload', () => {
           },
         ],
       },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: 'TRUNCATED',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey3',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test3',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: 'TRUNCATED',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
     ];
 
-    shrinkRawData(data);
+    shrinkRawData(data, context.logger);
 
     expect(data).toEqual(finalData);
   });
