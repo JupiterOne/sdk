@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.6.4] - 2022-03-23
+
 ### Changed
 
 - Log error `code` when an integration logs an error
