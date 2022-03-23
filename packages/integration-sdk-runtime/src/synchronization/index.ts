@@ -311,12 +311,14 @@ type HandleUploadDataChunkErrorParams = {
   err: any;
   attemptContext: AttemptContext;
   logger: IntegrationLogger;
+  batch;
 };
 
 function handleUploadDataChunkError({
   err,
   attemptContext,
   logger,
+  batch,
 }: HandleUploadDataChunkErrorParams): void {
   /**
    * The JupiterOne system will encapsulate error details in the response in
@@ -381,6 +383,7 @@ export async function uploadDataChunk<
           err,
           attemptContext,
           logger,
+          batch,
         });
       },
     },

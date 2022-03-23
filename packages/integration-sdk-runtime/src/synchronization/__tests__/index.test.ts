@@ -403,34 +403,23 @@ describe('uploadDataChunk', () => {
         };
       });
 
-    let uploadDataChunkErr: any;
-
-    try {
-      await uploadDataChunk({
+    await expect(
+      uploadDataChunk({
         logger: context.logger,
         apiClient: context.apiClient,
         jobId: job.id,
         type,
         batch,
-      });
-    } catch (err) {
-      uploadDataChunkErr = err;
+      }),
+    ).rejects.toThrow(requestTooLargeError);
 
-      expect(uploadDataChunkErr instanceof IntegrationError).toEqual(true);
-      expect(uploadDataChunkErr.message).toEqual(
-        'Failed to upload integration data because payload is too large',
-      );
-      expect(uploadDataChunkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
-    }
-
-    expect(uploadDataChunkErr).not.toBe(undefined);
-    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledTimes(5);
   });
 
   it('should not retry uploading data when a "JOB_NOT_AWAITING_UPLOADS" is returned', async () => {
     const context = createTestContext();
     const job = generateSynchronizationJob();
-    
+
     const jobNotAwaitingUploadsError = new Error('400 bad request');
     (jobNotAwaitingUploadsError as any).response = {
       data: {
