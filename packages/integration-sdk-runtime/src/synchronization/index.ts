@@ -7,6 +7,7 @@ import {
   Entity,
   Relationship,
   SynchronizationJob,
+  IntegrationError,
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationLogger } from '../logger';
@@ -18,7 +19,7 @@ import { synchronizationApiError } from './error';
 import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
-import { retry } from '@lifeomic/attempt';
+import { AttemptContext, retry } from '@lifeomic/attempt';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
@@ -277,6 +278,90 @@ function isRequestUploadTooLargeError(err): boolean {
   }
 }
 
+type SystemErrorResponseData = {
+  /**
+   * The specific system-level error code (e.g. `ENTITY_IS_NOT_ARRAY`)
+   */
+  code: string;
+  /**
+   * The specific system-level error message
+   * (e.g. `"\"entities\" should be an array"`)
+   */
+  message: string;
+};
+
+/**
+ * The JupiterOne system will encapsulate error details in the response in
+ * some situations. For example:
+ *
+ * {
+ *   "error": {
+ *     "code": "ENTITY_IS_NOT_ARRAY",
+ *     "message": "\"entities\" should be an array"
+ *   }
+ * }
+ */
+function getSystemErrorResponseData(
+  err: any,
+): SystemErrorResponseData | undefined {
+  return err.response?.data?.error;
+}
+
+type HandleUploadDataChunkErrorParams = {
+  err: any;
+  attemptContext: AttemptContext;
+  logger: IntegrationLogger;
+};
+
+function handleUploadDataChunkError({
+  err,
+  attemptContext,
+  logger,
+}: HandleUploadDataChunkErrorParams): void {
+  /**
+   * The JupiterOne system will encapsulate error details in the response in
+   * some situations. For example:
+   *
+   * {
+   *   "error": {
+   *     "code": "ENTITY_IS_NOT_ARRAY",
+   *     "message": "\"entities\" should be an array"
+   *   }
+   * }
+   */
+  const systemErrorResponseData = getSystemErrorResponseData(err);
+
+  if (isRequestUploadTooLargeError(err)) {
+    logger.info(`Attempting to shrink rawData`);
+    shrinkRawData(batch, logger);
+  } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
+    throw new IntegrationError({
+      code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
+      cause: err,
+      fatal: true,
+      message:
+        'Failed to upload integration data because job has already ended',
+    });
+  }
+
+  if (
+    attemptContext.attemptsRemaining &&
+    // There are sometimes intermittent credentials errors when running
+    // a managed integration on AWS Fargate. They consistently succeed
+    // with retry logic, so we don't want to log a warn.
+    err.code !== 'CredentialsError'
+  ) {
+    logger.warn(
+      {
+        err,
+        code: err.code,
+        attemptNum: attemptContext.attemptNum,
+      },
+      'Failed to upload integration data chunk (will retry)',
+    );
+  }
+}
+
 export async function uploadDataChunk<
   T extends UploadDataLookup,
   K extends keyof T,
@@ -292,27 +377,11 @@ export async function uploadDataChunk<
       delay: 200,
       factor: 1.05,
       handleError(err, attemptContext) {
-        // Did err.code ever work?  I see it as undefined if I console.log its
-        // value.  Using err.response.status seems like the more appropriate way
-        // to handle an Axios response
-        if (isRequestUploadTooLargeError(err)) {
-          logger.info(`Attempting to shrink rawData`);
-          shrinkRawData(batch, logger);
-        } else if (
-          attemptContext.attemptsRemaining &&
-          // There are sometimes intermittent credentials errors when running
-          // a managed integration on AWS Fargate. They consistently succeed
-          // with retry logic, so we don't want to log a warn.
-          err.code !== 'CredentialsError'
-        ) {
-          logger.warn(
-            {
-              err,
-              attemptNum: attemptContext.attemptNum,
-            },
-            'Failed to upload integration data chunk (will retry)',
-          );
-        }
+        handleUploadDataChunkError({
+          err,
+          attemptContext,
+          logger,
+        });
       },
     },
   );
