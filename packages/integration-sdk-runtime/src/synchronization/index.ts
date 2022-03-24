@@ -429,6 +429,7 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
   let totalSize = Buffer.byteLength(JSON.stringify(data));
   const initialSize = totalSize;
   let itemsRemoved = 0;
+  const sizeOfTruncated = Buffer.byteLength("'TRUNCATED'");
 
   while (totalSize > maxSize) {
     let largestEntityKey = '';
@@ -481,7 +482,7 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
       largestItemKey
     ] = 'TRUNCATED';
     itemsRemoved += 1;
-    totalSize = Buffer.byteLength(JSON.stringify(data));
+    totalSize = totalSize - largestItemSize + sizeOfTruncated;
   }
   const endTimeInMilliseconds = Date.now();
 
