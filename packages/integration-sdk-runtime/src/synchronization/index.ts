@@ -466,11 +466,13 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
       const length = data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
         'rawData'
       ][item]
-        ? JSON.stringify(
-            data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
-              'rawData'
-            ][item],
-          ).length
+        ? Buffer.byteLength(
+            JSON.stringify(
+              data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
+                'rawData'
+              ][item],
+            ),
+          )
         : 0;
       if (length > largestItemSize) {
         largestItemKey = item;
