@@ -9,15 +9,16 @@ import {
 export async function executeStepWithDependencies(params: StepTestConfig) {
   const { stepId, invocationConfig, instanceConfig } = params;
 
-  if (invocationConfig.dependencyGraphOrder) {
-    throw new Error(
-      'executeStepWithDependencies does not currently support dependencyGraphOrder',
-    );
-  }
-
   const stepDependencyGraph = buildStepDependencyGraph(
     invocationConfig.integrationSteps,
   );
+
+  const step = stepDependencyGraph.getNodeData(stepId);
+  if (step.dependencyGraphId) {
+    throw new Error(
+      'executeStepWithDependencies does not currently support steps with a dependencyGraphId',
+    );
+  }
 
   const dependencyStepIds = stepDependencyGraph.dependenciesOf(stepId);
 
@@ -48,8 +49,7 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
     executionConfig,
   };
 
-  const { executionHandler } = stepDependencyGraph.getNodeData(stepId);
-  await executionHandler(context);
+  await step.executionHandler(context);
 
   return {
     collectedEntities: context.jobState.collectedEntities,
