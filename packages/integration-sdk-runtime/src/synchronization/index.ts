@@ -335,7 +335,8 @@ function handleUploadDataChunkError({
 
   if (isRequestUploadTooLargeError(err)) {
     logger.info(`Attempting to shrink rawData`);
-    shrinkRawData(batch, logger);
+    const shrinkResults = shrinkRawData(batch);
+    logger.info(shrinkResults, 'Shrink raw data result');
   } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
       code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
@@ -442,6 +443,14 @@ interface keyAndSize {
   size: number;
 }
 
+// Interface for shrink run results
+interface shrinkRawDataResults {
+  initialSize: number;
+  totalSize: number;
+  itemsRemoved: number;
+  totalTime: number;
+}
+
 /**
  * Helper function to find the largest entry in an array and return its key
  * and approximate byte size.  We JSON.stringify as a method to try and have
@@ -471,11 +480,10 @@ function findLargestItemKeyAndByteSize(data: any[]): keyAndSize {
  *
  * @param data
  */
-export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
-  data: T[K][],
-  logger,
+export function shrinkRawData(
+  data: UploadDataLookup[keyof UploadDataLookup][],
   maxSize = UPLOAD_SIZE_MAX,
-) {
+): shrinkRawDataResults {
   const startTimeInMilliseconds = Date.now();
   let totalSize = Buffer.byteLength(JSON.stringify(data));
   const initialSize = totalSize;
@@ -509,15 +517,12 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
   }
 
   const endTimeInMilliseconds = Date.now();
-  logger.info(
-    {
-      initialSize,
-      totalSize,
-      itemsRemoved,
-      totalTime: endTimeInMilliseconds - startTimeInMilliseconds,
-    },
-    'Shrink raw data result',
-  );
+  return {
+    initialSize,
+    totalSize,
+    itemsRemoved,
+    totalTime: endTimeInMilliseconds - startTimeInMilliseconds,
+  };
 }
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {

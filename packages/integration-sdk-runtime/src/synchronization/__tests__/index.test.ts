@@ -492,8 +492,6 @@ describe('uploadDataChunk', () => {
 
 describe('shrinkLargeUpload', () => {
   it('should shrink rawData', () => {
-    const context = createTestContext();
-
     const largeData = new Array(700000).join('aaaaaaaaaa');
 
     const data = [
@@ -591,8 +589,9 @@ describe('shrinkLargeUpload', () => {
       },
     ];
 
-    shrinkRawData(data, context.logger);
+    const shrinkResults = shrinkRawData(data);
 
+    expect(shrinkResults.itemsRemoved).toEqual(3);
     expect(data).toEqual(finalData);
   });
 });
