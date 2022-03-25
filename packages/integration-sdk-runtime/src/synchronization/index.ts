@@ -440,6 +440,35 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   );
 }
 
+// Interface for storing both the key value and total size of a given array entry
+interface keyAndSize {
+  key: string;
+  size: number;
+}
+
+/**
+ * Helper function to find the largest entry in an array and return its key
+ * and approximate byte size.  We JSON.stringify as a method to try and have
+ * an apples to apples comparison no matter what the data type of the value is.
+ *
+ * @param data
+ * @returns
+ */
+function findLargestItemKeyAndByteSize(data: any[]): keyAndSize {
+  const largestItem: keyAndSize = { key: '', size: 0 };
+  for (const item in data) {
+    const length = data[item]
+      ? Buffer.byteLength(JSON.stringify(data[item]))
+      : 0;
+    if (length > largestItem.size) {
+      largestItem.key = item;
+      largestItem.size = length;
+    }
+  }
+
+  return largestItem;
+}
+
 /**
  * Removes data from the rawData of the largest entity until the overall size
  * of the data object is less than maxSize (defaulted to UPLOAD_SIZE_MAX).
@@ -458,62 +487,32 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
   const sizeOfTruncated = Buffer.byteLength("'TRUNCATED'");
 
   while (totalSize > maxSize) {
-    let largestEntityKey = '';
-    let largestEntitySize = 0;
-    let largestRawDataEntryKey = '';
-    let largestRawDataEntrySize = 0;
-    let largestItemKey = '';
-    let largestItemSize = 0;
+    let largestEntity: keyAndSize = { key: '', size: 0 };
+    let largestRawDataEntry: keyAndSize = { key: '', size: 0 };
+    let largestItem: keyAndSize = { key: '', size: 0 };
 
     // Find largest Entity
-    for (const entity in data) {
-      const length = JSON.stringify(data[entity]).length;
-      if (length > largestEntitySize) {
-        largestEntitySize = length;
-        largestEntityKey = entity;
-      }
-    }
+    largestEntity = findLargestItemKeyAndByteSize(data);
 
     // Find largest _rawData entry (typically 0, but check to be certain)
-    for (const rawEntry in data[largestEntityKey]['_rawData']) {
-      const length = JSON.stringify(
-        data[largestEntityKey]['_rawData'][rawEntry],
-      ).length;
-      if (length > largestRawDataEntrySize) {
-        largestRawDataEntrySize = length;
-        largestRawDataEntryKey = rawEntry;
-      }
-    }
+    largestRawDataEntry = findLargestItemKeyAndByteSize(
+      data[largestEntity.key]['_rawData'],
+    );
 
     // Find largest item within rawData
-    for (const item in data[largestEntityKey]['_rawData'][
-      largestRawDataEntryKey
-    ]['rawData']) {
-      const length = data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
-        'rawData'
-      ][item]
-        ? Buffer.byteLength(
-            JSON.stringify(
-              data[largestEntityKey]['_rawData'][largestRawDataEntryKey][
-                'rawData'
-              ][item],
-            ),
-          )
-        : 0;
-      if (length > largestItemSize) {
-        largestItemKey = item;
-        largestItemSize = length;
-      }
-    }
+    largestItem = findLargestItemKeyAndByteSize(
+      data[largestEntity.key]['_rawData'][largestRawDataEntry.key]['rawData'],
+    );
 
-    data[largestEntityKey]['_rawData'][largestRawDataEntryKey]['rawData'][
-      largestItemKey
+    // Truncate largest item and recalculate size to see if we need to continue truncating additional items
+    data[largestEntity.key]['_rawData'][largestRawDataEntry.key]['rawData'][
+      largestItem.key
     ] = 'TRUNCATED';
     itemsRemoved += 1;
-    totalSize = totalSize - largestItemSize + sizeOfTruncated;
+    totalSize = totalSize - largestItem.size + sizeOfTruncated;
   }
-  const endTimeInMilliseconds = Date.now();
 
+  const endTimeInMilliseconds = Date.now();
   logger.info(
     `shrinkRawData: raw data reduced from ${initialSize} to ${totalSize} truncating ${itemsRemoved} rawData items in ${
       endTimeInMilliseconds - startTimeInMilliseconds
