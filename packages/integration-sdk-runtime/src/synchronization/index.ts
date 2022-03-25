@@ -480,7 +480,10 @@ function findLargestItemKeyAndByteSize(data: any[]): keyAndSize {
  *
  * @param data
  */
-export function shrinkRawData(data: UploadDataLookup[keyof UploadDataLookup][], maxSize = UPLOAD_SIZE_MAX,): shrinkRawDataResults {
+export function shrinkRawData(
+  data: UploadDataLookup[keyof UploadDataLookup][],
+  maxSize = UPLOAD_SIZE_MAX,
+): shrinkRawDataResults {
   const startTimeInMilliseconds = Date.now();
   let totalSize = Buffer.byteLength(JSON.stringify(data));
   const initialSize = totalSize;
