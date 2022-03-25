@@ -20,6 +20,7 @@ import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
 import { AttemptContext, retry } from '@lifeomic/attempt';
+import { v4 as uuid } from 'uuid';
 
 export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
@@ -35,6 +36,9 @@ const UPLOAD_CONCURRENCY = 6;
 // servers will only allow 8KB or 16KB as a max header
 // size, so 6291456 - 16384 = 6275072
 const UPLOAD_SIZE_MAX = 6275072;
+export enum RequestHeaders {
+  CorrelationId = 'JupiterOne-Correlation-Id',
+}
 
 interface SynchronizeInput {
   logger: IntegrationLogger;
@@ -368,11 +372,33 @@ export async function uploadDataChunk<
   T extends UploadDataLookup,
   K extends keyof T,
 >({ logger, apiClient, jobId, type, batch }: UploadDataChunkParams<T, K>) {
+  const uploadCorrelationId = uuid();
+
   await retry(
-    async () => {
-      await apiClient.post(`/persister/synchronization/jobs/${jobId}/${type}`, {
-        [type]: batch,
-      });
+    async (ctx) => {
+      logger.info(
+        {
+          uploadCorrelationId,
+          uploadType: type,
+          attemptNum: ctx.attemptNum,
+          batchSize: batch.length,
+        },
+        'Uploading data...',
+      );
+
+      await apiClient.post(
+        `/persister/synchronization/jobs/${jobId}/${type}`,
+        {
+          [type]: batch,
+        },
+        {
+          headers: {
+            // NOTE: Other headers that were applied when the client was created,
+            // are still maintained
+            [RequestHeaders.CorrelationId]: uploadCorrelationId,
+          },
+        },
+      );
     },
     {
       maxAttempts: 5,
