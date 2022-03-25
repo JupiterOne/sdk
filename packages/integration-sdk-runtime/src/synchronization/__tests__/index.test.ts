@@ -27,6 +27,7 @@ import { createIntegrationLogger } from '../../logger';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../../fileSystem';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
+import { getExpectedRequestHeaders } from '../../../test/util/request';
 
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
@@ -114,6 +115,8 @@ describe('uploadCollectedData', () => {
     expect(loggerUploadEndSpy).toHaveBeenCalledWith(job);
 
     expect(postSpy).toHaveBeenCalledTimes(4);
+
+    const expectedRequestHeaders = getExpectedRequestHeaders();
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/entities`,
       {
@@ -121,6 +124,7 @@ describe('uploadCollectedData', () => {
           expect.objectContaining({ _key: `entity-${index + 1}` }),
         ),
       },
+      expectedRequestHeaders,
     );
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/entities`,
@@ -129,6 +133,7 @@ describe('uploadCollectedData', () => {
           expect.objectContaining({ _key: `entity-${index + 4}` }),
         ),
       },
+      expectedRequestHeaders,
     );
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/relationships`,
@@ -137,12 +142,14 @@ describe('uploadCollectedData', () => {
           expect.objectContaining({ _key: `relationship-${index + 1}` }),
         ),
       },
+      expectedRequestHeaders,
     );
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/relationships`,
       {
         relationships: [expect.objectContaining({ _key: `relationship-3` })],
       },
+      expectedRequestHeaders,
     );
   });
 
@@ -180,6 +187,8 @@ describe('uploadCollectedData', () => {
     expect(loggerUploadEndSpy).toHaveBeenCalledWith(job);
 
     expect(postSpy).toHaveBeenCalledTimes(4);
+    const expectedRequestHeaders = getExpectedRequestHeaders();
+
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/entities`,
       {
@@ -187,6 +196,7 @@ describe('uploadCollectedData', () => {
           expect.objectContaining({ _key: `entity-${index + 1}` }),
         ),
       },
+      expectedRequestHeaders,
     );
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/entities`,
@@ -195,6 +205,7 @@ describe('uploadCollectedData', () => {
           expect.objectContaining({ _key: `entity-${index + 4}` }),
         ),
       },
+      expectedRequestHeaders,
     );
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/relationships`,
@@ -203,12 +214,14 @@ describe('uploadCollectedData', () => {
           expect.objectContaining({ _key: `relationship-${index + 1}` }),
         ),
       },
+      expectedRequestHeaders,
     );
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/relationships`,
       {
         relationships: [expect.objectContaining({ _key: `relationship-3` })],
       },
+      expectedRequestHeaders,
     );
   });
 });
@@ -309,6 +322,8 @@ describe('synchronizeCollectedData', () => {
     const returnedJob = await synchronizeCollectedData(context);
     expect(returnedJob).toEqual(finalizedJob);
 
+    const expectedRequestHeaders = getExpectedRequestHeaders();
+
     expect(postSpy).toHaveBeenNthCalledWith(
       1,
       '/persister/synchronization/jobs',
@@ -321,11 +336,13 @@ describe('synchronizeCollectedData', () => {
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/entities`,
       { entities: expect.any(Array) },
+      expectedRequestHeaders,
     );
 
     expect(postSpy).toHaveBeenCalledWith(
       `/persister/synchronization/jobs/${job.id}/relationships`,
       { relationships: expect.any(Array) },
+      expectedRequestHeaders,
     );
 
     const summary = await readJsonFromPath<ExecuteIntegrationResult>(

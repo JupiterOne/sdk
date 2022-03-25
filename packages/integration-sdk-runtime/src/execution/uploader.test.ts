@@ -11,10 +11,11 @@ import {
 } from '@jupiterone/integration-sdk-private-test-utils';
 import times from 'lodash/times';
 import { v4 as uuid } from 'uuid';
-import { SynchronizationJobContext } from '../synchronization';
+import { RequestHeaders, SynchronizationJobContext } from '../synchronization';
 import { createApiClient, getApiBaseUrl } from '../api';
 import { generateSynchronizationJob } from '../synchronization/__tests__/util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../test/util/fixtures';
+import { getExpectedRequestHeaders } from '../../test/util/request';
 
 function createFlushedGraphObjectData(): FlushedGraphObjectData {
   return {
@@ -163,12 +164,15 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const flushed = await createFlushedDataAndWaitForUploads(uploader, 3);
     expect(postSpy).toHaveBeenCalledTimes(6);
 
+    const expectedRequestHeaders = getExpectedRequestHeaders();
+
     for (const { entities, relationships } of flushed) {
       expect(postSpy).toHaveBeenCalledWith(
         `/persister/synchronization/jobs/${job.id}/entities`,
         {
           entities,
         },
+        expectedRequestHeaders,
       );
 
       expect(postSpy).toHaveBeenCalledWith(
@@ -176,6 +180,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
         {
           relationships,
         },
+        expectedRequestHeaders,
       );
     }
   });
