@@ -11,7 +11,7 @@ import {
 } from '@jupiterone/integration-sdk-private-test-utils';
 import times from 'lodash/times';
 import { v4 as uuid } from 'uuid';
-import { RequestHeaders, SynchronizationJobContext } from '../synchronization';
+import { SynchronizationJobContext } from '../synchronization';
 import { createApiClient, getApiBaseUrl } from '../api';
 import { generateSynchronizationJob } from '../synchronization/__tests__/util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../test/util/fixtures';
