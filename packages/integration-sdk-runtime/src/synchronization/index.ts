@@ -272,14 +272,10 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
 }
 
 function isRequestUploadTooLargeError(err): boolean {
-  if (
+  return (
     err.code === 'RequestEntityTooLargeException' ||
     err.response?.status === 413
-  ) {
-    return true;
-  } else {
-    return false;
-  }
+  );
 }
 
 type SystemErrorResponseData = {
@@ -514,9 +510,13 @@ export function shrinkRawData<T extends UploadDataLookup, K extends keyof T>(
 
   const endTimeInMilliseconds = Date.now();
   logger.info(
-    `shrinkRawData: raw data reduced from ${initialSize} to ${totalSize} truncating ${itemsRemoved} rawData items in ${
-      endTimeInMilliseconds - startTimeInMilliseconds
-    } ms`,
+    {
+      initialSize,
+      totalSize,
+      itemsRemoved,
+      totalTime: endTimeInMilliseconds - startTimeInMilliseconds,
+    },
+    'Shrink raw data result',
   );
 }
 
