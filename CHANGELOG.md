@@ -9,6 +9,16 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.7.0] - 2022-03-25
+
+### Changed
+
+- Bumped version of `@jupiterone/data-model` to v0.46.0
+
+### Added
+
+- pass client-generated correlation id with sync job uploads
+
 ## [8.6.4] - 2022-03-23
 
 ### Changed

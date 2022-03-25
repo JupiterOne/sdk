@@ -643,10 +643,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@jupiterone/data-model@^0.45.0":
-  version "0.45.0"
-  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.45.0.tgz#429ee0dd3a709e7c3c8ad75098d544c4bb633ca6"
-  integrity sha512-zLZaHCTNuG3Ceevwi7pgBsauLkPfC/eFmMCSHhIbDtaVDceLN1vctmE0IX1CyLx7UaRoXHjBYzUg11qivZNAmA==
+"@jupiterone/data-model@^0.46.0":
+  version "0.46.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.46.0.tgz#90623ccdb4295e3299e353e0f6b5254c36b1ffbd"
+  integrity sha512-q9OMSYzyuNA/5NOVO+12hudkuhQuclKkBQFh6biGKMMyQtrTESpKxmF2XQkOKFjalqp+Gm49wrJi/unP2XEaow==
   dependencies:
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
