@@ -66,9 +66,10 @@ describe('#toMatchGraphObjectSchema', () => {
 
   function generateGraphObjectSchema(
     partialProperties?: Record<string, any>,
+    options?: { additionalProperties?: boolean },
   ): GraphObjectSchema {
     return {
-      additionalProperties: false,
+      additionalProperties: options?.additionalProperties || false,
       properties: {
         _type: { const: 'google_cloud_api_service' },
         category: { const: ['infrastructure'] },
@@ -134,6 +135,24 @@ describe('#toMatchGraphObjectSchema', () => {
     "message": "must be equal to constant"
   }
 ]`);
+  });
+
+  test('should pass for entity with undefined property', () => {
+    const result = toMatchGraphObjectSchema(
+      generateCollectedEntity({
+        _class: 'Service',
+        someAdditionalProperty: undefined,
+      }),
+      {
+        _class: 'Service',
+        schema: generateGraphObjectSchema({}, { additionalProperties: true }),
+      },
+    );
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
   });
 
   test('should match class schema with no custom schema', () => {
@@ -462,6 +481,19 @@ describe('#toMatchDirectRelationshipSchema', () => {
     expect(result.message()).toEqual(
       'Object `_key` properties array is not unique: [non-unique-key,non-unique-key]',
     );
+  });
+
+  test('should pass for relationship with undefined property', () => {
+    const result = toMatchDirectRelationshipSchema([
+      generateCollectedDirectRelationship({
+        someAdditionalProperty: undefined,
+      }),
+    ]);
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
   });
 
   test('should fail for relationship with array property', () => {

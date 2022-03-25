@@ -11,6 +11,7 @@ and this project adheres to
 
 ### Changed
 
+- Allow relationships to have `undefined` top-level properties
 - Support `executeStepWithDependencies` for steps with no `dependencyGraphId`,
   even if `invocationConfig.dependencyGraphOrder` is present
 
