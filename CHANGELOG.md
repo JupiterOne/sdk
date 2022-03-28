@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.8.0] - 2022-03-28
+
+### Added
+
+- SDK now proactively truncates rawData entries when uploads would exceed 6
+  megabytes.
+
 ## [8.7.0] - 2022-03-25
 
 ### Changed
