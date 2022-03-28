@@ -5,6 +5,7 @@ import pMap from 'p-map';
 import {
   PartialDatasets,
   Entity,
+  EntityRawData,
   Relationship,
   SynchronizationJob,
   IntegrationError,
@@ -438,13 +439,13 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
 }
 
 // Interface for storing both the key value and total size of a given array entry
-interface keyAndSize {
+interface KeyAndSize {
   key: string;
   size: number;
 }
 
 // Interface for shrink run results
-interface shrinkRawDataResults {
+interface ShrinkRawDataResults {
   initialSize: number;
   totalSize: number;
   itemsRemoved: number;
@@ -452,15 +453,15 @@ interface shrinkRawDataResults {
 }
 
 /**
- * Helper function to find the largest entry in an array and return its key
+ * Helper function to find the largest entry in an object and return its key
  * and approximate byte size.  We JSON.stringify as a method to try and have
  * an apples to apples comparison no matter what the data type of the value is.
  *
  * @param data
  * @returns
  */
-function findLargestItemKeyAndByteSize(data: any[]): keyAndSize {
-  const largestItem: keyAndSize = { key: '', size: 0 };
+function getLargestItemKeyAndByteSize(data: any): KeyAndSize {
+  const largestItem: KeyAndSize = { key: '', size: 0 };
   for (const item in data) {
     const length = data[item]
       ? Buffer.byteLength(JSON.stringify(data[item]))
@@ -468,6 +469,55 @@ function findLargestItemKeyAndByteSize(data: any[]): keyAndSize {
     if (length > largestItem.size) {
       largestItem.key = item;
       largestItem.size = length;
+    }
+  }
+
+  return largestItem;
+}
+
+/**
+ * Helper function to find the largest Entity in our data array and return it.
+ * We JSON.stringify as a method to try and have an apples to apples comparison
+ * no matter what the data type of the value is.
+ *
+ * @param data
+ * @returns
+ */
+function getLargestEntityFromBatch(
+  data: UploadDataLookup[keyof UploadDataLookup][],
+): Entity {
+  let largestItem;
+  let largestItemSize = 0;
+
+  for (const item of data) {
+    const length = item ? Buffer.byteLength(JSON.stringify(item)) : 0;
+    if (length > largestItemSize) {
+      largestItem = item;
+      largestItemSize = length;
+    }
+  }
+  return largestItem;
+}
+
+/**
+ * Helper function to find the largest _rawData entry in an Entity and return
+ * it.  We JSON.stringify as a method to try and have an apples to apples comparison
+ * no matter what the data type of the value is.
+ *
+ * @param data
+ * @returns
+ */
+function getLargestRawDataEntryFromEntity(
+  data: EntityRawData[],
+): EntityRawData {
+  let largestItem;
+  let largestItemSize = 0;
+
+  for (const item of data) {
+    const length = item ? Buffer.byteLength(JSON.stringify(item)) : 0;
+    if (length > largestItemSize) {
+      largestItem = item;
+      largestItemSize = length;
     }
   }
 
@@ -483,7 +533,7 @@ function findLargestItemKeyAndByteSize(data: any[]): keyAndSize {
 export function shrinkRawData(
   data: UploadDataLookup[keyof UploadDataLookup][],
   maxSize = UPLOAD_SIZE_MAX,
-): shrinkRawDataResults {
+): ShrinkRawDataResults {
   const startTimeInMilliseconds = Date.now();
   let totalSize = Buffer.byteLength(JSON.stringify(data));
   const initialSize = totalSize;
@@ -491,29 +541,35 @@ export function shrinkRawData(
   const sizeOfTruncated = Buffer.byteLength("'TRUNCATED'");
 
   while (totalSize > maxSize) {
-    let largestEntity: keyAndSize = { key: '', size: 0 };
-    let largestRawDataEntry: keyAndSize = { key: '', size: 0 };
-    let largestItem: keyAndSize = { key: '', size: 0 };
-
     // Find largest Entity
-    largestEntity = findLargestItemKeyAndByteSize(data);
+    const largestEntity = getLargestEntityFromBatch(data);
 
-    // Find largest _rawData entry (typically 0, but check to be certain)
-    largestRawDataEntry = findLargestItemKeyAndByteSize(
-      data[largestEntity.key]['_rawData'],
-    );
+    // If we don't have any entities to shrink or the optional _rawData array is empty,
+    // we have no other options than to throw an error.
+    if (largestEntity?._rawData) {
+      // Find largest _rawData entry (typically 0, but check to be certain)
+      const largestRawDataEntry = getLargestRawDataEntryFromEntity(
+        largestEntity._rawData,
+      );
 
-    // Find largest item within rawData
-    largestItem = findLargestItemKeyAndByteSize(
-      data[largestEntity.key]['_rawData'][largestRawDataEntry.key]['rawData'],
-    );
+      // Find largest item within rawData
+      const largestItemLookup = getLargestItemKeyAndByteSize(
+        largestRawDataEntry.rawData,
+      );
 
-    // Truncate largest item and recalculate size to see if we need to continue truncating additional items
-    data[largestEntity.key]['_rawData'][largestRawDataEntry.key]['rawData'][
-      largestItem.key
-    ] = 'TRUNCATED';
-    itemsRemoved += 1;
-    totalSize = totalSize - largestItem.size + sizeOfTruncated;
+      // Truncate largest item and recalculate size to see if we need to continue truncating additional items
+      largestRawDataEntry.rawData[largestItemLookup.key] = 'TRUNCATED';
+      itemsRemoved += 1;
+      totalSize = totalSize - largestItemLookup.size + sizeOfTruncated;
+    } else {
+      // Cannot find any entities to shrink, so throw
+      throw new IntegrationError({
+        code: 'INTEGRATION_UPLOAD_FAILED',
+        fatal: false,
+        message:
+          'Failed to upload integration data because payload is too large and cannot shrink',
+      });
+    }
   }
 
   const endTimeInMilliseconds = Date.now();

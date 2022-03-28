@@ -596,6 +596,50 @@ describe('shrinkLargeUpload', () => {
   });
 });
 
+describe('shrinkFailNoEntities', () => {
+  it('should fail to shrink rawData due to no entities', () => {
+    const data = [];
+
+    let shrinkErr;
+    try {
+      shrinkRawData(data, 0);
+    } catch (err) {
+      shrinkErr = err;
+      expect(shrinkErr instanceof IntegrationError).toEqual(true);
+      expect(shrinkErr.message).toEqual(
+        'Failed to upload integration data because payload is too large and cannot shrink',
+      );
+      expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
+    }
+    expect(shrinkErr).not.toBe(undefined);
+  });
+});
+
+describe('shrinkFailNo_rawData', () => {
+  it('should fail to shrink rawData due to no _rawData entries', () => {
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+      },
+    ];
+
+    let shrinkErr;
+    try {
+      shrinkRawData(data, 0);
+    } catch (err) {
+      shrinkErr = err;
+      expect(shrinkErr instanceof IntegrationError).toEqual(true);
+      expect(shrinkErr.message).toEqual(
+        'Failed to upload integration data because payload is too large and cannot shrink',
+      );
+      expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
+    }
+    expect(shrinkErr).not.toBe(undefined);
+  });
+});
+
 function createTestContext() {
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
