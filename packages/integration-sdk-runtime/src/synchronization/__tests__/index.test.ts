@@ -19,6 +19,7 @@ import {
   synchronizeCollectedData,
   abortSynchronization,
   uploadDataChunk,
+  shrinkRawData,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -393,7 +394,7 @@ describe('synchronizeCollectedData', () => {
 });
 
 describe('uploadDataChunk', () => {
-  it('should not retry uploading data when a "RequestEntityTooLargeException" is returned', async () => {
+  it('should retry uploading data when a "RequestEntityTooLargeException" is returned', async () => {
     const context = createTestContext();
     const job = generateSynchronizationJob();
 
@@ -419,28 +420,17 @@ describe('uploadDataChunk', () => {
         };
       });
 
-    let uploadDataChunkErr: any;
-
-    try {
-      await uploadDataChunk({
+    await expect(
+      uploadDataChunk({
         logger: context.logger,
         apiClient: context.apiClient,
         jobId: job.id,
         type,
         batch,
-      });
-    } catch (err) {
-      uploadDataChunkErr = err;
+      }),
+    ).rejects.toThrow(requestTooLargeError);
 
-      expect(uploadDataChunkErr instanceof IntegrationError).toEqual(true);
-      expect(uploadDataChunkErr.message).toEqual(
-        'Failed to upload integration data because payload is too large',
-      );
-      expect(uploadDataChunkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
-    }
-
-    expect(uploadDataChunkErr).not.toBe(undefined);
-    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledTimes(5);
   });
 
   it('should not retry uploading data when a "JOB_NOT_AWAITING_UPLOADS" is returned', async () => {
@@ -497,6 +487,156 @@ describe('uploadDataChunk', () => {
 
     expect(uploadDataChunkErr).not.toBe(undefined);
     expect(postSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('shrinkLargeUpload', () => {
+  it('should shrink rawData', () => {
+    const largeData = new Array(700000).join('aaaaaaaaaa');
+
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: largeData,
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: largeData,
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey3',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test3',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: largeData,
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+    const finalData = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: 'TRUNCATED',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: 'TRUNCATED',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey3',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test3',
+            rawData: {
+              testRawData: 'test123',
+              testLargeRawData: 'TRUNCATED',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+
+    const shrinkResults = shrinkRawData(data);
+
+    expect(shrinkResults.itemsRemoved).toEqual(3);
+    expect(data).toEqual(finalData);
+  });
+});
+
+describe('shrinkFailNoEntities', () => {
+  it('should fail to shrink rawData due to no entities', () => {
+    const data = [];
+
+    let shrinkErr;
+    try {
+      shrinkRawData(data, 0);
+    } catch (err) {
+      shrinkErr = err;
+      expect(shrinkErr instanceof IntegrationError).toEqual(true);
+      expect(shrinkErr.message).toEqual(
+        'Failed to upload integration data because payload is too large and cannot shrink',
+      );
+      expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
+    }
+    expect(shrinkErr).not.toBe(undefined);
+  });
+});
+
+describe('shrinkFailNo_rawData', () => {
+  it('should fail to shrink rawData due to no _rawData entries', () => {
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+      },
+    ];
+
+    let shrinkErr;
+    try {
+      shrinkRawData(data, 0);
+    } catch (err) {
+      shrinkErr = err;
+      expect(shrinkErr instanceof IntegrationError).toEqual(true);
+      expect(shrinkErr.message).toEqual(
+        'Failed to upload integration data because payload is too large and cannot shrink',
+      );
+      expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
+    }
+    expect(shrinkErr).not.toBe(undefined);
   });
 });
 

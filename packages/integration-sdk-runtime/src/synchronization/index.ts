@@ -5,6 +5,7 @@ import pMap from 'p-map';
 import {
   PartialDatasets,
   Entity,
+  EntityRawData,
   Relationship,
   SynchronizationJob,
   IntegrationError,
@@ -31,6 +32,11 @@ export { createEventPublishingQueue } from './events';
 const UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 6;
 
+// Uploads above 6 MB will fail.  This is technically
+// 6291456 bytes, but we need header space.  Most web
+// servers will only allow 8KB or 16KB as a max header
+// size, so 6291456 - 16384 = 6275072
+const UPLOAD_SIZE_MAX = 6275072;
 export enum RequestHeaders {
   CorrelationId = 'JupiterOne-Correlation-Id',
 }
@@ -266,6 +272,13 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
+function isRequestUploadTooLargeError(err): boolean {
+  return (
+    err.code === 'RequestEntityTooLargeException' ||
+    err.response?.status === 413
+  );
+}
+
 type SystemErrorResponseData = {
   /**
    * The specific system-level error code (e.g. `ENTITY_IS_NOT_ARRAY`)
@@ -299,12 +312,14 @@ type HandleUploadDataChunkErrorParams = {
   err: any;
   attemptContext: AttemptContext;
   logger: IntegrationLogger;
+  batch;
 };
 
 function handleUploadDataChunkError({
   err,
   attemptContext,
   logger,
+  batch,
 }: HandleUploadDataChunkErrorParams): void {
   /**
    * The JupiterOne system will encapsulate error details in the response in
@@ -319,14 +334,10 @@ function handleUploadDataChunkError({
    */
   const systemErrorResponseData = getSystemErrorResponseData(err);
 
-  if (err.code === 'RequestEntityTooLargeException') {
-    // No reason to retry these errors as the request size ain't gonna change.
-    throw new IntegrationError({
-      code: 'INTEGRATION_UPLOAD_FAILED',
-      cause: err,
-      fatal: false,
-      message: 'Failed to upload integration data because payload is too large',
-    });
+  if (isRequestUploadTooLargeError(err)) {
+    logger.info(`Attempting to shrink rawData`);
+    const shrinkResults = shrinkRawData(batch);
+    logger.info(shrinkResults, 'Shrink raw data result');
   } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
       code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
@@ -396,6 +407,7 @@ export async function uploadDataChunk<
           err,
           attemptContext,
           logger,
+          batch,
         });
       },
     },
@@ -424,6 +436,149 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
     },
     { concurrency: UPLOAD_CONCURRENCY },
   );
+}
+
+// Interface for storing both the key value and total size of a given array entry
+interface KeyAndSize {
+  key: string;
+  size: number;
+}
+
+// Interface for shrink run results
+interface ShrinkRawDataResults {
+  initialSize: number;
+  totalSize: number;
+  itemsRemoved: number;
+  totalTime: number;
+}
+
+/**
+ * Helper function to find the largest entry in an object and return its key
+ * and approximate byte size.  We JSON.stringify as a method to try and have
+ * an apples to apples comparison no matter what the data type of the value is.
+ *
+ * @param data
+ * @returns
+ */
+function getLargestItemKeyAndByteSize(data: any): KeyAndSize {
+  const largestItem: KeyAndSize = { key: '', size: 0 };
+  for (const item in data) {
+    const length = data[item]
+      ? Buffer.byteLength(JSON.stringify(data[item]))
+      : 0;
+    if (length > largestItem.size) {
+      largestItem.key = item;
+      largestItem.size = length;
+    }
+  }
+
+  return largestItem;
+}
+
+/**
+ * Helper function to find the largest Entity in our data array and return it.
+ * We JSON.stringify as a method to try and have an apples to apples comparison
+ * no matter what the data type of the value is.
+ *
+ * @param data
+ * @returns
+ */
+function getLargestEntityFromBatch(
+  data: UploadDataLookup[keyof UploadDataLookup][],
+): Entity {
+  let largestItem;
+  let largestItemSize = 0;
+
+  for (const item of data) {
+    const length = item ? Buffer.byteLength(JSON.stringify(item)) : 0;
+    if (length > largestItemSize) {
+      largestItem = item;
+      largestItemSize = length;
+    }
+  }
+  return largestItem;
+}
+
+/**
+ * Helper function to find the largest _rawData entry in an Entity and return
+ * it.  We JSON.stringify as a method to try and have an apples to apples comparison
+ * no matter what the data type of the value is.
+ *
+ * @param data
+ * @returns
+ */
+function getLargestRawDataEntryFromEntity(
+  data: EntityRawData[],
+): EntityRawData {
+  let largestItem;
+  let largestItemSize = 0;
+
+  for (const item of data) {
+    const length = item ? Buffer.byteLength(JSON.stringify(item)) : 0;
+    if (length > largestItemSize) {
+      largestItem = item;
+      largestItemSize = length;
+    }
+  }
+
+  return largestItem;
+}
+
+/**
+ * Removes data from the rawData of the largest entity until the overall size
+ * of the data object is less than maxSize (defaulted to UPLOAD_SIZE_MAX).
+ *
+ * @param data
+ */
+export function shrinkRawData(
+  data: UploadDataLookup[keyof UploadDataLookup][],
+  maxSize = UPLOAD_SIZE_MAX,
+): ShrinkRawDataResults {
+  const startTimeInMilliseconds = Date.now();
+  let totalSize = Buffer.byteLength(JSON.stringify(data));
+  const initialSize = totalSize;
+  let itemsRemoved = 0;
+  const sizeOfTruncated = Buffer.byteLength("'TRUNCATED'");
+
+  while (totalSize > maxSize) {
+    // Find largest Entity
+    const largestEntity = getLargestEntityFromBatch(data);
+
+    // If we don't have any entities to shrink or the optional _rawData array is empty,
+    // we have no other options than to throw an error.
+    if (largestEntity?._rawData) {
+      // Find largest _rawData entry (typically 0, but check to be certain)
+      const largestRawDataEntry = getLargestRawDataEntryFromEntity(
+        largestEntity._rawData,
+      );
+
+      // Find largest item within rawData
+      const largestItemLookup = getLargestItemKeyAndByteSize(
+        largestRawDataEntry.rawData,
+      );
+
+      // Truncate largest item and recalculate size to see if we need to continue truncating additional items
+      largestRawDataEntry.rawData[largestItemLookup.key] = 'TRUNCATED';
+      itemsRemoved += 1;
+      totalSize = totalSize - largestItemLookup.size + sizeOfTruncated;
+    } else {
+      // Cannot find any entities to shrink, so throw
+      throw new IntegrationError({
+        code: 'INTEGRATION_UPLOAD_FAILED',
+        fatal: false,
+        message:
+          'Failed to upload integration data because payload is too large and cannot shrink',
+      });
+    }
+  }
+
+  const endTimeInMilliseconds = Date.now();
+  return {
+    initialSize,
+    totalSize,
+    itemsRemoved,
+    totalTime: endTimeInMilliseconds - startTimeInMilliseconds,
+  };
 }
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {
