@@ -1308,7 +1308,7 @@ ex: `j1-integration sync --instance <integration instance id> --tail`
 ###### Option `--api-base-url`
 
 If provided this option specifies which base URL to use for synchronization.
-Cannot be used with the --development flag.
+Cannot be used with the `--development` flag.
 
 ex:
 `yarn j1-integration sync --integrationInstanceId <integration instance id> --api-base-url <api base url>`

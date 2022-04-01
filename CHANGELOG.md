@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.8.1] - 2022-04-01
+
+### Added
+
+- `j1-integration` commands `sync`, `run`, and `validate-question-file` now
+  accept optional command parameter --api-base-url to specify a different URL to
+  run against.
+
 ## [8.8.0] - 2022-03-28
 
 ### Added
