@@ -61,6 +61,7 @@ test('should export assets', async () => {
       'export',
       `--account=${TEST_ACCOUNT}`,
       `--api-key=${TEST_API_KEY}`,
+      `--api-base-url=https://api.TEST.jupiterone.io`,
     ]),
   ).resolves.toEqual(expect.anything());
   expect(Object.values(vol.toJSON())).toMatchInlineSnapshot(`
@@ -76,6 +77,11 @@ test('should export assets', async () => {
           entity-1|has|entity-2,entity_type_1_has_2,HAS,entity-1,entity-2,HAS",
           ]
         `);
+  expect(mockedCreateApiClient).toBeCalledWith({
+    accessToken: 'apiKey',
+    account: 'account',
+    apiBaseUrl: 'https://api.TEST.jupiterone.io',
+  });
 });
 test('should only export relationships when specified', async () => {
   mockedAxios.get

@@ -11,6 +11,7 @@ export interface ImportOptions {
   scope: string;
   account: string;
   apiKey: string;
+  apiBaseUrl?: string;
 }
 
 export function j1Import() {
@@ -43,6 +44,10 @@ export function j1Import() {
     )
     .option('--no-include-entities', 'Exclude entities in import')
     .option('--no-include-relationships', 'Exclude relationships in import')
+    .option(
+      '--api-base-url <url>',
+      'The base URL used to initiate api calls with your instance of JupiterOne',
+    )
     .action(async (options: ImportOptions) => {
       log.info(`Importing entities into account...`);
       const storageDirectory = path.join(process.cwd(), options.dataDir);
