@@ -40,6 +40,7 @@ export function run() {
       '"true" to target apps.dev.jupiterone.io',
       !!process.env.JUPITERONE_DEV,
     )
+    .option('--api-base-url <url>', 'API base URL used during run operation.')
     .action(async (options) => {
       const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -55,7 +56,19 @@ export function run() {
       log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
       const account = getAccountFromEnvironment();
 
-      const apiBaseUrl = getApiBaseUrl({ dev: options.development });
+      let apiBaseUrl: string;
+      if (options.apiBaseUrl) {
+        if (options.development) {
+          throw new Error(
+            'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
+          );
+        }
+        apiBaseUrl = options.apiBaseUrl;
+      } else {
+        apiBaseUrl = getApiBaseUrl({
+          dev: options.development,
+        });
+      }
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const startTime = Date.now();
