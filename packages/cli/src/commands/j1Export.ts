@@ -48,7 +48,7 @@ export function j1Export() {
     )
     .option(
       '--api-base-url <url>',
-      'The base URL used to initiate api calls with your instance of JupiterOne',
+      'The base URL used to initiate api calls with your instance of JupiterOne (defaults to `https://api.us.jupiterone.io`)',
     )
     .action(async (options: ExportOptions) => {
       log.info(`Starting export...`);

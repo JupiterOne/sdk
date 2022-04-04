@@ -46,7 +46,7 @@ export function j1Import() {
     .option('--no-include-relationships', 'Exclude relationships in import')
     .option(
       '--api-base-url <url>',
-      'The base URL used to initiate api calls with your instance of JupiterOne',
+      'The base URL used to initiate api calls with your instance of JupiterOne (defaults to `https://api.us.jupiterone.io`)',
     )
     .action(async (options: ImportOptions) => {
       log.info(`Importing entities into account...`);
