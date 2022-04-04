@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.8.2] - 2022-04-04
+
+### Added
+
+- `j1` commands `export` and `import` now accept optional command parameter
+  --api-base-url to specify a different URL to run against.
+
 ## [8.8.1] - 2022-04-01
 
 ### Added
