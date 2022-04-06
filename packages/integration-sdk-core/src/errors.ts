@@ -337,11 +337,18 @@ export type ProviderAuthError =
 export function isProviderAuthError(err: Error): err is ProviderAuthError {
   return (
     err instanceof IntegrationProviderAuthorizationError ||
-    err instanceof IntegrationProviderAuthenticationError ||
-    err instanceof IntegrationProviderRetriesExceededError
+    err instanceof IntegrationProviderAuthenticationError
   );
 }
 
+export function isProviderRetriesExceededError(err: Error): boolean {
+  return err instanceof IntegrationProviderRetriesExceededError;
+}
+
 export function shouldReportErrorToOperator(err: Error): boolean {
-  return !isUserConfigError(err) && !isProviderAuthError(err);
+  return (
+    !isUserConfigError(err) &&
+    !isProviderAuthError(err) &&
+    !isProviderRetriesExceededError(err)
+  );
 }
