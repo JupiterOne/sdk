@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.10.0] - 2022-04-07
+
+### Changed
+
+- Additional logging when upload errors occur
+
 ## [8.9.0] - 2022-04-05
 
 ### Changed
