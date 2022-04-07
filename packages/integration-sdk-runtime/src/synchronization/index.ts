@@ -334,6 +334,16 @@ function handleUploadDataChunkError({
    */
   const systemErrorResponseData = getSystemErrorResponseData(err);
 
+  logger.info(
+    {
+      err,
+      code: err.code,
+      attemptNum: attemptContext.attemptNum,
+      systemErrorResponseData,
+    },
+    'Handling upload error...',
+  );
+
   if (isRequestUploadTooLargeError(err)) {
     logger.info(`Attempting to shrink rawData`);
     const shrinkResults = shrinkRawData(batch);
