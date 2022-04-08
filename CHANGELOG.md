@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.10.1] - 2022-04-08
+
+### Changed
+
+- Reduced max upload size to 1 MB.
+
 ## [8.10.0] - 2022-04-07
 
 ### Changed
