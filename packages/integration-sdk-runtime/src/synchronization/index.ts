@@ -322,7 +322,7 @@ function handleUploadDataChunkError({
   attemptContext,
   logger,
   batch,
-  uploadCorrelationId
+  uploadCorrelationId,
 }: HandleUploadDataChunkErrorParams): void {
   /**
    * The JupiterOne system will encapsulate error details in the response in
@@ -344,7 +344,7 @@ function handleUploadDataChunkError({
       attemptNum: attemptContext.attemptNum,
       systemErrorResponseData,
       attemptsRemaining: attemptContext.attemptsRemaining,
-      uploadCorrelationId
+      uploadCorrelationId,
     },
     'Handling upload error...',
   );
@@ -406,7 +406,7 @@ export async function uploadDataChunk<
           attemptContext,
           logger,
           batch,
-          uploadCorrelationId
+          uploadCorrelationId,
         });
       },
     },

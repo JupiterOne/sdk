@@ -172,15 +172,6 @@ test('should retry a failed upload', async () => {
     },
     expectedRequestHeaders,
   );
-
-  expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
-  expect(loggerWarnSpy).toHaveBeenCalledWith(
-    {
-      attemptNum: 0,
-      err: expectedError,
-    },
-    'Failed to upload integration data chunk (will retry)',
-  );
 });
 
 test('should retry a failed upload and not log warn when error is a "CredentialsError"', async () => {
