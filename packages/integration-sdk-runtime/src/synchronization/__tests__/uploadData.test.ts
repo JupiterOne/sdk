@@ -117,8 +117,6 @@ test('uploads relationship data in batches of 250', async () => {
 test('should retry a failed upload', async () => {
   const { job, logger, apiClient } = createTestContext();
 
-  const loggerWarnSpy = jest.spyOn(logger, 'warn');
-
   const data = times(
     510,
     (i): Entity => ({
@@ -171,15 +169,6 @@ test('should retry a failed upload', async () => {
       entities: data.slice(500, 510),
     },
     expectedRequestHeaders,
-  );
-
-  expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
-  expect(loggerWarnSpy).toHaveBeenCalledWith(
-    {
-      attemptNum: 0,
-      err: expectedError,
-    },
-    'Failed to upload integration data chunk (will retry)',
   );
 });
 
