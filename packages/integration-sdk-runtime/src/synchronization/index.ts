@@ -36,7 +36,8 @@ const UPLOAD_CONCURRENCY = 6;
 // 6291456 bytes, but we need header space.  Most web
 // servers will only allow 8KB or 16KB as a max header
 // size, so 6291456 - 16384 = 6275072
-const UPLOAD_SIZE_MAX = 6275072;
+// We're further reducing to a max size of 1 MB or 1048576
+const UPLOAD_SIZE_MAX = 1048576;
 export enum RequestHeaders {
   CorrelationId = 'JupiterOne-Correlation-Id',
 }
@@ -312,7 +313,8 @@ type HandleUploadDataChunkErrorParams = {
   err: any;
   attemptContext: AttemptContext;
   logger: IntegrationLogger;
-  batch;
+  batch: any;
+  uploadCorrelationId: string;
 };
 
 function handleUploadDataChunkError({
@@ -320,6 +322,7 @@ function handleUploadDataChunkError({
   attemptContext,
   logger,
   batch,
+  uploadCorrelationId
 }: HandleUploadDataChunkErrorParams): void {
   /**
    * The JupiterOne system will encapsulate error details in the response in
@@ -340,6 +343,8 @@ function handleUploadDataChunkError({
       code: err.code,
       attemptNum: attemptContext.attemptNum,
       systemErrorResponseData,
+      attemptsRemaining: attemptContext.attemptsRemaining,
+      uploadCorrelationId
     },
     'Handling upload error...',
   );
@@ -356,23 +361,6 @@ function handleUploadDataChunkError({
       message:
         'Failed to upload integration data because job has already ended',
     });
-  }
-
-  if (
-    attemptContext.attemptsRemaining &&
-    // There are sometimes intermittent credentials errors when running
-    // a managed integration on AWS Fargate. They consistently succeed
-    // with retry logic, so we don't want to log a warn.
-    err.code !== 'CredentialsError'
-  ) {
-    logger.warn(
-      {
-        err,
-        code: err.code,
-        attemptNum: attemptContext.attemptNum,
-      },
-      'Failed to upload integration data chunk (will retry)',
-    );
   }
 }
 
@@ -418,6 +406,7 @@ export async function uploadDataChunk<
           attemptContext,
           logger,
           batch,
+          uploadCorrelationId
         });
       },
     },
