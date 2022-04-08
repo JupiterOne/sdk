@@ -117,8 +117,6 @@ test('uploads relationship data in batches of 250', async () => {
 test('should retry a failed upload', async () => {
   const { job, logger, apiClient } = createTestContext();
 
-  const loggerWarnSpy = jest.spyOn(logger, 'warn');
-
   const data = times(
     510,
     (i): Entity => ({
