@@ -8,6 +8,7 @@ import { getApiBaseUrl, createApiClient } from '../../api';
 import { createIntegrationLogger } from '../../logger';
 
 import { uploadData, uploadGraphObjectData } from '../index';
+import { getExpectedRequestHeaders } from '../../../test/util/request';
 
 test('uploads entity data in batches of 250', async () => {
   const { job, logger, apiClient } = createTestContext();
@@ -35,23 +36,28 @@ test('uploads entity data in batches of 250', async () => {
 
   expect(postSpy).toHaveBeenCalledTimes(3);
 
+  const expectedRequestHeaders = getExpectedRequestHeaders();
+
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
       entities: data.slice(0, 250),
     },
+    expectedRequestHeaders,
   );
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
       entities: data.slice(250, 500),
     },
+    expectedRequestHeaders,
   );
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
       entities: data.slice(500, 510),
     },
+    expectedRequestHeaders,
   );
 });
 
@@ -83,30 +89,33 @@ test('uploads relationship data in batches of 250', async () => {
 
   expect(postSpy).toHaveBeenCalledTimes(3);
 
+  const expectedRequestHeaders = getExpectedRequestHeaders();
+
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/relationships`,
     {
       relationships: data.slice(0, 250),
     },
+    expectedRequestHeaders,
   );
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/relationships`,
     {
       relationships: data.slice(250, 500),
     },
+    expectedRequestHeaders,
   );
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/relationships`,
     {
       relationships: data.slice(500, 510),
     },
+    expectedRequestHeaders,
   );
 });
 
 test('should retry a failed upload', async () => {
   const { job, logger, apiClient } = createTestContext();
-
-  const loggerWarnSpy = jest.spyOn(logger, 'warn');
 
   const data = times(
     510,
@@ -136,11 +145,14 @@ test('should retry a failed upload', async () => {
 
   expect(postSpy).toHaveBeenCalledTimes(4);
 
+  const expectedRequestHeaders = getExpectedRequestHeaders();
+
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
       entities: data.slice(0, 250),
     },
+    expectedRequestHeaders,
   );
 
   expect(postSpy).toHaveBeenCalledWith(
@@ -148,6 +160,7 @@ test('should retry a failed upload', async () => {
     {
       entities: data.slice(250, 500),
     },
+    expectedRequestHeaders,
   );
 
   expect(postSpy).toHaveBeenCalledWith(
@@ -155,15 +168,7 @@ test('should retry a failed upload', async () => {
     {
       entities: data.slice(500, 510),
     },
-  );
-
-  expect(loggerWarnSpy).toHaveBeenCalledTimes(1);
-  expect(loggerWarnSpy).toHaveBeenCalledWith(
-    {
-      attemptNum: 0,
-      err: expectedError,
-    },
-    'Failed to upload integration data chunk (will retry)',
+    expectedRequestHeaders,
   );
 });
 
@@ -201,11 +206,14 @@ test('should retry a failed upload and not log warn when error is a "Credentials
 
   expect(postSpy).toHaveBeenCalledTimes(4);
 
+  const expectedRequestHeaders = getExpectedRequestHeaders();
+
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
       entities: data.slice(0, 250),
     },
+    expectedRequestHeaders,
   );
 
   expect(postSpy).toHaveBeenCalledWith(
@@ -213,6 +221,7 @@ test('should retry a failed upload and not log warn when error is a "Credentials
     {
       entities: data.slice(250, 500),
     },
+    expectedRequestHeaders,
   );
 
   expect(postSpy).toHaveBeenCalledWith(
@@ -220,6 +229,7 @@ test('should retry a failed upload and not log warn when error is a "Credentials
     {
       entities: data.slice(500, 510),
     },
+    expectedRequestHeaders,
   );
 
   expect(loggerWarnSpy).toHaveBeenCalledTimes(0);

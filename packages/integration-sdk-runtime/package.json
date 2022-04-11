@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-runtime",
-  "version": "8.6.4",
+  "version": "8.11.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,7 +24,7 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^8.6.4",
+    "@jupiterone/integration-sdk-core": "^8.11.0",
     "@lifeomic/alpha": "^1.4.0",
     "@lifeomic/attempt": "^3.0.0",
     "async-sema": "^3.1.0",
@@ -43,7 +43,7 @@
     "uuid": "^7.0.3"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^8.6.4",
+    "@jupiterone/integration-sdk-private-test-utils": "^8.11.0",
     "@types/uuid": "^7.0.2",
     "get-port": "^5.1.1",
     "memfs": "^3.2.0",

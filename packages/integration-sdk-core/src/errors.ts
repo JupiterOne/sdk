@@ -290,6 +290,35 @@ export class IntegrationProviderAuthorizationError extends IntegrationProviderAP
   }
 }
 
+/**
+ * An error that may be thrown by integration during any step that interacts
+ * with provider APIs if the integration has exhausted all of the retries and can't fetch the resources.
+ *
+ * An alert SHOULD NOT be delivered to operators when this error is thrown to allow
+ * for improving the integration's handling of provider API errors.
+ */
+export class IntegrationProviderRetriesExceededError extends IntegrationProviderAPIError {
+  /**
+   * Optional encapsulation of the retry details received from API. Type is 'any' as the
+   * content will depend on the provider API.
+   */
+  readonly retryDetails?: any;
+
+  constructor(
+    options: IntegrationProviderApiErrorOptions & {},
+    retryDetails?: any,
+  ) {
+    super({
+      ...options,
+      code: 'PROVIDER_RETRIES_EXCEEDED_ERROR',
+      message: `Provider retries exceeded at ${options.endpoint}: ${options.status} ${options.statusText}`,
+      fatal: false,
+    });
+
+    this.retryDetails = retryDetails;
+  }
+}
+
 export type UserConfigError =
   | IntegrationValidationError
   | IntegrationProviderAuthenticationError;
@@ -312,6 +341,14 @@ export function isProviderAuthError(err: Error): err is ProviderAuthError {
   );
 }
 
+export function isProviderRetriesExceededError(err: Error): boolean {
+  return err instanceof IntegrationProviderRetriesExceededError;
+}
+
 export function shouldReportErrorToOperator(err: Error): boolean {
-  return !isUserConfigError(err) && !isProviderAuthError(err);
+  return (
+    !isUserConfigError(err) &&
+    !isProviderAuthError(err) &&
+    !isProviderRetriesExceededError(err)
+  );
 }

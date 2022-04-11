@@ -12,6 +12,7 @@ export interface ExportOptions {
   includeEntities: boolean;
   includeRelationships: boolean;
   includeDeleted: boolean;
+  apiBaseUrl?: string;
 }
 
 export const DEFAULT_EXPORT_DIRECTORY = '.j1/export';
@@ -44,6 +45,10 @@ export function j1Export() {
     .option(
       '--no-include-deleted',
       'Exclude deleted entities/relationships in export',
+    )
+    .option(
+      '--api-base-url <url>',
+      'The base URL used to initiate api calls with your instance of JupiterOne (defaults to `https://api.us.jupiterone.io`)',
     )
     .action(async (options: ExportOptions) => {
       log.info(`Starting export...`);

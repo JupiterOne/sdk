@@ -47,6 +47,7 @@ export type BulkDownloadParams = {
   apiKey: string;
   includeDeleted: boolean;
   progress: (totalDownloaded: number) => void;
+  apiBaseUrl: string | undefined;
 };
 
 export const ASSET_DOWNLOAD_LIMIT = 4000;
@@ -58,12 +59,13 @@ export async function bulkDownloadToJson({
   apiKey,
   includeDeleted,
   progress,
+  apiBaseUrl,
 }: BulkDownloadParams) {
   let endCursor: string | undefined;
   let assetCount = 0;
 
   const apiClient = createApiClient({
-    apiBaseUrl: J1_ENDPOINT,
+    apiBaseUrl: apiBaseUrl ? apiBaseUrl : J1_ENDPOINT,
     account,
     accessToken: apiKey,
   });

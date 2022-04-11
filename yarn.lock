@@ -643,10 +643,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@jupiterone/data-model@^0.45.0":
-  version "0.45.0"
-  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.45.0.tgz#429ee0dd3a709e7c3c8ad75098d544c4bb633ca6"
-  integrity sha512-zLZaHCTNuG3Ceevwi7pgBsauLkPfC/eFmMCSHhIbDtaVDceLN1vctmE0IX1CyLx7UaRoXHjBYzUg11qivZNAmA==
+"@jupiterone/data-model@^0.47.0":
+  version "0.47.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.47.0.tgz#b520915c0ca143fe39571ef184c605e0a94273e3"
+  integrity sha512-YzE7EKL2KzqdAFZyfL4e5ORY5KL+I8QqDmiSqBpr1bPrZH/ShAUReYxOQ+jBb9615jzcZHTfXQ0D7VXnHKIUyg==
   dependencies:
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
@@ -6217,9 +6217,9 @@ minimist-options@4.1.0:
     kind-of "^6.0.3"
 
 minimist@^1.2.0, minimist@^1.2.5:
-  version "1.2.5"
-  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
-  integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.6.tgz#8637a5b759ea0d6e98702cfb3a9283323c93af44"
+  integrity sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==
 
 minipass-collect@^1.0.2:
   version "1.0.2"
