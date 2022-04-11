@@ -101,6 +101,61 @@ test('hits dev urls if JUPITERONE_DEV environment variable is set', async () => 
   });
 });
 
+test('hits different url if --api-base-url is set', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.TEST.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'sync',
+    '--integrationInstanceId',
+    'test',
+    '--api-base-url',
+    'https://api.TEST.jupiterone.io',
+  ]);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
+    ...job,
+    status: SynchronizationJobStatus.FINALIZE_PENDING,
+    // We arrive at these numbers because of what
+    // was written to disk in the 'synchronization' project fixture
+    numEntitiesUploaded: 6,
+    numRelationshipsUploaded: 3,
+  });
+});
+
+test('throws an error if --api-base-url is set with --development', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.TEST.jupiterone.io',
+  });
+
+  await expect(
+    createCli().parseAsync([
+      'node',
+      'j1-integration',
+      'sync',
+      '--integrationInstanceId',
+      'test',
+      '--development',
+      '--api-base-url',
+      'https://api.TEST.jupiterone.io',
+    ]),
+  ).rejects.toThrow(
+    'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
+  );
+});
+
 test('throws if JUPITERONE_API_KEY is not set', async () => {
   delete process.env.JUPITERONE_API_KEY;
 

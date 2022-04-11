@@ -91,12 +91,13 @@ export async function importAssetsFromCsv({
   includeRelationships,
   storageDirectory,
   scope,
+  apiBaseUrl,
 }: ImportAssetsParams) {
   const spinner = createSpinner('Importing csv assets into account').start();
 
   try {
     const apiClient = createApiClient({
-      apiBaseUrl: J1_ENDPOINT,
+      apiBaseUrl: apiBaseUrl ? apiBaseUrl : J1_ENDPOINT,
       account,
       accessToken: apiKey,
     });

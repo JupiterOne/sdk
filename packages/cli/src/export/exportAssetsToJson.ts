@@ -11,6 +11,7 @@ export async function exportAssetsToJson({
   includeRelationships,
   account,
   apiKey,
+  apiBaseUrl,
 }: ExportAssetsParams) {
   const spinner = createSpinner('Exporting assets to JSON').start();
   try {
@@ -33,6 +34,7 @@ export async function exportAssetsToJson({
             entityCount = count;
             updateSpinner();
           },
+          apiBaseUrl,
         }),
       );
     }
@@ -49,6 +51,7 @@ export async function exportAssetsToJson({
             relationshipCount = count;
             updateSpinner();
           },
+          apiBaseUrl,
         }),
       );
     }

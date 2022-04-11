@@ -14,6 +14,56 @@ and this project adheres to
 - Support `executeStepWithDependencies` for steps with no `dependencyGraphId`,
   even if `invocationConfig.dependencyGraphOrder` is present
 
+## [8.10.1] - 2022-04-08
+
+### Changed
+
+- Reduced max upload size to 1 MB.
+
+## [8.10.0] - 2022-04-07
+
+### Changed
+
+- Additional logging when upload errors occur
+
+## [8.9.0] - 2022-04-05
+
+### Changed
+
+- Bumped version `@jupiterone/data-model` to v0.47.0
+
+## [8.8.2] - 2022-04-04
+
+### Added
+
+- `j1` commands `export` and `import` now accept optional command parameter
+  --api-base-url to specify a different URL to run against.
+
+## [8.8.1] - 2022-04-01
+
+### Added
+
+- `j1-integration` commands `sync`, `run`, and `validate-question-file` now
+  accept optional command parameter --api-base-url to specify a different URL to
+  run against.
+
+## [8.8.0] - 2022-03-28
+
+### Added
+
+- SDK now proactively truncates rawData entries when uploads would exceed 6
+  megabytes.
+
+## [8.7.0] - 2022-03-25
+
+### Changed
+
+- Bumped version of `@jupiterone/data-model` to v0.46.0
+
+### Added
+
+- pass client-generated correlation id with sync job uploads
+
 ## [8.6.4] - 2022-03-23
 
 ### Changed

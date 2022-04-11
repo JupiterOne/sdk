@@ -1305,6 +1305,14 @@ the job run. The polling will stop once the job was marked as complete.
 
 ex: `j1-integration sync --instance <integration instance id> --tail`
 
+###### Option `--api-base-url`
+
+If provided this option specifies which base URL to use for synchronization.
+Cannot be used with the `--development` flag.
+
+ex:
+`yarn j1-integration sync --integrationInstanceId <integration instance id> --api-base-url <api base url>`
+
 #### Command `j1-integration run`
 
 The `j1-integration run` command combines the functionality of the `collect` and
@@ -1417,6 +1425,7 @@ Options:
   -a, --jupiterone-account-id <jupiteroneAccountId>  J1 account ID used to validate J1QL queries
   -k, --jupiterone-api-key <jupiteroneApiKey>        J1 API key used to validate J1QL queries
   -d, --dry-run                                      skip making HTTP requests to validate J1QL queries
+  --api-base-url                                     API base URL used to validate question file.
   -h, --help                                         display help for command
 ```
 

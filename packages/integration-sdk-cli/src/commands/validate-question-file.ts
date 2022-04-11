@@ -14,6 +14,7 @@ interface ValidateQuestionFileCommandArgs extends TypesCommandArgs {
   jupiteroneAccountId?: string;
   jupiteroneApiKey?: string;
   dryRun?: boolean;
+  apiBaseUrl?: string;
 }
 
 export function getDefaultQuestionFilePath() {
@@ -40,6 +41,10 @@ export function validateQuestionFile() {
       '-d, --dry-run',
       'skip making HTTP requests to validate J1QL queries',
     )
+    .option(
+      '--api-base-url <url>',
+      'API base URL used to validate question file.',
+    )
     .action(executeValidateQuestionFileAction);
 }
 
@@ -60,10 +65,21 @@ async function executeValidateQuestionFileAction(
       'Must provide J1 account ID and API key (except for --dry-run)',
     );
   } else if (!dryRun && jupiteroneAccountId && jupiteroneApiKey) {
-    apiClient = createApiClient({
-      apiBaseUrl: getApiBaseUrl({
+    let apiBaseUrl: string;
+    if (options.apiBaseUrl) {
+      if (process.env.JUPITERONE_DEV) {
+        throw new Error(
+          'Invalid configuration supplied.  Cannot specify both --api-base-url and the JUPITERONE_DEV environment variable.',
+        );
+      }
+      apiBaseUrl = options.apiBaseUrl;
+    } else {
+      apiBaseUrl = getApiBaseUrl({
         dev: !!process.env.JUPITERONE_DEV,
-      }),
+      });
+    }
+    apiClient = createApiClient({
+      apiBaseUrl: apiBaseUrl,
       account: jupiteroneAccountId,
       accessToken: jupiteroneApiKey,
     });

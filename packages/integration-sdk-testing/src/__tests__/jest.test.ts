@@ -394,6 +394,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
       serial: 'C0123',
       platform: 'darwin',
       specialProp: 'abc',
+      deviceId: 'udid of device',
     };
 
     const result = toMatchGraphObjectSchema(entity, {

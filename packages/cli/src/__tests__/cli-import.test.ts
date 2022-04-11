@@ -100,6 +100,7 @@ test('should import json assets', async () => {
     `--account=${TEST_ACCOUNT}`,
     `--api-key=${TEST_API_KEY}`,
     `--scope=${scope}`,
+    `--api-base-url=https://api.TEST.jupiterone.io`,
   ]);
 
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -133,6 +134,11 @@ test('should import json assets', async () => {
   expect(mockedAxios.post).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/finalize`,
   );
+  expect(mockedCreateApiClient).toBeCalledWith({
+    accessToken: 'apiKey',
+    account: 'account',
+    apiBaseUrl: 'https://api.TEST.jupiterone.io',
+  });
 });
 
 test('should exclude relationships when specified', async () => {
