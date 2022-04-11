@@ -14,6 +14,12 @@ and this project adheres to
 - Support `executeStepWithDependencies` for steps with no `dependencyGraphId`,
   even if `invocationConfig.dependencyGraphOrder` is present
 
+### Added
+
+- Additional error type `IntegrationProviderRetriesExceededError` to be used
+  when integration has exhausted all of the retries. This error type won't be
+  sent in as an alert to the operators.
+
 ## [8.10.1] - 2022-04-08
 
 ### Changed
