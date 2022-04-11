@@ -65,17 +65,22 @@ describe('executeStepWithDependencies', () => {
   });
 
   describe('invalid invocationConfig', () => {
-    test('should fail if invocationConfig `dependencyGraphOrder` property is present', async () => {
+    test('should fail if `step.dependencyGraphId` property is present', async () => {
       await expect(
         executeStepWithDependencies({
           stepId: 'step-1',
           invocationConfig: getMockInvocationConfig({
-            dependencyGraphOrder: [],
+            integrationSteps: [
+              getMockIntegrationStep({
+                id: 'step-1',
+                dependencyGraphId: 'last',
+              }),
+            ],
           }),
           instanceConfig: getMockInstanceConfig(),
         }),
       ).rejects.toThrow(
-        'executeStepWithDependencies does not currently support dependencyGraphOrder',
+        'executeStepWithDependencies does not currently support steps with a dependencyGraphId',
       );
     });
 

@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Support `executeStepWithDependencies` for steps with no `dependencyGraphId`,
+  even if `invocationConfig.dependencyGraphOrder` is present
+
 ## [8.11.0] - 2022-04-11
 
 ### Added
