@@ -16,6 +16,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import * as log from '../log';
+import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
 
@@ -28,15 +29,7 @@ beforeEach(() => {
   process.env.JUPITERONE_API_KEY = 'testing-key';
   process.env.JUPITERONE_ACCOUNT = 'mochi';
 
-  polly = new Polly('run-cli', {
-    adapters: ['node-http'],
-    persister: 'fs',
-    logging: false,
-    matchRequestsBy: {
-      headers: false,
-    },
-  });
-
+  polly = createTestPolly('run-cli');
   loadProjectStructure('typeScriptIntegrationProject');
 
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
