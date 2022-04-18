@@ -20,6 +20,7 @@ import { createCli } from '../index';
 import { setupSynchronizerApi } from './util/synchronization';
 
 import * as log from '../log';
+import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
 
@@ -37,14 +38,7 @@ beforeEach(() => {
   process.env.JUPITERONE_ACCOUNT = 'mochi';
   loadProjectStructure('validationFailure');
 
-  polly = new Polly('run-cli-failure', {
-    adapters: ['node-http'],
-    persister: 'fs',
-    logging: false,
-    matchRequestsBy: {
-      headers: false,
-    },
-  });
+  polly = createTestPolly('run-cli-failure');
 
   mocked(mockCreateIntegrationLogger).mockReturnValue(
     createIntegrationLogger({ name: 'test' }),

@@ -22,7 +22,7 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/entities`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
-      job.numEntitiesUploaded += JSON.parse(req.body).entities.length;
+      job.numEntitiesUploaded += JSON.parse(req.body!).entities.length;
       res.status(200).json({ job });
     });
 
@@ -37,7 +37,9 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/relationships`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
-      job.numRelationshipsUploaded += JSON.parse(req.body).relationships.length;
+      job.numRelationshipsUploaded += JSON.parse(
+        req.body!,
+      ).relationships.length;
       res.status(200).json({ job });
     });
 

@@ -1,16 +1,16 @@
-import { Har, Entry } from 'har-format';
 import defaultsDeep from 'lodash/defaultsDeep';
 import { gunzipSync } from 'zlib';
 
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import { Polly, PollyConfig } from '@pollyjs/core';
 import FSPersister from '@pollyjs/persister-fs';
+import { HarEntry, Har } from '@pollyjs/persister';
 
 Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 export type Recording = Polly;
-export type RecordingEntry = Entry;
+export type RecordingEntry = HarEntry;
 
 export interface SetupRecordingInput {
   directory: string;
@@ -78,7 +78,7 @@ export function setupRecording({
       return 'JupiterOneIntegationFSPersister';
     }
 
-    saveRecording(recordingId: number, data: Har): void {
+    async onSaveRecording(recordingId: string, data: Har): Promise<void> {
       data.log.entries.forEach((entry) => {
         // Redact tokens, even though they expire
         entry.request.headers = entry.request.headers.map((header) => ({
@@ -104,7 +104,7 @@ export function setupRecording({
         mutateEntry?.(entry);
       });
 
-      super.saveRecording(recordingId, data);
+      return super.onSaveRecording(recordingId, data);
     }
   }
 
