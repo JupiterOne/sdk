@@ -1,0 +1,34 @@
+{
+  "name": "@jupiterone/integration-sdk-http-client",
+  "version": "1.0.0",
+  "description": "The HTTP client for use in JupiterOne integrations",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "repository": "git@github.com:JupiterOne/sdk.git",
+  "author": "JupiterOne <dev@jupiterone.io>",
+  "license": "MPL-2.0",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": "14.x"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:event-handlers": "ts-node ./test/index.ts",
+    "prebuild:dist": "rm -rf dist && mkdir dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration",
+    "prepack": "yarn build:dist"
+  },
+  "dependencies": {
+    "@jupiterone/integration-sdk-core": "^8.11.0",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "@jupiterone/integration-sdk-private-test-utils": "^8.11.0",
+    "@jupiterone/integration-sdk-testing": "^8.11.0"
+  }
+}
