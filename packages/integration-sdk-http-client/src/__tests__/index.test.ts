@@ -1,4 +1,5 @@
-import { createMockIntegrationLogger } from '@jupiterone/integration-sdk-testing';
+// import { createMockIntegrationLogger } from '@jupiterone/integration-sdk-testing';
+import * as tester from '@jupiterone/integration-sdk-testing';;
 import { APIClient } from '../index';
 
 // const fakeData = {test: "test"};
@@ -19,8 +20,9 @@ import { APIClient } from '../index';
 // global.fetch = jest.fn().mockImplementation(setupFetchStub(fakeData))
 
 test('test ctor', () => {
-  const client = new APIClient(createMockIntegrationLogger());
-  expect(client).toBeObject();
+  const logger = tester.createMockIntegrationLogger();
+  const client = new APIClient(logger);
+  expect(client).toBeDefined();
 });
 
 // test('it returns 200 status', async () => {
