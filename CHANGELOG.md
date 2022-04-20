@@ -9,7 +9,18 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.12.0] - 2022-04-20
+
 ### Changed
+
+- The following packages have been upgraded:
+
+  - `@pollyjs/adapter-node-http`
+  - `@pollyjs/core`
+  - `@pollyjs/persister-fs`
+
+- The new Polly.JS packages ship with TypeScript definition files, so the old
+  `@type/pollyjs__` packages have been removed
 
 - Support `executeStepWithDependencies` for steps with no `dependencyGraphId`,
   even if `invocationConfig.dependencyGraphOrder` is present
