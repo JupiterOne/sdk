@@ -54,7 +54,7 @@ for (const size of inputSizes) {
 
   // Add the test function to the benchmark
   suite.add(
-    `FileSystemGraphObjectStore#addEntity ${size.toString()} Entities`,
+    `FileSystemGraphObjectStore#addEntities ${size.toString()} Entities`,
     fn,
   );
 }

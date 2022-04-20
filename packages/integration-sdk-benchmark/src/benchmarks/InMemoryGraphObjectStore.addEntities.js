@@ -50,7 +50,7 @@ for (const size of inputSizes) {
     );
   };
 
-  suite.add(`InMemoryGraphObjectStore#addEntity ${size.toString()}`, fn);
+  suite.add(`InMemoryGraphObjectStore#addEntities ${size.toString()}`, fn);
 }
 
 suite
