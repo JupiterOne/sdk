@@ -1,16 +1,17 @@
-import { Response } from 'node-fetch';
-
 export type APIRequest = {
   url: string;
-  exec: () => Promise<Response>;
+  method: string;
+  headers: Object;
 };
 
 export type APIResponse = {
-  response: Response;
-  status: Response['status'];
-  statusText: Response['statusText'];
+  data: any;
+  headers: any;
+  status: number;
+  statusText: string;
 };
 
+// TODO, we're not currently paginating anywhere yet.
 type PaginationState = {
   /**
    * Fetch limit, will be URL encoded as value of `limit` GET parameter.
@@ -136,4 +137,14 @@ export type ResourcesResponse<T> = {
   meta: ResponseMeta;
   errors: ResponseError[];
   resources: T[];
+};
+
+export type APIClientRateLimitConfig = {
+  limitHeader: string;
+  limitRemainingHeader: string;
+  retryAfterHeader: string;
+};
+
+export type APIClientConfiguration = {
+  rateLimitConfig: APIClientRateLimitConfig;
 };

@@ -1,17 +1,10 @@
-import fetch, { RequestInfo, RequestInit } from 'node-fetch';
-import { URLSearchParams } from 'url';
-
-import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
+import fetch from 'node-fetch';
 
 import {
   RateLimitConfig,
-  APIRequest,
   APIResponse,
-  PaginationParams,
-  QueryParams,
-  ResourcesResponse,
-  PaginationMeta,
   RateLimitState,
+  APIRequest,
 } from './types';
 
 function getUnixTimeNow() {
@@ -33,106 +26,15 @@ export type APIResourceIterationCallback<T> = (
 ) => boolean | void | Promise<boolean | void>;
 
 export class APIClient {
-  private logger: IntegrationLogger;
   private rateLimitConfig: RateLimitConfig = DEFAULT_RATE_LIMIT_CONFIG;
 
-  constructor(logger: IntegrationLogger) {
-    this.logger = logger;
-  }
-
-  async paginateResources<ResourceType>({
-    callback,
-    apiUrl,
-    query,
-  }: {
-    callback: APIResourceIterationCallback<ResourceType>;
-    apiUrl: string;
-    query?: QueryParams;
-  }): Promise<void> {
-    let seen: number = 0;
-    let total: number = 0;
-    let finished = false;
-
-    let paginationParams: PaginationParams | undefined = undefined;
-
-    do {
-      const url = `${apiUrl}?${toQueryString(
-        paginationParams,
-        query,
-      )}`;
-
-      this.logger.info({ requestUrl: url, paginationParams });
-      const response: ResourcesResponse<ResourceType> =
-        await this.executeAuthenticatedAPIRequest<
-          ResourcesResponse<ResourceType>
-        >(url, {
-          method: 'GET',
-          headers: {
-            accept: 'application/json',
-          },
-        });
-
-      await callback(response.resources);
-
-      this.logger.info(
-        {
-          pagination: response.meta,
-          resourcesLength: response.resources.length,
-        },
-        'pagination response details',
-      );
-
-      paginationParams = response.meta.pagination as PaginationMeta;
-      seen += response.resources.length;
-      total = paginationParams.total!;
-      finished = seen === 0 || seen >= total;
-
-      this.logger.info(
-        { seen, total, finished },
-        'post-request pagination state',
-      );
-    } while (!finished);
-  }
-
-  async executeAuthenticatedAPIRequest<ResponseType>(
-    info: RequestInfo,
-    init: RequestInit,
-  ): Promise<ResponseType> {
-    return this.executeAPIRequest<ResponseType>(info, {
-      ...init,
-      headers: { ...init.headers },
-    });
-  }
-
-  private async executeAPIRequest<ResponseType>(
-    info: RequestInfo,
-    init: RequestInit,
-  ): Promise<ResponseType> {
-    const apiResponse = await this.executeAPIRequestWithRateLimitRetries({
-      url: info as string,
-      exec: () => fetch(info, init),
-    });
-
-    if (apiResponse.status >= 400) {
-      const err = new Error(
-        `API request error for ${info}: ${apiResponse.statusText}`,
-      );
-      Object.assign(err, { code: apiResponse.status });
-      throw err;
-    }
-
-    return apiResponse.response.json();
-  }
-
-  //TODO abstract out which Header values we're grabbing for limit and remaining values.
-  private async executeAPIRequestWithRateLimitRetries<T>(
-    request: APIRequest,
-  ): Promise<APIResponse> {
+  //TODO abstract out which Header values we're grabbing for rate limiting.
+  async executeAPIRequest(request: APIRequest): Promise<APIResponse> {
     let attempts = 0;
     let rateLimitState: RateLimitState;
 
     do {
-      const response = await request.exec();
+      const response = await fetch(request.url, request);
 
       rateLimitState = {
         limitRemaining: Number(response.headers.get('X-RateLimit-Remaining')),
@@ -142,15 +44,21 @@ export class APIClient {
           Number(response.headers.get('X-RateLimit-RetryAfter')),
       };
 
-      if (response.status !== 429 && response.status !== 500) {
+      if (response.status !== 429) {
+        if (response.status >= 400) {
+          const err = new Error(
+            `API request error for ${request.url}: ${response.statusText}`,
+          );
+          Object.assign(err, { code: response.status });
+          throw err;
+        }
         return {
-          response,
+          data: await response.json(),
+          headers: response.headers,
           status: response.status,
           statusText: response.statusText,
         };
-      }
-
-      if (response.status === 429) {
+      } else {
         const unixTimeNow = getUnixTimeNow();
         /**
          * We have seen in the wild that waiting until the
@@ -166,74 +74,17 @@ export class APIClient {
         const timeToSleepInSeconds = rateLimitState.retryAfter
           ? rateLimitState.retryAfter + 60 - unixTimeNow
           : 0;
-        this.logger.info(
-          {
-            unixTimeNow,
-            timeToSleepInSeconds,
-            rateLimitState,
-            rateLimitConfig: this.rateLimitConfig,
-          },
-          'Encountered 429 response. Waiting to retry request.',
-        );
         await sleep(timeToSleepInSeconds * 1000);
         if (
           rateLimitState.limitRemaining &&
           rateLimitState.limitRemaining <= this.rateLimitConfig.reserveLimit
         ) {
-          this.logger.info(
-            {
-              rateLimitState,
-              rateLimitConfig: this.rateLimitConfig,
-            },
-            'Rate limit remaining is less than reserve limit. Waiting for cooldown period.',
-          );
           await sleep(this.rateLimitConfig.cooldownPeriod);
         }
       }
-
       attempts += 1;
-      this.logger.warn(
-        {
-          rateLimitState,
-          attempts,
-          url: request.url,
-          status: response.status,
-        },
-        'Encountered retryable status code from Crowdstrike API',
-      );
     } while (attempts < this.rateLimitConfig.maxAttempts);
 
     throw new Error(`Could not complete request within ${attempts} attempts!`);
   }
-}
-
-function toQueryString(
-  pagination?: {
-    limit?: number;
-    offset?: number | string;
-    after?: number | string;
-  },
-  queryParams?: object,
-): URLSearchParams {
-  const params = new URLSearchParams();
-
-  if (pagination) {
-    if (typeof pagination.limit === 'number') {
-      params.append('limit', String(pagination.limit));
-    }
-    if (pagination.offset !== undefined) {
-      params.append('offset', String(pagination.offset));
-    }
-    if (pagination.after !== undefined) {
-      params.append('after', String(pagination.after));
-    }
-  }
-
-  if (queryParams) {
-    for (const e of Object.entries(queryParams)) {
-      params.append(e[0], String(e[1]));
-    }
-  }
-
-  return params;
 }
