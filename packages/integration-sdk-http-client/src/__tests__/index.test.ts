@@ -1,10 +1,9 @@
-import { ResourcesResponse } from '../types';
 import { APIClient } from '../index';
 import 'fetch-mock-jest';
 import fetch from 'node-fetch';
 
 jest.mock('node-fetch', () => require('fetch-mock-jest').sandbox());
-const fetchMock = fetch as unknown as FetchMockStatic;
+const fetchMock = fetch;// as unknown as FetchMockStatic;
 
 jest.setTimeout(10000);
 
