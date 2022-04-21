@@ -1,6 +1,7 @@
 # @jupiterone/integration-sdk-http-client
 
-This package contains the runtime code required for executing an integration.
+This package contains the default HTTP Client used to interact with API
+providers.
 
 ## Installation
 

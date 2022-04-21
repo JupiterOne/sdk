@@ -37,17 +37,15 @@ test('it throws a forbidden error code', async () => {
   fetchMock.get(testUrl, () => {
     return { status: 403 };
   });
-  try {
-    await client.executeAPIRequest({
+  await expect(
+    client.executeAPIRequest({
       url: testUrl,
       method: 'GET',
       headers: {
         accept: 'application/json',
       },
-    });
-  } catch (err) {
-    expect(err.code).toEqual(403);
-  }
+    }),
+  ).rejects.toThrowError('API request error for http://testUrl: 403 Forbidden');
 });
 
 test('it handles a rate limit code with no headers', async () => {
@@ -57,18 +55,16 @@ test('it handles a rate limit code with no headers', async () => {
   fetchMock.get(testUrl, () => {
     return { status: 429 };
   });
-  try {
-    await client.executeAPIRequest({
+  await expect(
+    client.executeAPIRequest({
       url: testUrl,
       method: 'GET',
       headers: {
         accept: 'application/json',
       },
-    });
-  } catch (err) {
-    expect(err).toEqual(Error('Could not complete request within 5 attempts!'));
-    expect(fetchMock).toHaveFetchedTimes(5);
-  }
+    }),
+  ).rejects.toThrowError('Could not complete request within 5 attempts!');
+  expect(fetchMock).toHaveFetchedTimes(5);
 });
 
 test('it handles a rate limit code with headers', async () => {
@@ -79,22 +75,20 @@ test('it handles a rate limit code with headers', async () => {
     return {
       status: 429,
       headers: {
-        'X-RateLimit-Remaining': 5,
+        'X-RateLimit-Remaining': 7,
         'X-RateLimit-Limit': 10,
         'X-RateLimit-RetryAfter': 3,
       },
     };
   });
-  try {
-    await client.executeAPIRequest({
+  await expect(
+    client.executeAPIRequest({
       url: testUrl,
       method: 'GET',
       headers: {
         accept: 'application/json',
       },
-    });
-  } catch (err) {
-    expect(err).toEqual(Error('Could not complete request within 5 attempts!'));
-    expect(fetchMock).toHaveFetchedTimes(5);
-  }
+    }),
+  ).rejects.toThrowError('Could not complete request within 5 attempts!');
+  expect(fetchMock).toHaveFetchedTimes(5);
 });

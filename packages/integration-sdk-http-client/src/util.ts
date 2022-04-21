@@ -12,6 +12,7 @@ export async function sleep(ms: number) {
  * @returns boolean
  */
 export function isNonRetryableError(statusCode: number): boolean {
+  // TODO make range of retryable error codes configurable
   if (statusCode !== 429 && statusCode >= 400) {
     return true;
   }
