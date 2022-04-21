@@ -1,0 +1,45 @@
+name: 'CodeQL'
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # NOTE: This is the template default.
+    # "At 04:41 on Tuesday."
+    - cron: '41 4 * * 2'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - id: setup-node
+        name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run build
+        run: yarn build
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          # `javascript` tests both JavaScript code and TypeScript code
+          languages: 'javascript'
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
