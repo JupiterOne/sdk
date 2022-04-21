@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-cli",
-  "version": "8.11.0",
+  "version": "8.12.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -22,10 +22,10 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-runtime": "^8.11.0",
+    "@jupiterone/integration-sdk-runtime": "^8.12.0",
     "chalk": "^4",
     "commander": "^5.0.0",
-    "fs-extra": "^10.0.0",
+    "fs-extra": "^10.1.0",
     "globby": "^11.0.0",
     "js-yaml": "^4.1.0",
     "json-diff": "^0.5.4",
@@ -37,17 +37,14 @@
     "vis": "^4.21.0-EOL"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^8.11.0",
-    "@pollyjs/adapter-node-http": "^5.1.1",
-    "@pollyjs/core": "^5.1.1",
-    "@pollyjs/persister-fs": "^5.1.1",
+    "@jupiterone/integration-sdk-private-test-utils": "^8.12.0",
+    "@pollyjs/adapter-node-http": "^6.0.5",
+    "@pollyjs/core": "^6.0.5",
+    "@pollyjs/persister-fs": "^6.0.5",
     "@types/fs-extra": "^9.0.13",
     "@types/js-yaml": "^4.0.3",
     "@types/json-diff": "^0.5.1",
     "@types/lodash": "^4.14.158",
-    "@types/pollyjs__adapter-node-http": "^2.0.1",
-    "@types/pollyjs__core": "^4.3.3",
-    "@types/pollyjs__persister": "^4.3.1",
     "@types/vis": "^4.21.20",
     "memfs": "^3.2.0",
     "neo-forgery": "^2.0.0",

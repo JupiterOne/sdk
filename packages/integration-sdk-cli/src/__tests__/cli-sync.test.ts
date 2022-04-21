@@ -13,6 +13,7 @@ import {
 } from './util/synchronization';
 
 import * as log from '../log';
+import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
 
@@ -25,15 +26,7 @@ beforeEach(() => {
   process.env.JUPITERONE_API_KEY = 'testing-key';
   process.env.JUPITERONE_ACCOUNT = 'mochi';
 
-  polly = new Polly('sync-cli', {
-    adapters: ['node-http'],
-    persister: 'fs',
-    logging: false,
-    matchRequestsBy: {
-      headers: false,
-    },
-  });
-
+  polly = createTestPolly('sync-cli');
   loadProjectStructure('synchronization');
 
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
