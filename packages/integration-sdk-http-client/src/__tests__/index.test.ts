@@ -3,7 +3,7 @@ import 'fetch-mock-jest';
 import fetch from 'node-fetch';
 
 jest.mock('node-fetch', () => require('fetch-mock-jest').sandbox());
-const fetchMock = fetch;// as unknown as FetchMockStatic;
+const fetchMock = fetch;
 
 jest.setTimeout(10000);
 

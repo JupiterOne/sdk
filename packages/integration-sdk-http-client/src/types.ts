@@ -88,6 +88,12 @@ export type RateLimitConfig = {
    * tries.
    */
   maxAttempts: number;
+
+  /**
+   * Optional number of additional seconds to sleep in the event of a rate limit
+   * event.
+   */
+  sleepAdditionalSeconds: number;
 };
 
 /**
