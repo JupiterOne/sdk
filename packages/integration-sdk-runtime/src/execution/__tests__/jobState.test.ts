@@ -25,6 +25,12 @@ import pMap from 'p-map';
 
 jest.mock('fs');
 
+function entitiesToEntityKeySet(entities: Entity[]): Set<string> {
+  const s = new Set<string>();
+  for (const e of entities) s.add(e._key);
+  return s;
+}
+
 function createInMemoryStepGraphObjectDataUploaderCollector(
   partial?: CreateQueuedStepGraphObjectDataUploaderParams,
 ) {
@@ -188,10 +194,20 @@ describe('#hasKey', () => {
       // could result in a `hasKey` returning `false` because neither of the
       // duplicate entities have been fully added to the job state yet.
       if (jobState.hasKey(e._key)) return;
+
+      // We should not reach this line if the `_key` already exists. Therefore,
+      // a duplicate key error should _not_ be thrown.
       return await jobState.addEntity(e);
     });
 
-    expect(results.length).toEqual(entities.length);
+    const resultEntities = results.filter((e) => e !== undefined) as Entity[];
+
+    expect(resultEntities.length).toEqual(entities.length - 1);
+    const entityKeySet = entitiesToEntityKeySet(resultEntities);
+
+    for (const entity of entities) {
+      expect(entityKeySet.has(entity._key)).toEqual(true);
+    }
   });
 });
 
