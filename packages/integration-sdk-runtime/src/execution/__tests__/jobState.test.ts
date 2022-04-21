@@ -183,30 +183,15 @@ describe('#hasKey', () => {
     entities.splice(10, 0, tenthEntity);
 
     const results = await pMap(entities, async (e) => {
+      // NOTE: Due to the event loop queue order in the Node.js, awaiting
+      // the `hasKey` promise while handling multiple entities concurrently,
+      // could result in a `hasKey` returning `false` because neither of the
+      // duplicate entities have been fully added to the job state yet.
       if (jobState.hasKey(e._key)) return;
       return await jobState.addEntity(e);
     });
 
     expect(results.length).toEqual(entities.length);
-  });
-
-  test('should fail to handle concurrent reads from in-memory key store when using asynchronous hasKey', async () => {
-    const jobState = createTestStepJobState();
-    const entities = createTestEntities(100);
-
-    const tenthEntity = entities[9];
-    entities.splice(10, 0, tenthEntity);
-
-    await expect(
-      pMap(entities, async (e) => {
-        // NOTE: Due to the event loop queue order in the Node.js, awaiting
-        // the `hasKey` promise while handling multiple entities concurrently,
-        // could result in a `hasKey` returning `false` because neither of the
-        // duplicate entities have been fully added to the job state yet.
-        if (await jobState.hasKey(e._key)) return;
-        await jobState.addEntity(e);
-      }),
-    ).rejects.toThrowError('Duplicate _key detected (_key=entityKey:9)');
   });
 });
 
