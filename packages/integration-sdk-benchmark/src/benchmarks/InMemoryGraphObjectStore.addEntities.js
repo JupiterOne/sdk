@@ -1,12 +1,12 @@
 const Benchmark = require('benchmark');
 const {
-  FileSystemGraphObjectStore,
+  InMemoryGraphObjectStore,
 } = require('@jupiterone/integration-sdk-runtime');
 const { createMockEntities } = require('../util/entity');
 const { createEventCollector } = require('../util/eventCollector');
 
-function createFileSystemGraphObjectStore(params) {
-  return new FileSystemGraphObjectStore(params);
+function createInMemoryGraphObjectStore(params) {
+  return new InMemoryGraphObjectStore(params);
 }
 
 function createBenchmarkContext(params = {}) {
@@ -20,9 +20,9 @@ function createBenchmarkContext(params = {}) {
   return {
     stepId,
     newEntities,
-    fileSystemGraphObjectStoreParams: { graphObjectBufferThreshold: 500 },
   };
 }
+
 const inputSizes = [100, 1000, 10000, 100000];
 
 const eventCollector = createEventCollector();
@@ -42,21 +42,15 @@ for (const size of inputSizes) {
 
   // ---- TEST FUNCTION -------------
   const fn = async function () {
-    const fileSystemGraphObjectStore = createFileSystemGraphObjectStore(
-      context.fileSystemGraphObjectStoreParams,
-    );
+    const inMemoryGraphObjectStore = createInMemoryGraphObjectStore();
 
-    await fileSystemGraphObjectStore.addEntities(
+    await inMemoryGraphObjectStore.addEntities(
       context.stepId,
       context.newEntities,
     );
   };
 
-  // Add the test function to the benchmark
-  suite.add(
-    `FileSystemGraphObjectStore#addEntities ${size.toString()} Entities`,
-    fn,
-  );
+  suite.add(`InMemoryGraphObjectStore#addEntities ${size.toString()}`, fn);
 }
 
 suite
@@ -66,4 +60,6 @@ suite
   .on('complete', function () {
     eventCollector.publishEvents();
   })
-  .run({ async: true });
+  .run({
+    async: true,
+  });
