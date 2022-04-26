@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.12.1] - 2022-04-26
+
+## Changed
+
+- Updated dependency `@lifeomic/attempt` to version 3.0.3  
+  Fixes an error handling issues when using the timeout option.
+
 ## [8.12.0] - 2022-04-20
 
 ### Changed
