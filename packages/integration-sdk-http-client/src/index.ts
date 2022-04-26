@@ -20,7 +20,7 @@ export type APIResourceIterationCallback<T> = (
 ) => boolean | void | Promise<boolean | void>;
 
 export class APIClient {
-  // TODO make rateLimitConfig configurable and only use the default values when none are provided
+  // TODO (adam-in-ict) make rateLimitConfig configurable and only use the default values when none are provided
   private rateLimitConfig: RateLimitConfig = DEFAULT_RATE_LIMIT_CONFIG;
   private rateLimitState: RateLimitState;
 
@@ -38,7 +38,7 @@ export class APIClient {
         throw err;
       }
 
-      // TODO make rate limit error configurable for instances where an API isn't using the default of 429
+      // TODO (adam-in-ict) make rate limit error configurable for instances where an API isn't using the default of 429
       if (response.status === 429) {
         await this.handleRateLimitError(response.headers);
       } else {
@@ -60,7 +60,7 @@ export class APIClient {
     });
   }
 
-  //TODO abstract out which Header values we're grabbing for rate limiting.
+  //TODO (adam-in-ict) abstract out which Header values we're grabbing for rate limiting.
   /**
    * Get rate limit info, sleep, and then loop to retry
    *

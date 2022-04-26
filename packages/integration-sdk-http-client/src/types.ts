@@ -11,7 +11,7 @@ export type APIResponse = {
   statusText: string;
 };
 
-// TODO, we're not currently paginating anywhere yet.
+// TODO (adam-in-ict), we're not currently paginating anywhere yet.
 type PaginationState = {
   /**
    * Fetch limit, will be URL encoded as value of `limit` GET parameter.

@@ -1,4 +1,4 @@
-export interface APIErrorConfig {
+export interface APIErrorParams {
   message: string;
 
   code: number;
@@ -10,7 +10,7 @@ export class APIError extends Error {
    */
   readonly code: number;
 
-  constructor(config: APIErrorConfig) {
+  constructor(config: APIErrorParams) {
     super(config.message);
     this.code = config.code;
   }
