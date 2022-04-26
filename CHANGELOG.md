@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.0] - 2022-04-26
+
+## Added
+
+- Initial release of HTTP client with basic rate limit retry handling.
+
 ## [8.12.1] - 2022-04-26
 
 ## Changed
