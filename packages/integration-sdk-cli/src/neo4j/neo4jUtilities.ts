@@ -16,7 +16,7 @@ export function sanitizePropertyName(propertyName: string): string {
 }
 
 export function sanitizeValue(value: string): string {
-  return value.replace(/"/gi, '\\"');
+  return value.replace(/\\*"/gi, '\\"');
 }
 
 export function buildPropertyParameters(propList: Object) {
