@@ -30,6 +30,14 @@ describe('#neo4jUtilities', () => {
       '1a!b@c#d$e%f^g&h*i(j)k-l=m+n\\o|p\'q\\"r;s:t/u?v.w,x>y<z`1~2\t3\n4[5]6{7}8 90',
     );
   });
+  test('should sanitize multiple escapes properly', () => {
+    const testSanitize: string = sanitizeValue(
+      '1a!b@c#d$e%f^g&h*i(j)k-l=m+n\\o|p\'q\\\\\\\\\\"r;s:t/u?v.w,x>y<z`1~2\t3\n4[5]6{7}8 90',
+    );
+    expect(testSanitize).toEqual(
+      '1a!b@c#d$e%f^g&h*i(j)k-l=m+n\\o|p\'q\\"r;s:t/u?v.w,x>y<z`1~2\t3\n4[5]6{7}8 90',
+    );
+  });
 });
 
 describe('#buildPropertyParameters', () => {
