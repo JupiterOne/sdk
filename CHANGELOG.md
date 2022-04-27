@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.1] - 2022-04-27
+
+## Fixed
+
+- Fixed CodeQL warning around Neo4j value sanitization previously not properly
+  accounting for potential escape characters.
+
 ## [8.13.0] - 2022-04-26
 
 ## Added
