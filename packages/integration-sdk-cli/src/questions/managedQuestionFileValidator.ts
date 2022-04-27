@@ -7,6 +7,14 @@ import * as queryLanguage from '../services/queryLanguage';
 export const ManagedQuestionQueryRecord = Runtypes.Record({
   name: Runtypes.String.Or(Runtypes.Undefined),
   query: Runtypes.String,
+  resultsAre: Runtypes.Union(
+    Runtypes.Literal('BAD'),
+    Runtypes.Literal('GOOD'),
+    Runtypes.Literal('INFORMATIVE'),
+    Runtypes.Literal('UNKNOWN'),
+    Runtypes.Undefined,
+    Runtypes.Null,
+  ),
 });
 
 export const ManagedQuestionComplianceDetailsRecord = Runtypes.Record({

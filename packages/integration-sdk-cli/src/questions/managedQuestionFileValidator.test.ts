@@ -43,6 +43,10 @@ describe('#validateManagedQuestionFile dryRun - Valid', () => {
   test('should validate compliance question', async () => {
     await dryRunTest('compliance');
   });
+
+  test('should validate any allowed resultsAre property', async () => {
+    await dryRunTest('results-are');
+  });
 });
 
 describe('#validateManagedQuestionFile dryRun - Invalid', () => {
@@ -75,6 +79,12 @@ describe('#validateManagedQuestionFile dryRun - Invalid', () => {
       dryRunTest('non-unique-question-name'),
     ).rejects.toThrowError(
       `Duplicate query name in question detected (questionId=integration-question-google-cloud-corporate-login-credentials, queryName=good)`,
+    );
+  });
+
+  test('should throw if resultsAre contains invalid property', async () => {
+    await expect(() => dryRunTest('invalid-results-are')).rejects.toThrowError(
+      `Expected "BAD" | "GOOD" | "INFORMATIVE" | "UNKNOWN" | undefined | null, but was string in questions.[0].queries.[0].resultsAre`,
     );
   });
 });
