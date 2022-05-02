@@ -1,3 +1,5 @@
+import { Relationship, RelationshipMapping } from '@jupiterone/integration-sdk-core';
+
 export function startsWithNumeric(str: string): boolean {
   return /^\d/.test(str);
 }
@@ -49,4 +51,27 @@ export function buildPropertyParameters(propList: Object) {
   }
 
   return propertyParameters;
+}
+
+// Start and end type helper functions.  Prepends a : to any nonempty results for
+// immediate use in a Neo4j command.
+export function getFromType(relationship: Relationship) : String {
+  if (relationship.fromType) {
+    return ':' + relationship.fromType.toString();
+  } 
+  // TODO (adam-in-ict) do we want to try something like the below or does it risk too many unintended consequences?
+  // else if (relationship._fromEntityKey && relationship._fromEntityKey.toString().includes('|')) {
+  //   const generatedType = relationship._fromEntityKey.toString().split('|')[0];
+  //   if (generatedType.length > 0) return ':' + generatedType;
+  // }
+  return '';
+}
+
+export function getToType(relationship: Relationship) : String {
+  if (relationship.toType) {
+    return ':' + relationship.toType.toString();
+  } else if ((relationship._mapping as RelationshipMapping)?.targetEntity?._type) {
+    return ':' + (relationship._mapping as RelationshipMapping).targetEntity._type
+  }
+  return '';
 }
