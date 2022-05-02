@@ -85,11 +85,13 @@ export class Neo4jGraphStore {
         MERGE (${nodeAlias} {_key: $finalKeyValue, _integrationInstanceID: $integrationInstanceID}) 
         SET ${nodeAlias} += $propertyParameters
         SET ${nodeAlias}:${sanitizedType}${classLabels};`;
-      promiseArray.push(this.runCypherCommand(buildCommand, {
-        propertyParameters: propertyParameters,
-        finalKeyValue: finalKeyValue,
-        integrationInstanceID: this.integrationInstanceID,
-      }));
+      promiseArray.push(
+        this.runCypherCommand(buildCommand, {
+          propertyParameters: propertyParameters,
+          finalKeyValue: finalKeyValue,
+          integrationInstanceID: this.integrationInstanceID,
+        }),
+      );
     }
     await Promise.all(promiseArray);
   }
@@ -156,12 +158,14 @@ export class Neo4jGraphStore {
       MERGE (end${endEntityType} {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
       MERGE (start)-[${relationshipAlias}:${sanitizedRelationshipClass}]->(end)
       SET ${relationshipAlias} += $propertyParameters;`;
-      promiseArray.push(this.runCypherCommand(buildCommand, {
-        propertyParameters: propertyParameters,
-        startEntityKey: startEntityKey,
-        endEntityKey: endEntityKey,
-        integrationInstanceID: this.integrationInstanceID,
-      }));
+      promiseArray.push(
+        this.runCypherCommand(buildCommand, {
+          propertyParameters: propertyParameters,
+          startEntityKey: startEntityKey,
+          endEntityKey: endEntityKey,
+          integrationInstanceID: this.integrationInstanceID,
+        }),
+      );
     }
     await Promise.all(promiseArray);
   }
