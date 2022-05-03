@@ -3,8 +3,8 @@ import {
   sanitizePropertyName,
   sanitizeValue,
   buildPropertyParameters,
-  getFromType,
-  getToType,
+  getFromTypeLabel,
+  getToTypeLabel,
 } from '../neo4jUtilities';
 import {
   Relationship,
@@ -134,26 +134,26 @@ describe('#getFromAndToTypes', () => {
   };
 
   test('should build fromType label', () => {
-    expect(getFromType(testRelationshipData)).toEqual(':testType1');
+    expect(getFromTypeLabel(testRelationshipData)).toEqual(':testType1');
   });
 
   test('should build toType label', () => {
-    expect(getToType(testRelationshipData)).toEqual(':testType2');
+    expect(getToTypeLabel(testRelationshipData)).toEqual(':testType2');
   });
 
   test('should return empty fromType label', () => {
-    expect(getFromType(testRelationshipNoTypeData)).toEqual('');
+    expect(getFromTypeLabel(testRelationshipNoTypeData)).toEqual('');
   });
 
   test('should return empty toType label', () => {
-    expect(getToType(testRelationshipNoTypeData)).toEqual('');
+    expect(getToTypeLabel(testRelationshipNoTypeData)).toEqual('');
   });
 
   test('should return empty fromType label for mapped relationship', () => {
-    expect(getFromType(testMappedRelationship)).toEqual('');
+    expect(getFromTypeLabel(testMappedRelationship)).toEqual('');
   });
 
   test('should return correct toType label for mapped relationship', () => {
-    expect(getToType(testMappedRelationship)).toEqual(':testEntityType');
+    expect(getToTypeLabel(testMappedRelationship)).toEqual(':testEntityType');
   });
 });

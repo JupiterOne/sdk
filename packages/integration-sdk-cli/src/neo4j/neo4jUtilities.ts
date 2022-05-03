@@ -58,14 +58,14 @@ export function buildPropertyParameters(propList: Object) {
 
 // Start and end type helper functions.  Prepends a : to any nonempty results for
 // immediate use in a Neo4j command.
-export function getFromType(relationship: Relationship): String {
+export function getFromTypeLabel(relationship: Relationship): String {
   if (relationship._fromType) {
     return ':' + relationship._fromType.toString();
   }
   return '';
 }
 
-export function getToType(relationship: Relationship): String {
+export function getToTypeLabel(relationship: Relationship): String {
   if (relationship._toType) {
     return ':' + relationship._toType.toString();
   } else if (

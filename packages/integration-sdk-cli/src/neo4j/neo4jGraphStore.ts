@@ -3,8 +3,8 @@ import {
   sanitizeValue,
   buildPropertyParameters,
   sanitizePropertyName,
-  getFromType,
-  getToType,
+  getFromTypeLabel,
+  getToTypeLabel,
 } from './neo4jUtilities';
 
 import * as neo4j from 'neo4j-driver';
@@ -115,8 +115,8 @@ export class Neo4jGraphStore {
       }
 
       //Attempt to get start and end types
-      const startEntityType = getFromType(relationship);
-      const endEntityType = getToType(relationship);
+      const startEntityTypeLabel = getFromTypeLabel(relationship);
+      const endEntityTypeLabel = getToTypeLabel(relationship);
 
       if (relationship._mapping) {
         //Mapped Relationship
@@ -154,8 +154,8 @@ export class Neo4jGraphStore {
       );
 
       const buildCommand = `
-      MERGE (start${startEntityType} {_key: $startEntityKey, _integrationInstanceID: $integrationInstanceID})
-      MERGE (end${endEntityType} {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
+      MERGE (start${startEntityTypeLabel} {_key: $startEntityKey, _integrationInstanceID: $integrationInstanceID})
+      MERGE (end${endEntityTypeLabel} {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
       MERGE (start)-[${relationshipAlias}:${sanitizedRelationshipClass}]->(end)
       SET ${relationshipAlias} += $propertyParameters;`;
       promiseArray.push(
