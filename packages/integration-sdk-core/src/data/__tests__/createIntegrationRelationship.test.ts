@@ -30,7 +30,9 @@ describe('DirectRelationshipOptions', () => {
     _class: 'HAS',
     _key: 'a|has|b',
     _fromEntityKey: 'a',
+    _fromType: 'a_entity',
     _toEntityKey: 'b',
+    _toType: 'b_entity',
     displayName: 'HAS',
   };
 
@@ -74,7 +76,9 @@ describe('DirectRelationshipLiteralOptions', () => {
     _class: 'HAS',
     _key: 'a|has|b',
     _fromEntityKey: 'a',
+    _fromType: 'a_entity',
     _toEntityKey: 'b',
+    _toType: 'b_entity',
     displayName: 'HAS',
   };
 
