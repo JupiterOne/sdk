@@ -265,9 +265,7 @@ function createRelationship({
     _type,
     _class: relationshipClass,
     _fromEntityKey: fromKey,
-    _fromType: fromType,
     _toEntityKey: toKey,
-    _toType: toType,
     displayName: relationshipClass,
     ...properties,
   };
