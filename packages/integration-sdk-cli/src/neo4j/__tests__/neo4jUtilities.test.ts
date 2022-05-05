@@ -3,7 +3,13 @@ import {
   sanitizePropertyName,
   sanitizeValue,
   buildPropertyParameters,
+  getFromTypeLabel,
+  getToTypeLabel,
 } from '../neo4jUtilities';
+import {
+  Relationship,
+  RelationshipDirection,
+} from '@jupiterone/integration-sdk-core';
 
 describe('#neo4jUtilities', () => {
   test('should return true for string starting with a numeric', () => {
@@ -85,5 +91,69 @@ describe('#buildPropertyParameters', () => {
       test: '123',
       include: false,
     });
+  });
+});
+
+describe('#getFromAndToTypes', () => {
+  const testRelationshipData: Relationship = {
+    _fromEntityKey: 'testKey1',
+    _fromType: 'testType1',
+    _toEntityKey: 'testKey2',
+    _toType: 'testType2',
+    _type: 'testRelType',
+    _key: 'relKey',
+    _class: 'testRelationshipClass',
+  };
+  const testRelationshipNoTypeData: Relationship = {
+    _fromEntityKey: 'testKey1',
+    _toEntityKey: 'testKey2',
+    _type: 'testRelType',
+    _key: 'relKey',
+    _class: 'testRelationshipClass',
+  };
+  const testMappedRelationship: Relationship = {
+    _class: 'EXPLOITS',
+    _mapping: {
+      relationshipDirection: RelationshipDirection.FORWARD,
+      sourceEntityKey: 'testEntityKey',
+      targetEntity: {
+        _type: 'testEntityType',
+        _class: ['testEntityClass'],
+        _key: 'testEntityKey',
+        name: 'testEntityName',
+        displayName: 'testEntityDisplayName',
+        description: 'Test Entity Description',
+        references: ['https://test.entity.html'],
+      },
+      targetFilterKeys: [['_type', '_key']],
+      skipTargetCreation: false,
+    },
+    displayName: 'TESTRELATIONSHIP',
+    _key: 'testRelationshipKey',
+    _type: 'testRelationshipType',
+  };
+
+  test('should build fromType label', () => {
+    expect(getFromTypeLabel(testRelationshipData)).toEqual(':testType1');
+  });
+
+  test('should build toType label', () => {
+    expect(getToTypeLabel(testRelationshipData)).toEqual(':testType2');
+  });
+
+  test('should return empty fromType label', () => {
+    expect(getFromTypeLabel(testRelationshipNoTypeData)).toEqual('');
+  });
+
+  test('should return empty toType label', () => {
+    expect(getToTypeLabel(testRelationshipNoTypeData)).toEqual('');
+  });
+
+  test('should return empty fromType label for mapped relationship', () => {
+    expect(getFromTypeLabel(testMappedRelationship)).toEqual('');
+  });
+
+  test('should return correct toType label for mapped relationship', () => {
+    expect(getToTypeLabel(testMappedRelationship)).toEqual(':testEntityType');
   });
 });
