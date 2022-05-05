@@ -76,7 +76,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
 
 Let's work top to bottom.
 
-### Creating `InstanceConfigFields`
+#### **Creating `InstanceConfigFields`**
 
 The first object in our `InvocationConfig` is `instanceConfigFields` with type
 `IntegrationInstanceConfigFieldsMap`.This object is implemented in
@@ -187,7 +187,10 @@ cp .env.example .env
 Awesome! We have created our `instanceConfigFields` and `IntegrationConfig`.
 Let's go to the next step.
 
-### **Creating `ValidateInvocation`**
+#### **Creating `ValidateInvocation`**
+
+Next, we will create a our `validateInvocation` function. The
+`validateInvocation` has the following signature:
 
 - TODO: Consider deferring to development.md The next object in our
   `IntegrationConfig` is `validateInvocation`: This is the type signature for
@@ -199,12 +202,18 @@ export type InvocationValidationFunction<T extends ExecutionContext> = (
 ) => Promise<void> | void;
 ```
 
-The basic contract for `validateInvocation` is as follows: [TODO DOUBLE CHECK
-THIS NEXT LINE] The function will receive the `ExecutionContext` and check that
-all necessary configuration is present and valid.
+The basic contract for `validateInvocation` is as follows:
+
+- The function recieves the execution context and configuration we set in
+  `instanceConfigFields`.
+- The function will validate that all configuration is present and valid or
+  throw an error otherwise.
+
+Let's create a `validateInvocation` for DigitalOcean.
 
 ```diff
 export async function validateInvocation(
+  context: IntegrationExecutionContext<IntegrationConfig>
  ) {
    const { config } = context.instance;
 
@@ -216,15 +225,119 @@ export async function validateInvocation(
      );
    }
 -
--  const apiClient = createAPIClient(config);
--  await apiClient.verifyAuthentication();
+- const apiClient = createAPIClient(config);
+- await apiClient.verifyAuthentication();
  }
 ```
 
+You'll notice at the bottom we deleted these two lines:
+
+```diff
+- const apiClient = createAPIClient(config);
+- await apiClient.verifyAuthentication();
+```
+
+It's a good idea to actually test your credentials in `validateInvocation` by
+making a light-weight authenticated request to your provider API, but we haven't
+implemented `APIClient.verifyAuthentication` yet, so let's do that now.
+
+**Creating `verifyAuthentication`**
+
+# TODO We need better http client in template first
+
 ## Creating you first `IntegrationStep`
 
-Let's get some data! Integrations are executed in `Steps`. The basic signature
-for a step is:
+Let's get some data! Integrations are executed in Steps. Steps are functions
+which can produce **Entities**, **Relationships**, and **MappedRelationships**.
+It is good practice to limit each step to create a small number of closely
+related resources. If one step fails, other steps may still be able to succeed.
+
+An `IntegrationStep` is made up of two parts - an `ExecutionHandlerFunction`
+which does the work of the step and `StepMetadata` which export information
+about the work the `ExecutionHandlerFunction` will do.
+
+We can see and example `Account` step in our project.
+
+**`src/steps/account/index.ts`**
+
+```ts
+export const accountSteps: IntegrationStep<IntegrationConfig>[] = [
+  {
+    id: Steps.ACCOUNT,
+    name: 'Fetch Account Details',
+    entities: [Entities.ACCOUNT],
+    relationships: [],
+    dependsOn: [],
+    executionHandler: fetchAccountDetails,
+  },
+];
+```
+
+This step has an `id`, which _uniquely_ identifies the step, given by a constant
+`Steps.ACCOUNT`. The step has a name, `Fetch Account Details`, which will show
+up in human readable logs. It also declares that the `executionHandler`,
+`fetchAccountDetails`, will create an `ACCOUNT` entity.
+
+Let's see what the `ACCOUNT` entity looks like:
+
+**`src/steps/constants.ts`**
+
+```ts
+ACCOUNT: {
+    resourceName: 'Account',
+    _type: 'acme_account',
+    _class: ['Account'],
+    schema: {
+      properties: {
+        mfaEnabled: { type: 'boolean' },
+        manager: { type: 'string' },
+      },
+      required: ['mfaEnabled', 'manager'],
+    },
+  },
+```
+
+This object provides a few different properties:
+
+- `resourceName`: The natural resource name in the integration provider. For
+  example: `S3 Bucket`.
+- `_type`: An identifier noting the provider and type of resource. For example:
+  `aws_ec`2
+- `_class`: A class from the JupiterOne
+  **[data-model](https://github.com/JupiterOne/data-model/tree/main/src/schemas)**.
+  This is used to help classify objects and promote common properties and names
+  across different integrations. An example `_class` is
+  [`Account`](https://github.com/JupiterOne/data-model/blob/main/src/schemas/Account.json).
+  Objects may have more than one `_class`.
+- `schema`: An object used to specify and extend the schema inherited from the
+  `_class`. This object is useful for testing integrations and showing what
+  information can or will show up on the created `Entity` or `Relationship`.
+
+Let's edit this object to conform to our `Account` on DigitalOcean.
+
+```diff
+ACCOUNT: {
+    resourceName: 'Account',
+-    _type: 'acme_account',
++    _type: 'digital_ocean_account',
+
+    _class: ['Account'],
+    schema: {
+      properties: {
+-        mfaEnabled: { type: 'boolean' },
+-        manager: { type: 'string' },
++        email: { type: 'string' },
++        email_verified: { type: 'boolean' }
++        status: { type: 'string' }
++        status_message: { type: 'string' }
+      },
+      required: ['mfaEnabled', 'manager'],
+    },
+  },
+`
+
+
+```
 
 ```ts
 interface StepMetadata {
@@ -240,19 +353,6 @@ interface StepMetadata {
 
 We can see an implementation in
 [`src/steps/account/index.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/steps/account/index.ts#L20-L29).
-
-```ts
-export const accountSteps: IntegrationStep<IntegrationConfig>[] = [
-  {
-    id: Steps.ACCOUNT,
-    name: 'Fetch Account Details',
-    entities: [Entities.ACCOUNT],
-    relationships: [],
-    dependsOn: [],
-    executionHandler: fetchAccountDetails,
-  },
-];
-```
 
 Let's work on getting our DigitalOcean Account ingested.
 
