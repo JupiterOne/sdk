@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.2] - 2022-05-05
+
+### Changed
+
+- Updated Neo4j upload commands to improve performance.
+
 ## [8.13.1] - 2022-04-27
 
 ## Fixed
