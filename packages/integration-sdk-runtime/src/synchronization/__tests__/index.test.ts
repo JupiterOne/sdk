@@ -4,6 +4,7 @@ import noop from 'lodash/noop';
 
 import {
   IntegrationError,
+  IntegrationErrorEventName,
   PartialDatasets,
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
@@ -33,6 +34,7 @@ import { getExpectedRequestHeaders } from '../../../test/util/request';
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
   restoreProjectStructure();
+  jest.clearAllMocks();
 });
 
 describe('initiateSynchronization', () => {
@@ -490,10 +492,12 @@ describe('uploadDataChunk', () => {
   });
 });
 
-describe('shrinkLargeUpload', () => {
+describe('shrinkLargeRawDataUpload', () => {
   it('should shrink rawData', () => {
     const largeData = new Array(700000).join('aaaaaaaaaa');
-
+    const logger = createIntegrationLogger({
+      name: 'test',
+    });
     const data = [
       {
         _class: 'test',
@@ -589,20 +593,91 @@ describe('shrinkLargeUpload', () => {
       },
     ];
 
-    const shrinkResults = shrinkRawData(data);
-
+    const shrinkResults = shrinkRawData(data, logger);
     expect(shrinkResults.itemsRemoved).toEqual(3);
     expect(data).toEqual(finalData);
+  });
+});
+
+describe('shrinkLargeUploadDueToProps', () => {
+  it('should detect that data is unshrinkable and throw error', () => {
+    const largeData = new Array(700000).join('aaaaaaaaaa');
+    const logger = createIntegrationLogger({
+      name: 'test',
+    });
+    logger.error = jest.fn();
+    logger.publishErrorEvent = jest.fn();
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        largeProperty: largeData,
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              testRawData: 'test123',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        largeProperty: largeData,
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey3',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test3',
+            rawData: {
+              testRawData: 'test123',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+    try {
+      shrinkRawData(data, logger);
+      throw new Error('this was not supposed to happen');
+    } catch (err) {
+      expect(err).toBeInstanceOf(IntegrationError);
+      expect(logger.error).toBeCalledTimes(1);
+      expect(logger.publishErrorEvent).toBeCalledTimes(1);
+      expect(logger.publishErrorEvent).toBeCalledWith(
+        expect.objectContaining({
+          name: IntegrationErrorEventName.EntitySizeLimitEncountered,
+        }),
+      );
+    }
   });
 });
 
 describe('shrinkFailNoEntities', () => {
   it('should fail to shrink rawData due to no entities', () => {
     const data = [];
-
+    const logger = createIntegrationLogger({
+      name: 'test',
+    });
     let shrinkErr;
     try {
-      shrinkRawData(data, 0);
+      shrinkRawData(data, logger, 0);
     } catch (err) {
       shrinkErr = err;
       expect(shrinkErr instanceof IntegrationError).toEqual(true);
@@ -624,10 +699,12 @@ describe('shrinkFailNo_rawData', () => {
         _type: 'testType',
       },
     ];
-
+    const logger = createIntegrationLogger({
+      name: 'test',
+    });
     let shrinkErr;
     try {
-      shrinkRawData(data, 0);
+      shrinkRawData(data, logger, 0);
     } catch (err) {
       shrinkErr = err;
       expect(shrinkErr instanceof IntegrationError).toEqual(true);

@@ -9,6 +9,7 @@ import {
   Relationship,
   SynchronizationJob,
   IntegrationError,
+  IntegrationErrorEventName,
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationLogger } from '../logger';
@@ -351,7 +352,7 @@ function handleUploadDataChunkError({
 
   if (isRequestUploadTooLargeError(err)) {
     logger.info(`Attempting to shrink rawData`);
-    const shrinkResults = shrinkRawData(batch);
+    const shrinkResults = shrinkRawData(batch, logger);
     logger.info(shrinkResults, 'Shrink raw data result');
   } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
@@ -506,9 +507,7 @@ function getLargestEntityFromBatch(
  * @param data
  * @returns
  */
-function getLargestRawDataEntryFromEntity(
-  data: EntityRawData[],
-): EntityRawData {
+function getLargestKeyFromData(data: EntityRawData[]): EntityRawData {
   let largestItem;
   let largestItemSize = 0;
 
@@ -524,6 +523,26 @@ function getLargestRawDataEntryFromEntity(
 }
 
 /**
+ * Helper function to generate a map of property sizes for a given Entity.
+ * This is used to determine what property keys on an Entity have a particularly large value.
+ * Intended to be used when logging upload errors due to large payload size.
+ *
+ * @param data
+ * @returns
+ */
+function getPropSizeMapFromEntity(data: Entity): any {
+  const propSizeMap = {};
+
+  for (const [key, value] of Object.entries({
+    ...data,
+  })) {
+    propSizeMap[key] = Buffer.byteLength(JSON.stringify(value));
+  }
+
+  return propSizeMap;
+}
+
+/**
  * Removes data from the rawData of the largest entity until the overall size
  * of the data object is less than maxSize (defaulted to UPLOAD_SIZE_MAX).
  *
@@ -531,6 +550,7 @@ function getLargestRawDataEntryFromEntity(
  */
 export function shrinkRawData(
   data: UploadDataLookup[keyof UploadDataLookup][],
+  logger: IntegrationLogger,
   maxSize = UPLOAD_SIZE_MAX,
 ): ShrinkRawDataResults {
   const startTimeInMilliseconds = Date.now();
@@ -547,14 +567,40 @@ export function shrinkRawData(
     // we have no other options than to throw an error.
     if (largestEntity?._rawData) {
       // Find largest _rawData entry (typically 0, but check to be certain)
-      const largestRawDataEntry = getLargestRawDataEntryFromEntity(
-        largestEntity._rawData,
-      );
+      const largestRawDataEntry = getLargestKeyFromData(largestEntity._rawData);
 
       // Find largest item within rawData
       const largestItemLookup = getLargestItemKeyAndByteSize(
         largestRawDataEntry.rawData,
       );
+
+      // if we can no longer truncate, log and error out
+      if (largestItemLookup.size === sizeOfTruncated) {
+        const sizeDistribution = {};
+        for (const entity of data) {
+          sizeDistribution[entity._key] = Buffer.byteLength(
+            JSON.stringify(entity),
+          );
+        }
+        logger.error(
+          {
+            largestEntityPropSizeMap: getPropSizeMapFromEntity(largestEntity),
+            totalBatchSize: totalSize,
+            sizeDistribution,
+          },
+          'Encountered upload size error after fully shrinking',
+        );
+        logger.publishErrorEvent({
+          name: IntegrationErrorEventName.EntitySizeLimitEncountered,
+          description: `Failed to upload integration data because the payload is too large. This batch of ${data.length} entities is still ${totalSize} bytes after truncating all non-mapped properties.`,
+        });
+        throw new IntegrationError({
+          code: 'INTEGRATION_UPLOAD_FAILED',
+          fatal: false,
+          message:
+            'Failed to upload integration data because the payload is still too large after performing as much shrinking as possible',
+        });
+      }
 
       // Truncate largest item and recalculate size to see if we need to continue truncating additional items
       largestRawDataEntry.rawData[largestItemLookup.key] = 'TRUNCATED';
