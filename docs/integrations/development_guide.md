@@ -7,7 +7,13 @@ easy!
 ## Table of Contents
 
 - [Requirements](#requirements)
-- [Setup](#)
+- [Getting Started](#getting-started)
+  - [Setup](#setup)
+  - [Developing the Integration](#developing-the-integration)
+    - [Creating instanceConfigFields](#creating-instanceconfigfields)
+    - [Creating validateInvocation](#creating-validateinvocation)
+    - [Creating your first IntegrationStep](#creating-you-first-integrationstep)
+-
 
 ## Requirements
 
