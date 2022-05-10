@@ -9,7 +9,7 @@ and this project adheres to
 
 ## Unreleased
 
-## [8.13.3] - 2022-05-10
+## [8.13.4] - 2022-05-10
 
 ### Fixed
 
