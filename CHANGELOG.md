@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.3] - 2022-05-10
+
+### Changed
+
+- Added base64 support for unzipping gzipped polly recording entries.
+
 ## [8.13.2] - 2022-05-05
 
 ### Changed
