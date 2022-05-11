@@ -244,10 +244,54 @@ You'll notice at the bottom we deleted these two lines:
 ```
 
 It's a good idea to actually test your credentials in `validateInvocation` by
-making a light-weight authenticated request to your provider API, but we haven't
-implemented `APIClient.verifyAuthentication` yet, so let's do that now.
+making a light-weight authenticated request to your provider API, but we don't
+have a working API Client or a `verifyAuthentication` method to use yet, so
+let's add one in.
 
-**Creating `verifyAuthentication`**
+## Adding or Creating an API Client
+
+There are three common cases when creating your integration's `APIClient`.
+
+1. The provider you are integrating with provides an out-of-the-box open source
+   - Examples Integrations:
+     [**graph-microsoft-365**](https://github.com/JupiterOne/graph-microsoft-365/blob/main/src/ms-graph/client.ts),
+     [**graph-google-cloud**](https://github.com/JupiterOne/graph-google-cloud/blob/main/src/google-cloud/client.ts)
+2. An open source client exists and is well maintained, trusted, and widely
+   used.
+   - Examples Integrations: []
+3. There is no provider client and there are no open source clients or the
+   clients that exist fail to meet a high standard of trust and use.
+   - Examples Integrations:
+     [**graph-rumble**](https://github.com/JupiterOne/graph-rumble/blob/main/src/client.ts),
+     [**graph-crowdstrike**](https://github.com/JupiterOne/graph-crowdstrike/blob/main/src/crowdstrike/FalconAPIClient.ts),
+
+In the first two cases, it is often better to use a publicly available client if
+there aren't extenuating circumstances.
+
+In the third case, we will need to implement the client ourselves as part of the
+integration.
+
+For DigitalOcean, there is not a provider supported client and the open source
+clients available are not widely used. So let's make our own. The patterns would
+be similar in the first or second case, we'll just go one step deeper here.
+
+### Basic Client Setup
+
+The first thing we'll want to do is make sure our client will have access to the
+information it needs to make authenticated request. If we anticipate logging
+from our client we should also add `IntegrationLogger` to the constructor
+parameters.
+
+**`src/steps/client.ts`**
+
+```diff
+export class APIClient {
+-  constructor(readonly config: IntegrationConfig, ) {}
++  constructor(
++    readonly config: IntegrationConfig,
++    readonly logger: IntegrationLogger)
++  ) {}
+```
 
 # TODO We need better http client in template first
 
