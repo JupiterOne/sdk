@@ -9,7 +9,7 @@ and this project adheres to
 
 ## Unreleased
 
-## [8.13.3] - 2022-05-11
+## [8.13.5] - 2022-05-11
 
 ### Fixed
 
@@ -18,6 +18,12 @@ and this project adheres to
 - add logging surrounding the size distribution of upload batch and its largest
   entity when such a situation occurs
 - throw fatal error when such a situation occurs
+
+## [8.13.4] - 2022-05-10
+
+### Fixed
+
+- Added base64 support for unzipping gzipped polly recording entries.
 
 ## [8.13.2] - 2022-05-05
 
