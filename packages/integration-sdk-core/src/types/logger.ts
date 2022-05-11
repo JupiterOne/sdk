@@ -69,6 +69,12 @@ export enum IntegrationErrorEventName {
    * We would like to indicate to the end-user when this limit is encountered, and then fail the execution on completion.
    */
   IngestionLimitEncountered = 'error_ingestion_limit_encountered',
+  /**
+   * In some rare cases, the mapped properties of an entity can be so large that they trigger upload errors due to payload size.
+   * This points to a possible poison pill in the api the integration is consuming. We would like to indicate to the end-user when this
+   * error is encountered.
+   */
+  EntitySizeLimitEncountered = 'error_entity_size_limit_encountered',
 }
 
 export interface PublishErrorEventInput extends PublishEventInput {
