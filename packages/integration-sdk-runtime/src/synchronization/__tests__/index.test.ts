@@ -20,7 +20,7 @@ import {
   synchronizeCollectedData,
   abortSynchronization,
   uploadDataChunk,
-  shrinkRawData,
+  shrinkBatchRawData,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -493,8 +493,8 @@ describe('uploadDataChunk', () => {
 });
 
 describe('shrinkLargeRawDataUpload', () => {
-  it('should shrink rawData', () => {
-    const largeData = new Array(700000).join('aaaaaaaaaa');
+  it('should shrink rawData until batch size is < 6 million bytes', () => {
+    const largeData = new Array(500000).join('aaaaaaaaaa');
     const logger = createIntegrationLogger({
       name: 'test',
     });
@@ -508,6 +508,8 @@ describe('shrinkLargeRawDataUpload', () => {
             name: 'test',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedFirst:
+                'yes it will get removed first b/c it has largest raw data',
               testLargeRawData: largeData,
               testFinalData: 'test789',
             },
@@ -523,6 +525,7 @@ describe('shrinkLargeRawDataUpload', () => {
             name: 'test2',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedSecond: true,
               testLargeRawData: largeData,
               testFinalData: 'test789',
             },
@@ -555,6 +558,8 @@ describe('shrinkLargeRawDataUpload', () => {
             name: 'test',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedFirst:
+                'yes it will get removed first b/c it has largest raw data',
               testLargeRawData: 'TRUNCATED',
               testFinalData: 'test789',
             },
@@ -570,6 +575,7 @@ describe('shrinkLargeRawDataUpload', () => {
             name: 'test2',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedSecond: true,
               testLargeRawData: 'TRUNCATED',
               testFinalData: 'test789',
             },
@@ -585,7 +591,7 @@ describe('shrinkLargeRawDataUpload', () => {
             name: 'test3',
             rawData: {
               testRawData: 'test123',
-              testLargeRawData: 'TRUNCATED',
+              testLargeRawData: expect.stringContaining('aaaaaaa'),
               testFinalData: 'test789',
             },
           },
@@ -593,8 +599,8 @@ describe('shrinkLargeRawDataUpload', () => {
       },
     ];
 
-    const shrinkResults = shrinkRawData(data, logger);
-    expect(shrinkResults.itemsRemoved).toEqual(3);
+    const shrinkResults = shrinkBatchRawData(data, logger);
+    expect(shrinkResults.itemsRemoved).toEqual(2);
     expect(data).toEqual(finalData);
   });
 });
@@ -612,13 +618,14 @@ describe('shrinkLargeUploadDueToProps', () => {
         _class: 'test',
         _key: 'testKey',
         _type: 'testType',
-        largeProperty: largeData,
         _rawData: [
           {
             name: 'test',
             rawData: {
+              largeRawDataProp: largeData + 'more',
               testRawData: 'test123',
               testFinalData: 'test789',
+              anotherLargeRawDataProp: largeData,
             },
           },
         ],
@@ -654,11 +661,26 @@ describe('shrinkLargeUploadDueToProps', () => {
       },
     ];
     try {
-      shrinkRawData(data, logger);
+      shrinkBatchRawData(data, logger);
       throw new Error('this was not supposed to happen');
     } catch (err) {
       expect(err).toBeInstanceOf(IntegrationError);
       expect(logger.error).toBeCalledTimes(1);
+      // should give details on largest entity in batch after finished shrinking, this should be item with _key=testKey3
+      expect(logger.error).toBeCalledWith(
+        expect.objectContaining({
+          largestEntityPropSizeMap: {
+            _class: 6,
+            _key: 10,
+            _rawData: 80,
+            _type: 10,
+            largeProperty: 6999992,
+          },
+        }),
+        expect.stringContaining(
+          'Encountered upload size error after fully shrinking.',
+        ),
+      );
       expect(logger.publishErrorEvent).toBeCalledTimes(1);
       expect(logger.publishErrorEvent).toBeCalledWith(
         expect.objectContaining({
@@ -677,7 +699,7 @@ describe('shrinkFailNoEntities', () => {
     });
     let shrinkErr;
     try {
-      shrinkRawData(data, logger, 0);
+      shrinkBatchRawData(data, logger, 0);
     } catch (err) {
       shrinkErr = err;
       expect(shrinkErr instanceof IntegrationError).toEqual(true);
@@ -704,7 +726,7 @@ describe('shrinkFailNo_rawData', () => {
     });
     let shrinkErr;
     try {
-      shrinkRawData(data, logger, 0);
+      shrinkBatchRawData(data, logger, 0);
     } catch (err) {
       shrinkErr = err;
       expect(shrinkErr instanceof IntegrationError).toEqual(true);
