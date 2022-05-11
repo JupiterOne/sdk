@@ -358,9 +358,7 @@ function handleUploadDataChunkError({
 
   if (isRequestUploadTooLargeError(err)) {
     // shrink rawData further to try and achieve a batch size of < 6MB
-    logger.info(`Attempting to shrink rawData`);
-    const shrinkResults = shrinkBatchRawData(batch, logger);
-    logger.info(shrinkResults, 'Shrink raw data result');
+    shrinkBatchRawData(batch, logger);
   } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
       code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
@@ -451,14 +449,6 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
 interface KeyAndSize {
   key: string;
   size: number;
-}
-
-// Interface for shrink run results
-interface ShrinkRawDataResults {
-  initialSize: number;
-  totalSize: number;
-  itemsRemoved: number;
-  totalTime: number;
 }
 
 /**
@@ -577,7 +567,8 @@ export function shrinkBatchRawData(
   batchData: UploadDataLookup[keyof UploadDataLookup][],
   logger: IntegrationLogger,
   maxBatchSize = MAX_BATCH_SIZE,
-): ShrinkRawDataResults {
+): void {
+  logger.info(`Attempting to shrink rawData`);
   const startTimeInMilliseconds = Date.now();
   let totalBatchSize = Buffer.byteLength(JSON.stringify(batchData));
   const initialBatchSize = totalBatchSize;
@@ -596,7 +587,7 @@ export function shrinkBatchRawData(
       const largestRawDataEntry = getLargestRawDataEntry(
         entityWithLargestRawData._rawData,
       );
-      // Find largest item within largest that element
+      // Find largest item within that element
       const largestItemLookup = getLargestItemKeyAndByteSize(
         largestRawDataEntry.rawData,
       );
@@ -648,12 +639,15 @@ export function shrinkBatchRawData(
   }
 
   const endTimeInMilliseconds = Date.now();
-  return {
-    initialSize: initialBatchSize,
-    totalSize: totalBatchSize,
-    itemsRemoved,
-    totalTime: endTimeInMilliseconds - startTimeInMilliseconds,
-  };
+  logger.info(
+    {
+      initialSize: initialBatchSize,
+      totalSize: totalBatchSize,
+      itemsRemoved,
+      totalTime: endTimeInMilliseconds - startTimeInMilliseconds,
+    },
+    'Shrink raw data result',
+  );
 }
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {

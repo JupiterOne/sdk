@@ -34,7 +34,6 @@ import { getExpectedRequestHeaders } from '../../../test/util/request';
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
   restoreProjectStructure();
-  jest.clearAllMocks();
 });
 
 describe('initiateSynchronization', () => {
@@ -492,12 +491,22 @@ describe('uploadDataChunk', () => {
   });
 });
 
-describe('shrinkLargeRawDataUpload', () => {
+describe('shrinkBatchRawData', () => {
+  const logger = createIntegrationLogger({
+    name: 'test',
+  });
+  logger.error = jest.fn();
+  logger.publishErrorEvent = jest.fn();
+  logger.info = jest.fn();
+
+  afterEach(() => {
+    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+    restoreProjectStructure();
+    jest.clearAllMocks();
+  });
+
   it('should shrink rawData until batch size is < 6 million bytes', () => {
     const largeData = new Array(500000).join('aaaaaaaaaa');
-    const logger = createIntegrationLogger({
-      name: 'test',
-    });
     const data = [
       {
         _class: 'test',
@@ -548,6 +557,7 @@ describe('shrinkLargeRawDataUpload', () => {
         ],
       },
     ];
+    const startingSize = Buffer.byteLength(JSON.stringify(data));
     const finalData = [
       {
         _class: 'test',
@@ -599,20 +609,25 @@ describe('shrinkLargeRawDataUpload', () => {
       },
     ];
 
-    const shrinkResults = shrinkBatchRawData(data, logger);
-    expect(shrinkResults.itemsRemoved).toEqual(2);
+    shrinkBatchRawData(data, logger);
+    expect(logger.info).toBeCalledTimes(2);
+    expect(logger.info).toHaveBeenNthCalledWith(
+      1,
+      'Attempting to shrink rawData',
+    );
+    expect(logger.info).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        initialSize: startingSize,
+        totalSize: Buffer.byteLength(JSON.stringify(data)),
+        itemsRemoved: 2,
+      }),
+      'Shrink raw data result',
+    );
     expect(data).toEqual(finalData);
   });
-});
-
-describe('shrinkLargeUploadDueToProps', () => {
-  it('should detect that data is unshrinkable and throw error', () => {
+  it('should detect if data is unshrinkable and throw error', () => {
     const largeData = new Array(700000).join('aaaaaaaaaa');
-    const logger = createIntegrationLogger({
-      name: 'test',
-    });
-    logger.error = jest.fn();
-    logger.publishErrorEvent = jest.fn();
     const data = [
       {
         _class: 'test',
@@ -634,6 +649,7 @@ describe('shrinkLargeUploadDueToProps', () => {
         _class: 'test',
         _key: 'testKey2',
         _type: 'testType',
+        // poison pill in entity properties
         largeProperty: largeData,
         _rawData: [
           {
@@ -687,16 +703,12 @@ describe('shrinkLargeUploadDueToProps', () => {
           name: IntegrationErrorEventName.EntitySizeLimitEncountered,
         }),
       );
+      expect(logger.info).toBeCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
     }
   });
-});
-
-describe('shrinkFailNoEntities', () => {
   it('should fail to shrink rawData due to no entities', () => {
     const data = [];
-    const logger = createIntegrationLogger({
-      name: 'test',
-    });
     let shrinkErr;
     try {
       shrinkBatchRawData(data, logger, 0);
@@ -709,10 +721,9 @@ describe('shrinkFailNoEntities', () => {
       expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
     }
     expect(shrinkErr).not.toBe(undefined);
+    expect(logger.info).toBeCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
   });
-});
-
-describe('shrinkFailNo_rawData', () => {
   it('should fail to shrink rawData due to no _rawData entries', () => {
     const data = [
       {
@@ -721,9 +732,6 @@ describe('shrinkFailNo_rawData', () => {
         _type: 'testType',
       },
     ];
-    const logger = createIntegrationLogger({
-      name: 'test',
-    });
     let shrinkErr;
     try {
       shrinkBatchRawData(data, logger, 0);
@@ -736,6 +744,8 @@ describe('shrinkFailNo_rawData', () => {
       expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
     }
     expect(shrinkErr).not.toBe(undefined);
+    expect(logger.info).toBeCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
   });
 });
 
