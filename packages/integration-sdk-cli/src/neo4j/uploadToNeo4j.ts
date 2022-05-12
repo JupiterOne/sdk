@@ -36,11 +36,15 @@ export async function uploadToNeo4j({
     integrationInstanceID: integrationInstanceID,
   });
 
-  async function handleGraphObjectEntityFiles(parsedData: FlushedGraphObjectData) {
+  async function handleGraphObjectEntityFiles(
+    parsedData: FlushedGraphObjectData,
+  ) {
     if (parsedData.entities) await store.addEntities(parsedData.entities);
   }
 
-  async function handleGraphObjectRelationshipFiles(parsedData: FlushedGraphObjectData) {
+  async function handleGraphObjectRelationshipFiles(
+    parsedData: FlushedGraphObjectData,
+  ) {
     if (parsedData.relationships)
       await store.addRelationships(parsedData.relationships);
   }
@@ -51,13 +55,16 @@ export async function uploadToNeo4j({
     // only uses indexes and not constraints due to the fact that we would need a node
     // key constraint consisting of both the _key value as well as the _integrationInstanceID
     // value and that would require users to have an enterprise Neo4j instance instead
-    // of just a community version.  Additionally, MERGE commands within relationship 
+    // of just a community version.  Additionally, MERGE commands within relationship
     // creation to create the start and end nodes if they do not yet exist do not always
-    // have access to the Type label during creation, and are therefore not always found by 
-    // the MERGE command within entity creation.  The current workaround is to make 
+    // have access to the Type label during creation, and are therefore not always found by
+    // the MERGE command within entity creation.  The current workaround is to make
     // sure all entities are created before relationship creation occurs.
     await iterateParsedGraphFiles(handleGraphObjectEntityFiles, pathToData);
-    await iterateParsedGraphFiles(handleGraphObjectRelationshipFiles, pathToData);
+    await iterateParsedGraphFiles(
+      handleGraphObjectRelationshipFiles,
+      pathToData,
+    );
   } finally {
     await store.close();
   }
