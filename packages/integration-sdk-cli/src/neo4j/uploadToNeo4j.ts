@@ -60,6 +60,8 @@ export async function uploadToNeo4j({
     // have access to the Type label during creation, and are therefore not always found by
     // the MERGE command within entity creation.  The current workaround is to make
     // sure all entities are created before relationship creation occurs.
+    //
+    // TODO (adam-in-ict - INT-3750) revisit this and remove the need to walk the graph directory twice
     await iterateParsedGraphFiles(handleGraphObjectEntityFiles, pathToData);
     await iterateParsedGraphFiles(
       handleGraphObjectRelationshipFiles,
