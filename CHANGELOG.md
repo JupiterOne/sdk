@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.6] - 2022-05-12
+
+### Fixed
+
+- Neo4j uploads no longer occasionally create duplicate nodes on relationship
+  creation.
+
 ## [8.13.5] - 2022-05-11
 
 ### Fixed
