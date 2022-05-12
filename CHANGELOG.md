@@ -13,6 +13,13 @@ and this project adheres to
 
 ### Fixed
 
+- Neo4j uploads no longer occasionally create duplicate nodes on relationship
+  creation.
+
+## [8.13.5] - 2022-05-11
+
+### Fixed
+
 - Hanging execution when encountering upload failure due to entity properties
   being too large
 - add logging surrounding the size distribution of upload batch and its largest
