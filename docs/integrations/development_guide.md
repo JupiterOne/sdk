@@ -36,7 +36,7 @@ You'll need:
 ```sh
 gh repo create graph-$INTEGRATION_NAME --public \
   --clone \
- --template=https://github.com/jupiterone/integration-template
+  --template=https://github.com/jupiterone/integration-template
 cd graph-$INTEGRATION_NAME
 yarn install
 ```
@@ -63,7 +63,7 @@ This guide will go through building a small integration with
 the integration you are building.
 
 Every integration builds and exports an `InvocationConfig` that is used to
-execute the integration by the `integration-sdk-runtime`.
+execute the integration.
 
 In the new integration you just created you can see the `InvocationConfig`
 exported in
@@ -80,12 +80,14 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
   };
 ```
 
-Let's work top to bottom.
+Let's work top to bottom. We'll start by defining `InstanceConfigFields`, next
+we'll implement `validateInvocation`, and finally define our `integrationSteps`.
 
-#### **Creating `InstanceConfigFields`**
+### 1. **Creating `InstanceConfigFields`**
 
 The first object in our `InvocationConfig` is `instanceConfigFields` with type
-`IntegrationInstanceConfigFieldsMap`.This object is implemented in
+[`IntegrationInstanceConfigFieldsMap`](https://github.com/JupiterOne/sdk/blob/1280faf454cefa6aff1aabd90b4890c1920b88c9/packages/integration-sdk-core/src/types/config.ts#L68-L70).
+You'll find this defined in your project in
 [`src/config.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/config.ts#L9-L31).
 
 **`/src/config.ts`**
@@ -116,10 +118,11 @@ export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
 };
 ```
 
-This object let's us configure information the integration will need access to
-to execute successfully. For many integrations we may need a `Client ID`, an
-`API Key`, or even a certain `API URL` to run the integration. Any outside
-information the integration needs at runtime can be defined here.
+This object let's us control how the integration will execute. A common use is
+to provide credentials to authenticate requests. For example, DigitalOcean
+requires a `Personal Access Token` (see below for example). Other common config
+values include a `Client ID`, `API Key`, or `API URL`. Any outside information
+the integration needs at runtime can be defined here.
 
 DigitalOcean requires a `Person Access Token`, so I'll edit the fields to show
 that.
@@ -149,8 +152,7 @@ export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
 We should also edit
 [`IntegrationConfig`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/config.ts#L37-L47)
 in the same file to match `instanceConfigFields`. `IntegrationConfig` is used to
-add and infer type information throughout about the config throughout the
-project.
+add and provide type information throughout the project.
 
 **`src/config.ts`**
 
@@ -291,6 +293,25 @@ export class APIClient {
 +    readonly config: IntegrationConfig,
 +    readonly logger: IntegrationLogger)
 +  ) {}
+```
+
+### Adding the first route
+
+As discussed earlier, we need a way to test that we can authenticate with the
+provider api to use in `validateInvocation`. What endpoint we should use varies
+on a case-by-case basis. The general guiding principle is to make a request that
+is simple and lightweight.
+
+In some cases, we may make a request to an `/authenticate` endpoint or an api
+`/version` endpoint. In our case, the most lightweight request we can make to
+the DigitalOcean API is to the `/account` endpoint.
+
+Let's create a new `getAccount` method from `APIClient`
+
+# TODO: Add http client dependency
+
+```ts
+
 ```
 
 # TODO We need better http client in template first
@@ -504,10 +525,6 @@ Edits to the `src/client.ts`
 +    const response = await this.client.executeAPIRequest(request);
 +    return response.data as DigitalOceanAccount;
 +
-+    // const response = await this.client.executeAPIRequest<DigitalOceanAccount>(
-+    // request,
-+    // );
-+    // return response.data;
    }
  }
 ```
