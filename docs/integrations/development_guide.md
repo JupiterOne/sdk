@@ -1,8 +1,10 @@
 # Getting Started with Integration Development
 
-The `integration-sdk` provides a framework and runtime to build and execute
-integrations. Getting started with integration development using the SDK is
-easy!
+In this Development Guide, we will walk you through the initial steps of getting
+your integration up and running. Along the way, we will provide tips and tricks
+to ensure your success. JupiterOne has a number of open source projects that
+provide an easy-to-use framework for creating a new integration, including the
+code found in this SDK project.
 
 ## Table of Contents
 
@@ -20,12 +22,15 @@ easy!
 You'll need:
 
 - Node.js
-  - TODO: [[FNM/NVM instructions here]]
-- yarn
 
-```sh
- npm install --global yarn
-```
+  - It's recommended to use a Node version manager. Both
+    [fnm](https://github.com/Schniz/fnm) and
+    [nvm](https://github.com/nvm-sh/nvm) are great choices.
+
+- yarn
+  ```sh
+    npm install --global yarn
+  ```
 
 ## Getting Started
 
@@ -58,12 +63,6 @@ That's it! Your project is ready for development!
 
 ### **Developing the Integration**
 
-In this Development Guide, we will walk you through the initial steps of getting
-your integration up and running. Along the way, we will provide tips and tricks
-to ensure your success. JupiterOne has a number of open source projects that
-provide an easy-to-use framework for creating a new integration, including the
-code found in this SDK project.
-
 In this guide, we will create a small integration with
 [DigitalOcean](https://digitalocean.com) using examples that can be applied to
 the integration you are building.
@@ -79,7 +78,7 @@ In the new integration you created you can see the `InvocationConfig` exported
 in
 [`src/index.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/index.ts#L9-L14)
 
-**`/src/index.ts`**
+**`src/index.ts`**
 
 ```ts
 export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
@@ -90,7 +89,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
   };
 ```
 
-Let's work top to bottom. We'll start by defining `InstanceConfigFields`, next
+Let's work top to bottom. We'll start by defining `instanceConfigFields`, next
 we'll implement `validateInvocation`, and finally define our `integrationSteps`.
 
 #### **1. Creating `InstanceConfigFields`**
@@ -100,7 +99,7 @@ The first object in our `InvocationConfig` is `instanceConfigFields` with type
 You'll find this defined in your project in
 [`src/config.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/config.ts#L9-L31).
 
-**`/src/config.ts`**
+**`src/config.ts`**
 
 ```ts
 /**
@@ -137,7 +136,7 @@ the integration needs at runtime can be defined here.
 DigitalOcean requires a `Person Access Token`, so I'll edit the fields to show
 that.
 
-**`/src/config.ts`**
+**`src/config.ts`**
 
 ```diff
 export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
