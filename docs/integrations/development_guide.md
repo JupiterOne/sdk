@@ -228,6 +228,8 @@ The basic contract for `validateInvocation` is as follows:
 
 Let's create a `validateInvocation` for DigitalOcean.
 
+**`src/config.ts`**
+
 ```diff
 export async function validateInvocation(
   context: IntegrationExecutionContext<IntegrationConfig>
@@ -445,7 +447,7 @@ It is good practice to limit each step to create a small number of closely
 related resources. If one step fails, other steps may still be able to succeed.
 
 An `IntegrationStep` is made up of two parts - an `ExecutionHandlerFunction`
-which does the work of the step and `StepMetadata` which export information
+which does the work of the step and `StepMetadata` which exports information
 about the work the `ExecutionHandlerFunction` will do.
 
 We can see and example `Account` step in our project.
@@ -464,6 +466,17 @@ export const accountSteps: IntegrationStep<IntegrationConfig>[] = [
   },
 ];
 ```
+
+Let's go through the properties of the step:
+
+- `id` is the _unique_ identifier for the step.
+- `name` is the human readable name of the step that will appear in logs.
+- `entities` is the set of entities the step will produce
+- `relationships` is the set of relationships the step will produce
+- `dependsOn` is the steps, referenced by their `id`, which the current step
+  depends on. This step doesn't need information from other steps so there are
+  no dependencies.
+- `executionHandler` is the function that will perform the work for the step.
 
 This step has an `id`, which _uniquely_ identifies the step, given by a constant
 `Steps.ACCOUNT`. The step has a name, `Fetch Account Details`, which will show
