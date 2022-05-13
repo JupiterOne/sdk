@@ -58,15 +58,25 @@ That's it! Your project is ready for development!
 
 ### **Developing the Integration**
 
-This guide will go through building a small integration with
+In this Development Guide, we will walk you through the initial steps of getting
+your integration up and running. Along the way, we will provide tips and tricks
+to ensure your success. JupiterOne has a number of open source projects that
+provide an easy-to-use framework for creating a new integration, including the
+code found in this SDK project.
+
+In this guide, we will create a small integration with
 [DigitalOcean](https://digitalocean.com) using examples that can be applied to
 the integration you are building.
+
+#### **Integration Configuration**
 
 Every integration builds and exports an `InvocationConfig` that is used to
 execute the integration.
 
-In the new integration you just created you can see the `InvocationConfig`
-exported in
+[//]: # 'TODO: Add reference or link to document showing integration execution'
+
+In the new integration you created you can see the `InvocationConfig` exported
+in
 [`src/index.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/index.ts#L9-L14)
 
 **`/src/index.ts`**
@@ -83,7 +93,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
 Let's work top to bottom. We'll start by defining `InstanceConfigFields`, next
 we'll implement `validateInvocation`, and finally define our `integrationSteps`.
 
-### 1. **Creating `InstanceConfigFields`**
+#### **1. Creating `InstanceConfigFields`**
 
 The first object in our `InvocationConfig` is `instanceConfigFields` with type
 [`IntegrationInstanceConfigFieldsMap`](https://github.com/JupiterOne/sdk/blob/1280faf454cefa6aff1aabd90b4890c1920b88c9/packages/integration-sdk-core/src/types/config.ts#L68-L70).
@@ -195,7 +205,7 @@ cp .env.example .env
 Awesome! We have created our `instanceConfigFields` and `IntegrationConfig`.
 Let's go to the next step.
 
-#### **Creating `ValidateInvocation`**
+#### **2. Creating `ValidateInvocation`**
 
 Next, we will create a our `validateInvocation` function. The
 `validateInvocation` has the following signature:
@@ -212,7 +222,7 @@ export type InvocationValidationFunction<T extends ExecutionContext> = (
 
 The basic contract for `validateInvocation` is as follows:
 
-- The function recieves the execution context and configuration we set in
+- The function receives the execution context and configuration we set in
   `instanceConfigFields`.
 - The function will validate that all configuration is present and valid or
   throw an error otherwise.
@@ -229,26 +239,28 @@ export async function validateInvocation(
 +  if (!config.accessToken) {
      throw new IntegrationValidationError(
 -      'Config requires all of {clientId, clientSecret}',
-+      'Config requires all of {accessToken}',
++      'Config requires accessToken',
      );
    }
 -
 - const apiClient = createAPIClient(config);
 - await apiClient.verifyAuthentication();
++ // const apiClient = createAPIClient(config);
++ // await apiClient.verifyAuthentication();
  }
 ```
 
-You'll notice at the bottom we deleted these two lines:
+You'll notice at the bottom we commented these two lines.
 
-```diff
+```ts
 - const apiClient = createAPIClient(config);
 - await apiClient.verifyAuthentication();
 ```
 
-It's a good idea to actually test your credentials in `validateInvocation` by
-making a light-weight authenticated request to your provider API, but we don't
-have a working API Client or a `verifyAuthentication` method to use yet, so
-let's add one in.
+It's good practice to test your credentials in `validateInvocation` by making a
+light-weight authenticated request to your provider API, but we don't have a
+working API Client or a `verifyAuthentication` method to use yet, so let's add
+one in.
 
 ## Adding or Creating an API Client
 
@@ -279,42 +291,152 @@ be similar in the first or second case, we'll just go one step deeper here.
 
 ### Basic Client Setup
 
-The first thing we'll want to do is make sure our client will have access to the
-information it needs to make authenticated request. If we anticipate logging
-from our client we should also add `IntegrationLogger` to the constructor
-parameters.
+We will first want to make sure our client has access to the information it
+needs to make authenticated request. If we anticipate logging from our client we
+should also add `IntegrationLogger` to the constructor parameters.
 
 **`src/steps/client.ts`**
 
 ```diff
 export class APIClient {
--  constructor(readonly config: IntegrationConfig, ) {}
+-  constructor(readonly config: IntegrationConfig) {}
++  private BASE_URL = 'https://api.digitalocean.com/v2';
 +  constructor(
 +    readonly config: IntegrationConfig,
-+    readonly logger: IntegrationLogger)
++    readonly logger: IntegrationLogger
 +  ) {}
+...
+- export function createAPIClient(config: IntegrationConfig): APIClient
++ export function createAPIClient(
++  config: IntegrationConfig,
++  logger: IntegrationLogger
++ ): APIClient {
+-    return new APIClient(config);
++    return new APIClient(config, logger);
+}
 ```
 
 ### Adding the first route
 
 As discussed earlier, we need a way to test that we can authenticate with the
-provider api to use in `validateInvocation`. What endpoint we should use varies
-on a case-by-case basis. The general guiding principle is to make a request that
-is simple and lightweight.
-
-In some cases, we may make a request to an `/authenticate` endpoint or an api
-`/version` endpoint. In our case, the most lightweight request we can make to
-the DigitalOcean API is to the `/account` endpoint.
+provider api to use in `validateInvocation`. We will want to make a lightweight
+authenticated request. What endpoint you choose will vary from provider to
+provider, but for DigitalOcean, we'll use the `/account` endpoint.
 
 Let's create a new `getAccount` method from `APIClient`
 
-# TODO: Add http client dependency
+We'll first create a type to represent the `DigitalOceanAccount` response
+object. Let's go to the
+[`src/types.ts`](https://github.com/JupiterOne/integration-template/blob/main/src/types.ts)
+file. There are good examples of how we might define our types, but let's delete
+them and create our own.
+
+**`src/types.ts`**
 
 ```ts
-
+// modeled from the example response from the DigitalOcean API
+// See: https://docs.digitalocean.com/reference/api/api-reference/#tag/Account
+export interface DigitalOceanAccount {
+  account: {
+    droplet_limit: number;
+    floating_ip_limit: number;
+    email: string;
+    uuid: string;
+    email_verified: boolean;
+    status: string;
+    status_message: string;
+  };
+}
 ```
 
-# TODO We need better http client in template first
+We'll also need to add an http client to make requests. I'll use `node-fetch`,
+but the client you use is up to you.
+
+```sh
+yarn add node-fetch
+```
+
+Now we can add the `getAccount` method to our client.
+
+```ts
+import {
+  IntegrationLogger,
+  IntegrationProviderAPIError
+  IntegrationProviderAuthenticationError,
+  IntegrationProviderAuthorizationError,
+} from '@jupiterone/integration-sdk-core';
+import fetch from 'node-fetch';
+import { DigitalOceanAccount } from './types';
+
+...
+export class APIClient {
+...
+  public async getAccount(): Promise<DigitalOceanAccount> {
+    const endpoint = '/account';
+    const response = await fetch(this.BASE_URL + endpoint, {
+      headers: {
+        Authorization: `Bearer ${this.config.token}`,
+      },
+    });
+
+    // If the response is not ok, we should handle the error
+    if (!response.ok) {
+      this.handleApiError(response, endpoint);
+    }
+
+    return (await response.json()) as DigitalOceanAccount;
+  }
+
+   private handleApiError(err: any, endpoint: string): void {
+    if (err.status === 401) {
+      throw new IntegrationProviderAuthenticationError({
+        endpoint: endpoint,
+        status: err.status,
+        statusText: err.statusText,
+      });
+    } else if (err.status === 403) {
+      throw new IntegrationProviderAuthorizationError({
+        endpoint: endpoint,
+        status: err.status,
+        statusText: err.statusText,
+      });
+    } else {
+      throw new IntegrationProviderAPIError({
+        endpoint: endpoint,
+        status: err.status,
+        statusText: err.statusText,
+      });
+    }
+}
+```
+
+In the `getAccount` method, we define the endpoint, make the request, handle any
+errors, and return the response.
+
+Now we can add authentication verification to our `validateAuthentication`.
+
+**`src/config.ts`**
+
+```diff
+export async function validateInvocation(
+  context: IntegrationExecutionContext<IntegrationConfig>
+ ) {
+   const { config } = context.instance;
+
+  if (!config.accessToken) {
+     throw new IntegrationValidationError(
+      'Config requires accessToken',
+     );
+   }
+- // const apiClient = createAPIClient(config);
+- // await apiClient.verifyAuthentication();
++ const apiClient = createAPIClient(config, context.);
++ await apiClient.getAccount();
+ }
+```
+
+And that's `validateInvocation` completed! :tada: We can now proceed to our
+`IntegrationSteps` knowing that we have a valid configuration to work with.
 
 ## Creating you first `IntegrationStep`
 
