@@ -61,13 +61,13 @@ yarn install
 
 That's it! Your project is ready for development!
 
-### **Developing the Integration**
+## **Developing the Integration**
 
 In this guide, we will create a small integration with
 [DigitalOcean](https://digitalocean.com) using examples that can be applied to
 the integration you are building.
 
-#### **Integration Configuration**
+### **Integration Configuration**
 
 Every integration builds and exports an `InvocationConfig` that is used to
 execute the integration.
@@ -92,7 +92,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
 Let's work top to bottom. We'll start by defining `instanceConfigFields`, next
 we'll implement `validateInvocation`, and finally define our `integrationSteps`.
 
-#### **1. Creating `InstanceConfigFields`**
+### **1. Creating `InstanceConfigFields`**
 
 The first object in our `InvocationConfig` is `instanceConfigFields` with type
 [`IntegrationInstanceConfigFieldsMap`](https://github.com/JupiterOne/sdk/blob/1280faf454cefa6aff1aabd90b4890c1920b88c9/packages/integration-sdk-core/src/types/config.ts#L68-L70).
@@ -204,7 +204,7 @@ cp .env.example .env
 Awesome! We have created our `instanceConfigFields` and `IntegrationConfig`.
 Let's go to the next step.
 
-#### **2. Creating `ValidateInvocation`**
+### **2. Creating `ValidateInvocation`**
 
 Next, we will create a our `validateInvocation` function. The
 `validateInvocation` has the following signature:
@@ -439,7 +439,7 @@ export async function validateInvocation(
 And that's `validateInvocation` completed! :tada: We can now proceed to our
 `IntegrationSteps` knowing that we have a valid configuration to work with.
 
-## Creating you first `IntegrationStep`
+### **3. Creating your first `IntegrationStep`**
 
 Let's get some data! Integrations are executed in Steps. Steps are functions
 which can produce **Entities**, **Relationships**, and **MappedRelationships**.
@@ -467,21 +467,37 @@ export const accountSteps: IntegrationStep<IntegrationConfig>[] = [
 ];
 ```
 
-Let's go through the properties of the step:
+Let's go through each of these to build our `IntegrationStep`. We'll skip over
+`relationships` and `dependsOn` as those will not be used by our step and will
+be covered later as advanced topics.
 
-- `id` is the _unique_ identifier for the step.
-- `name` is the human readable name of the step that will appear in logs.
-- `entities` is the set of entities the step will produce
-- `relationships` is the set of relationships the step will produce
-- `dependsOn` is the steps, referenced by their `id`, which the current step
-  depends on. This step doesn't need information from other steps so there are
-  no dependencies.
-- `executionHandler` is the function that will perform the work for the step.
+#### **`id`**
 
-This step has an `id`, which _uniquely_ identifies the step, given by a constant
-`Steps.ACCOUNT`. The step has a name, `Fetch Account Details`, which will show
-up in human readable logs. It also declares that the `executionHandler`,
-`fetchAccountDetails`, will create an `ACCOUNT` entity.
+The step `id` is the _unique_ identifier for the step
+
+It's a good idea to define your step `ids` as constants in
+[`src/steps/constants.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/steps/constants.ts#L7-L12)
+as you'll want to reference these `ids` in other parts of the project.
+
+```ts
+export const Steps = {
+  ACCOUNT: 'fetch-account',
+  USERS: 'fetch-users',
+  GROUPS: 'fetch-groups',
+  GROUP_USER_RELATIONSHIPS: 'build-user-group-relationships',
+};
+```
+
+We already have an account identifier, so we will leave this as-is for now.
+
+#### **`name`**
+
+The step `name` is the human readable name of the step that will appear in logs.
+
+#### **`entities`**
+
+The `entities` property of the step provides metadata about the entities that
+are produced by the step.
 
 Let's see what the `ACCOUNT` entity looks like:
 
@@ -502,15 +518,25 @@ ACCOUNT: {
   },
 ```
 
-This object provides a few different properties:
+The `ACCOUNT` object of type `StepEntityMetadata` is used at runtime to define
+the structure of the data the integration will produce and test that the
+structure is actually produced.
 
-- `resourceName`: The natural resource name in the integration provider. For
-  example: `S3 Bucket`.
-- `_type`: An identifier noting the provider and type of resource. For example:
-  `aws_ec`2
-- `_class`: A class from the JupiterOne
+| Property     | Purpose                                                                                                                                                                                                                                                                     | Examples                                                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| resourceName | The natural resource name in the integration provider.                                                                                                                                                                                                                      | `S3 Bucket`, `Account`, `Organization`                                                                                            |
+| \_type       | An identifier noting the provider and type of resource. The `_type` is used to identify and find entities produced by the integration                                                                                                                                       | `aws_ec2`, `tenable_finding`, `github_repo`                                                                                       |
+| \_class      | An entity classification from the JupiterOne [data-model](https://github.com/JupiterOne/data-model/tree/main/src/schemas). The `\_class is used to classify objects and promote common properties across different integrations. An entity may have more than one `\_class` | `Account`, `Organization`, `Finding`, `Vulnerability`                                                                             |
+| schema       | An object used to specify and extend the schema inherited from the `_class`. This object is useful for testing integrations and providing information about what properties can or will exist on the created `Entity` or `Relationship`                                     | See [`src/steps/constants.ts`](https://github.com/JupiterOne/integration-template/blob/main/src/steps/constants.ts) for examples. |
+
+- `resourceName` is natural resource name in the integration provider. For
+  example: `S3 Bucket` or `Account`.
+- `_type`: An identifier noting the provider and type of resource. The `_type`
+  is used to identify and find entities produced by the integration. Example
+  `_types` include `aws_ec2`, `tenable_finding`, or `github_repo`.
+- `_class`: A entity classification from the JupiterOne
   **[data-model](https://github.com/JupiterOne/data-model/tree/main/src/schemas)**.
-  This is used to help classify objects and promote common properties and names
+  This is used to classify objects and promote common properties and names
   across different integrations. An example `_class` is
   [`Account`](https://github.com/JupiterOne/data-model/blob/main/src/schemas/Account.json).
   Objects may have more than one `_class`.
