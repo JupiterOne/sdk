@@ -683,12 +683,12 @@ And that's it! We have a working `executionHandler`.
 
 We've now:
 
-- [ ] Created a new integration project
-- [ ] Installed dependencies with `yarn install`
-- [ ] Created our `instanceConfigFields`
-- [ ] Created our `validateInvocation`
-- [ ] Added our API Client and authenticated request
-- [ ] Created our first `IntegrationStep`
+- ✅ Created a new integration project
+- ✅ Installed dependencies with `yarn install`
+- ✅ Created our `instanceConfigFields`
+- ✅ Created our `validateInvocation`
+- ✅ Added our API Client and authenticated request
+- ✅ Created our first `IntegrationStep`
 
 We are now ready to run our integration!
 
