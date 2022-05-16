@@ -579,6 +579,7 @@ executionHandler is a function that takes in the
 to create entities and relationships.
 
 We can see an example `executionHandler` for the `fetch-account` step.
+
 **`src/steps/account/index.ts`**
 
 ```ts
@@ -617,6 +618,86 @@ it. It is the converters job to create this consistent normalized entity or
 relationships from the raw data the provider gives in an API response.
 
 Let's create our first converter. We can go to `src/steps/accounts/converter.ts`
-and remove the exmaples there to start fresh.
+and remove the example there to start fresh.
+
+`**src/steps/account/converter.ts**`
+
+```ts
+import {
+  createIntegrationEntity,
+  Entity,
+} from '@jupiterone/integration-sdk-core';
+import { DigitalOceanAccount } from '../../types';
+
+import { Entities } from '../constants';
+
+export function createAccountEntity(account: DigitalOceanAccount): Entity {
+  return createIntegrationEntity({
+    entityData: {
+      source: account,
+      assign: {
+        _key: account.account.uuid,
+        _type: Entities.ACCOUNT._type,
+        _class: Entities.ACCOUNT._class,
+        dropletLimit: account.account.droplet_limit,
+        floatingIpLimit: account.account.floating_ip_limit,
+        uuid: account.account.uuid,
+        email: account.account.email,
+        emailVerified: account.account.email_verified,
+        status: account.account.status,
+        statusMessage: account.account.status_message,
+      },
+    },
+  });
+}
+```
+
+There are two parts to the `createIntegrationEntity` function. The `source`
+property captures the raw data from the provider. The `assign` object creates
+the normalized, searchable data for the entity. We camel case the assign
+properties. There are also three important underscored properties required. The
+`_type` and `_class` are used for the reasons stated above. The `_key` is the
+unique identifier of the entity.
+
+Let's finish our `executionHandler` by adding the converter.
+
+```diff
++ import { createAccountEntity } from './converter';
+...
+export async function fetchAccountDetails({
++ instance,
+  jobState,
++ logger
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  const client = createApiClient(instance.config, logger);
+  const account = client.getAccount();
++
++ const accountEntity = createAccountEntity(account);
++ await jobState.addEntity(accountEntity);
+}
+```
+
+And that's it! We have a working `executionHandler`.
 
 ## Running the integration
+
+We've now:
+
+- [ ] Created a new integration project
+- [ ] Installed dependencies with `yarn install`
+- [ ] Created our `instanceConfigFields`
+- [ ] Created our `validateInvocation`
+- [ ] Added our API Client and authenticated request
+- [ ] Created our first `IntegrationStep`
+
+We are now ready to run our integration!
+
+```sh
+yarn start
+yarn graph
+```
+
+If we open the `.j1-integration/index.html` file in our browser. We'll see a
+graph like:
+
+# TODO Add image
