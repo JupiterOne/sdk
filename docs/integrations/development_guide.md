@@ -731,14 +731,7 @@ We are now ready to run our integration! We can collect data using:
 yarn start
 ```
 
-Once we've collected our data, we can visualize it using:
-
-```sh
-yarn graph
-```
-
-You can see the collected data in the `.j1-integration` folder.
-
-You can also see the results visually with the `yarn graph` command.
+You can see the collected data in the `.j1-integration` and you can visualize
+the results with `yarn graph`.
 
 [//]: # 'TODO add references to other more advanced docs'
