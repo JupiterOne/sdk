@@ -2,9 +2,9 @@
 
 In this Development Guide, we will walk you through the initial steps of getting
 your integration up and running. Along the way, we will provide tips and tricks
-to ensure your success. JupiterOne has a number of open source projects that
-provide an easy-to-use framework for creating a new integration, including the
-code found in this SDK project.
+to ensure your success. JupiterOne has many open-source projects that provide an
+easy-to-use framework for creating a new integration, including the code found
+in this SDK project.
 
 ## Table of Contents
 
@@ -74,7 +74,7 @@ That's it! Your project is ready for development!
 ## **Developing the integration**
 
 In this guide, we will create a small integration with
-[DigitalOcean](https://digitalocean.com) using examples that can be applied to
+[DigitalOcean](https://digitalocean.com) using examples which you can apply to
 the integration you are building.
 
 ### **Integration configuration**
@@ -84,8 +84,8 @@ execute the integration.
 
 [//]: # 'TODO: Add reference or link to document showing integration execution'
 
-In the new integration you created you can see the `InvocationConfig` exported
-in
+In the new integration that you created, you can see the `InvocationConfig`
+exported in
 [`src/index.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/index.ts#L9-L14)
 
 📁 **`src/index.ts`**
@@ -99,8 +99,9 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
   };
 ```
 
-Let's work top to bottom. We'll start by defining `instanceConfigFields`, next
-we'll implement `validateInvocation`, and finally define our `integrationSteps`.
+Let's work from the top to bottom. We'll start by defining
+`instanceConfigFields`, next we'll implement `validateInvocation`, and finally
+define our `integrationSteps`.
 
 ### **1. Creating `InstanceConfigFields`**
 
@@ -137,11 +138,11 @@ export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
 };
 ```
 
-This object let's us control how the integration will execute. A common use is
-to provide credentials to authenticate requests. For example, DigitalOcean
-requires a `Personal Access Token` (see below for example). Other common config
-values include a `Client ID`, `API Key`, or `API URL`. Any outside information
-the integration needs at runtime can be defined here.
+The `instanceConfigFields` object lets us control how the integration will
+execute. A common use is to provide credentials to authenticate requests. For
+example, DigitalOcean requires a `Personal Access Token` (see below). Other
+common config values include a `Client ID`, `API Key`, or `API URL`. Any outside
+information the integration needs at runtime can be defined here.
 
 DigitalOcean requires a `Person Access Token`, so I'll edit the fields to show
 that.
@@ -164,9 +165,9 @@ export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
 };
 ```
 
-| :warning: IMPORTANT                                                                             |
-| :---------------------------------------------------------------------------------------------- |
-| The `mask` property should be set to true anytime a property is secret and shouldn't be logged. |
+| :warning: IMPORTANT                                                                   |
+| :------------------------------------------------------------------------------------ |
+| The `mask` property should be set to true any time a property is secret or sensitive. |
 
 We should also edit
 [`IntegrationConfig`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/config.ts#L37-L47)
@@ -193,7 +194,7 @@ export interface IntegrationConfig extends IntegrationInstanceConfig {
 }
 ```
 
-Lastly, we will want to create an **.env** file with our configuration. Let's
+Lastly, we will want to create a **.env** file with our configuration. Let's
 edit `.env.example` to match our project:
 
 📁 **`.env.example`**
@@ -208,21 +209,21 @@ edit `.env.example` to match our project:
 cp .env.example .env
 ```
 
-In the **.env** file we've created we can put our `ACCESS_TOKEN`. Make sure not
-to put real secrets in the **.env.example**!
+In the **.env** file, we can put our `ACCESS_TOKEN`. Make sure not to put real
+secrets in the **.env.example**!
 
-**`.env`**
+| :warning: IMPORTANT |
+| :------------------ |
 
-| :warning: IMPORTANT                                                                                                                                                       |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| The **.env** file should **NEVER** be committed. The **integration-template** has `.env` in the **.gitignore**, but always be sure not to accidentally add and commit it! |
+| The **.env** file should **NEVER** be committed. The **integration-template**
+has `.env` in the **.gitignore**, but always be sure not to add and commit it.
 
 Awesome! We have created our `instanceConfigFields` and `IntegrationConfig`.
 Let's go to the next step.
 
 ### **2. Creating `ValidateInvocation`**
 
-Next, we will create a our `validateInvocation` function. The basic contract for
+Next, we will create our `validateInvocation` function. The basic contract for
 `validateInvocation` is as follows:
 
 - The function receives the execution context and configuration we set in
@@ -255,17 +256,17 @@ export async function validateInvocation(
  }
 ```
 
-You'll notice at the bottom we commented these two lines.
+You'll notice we commented these two lines:
 
 ```ts
-- const apiClient = createAPIClient(config);
-- await apiClient.verifyAuthentication();
+const apiClient = createAPIClient(config);
+await apiClient.verifyAuthentication();
 ```
 
 It's good practice to test your credentials in `validateInvocation` by making a
 light-weight authenticated request to your provider API, but we don't have a
 working API Client or a `verifyAuthentication` method to use yet, so let's add
-one in.
+one.
 
 ### Adding or Creating an API Client
 
@@ -275,10 +276,9 @@ There are three common cases when creating your integration's `APIClient`.
    - Examples Integrations:
      [**graph-microsoft-365**](https://github.com/JupiterOne/graph-microsoft-365/blob/main/src/ms-graph/client.ts),
      [**graph-google-cloud**](https://github.com/JupiterOne/graph-google-cloud/blob/main/src/google-cloud/client.ts)
-2. An open source client exists and is well maintained, trusted, and widely
+2. An open-source client exists and is well maintained, trusted, and widely
    used.
-   - Examples Integrations: []
-3. There is no provider client and there are no open source clients or the
+3. There is no provider client, and there are no open-source clients or the
    clients that exist fail to meet a high standard of trust and use.
    - Examples Integrations:
      [**graph-rumble**](https://github.com/JupiterOne/graph-rumble/blob/main/src/client.ts),
@@ -290,15 +290,15 @@ there aren't extenuating circumstances.
 In the third case, we will need to implement the client ourselves as part of the
 integration.
 
-For DigitalOcean, there is not a provider supported client and the open source
+For DigitalOcean, there is not a provider-supported client and the open-source
 clients available are not widely used. So let's make our own. The patterns would
-be similar in the first or second case, we'll just go one step deeper here.
+be similar in the first or second case. We will just go one step deeper here.
 
 ### Basic Client Setup
 
-We will first want to make sure our client has access to the information it
-needs to make authenticated request. If we anticipate logging from our client we
-should also add `IntegrationLogger` to the constructor parameters.
+We will first want to ensure our client has access to the information it needs
+to make authenticated requests. If we anticipate logging from our client, then
+we should add `IntegrationLogger` to the constructor parameters.
 
 📁 **`src/client.ts`**
 
@@ -324,7 +324,7 @@ export class APIClient {
 ### Adding the first route
 
 As discussed earlier, we need a way to test that we can authenticate with the
-provider api to use in `validateInvocation`. We will want to make a lightweight
+provider API to use in `validateInvocation`. We will want to make a light-weight
 authenticated request. What endpoint you choose will vary from provider to
 provider, but for DigitalOcean, we'll use the `/account` endpoint.
 
@@ -354,8 +354,8 @@ export interface DigitalOceanAccount {
 }
 ```
 
-We'll also need to add an http client to make requests. I'll use `node-fetch`,
-but the client you use is up to you.
+We'll also need to add an HTTP client to make requests. I'll use `node-fetch`,
+but the choice of client is up to you.
 
 ```sh
 yarn add node-fetch
@@ -415,8 +415,8 @@ export class APIClient {
 }
 ```
 
-In the `getAccount` method, we define the endpoint, make the request, handle any
-errors, and return the response.
+In the `getAccount` method, we define the endpoint, make the request, and handle
+any errors. If the request was successful, then we return the response.
 
 Now we can add authentication verification to our `validateAuthentication`.
 
@@ -441,7 +441,7 @@ export async function validateInvocation(
 ```
 
 And that's `validateInvocation` completed! :tada: We can now proceed to our
-`IntegrationSteps` knowing that we have a valid configuration to work with.
+`IntegrationSteps` knowing that we have a valid configuration.
 
 ### **3. Creating your first `IntegrationStep`**
 
@@ -475,8 +475,8 @@ Let's remove `accessSteps` and focus on `accountSteps`.
 #### **Creating the `Account` Step**
 
 An `IntegrationStep` is made up of two parts - an `ExecutionHandlerFunction`
-which does the work of the step and `StepMetadata` which exports information
-about the work the `ExecutionHandlerFunction` will do.
+which does the work of the step, and `StepMetadata` which exports information
+about the work that the `ExecutionHandlerFunction` will do.
 
 Let's look at the example `Account` step.
 
@@ -501,7 +501,7 @@ be covered later as advanced topics.
 
 #### **id**
 
-The step `id` is the _unique_ identifier for the step
+The step `id` is the _unique_ identifier for the step.
 
 It's a good idea to define your step `ids` as constants in
 [`src/steps/constants.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/steps/constants.ts#L7-L12)
@@ -520,7 +520,7 @@ We already have an account identifier, so we will leave this as-is for now.
 
 #### **name**
 
-The step `name` is the human readable name of the step that will appear in logs.
+The step `name` is the human-readable name of the step that will appear in logs.
 
 #### **entities**
 
@@ -569,8 +569,9 @@ structure is actually produced.
   [`Account`](https://github.com/JupiterOne/data-model/blob/main/src/schemas/Account.json).
   Objects may have more than one `_class`.
 - `schema`: An object used to specify and extend the schema inherited from the
-  `_class`. This object is useful for testing integrations and showing what
-  information can or will show up on the created `Entity` or `Relationship`.
+  `_class`. The schema object is useful for testing integrations and
+  communicating what information can or will show up on the created `Entity` or
+  `Relationship`.
 
 Let's edit this object to conform to our `Account` on DigitalOcean.
 
@@ -595,9 +596,9 @@ ACCOUNT: {
   },
 ```
 
-| Tip :bulb:                                                                                                                                                                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| It can be helpful to put properties that will _always_ exist in the required field. This will help communicate what properties to expect to future maintainers and will be useful in testing the created entities |
+| Tip :bulb:                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| It can be helpful to put properties that will _always_ exist in the required field. Explicitly adding required properties helps communicate what properties to expect to future maintainers. It will also help to test the created entities |
 
 ### **executionHandler**
 
@@ -641,9 +642,9 @@ we'll first want to convert the entity to a common format.
 #### **Converters**
 
 Different providers will present data in many different ways. We want to
-normalize our data to be more consistent so we can gather useful insights from
-it. It is the converters job to create this consistent normalized entity or
-relationships from the raw data the provider gives in an API response.
+normalize our data to be more consistent, so we can gather useful insights from
+it. The converter will create the normalized entity or relationship from the raw
+data the provider gives in an API response.
 
 Let's create our first converter. We can go to `src/steps/accounts/converter.ts`
 and remove the example there to start fresh.
@@ -685,7 +686,7 @@ There are two parts to the `createIntegrationEntity` function. The `source`
 property captures the raw data from the provider.
 
 The `assign` object creates the normalized, searchable data for the entity. We
-camel case the assign properties. There are four required properties on the
+camel case the `assign` properties. There are four required properties on the
 `assign` object. The `_type` and `_class` are required for the reasons stated
 discussed above. The `_key` is the unique identifier of the entity. Lastly, the
 `name` is the name of the entity. Sometimes an entity will have a natural name
@@ -730,13 +731,14 @@ We are now ready to run our integration! We can collect data using:
 yarn start
 ```
 
-Once we've collected our data we can visualize it using:
+Once we've collected our data, we can visualize it using:
 
 ```sh
 yarn graph
 ```
 
-This will create an html file at `.j1-integration/index.html`. If we open this
-file in our browser we'll see an image like:
+The `yarn graph` command will create an HTML file at
+`.j1-integration/index.html`. If we open this file in our browser we will see an
+image like:
 
 # TODO Add image
