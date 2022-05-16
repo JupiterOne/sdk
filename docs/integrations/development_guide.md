@@ -551,7 +551,6 @@ ACCOUNT: {
     resourceName: 'Account',
 -    _type: 'acme_account',
 +    _type: 'digital_ocean_account',
-
     _class: ['Account'],
     schema: {
       properties: {
@@ -562,146 +561,25 @@ ACCOUNT: {
 +        status: { type: 'string' }
 +        status_message: { type: 'string' }
       },
-      required: ['mfaEnabled', 'manager'],
+-     required: ['mfaEnabled', 'manager'],
++     required: ['email', 'email_verified', 'status']
     },
   },
-`
-
-
 ```
 
-```ts
-interface StepMetadata {
-  id: string;
-  name: string;
-  entities: StepEntityMetadata[];
-  relationships: StepRelationshipMetadata[];
-  mappedRelationships: StepMappedRelationshipMetadata[];
-  dependsOn?: string[];
-  dependencyGraphId?: string;
-}
-```
+| Tip :bulb:                                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| It can be helpful to put properties that will _always_ exist in the required field. This will help communicate what properties to expect to future maintainers and will be useful in testing the created entities |
 
-We can see an implementation in
-[`src/steps/account/index.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/steps/account/index.ts#L20-L29).
+### **executionHandler**
 
-Let's work on getting our DigitalOcean Account ingested.
+The `executionHandler` is where the work for the step happens. The
+executionHandler is a function that takes in the
+`IntegrationStepExecutionContext` as a parameter and performs the necessary work
+to create entities and relationships.
 
-In `src/types.ts` we'll setup the basic type for our `DigitalOceanAccount`.
-
-```diff
-- export interface AcmeAccount {
--  id: string;
--  name: string;
-+ export interface DigitalOceanAccount {
-+  uuid: string;
-+  email: string;
-+  email_verified: boolean;
-+  status: string;
-+  status_message: string;
-}
-```
-
-Let's also make a change in `src/constants.ts` so our step knows information
-about the entity we are ingesting.
-
-```diff
-
-
-
-export const Entities: Record<'ACCOUNT', StepEntityMetadata> = {
-  ACCOUNT: {
-    resourceName: 'Account',
--   _type: 'acme_account',
-+   _type: 'digital_ocean_account',
-    _class: ['Account'],
-    schema: {
-      properties: {},
-      required: [],
-    },
-  },
-};
-```
-
-We'll also need to use a http client to make requests to our provider. Here
-we'll use the `integration-sdk-http-client`.
-
-```sh
-yarn add @jupiterone/integration-sdk-http-client
-```
-
-Edits to the `src/client.ts`
-
-# TODO: This is more edits than I really want :/
-
-```diff
- import { IntegrationConfig } from './config';
--import { AcmeAccount } from './types';
-+import { DigitalOceanAccount } from './types';
-+
-+import { APIClient as sdkApiClient } from '@jupiterone/integration-sdk-http-client';
-+import {
-+  APIRequest,
-+  APIResponse,
-+} from '@jupiterone/integration-sdk-http-client/dist/src/types';
-
- export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
-
-@@ -12,22 +18,33 @@ export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
-  * resources.
-  */
- export class APIClient {
--  constructor(readonly config: IntegrationConfig) {}
-+  private client: sdkApiClient;
-+
-+  private BASE_URL = 'https://api.digitalocean.com/v2';
-+
-+  constructor(readonly config: IntegrationConfig) {
-+    this.client = new sdkApiClient();
-+  }
-
-   /**
-    * getAccount fetches the account details from the provider API.
-    * @returns {Promise<AcmeAccount>} A promise for the AcmeAccount
-    */
--  public async getAccount(): Promise<AcmeAccount> {
--    // This is where an authenticated request to the provider API would be made
--    // We return a promise that resolves to mock data
--    // to simulate an API response
--    return new Promise<AcmeAccount>((resolve) => {
--      resolve({
--        id: 'account-id',
--        name: 'Account Name',
--      });
--    });
-+  public async getAccount(): Promise<DigitalOceanAccount> {
-+    const request: APIRequest = {
-+      url: this.BASE_URL + '/account',
-+      headers: {
-+        Authorization: `Bearer ${this.config.accessToken}`,
-+      },
-+      method: 'GET',
-+    };
-+    const response = await this.client.executeAPIRequest(request);
-+    return response.data as DigitalOceanAccount;
-+
-   }
- }
-```
-
-# TODO: Trim/move this section once the examples become more clear
-
-Let's go through these one by one:
-
-- `id` is the _unique_ identifier for the step
-- `name` is the public facing name of the step. You'll see this name appear in
-  logs.
-- `entities` describes which entities the step may produce.
-- `relationships`, like `entities`, describes which relationships may be
-  produced in our step
-- `dependsOn` describes what other steps this step depends on. TODO :MAKE BETTER
-- `executionHandler` is the function called to execute this step. It's where the
-  work happens!
+We can see an example `executionHandler` for the `fetch-account` step.
+**`src/steps/account/index.ts`**
 
 ```ts
 export async function fetchAccountDetails({
@@ -713,41 +591,32 @@ export async function fetchAccountDetails({
 }
 ```
 
-### Editing our client
+Let's make a few changes to adapt it to work for DigitalOcean.
 
-````ts
-const BASE_URI='https://api.digitalocean.com/v2/domain';
-
-
-export class APIClient {
-  constructor(readonly config: IntegrationConfig) {}
-
-  public async getAccount(): Promise<Account> {
-
-
-
-  }
+```diff
+export async function fetchAccountDetails({
++ instance,
+  jobState,
++ logger
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+-   const accountEntity = await jobState.addEntity(createAccountEntity());
+-   await jobState.setData(ACCOUNT_ENTITY_KEY, accountEntity);
++   const client = createApiClient(instance.config, logger);
++   const account = client.getAccount();
 }
-
-
-
-
-## Testing
-
-### Writing tests
-
-### Running tests
-
-To run test files in an integration
-
-```sh
-yarn test
-````
-
-```sh
-yarn test:env
 ```
 
-## Running the integration
+The last thing we need to do is add our entity to the jobState. To do this,
+we'll first want to convert the entity to a common format.
 
-### Integration Development Best Practices
+### Converters
+
+Different providers will present data in many different ways. We want to
+normalize our data to be more consistent so we can gather useful insights from
+it. It is the converters job to create this consistent normalized entity or
+relationships from the raw data the provider gives in an API response.
+
+Let's create our first converter. We can go to `src/steps/accounts/converter.ts`
+and remove the exmaples there to start fresh.
+
+## Running the integration
