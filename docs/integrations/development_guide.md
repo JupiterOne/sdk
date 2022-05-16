@@ -737,8 +737,8 @@ Once we've collected our data, we can visualize it using:
 yarn graph
 ```
 
-The `yarn graph` command will create an HTML file at
-`.j1-integration/index.html`. If we open this file in our browser we will see an
-image like:
+You can see the collected data in the `.j1-integration` folder.
 
-# TODO Add image
+You can also see the results visually with the `yarn graph` command.
+
+[//]: # 'TODO add references to other more advanced docs'
