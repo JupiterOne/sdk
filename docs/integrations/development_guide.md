@@ -499,7 +499,7 @@ Let's go through each of these to build our `IntegrationStep`. We'll skip over
 `relationships` and `dependsOn` as those will not be used by our step and will
 be covered later as advanced topics.
 
-#### **`id`**
+#### **id**
 
 The step `id` is the _unique_ identifier for the step
 
@@ -518,11 +518,11 @@ export const Steps = {
 
 We already have an account identifier, so we will leave this as-is for now.
 
-#### **`name`**
+#### **name**
 
 The step `name` is the human readable name of the step that will appear in logs.
 
-#### **`entities`**
+#### **entities**
 
 The `entities` property of the step provides metadata about the entities that
 are produced by the step.
