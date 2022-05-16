@@ -8,16 +8,28 @@ code found in this SDK project.
 
 ## Table of Contents
 
-- [Requirements](#requirements)
 - [Getting Started](#getting-started)
+  - [Requirements](#requirements)
   - [Setup](#setup)
-  - [Developing the Integration](#developing-the-integration)
-    - [Creating instanceConfigFields](#creating-instanceconfigfields)
-    - [Creating validateInvocation](#creating-validateinvocation)
-    - [Creating your first IntegrationStep](#creating-you-first-integrationstep)
--
+- [Developing the integration](#developing-the-integration)
+  - [Integration Configuration](#integration-configuration)
+  - [Creating instanceConfigFields](#1-creating-instanceconfigfields)
+  - [Creating validateInvocation](#2-creating-validateinvocation)
+    - [Adding or creating an API Client](#adding-or-creating-an-api-client)
+      - [Basic client setup](#basic-client-setup)
+      - [Adding the first route](#adding-the-first-route)
+  - [Creating your first IntegrationStep](#3-creating-your-first-integrationstep)
+    - [Creating the Account step](#creating-the-account-step)
+      - [id](#id)
+      - [name](#name)
+      - [entities](#entities)
+      - [executionHandler](#executionhandler)
+        - [Converters](#converters)
+  - [Running the integration](#running-the-integration-🚀)
 
-## Requirements
+## Getting Started
+
+### **Requirements**
 
 You'll need:
 
@@ -31,8 +43,6 @@ You'll need:
   ```sh
     npm install --global yarn
   ```
-
-## Getting Started
 
 ### **Setup**
 
@@ -61,13 +71,13 @@ yarn install
 
 That's it! Your project is ready for development!
 
-## **Developing the Integration**
+## **Developing the integration**
 
 In this guide, we will create a small integration with
 [DigitalOcean](https://digitalocean.com) using examples that can be applied to
 the integration you are building.
 
-### **Integration Configuration**
+### **Integration configuration**
 
 Every integration builds and exports an `InvocationConfig` that is used to
 execute the integration.
@@ -78,7 +88,7 @@ In the new integration you created you can see the `InvocationConfig` exported
 in
 [`src/index.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/index.ts#L9-L14)
 
-**`src/index.ts`**
+📁 **`src/index.ts`**
 
 ```ts
 export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
@@ -99,7 +109,7 @@ The first object in our `InvocationConfig` is `instanceConfigFields` with type
 You'll find this defined in your project in
 [`src/config.ts`](https://github.com/JupiterOne/integration-template/blob/057d8b60dd1e47dcdc4010da973578f28ef99522/src/config.ts#L9-L31).
 
-**`src/config.ts`**
+📁 **`src/config.ts`**
 
 ```ts
 /**
@@ -136,7 +146,7 @@ the integration needs at runtime can be defined here.
 DigitalOcean requires a `Person Access Token`, so I'll edit the fields to show
 that.
 
-**`src/config.ts`**
+📁 **`src/config.ts`**
 
 ```diff
 export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
@@ -163,7 +173,7 @@ We should also edit
 in the same file to match `instanceConfigFields`. `IntegrationConfig` is used to
 add and provide type information throughout the project.
 
-**`src/config.ts`**
+📁 **`src/config.ts`**
 
 ```diff
 export interface IntegrationConfig extends IntegrationInstanceConfig {
@@ -183,19 +193,25 @@ export interface IntegrationConfig extends IntegrationInstanceConfig {
 }
 ```
 
-Lastly, we will want to create an **.env** file with our configuration.
+Lastly, we will want to create an **.env** file with our configuration. Let's
+edit `.env.example` to match our project:
 
-```sh
-cp .env.example .env
-```
-
-**`.env`**
+📁 **`.env.example`**
 
 ```diff
 - CLIENT_ID=
 - CLIENT_SECRET=
 + ACCESS_TOKEN=<access token goes here>
 ```
+
+```sh
+cp .env.example .env
+```
+
+In the **.env** file we've created we can put our `ACCESS_TOKEN`. Make sure not
+to put real secrets in the **.env.example**!
+
+**`.env`**
 
 | :warning: IMPORTANT                                                                                                                                                       |
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -206,20 +222,8 @@ Let's go to the next step.
 
 ### **2. Creating `ValidateInvocation`**
 
-Next, we will create a our `validateInvocation` function. The
-`validateInvocation` has the following signature:
-
-- TODO: Consider deferring to development.md The next object in our
-  `IntegrationConfig` is `validateInvocation`: This is the type signature for
-  [`validateInvocation`](https://github.com/JupiterOne/sdk/blob/63630abe43455b4035b311c71d72f8aa9a602ffb/packages/integration-sdk-core/src/types/validation.ts#L4-L6).
-
-```ts
-export type InvocationValidationFunction<T extends ExecutionContext> = (
-  context: T,
-) => Promise<void> | void;
-```
-
-The basic contract for `validateInvocation` is as follows:
+Next, we will create a our `validateInvocation` function. The basic contract for
+`validateInvocation` is as follows:
 
 - The function receives the execution context and configuration we set in
   `instanceConfigFields`.
@@ -228,7 +232,7 @@ The basic contract for `validateInvocation` is as follows:
 
 Let's create a `validateInvocation` for DigitalOcean.
 
-**`src/config.ts`**
+📁 **`src/config.ts`**
 
 ```diff
 export async function validateInvocation(
@@ -263,7 +267,7 @@ light-weight authenticated request to your provider API, but we don't have a
 working API Client or a `verifyAuthentication` method to use yet, so let's add
 one in.
 
-## Adding or Creating an API Client
+### Adding or Creating an API Client
 
 There are three common cases when creating your integration's `APIClient`.
 
@@ -296,7 +300,7 @@ We will first want to make sure our client has access to the information it
 needs to make authenticated request. If we anticipate logging from our client we
 should also add `IntegrationLogger` to the constructor parameters.
 
-**`src/steps/client.ts`**
+📁 **`src/client.ts`**
 
 ```diff
 export class APIClient {
@@ -332,7 +336,7 @@ object. Let's go to the
 file. There are good examples of how we might define our types, but let's delete
 them and create our own.
 
-**`src/types.ts`**
+📁 **`src/types.ts`**
 
 ```ts
 // modeled from the example response from the DigitalOcean API
@@ -376,13 +380,13 @@ export class APIClient {
     const endpoint = '/account';
     const response = await fetch(this.BASE_URL + endpoint, {
       headers: {
-        Authorization: `Bearer ${this.config.token}`,
+        Authorization: `Bearer ${this.config.accessToken}`,
       },
     });
 
     // If the response is not ok, we should handle the error
     if (!response.ok) {
-      this.handleApiError(response, endpoint);
+      this.handleApiError(response, this.BASE_URL + endpoint);
     }
 
     return (await response.json()) as DigitalOceanAccount;
@@ -416,7 +420,7 @@ errors, and return the response.
 
 Now we can add authentication verification to our `validateAuthentication`.
 
-**`src/config.ts`**
+📁 **`src/config.ts`**
 
 ```diff
 export async function validateInvocation(
@@ -431,7 +435,7 @@ export async function validateInvocation(
    }
 - // const apiClient = createAPIClient(config);
 - // await apiClient.verifyAuthentication();
-+ const apiClient = createAPIClient(config, context.);
++ const apiClient = createAPIClient(config, context.logger);
 + await apiClient.getAccount();
  }
 ```
@@ -446,13 +450,37 @@ which can produce **Entities**, **Relationships**, and **MappedRelationships**.
 It is good practice to limit each step to create a small number of closely
 related resources. If one step fails, other steps may still be able to succeed.
 
+The `integrationSteps` are exported from `src/steps/index.ts`.
+
+📁 **`src/steps/index.ts`**
+
+```ts
+import { accountSteps } from './account';
+import { accessSteps } from './access';
+
+const integrationSteps = [...accountSteps, ...accessSteps];
+
+export { integrationSteps };
+```
+
+Let's remove `accessSteps` and focus on `accountSteps`.
+
+```diff
+- import { accessSteps } from './access';
+
+- const integrationSteps = [...accountSteps, ...accessSteps];
++ const integrationSteps = [...accountSteps];
+```
+
+#### **Creating the `Account` Step**
+
 An `IntegrationStep` is made up of two parts - an `ExecutionHandlerFunction`
 which does the work of the step and `StepMetadata` which exports information
 about the work the `ExecutionHandlerFunction` will do.
 
-We can see and example `Account` step in our project.
+Let's look at the example `Account` step.
 
-**`src/steps/account/index.ts`**
+📁 **`src/steps/account/index.ts`**
 
 ```ts
 export const accountSteps: IntegrationStep<IntegrationConfig>[] = [
@@ -501,7 +529,7 @@ are produced by the step.
 
 Let's see what the `ACCOUNT` entity looks like:
 
-**`src/steps/constants.ts`**
+📁 **`src/steps/constants.ts`**
 
 ```ts
 ACCOUNT: {
@@ -557,12 +585,12 @@ ACCOUNT: {
 -        mfaEnabled: { type: 'boolean' },
 -        manager: { type: 'string' },
 +        email: { type: 'string' },
-+        email_verified: { type: 'boolean' }
++        emailVerified: { type: 'boolean' }
 +        status: { type: 'string' }
-+        status_message: { type: 'string' }
++        statusMessage: { type: 'string' }
       },
 -     required: ['mfaEnabled', 'manager'],
-+     required: ['email', 'email_verified', 'status']
++     required: ['email', 'emailVerified', 'status']
     },
   },
 ```
@@ -580,7 +608,7 @@ to create entities and relationships.
 
 We can see an example `executionHandler` for the `fetch-account` step.
 
-**`src/steps/account/index.ts`**
+📁 **`src/steps/account/index.ts`**
 
 ```ts
 export async function fetchAccountDetails({
@@ -602,15 +630,15 @@ export async function fetchAccountDetails({
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
 -   const accountEntity = await jobState.addEntity(createAccountEntity());
 -   await jobState.setData(ACCOUNT_ENTITY_KEY, accountEntity);
-+   const client = createApiClient(instance.config, logger);
-+   const account = client.getAccount();
++   const client = createAPIClient(instance.config, logger);
++   const account = await client.getAccount();
 }
 ```
 
 The last thing we need to do is add our entity to the jobState. To do this,
 we'll first want to convert the entity to a common format.
 
-### Converters
+#### **Converters**
 
 Different providers will present data in many different ways. We want to
 normalize our data to be more consistent so we can gather useful insights from
@@ -620,7 +648,7 @@ relationships from the raw data the provider gives in an API response.
 Let's create our first converter. We can go to `src/steps/accounts/converter.ts`
 and remove the example there to start fresh.
 
-`**src/steps/account/converter.ts**`
+📁 **`src/steps/account/converter.ts`**
 
 ```ts
 import {
@@ -639,6 +667,7 @@ export function createAccountEntity(account: DigitalOceanAccount): Entity {
         _key: account.account.uuid,
         _type: Entities.ACCOUNT._type,
         _class: Entities.ACCOUNT._class,
+        name: 'Account',
         dropletLimit: account.account.droplet_limit,
         floatingIpLimit: account.account.floating_ip_limit,
         uuid: account.account.uuid,
@@ -653,11 +682,15 @@ export function createAccountEntity(account: DigitalOceanAccount): Entity {
 ```
 
 There are two parts to the `createIntegrationEntity` function. The `source`
-property captures the raw data from the provider. The `assign` object creates
-the normalized, searchable data for the entity. We camel case the assign
-properties. There are also three important underscored properties required. The
-`_type` and `_class` are used for the reasons stated above. The `_key` is the
-unique identifier of the entity.
+property captures the raw data from the provider.
+
+The `assign` object creates the normalized, searchable data for the entity. We
+camel case the assign properties. There are four required properties on the
+`assign` object. The `_type` and `_class` are required for the reasons stated
+discussed above. The `_key` is the unique identifier of the entity. Lastly, the
+`name` is the name of the entity. Sometimes an entity will have a natural name
+like "Zane's PC", but since the provider doesn't have a good name for the
+account, we'll just name it "Account".
 
 Let's finish our `executionHandler` by adding the converter.
 
@@ -679,25 +712,31 @@ export async function fetchAccountDetails({
 
 And that's it! We have a working `executionHandler`.
 
-## Running the integration
+## Running the integration 🚀
 
 We've now:
 
 - ✅ Created a new integration project
 - ✅ Installed dependencies with `yarn install`
 - ✅ Created our `instanceConfigFields`
+- ✅ Setup a `.env` file
 - ✅ Created our `validateInvocation`
 - ✅ Added our API Client and authenticated request
 - ✅ Created our first `IntegrationStep`
 
-We are now ready to run our integration!
+We are now ready to run our integration! We can collect data using:
 
 ```sh
 yarn start
+```
+
+Once we've collected our data we can visualize it using:
+
+```sh
 yarn graph
 ```
 
-If we open the `.j1-integration/index.html` file in our browser. We'll see a
-graph like:
+This will create an html file at `.j1-integration/index.html`. If we open this
+file in our browser we'll see an image like:
 
 # TODO Add image
