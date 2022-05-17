@@ -334,7 +334,9 @@ We'll first create a type to represent the `DigitalOceanAccount` response
 object. Let's go to the
 [`src/types.ts`](https://github.com/JupiterOne/integration-template/blob/main/src/types.ts)
 file. There are good examples of how we might define our types, but let's delete
-them and create our own.
+them and create our own. This interface will be used to represent the data
+returned via the API. We should carefully consider what values may not always be
+present through testing and reading the API documentation.
 
 📁 **`src/types.ts`**
 
@@ -556,22 +558,6 @@ structure is actually produced.
 | \_type       | An identifier noting the provider and type of resource. The `_type` is used to identify and find entities produced by the integration                                                                                                                                       | `aws_ec2`, `tenable_finding`, `github_repo`                                                                                       |
 | \_class      | An entity classification from the JupiterOne [data-model](https://github.com/JupiterOne/data-model/tree/main/src/schemas). The `\_class is used to classify objects and promote common properties across different integrations. An entity may have more than one `\_class` | `Account`, `Organization`, `Finding`, `Vulnerability`                                                                             |
 | schema       | An object used to specify and extend the schema inherited from the `_class`. This object is useful for testing integrations and providing information about what properties can or will exist on the created `Entity` or `Relationship`                                     | See [`src/steps/constants.ts`](https://github.com/JupiterOne/integration-template/blob/main/src/steps/constants.ts) for examples. |
-
-- `resourceName` is natural resource name in the integration provider. For
-  example: `S3 Bucket` or `Account`.
-- `_type`: An identifier noting the provider and type of resource. The `_type`
-  is used to identify and find entities produced by the integration. Example
-  `_types` include `aws_ec2`, `tenable_finding`, or `github_repo`.
-- `_class`: A entity classification from the JupiterOne
-  **[data-model](https://github.com/JupiterOne/data-model/tree/main/src/schemas)**.
-  This is used to classify objects and promote common properties and names
-  across different integrations. An example `_class` is
-  [`Account`](https://github.com/JupiterOne/data-model/blob/main/src/schemas/Account.json).
-  Objects may have more than one `_class`.
-- `schema`: An object used to specify and extend the schema inherited from the
-  `_class`. The schema object is useful for testing integrations and
-  communicating what information can or will show up on the created `Entity` or
-  `Relationship`.
 
 Let's edit this object to conform to our `Account` on DigitalOcean.
 
