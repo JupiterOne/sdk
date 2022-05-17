@@ -4,6 +4,7 @@ import noop from 'lodash/noop';
 
 import {
   IntegrationError,
+  IntegrationErrorEventName,
   PartialDatasets,
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
@@ -19,7 +20,7 @@ import {
   synchronizeCollectedData,
   abortSynchronization,
   uploadDataChunk,
-  shrinkRawData,
+  shrinkBatchRawData,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -490,10 +491,22 @@ describe('uploadDataChunk', () => {
   });
 });
 
-describe('shrinkLargeUpload', () => {
-  it('should shrink rawData', () => {
-    const largeData = new Array(700000).join('aaaaaaaaaa');
+describe('shrinkBatchRawData', () => {
+  const logger = createIntegrationLogger({
+    name: 'test',
+  });
+  logger.error = jest.fn();
+  logger.publishErrorEvent = jest.fn();
+  logger.info = jest.fn();
 
+  afterEach(() => {
+    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+    restoreProjectStructure();
+    jest.clearAllMocks();
+  });
+
+  it('should shrink rawData until batch size is < 6 million bytes', () => {
+    const largeData = new Array(500000).join('aaaaaaaaaa');
     const data = [
       {
         _class: 'test',
@@ -504,6 +517,8 @@ describe('shrinkLargeUpload', () => {
             name: 'test',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedFirst:
+                'yes it will get removed first b/c it has largest raw data',
               testLargeRawData: largeData,
               testFinalData: 'test789',
             },
@@ -519,6 +534,7 @@ describe('shrinkLargeUpload', () => {
             name: 'test2',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedSecond: true,
               testLargeRawData: largeData,
               testFinalData: 'test789',
             },
@@ -541,6 +557,7 @@ describe('shrinkLargeUpload', () => {
         ],
       },
     ];
+    const startingSize = Buffer.byteLength(JSON.stringify(data));
     const finalData = [
       {
         _class: 'test',
@@ -551,6 +568,8 @@ describe('shrinkLargeUpload', () => {
             name: 'test',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedFirst:
+                'yes it will get removed first b/c it has largest raw data',
               testLargeRawData: 'TRUNCATED',
               testFinalData: 'test789',
             },
@@ -566,6 +585,7 @@ describe('shrinkLargeUpload', () => {
             name: 'test2',
             rawData: {
               testRawData: 'test123',
+              willGetRemovedSecond: true,
               testLargeRawData: 'TRUNCATED',
               testFinalData: 'test789',
             },
@@ -581,7 +601,7 @@ describe('shrinkLargeUpload', () => {
             name: 'test3',
             rawData: {
               testRawData: 'test123',
-              testLargeRawData: 'TRUNCATED',
+              testLargeRawData: expect.stringContaining('aaaaaaa'),
               testFinalData: 'test789',
             },
           },
@@ -589,20 +609,109 @@ describe('shrinkLargeUpload', () => {
       },
     ];
 
-    const shrinkResults = shrinkRawData(data);
-
-    expect(shrinkResults.itemsRemoved).toEqual(3);
+    shrinkBatchRawData(data, logger);
+    expect(logger.info).toBeCalledTimes(2);
+    expect(logger.info).toHaveBeenNthCalledWith(
+      1,
+      'Attempting to shrink rawData',
+    );
+    expect(logger.info).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        initialSize: startingSize,
+        totalSize: Buffer.byteLength(JSON.stringify(data)),
+        itemsRemoved: 2,
+      }),
+      'Shrink raw data result',
+    );
     expect(data).toEqual(finalData);
   });
-});
-
-describe('shrinkFailNoEntities', () => {
+  it('should detect if data is unshrinkable and throw error', () => {
+    const largeData = new Array(700000).join('aaaaaaaaaa');
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              largeRawDataProp: largeData + 'more',
+              testRawData: 'test123',
+              testFinalData: 'test789',
+              anotherLargeRawDataProp: largeData,
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        // poison pill in entity properties
+        largeProperty: largeData,
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey3',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test3',
+            rawData: {
+              testRawData: 'test123',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+    try {
+      shrinkBatchRawData(data, logger);
+      throw new Error('this was not supposed to happen');
+    } catch (err) {
+      expect(err).toBeInstanceOf(IntegrationError);
+      expect(logger.error).toBeCalledTimes(1);
+      // should give details on largest entity in batch after finished shrinking, this should be item with _key=testKey3
+      expect(logger.error).toBeCalledWith(
+        expect.objectContaining({
+          largestEntityPropSizeMap: {
+            _class: 6,
+            _key: 10,
+            _rawData: 80,
+            _type: 10,
+            largeProperty: 6999992,
+          },
+        }),
+        expect.stringContaining(
+          'Encountered upload size error after fully shrinking.',
+        ),
+      );
+      expect(logger.publishErrorEvent).toBeCalledTimes(1);
+      expect(logger.publishErrorEvent).toBeCalledWith(
+        expect.objectContaining({
+          name: IntegrationErrorEventName.EntitySizeLimitEncountered,
+        }),
+      );
+      expect(logger.info).toBeCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
+    }
+  });
   it('should fail to shrink rawData due to no entities', () => {
     const data = [];
-
     let shrinkErr;
     try {
-      shrinkRawData(data, 0);
+      shrinkBatchRawData(data, logger, 0);
     } catch (err) {
       shrinkErr = err;
       expect(shrinkErr instanceof IntegrationError).toEqual(true);
@@ -612,10 +721,9 @@ describe('shrinkFailNoEntities', () => {
       expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
     }
     expect(shrinkErr).not.toBe(undefined);
+    expect(logger.info).toBeCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
   });
-});
-
-describe('shrinkFailNo_rawData', () => {
   it('should fail to shrink rawData due to no _rawData entries', () => {
     const data = [
       {
@@ -624,10 +732,9 @@ describe('shrinkFailNo_rawData', () => {
         _type: 'testType',
       },
     ];
-
     let shrinkErr;
     try {
-      shrinkRawData(data, 0);
+      shrinkBatchRawData(data, logger, 0);
     } catch (err) {
       shrinkErr = err;
       expect(shrinkErr instanceof IntegrationError).toEqual(true);
@@ -637,6 +744,8 @@ describe('shrinkFailNo_rawData', () => {
       expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
     }
     expect(shrinkErr).not.toBe(undefined);
+    expect(logger.info).toBeCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
   });
 });
 

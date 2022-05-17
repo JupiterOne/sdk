@@ -9,6 +9,29 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.6] - 2022-05-12
+
+### Fixed
+
+- Neo4j uploads no longer occasionally create duplicate nodes on relationship
+  creation.
+
+## [8.13.5] - 2022-05-11
+
+### Fixed
+
+- Hanging execution when encountering upload failure due to entity properties
+  being too large
+- add logging surrounding the size distribution of upload batch and its largest
+  entity when such a situation occurs
+- throw fatal error when such a situation occurs
+
+## [8.13.4] - 2022-05-10
+
+### Fixed
+
+- Added base64 support for unzipping gzipped polly recording entries.
+
 ## [8.13.2] - 2022-05-05
 
 ### Changed
