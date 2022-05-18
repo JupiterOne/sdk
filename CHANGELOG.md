@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.7] - 2022-05-18
+
+### Changed
+
+- Bumped version `@jupiterone/data-model` to v0.48.0
+
 ## [8.13.6] - 2022-05-12
 
 ### Fixed
