@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.8] - 2022-05-19
+
 ### Changed
 
 - Moved `shrinkBatchRawData` to its own module for readablity and easy mocking
