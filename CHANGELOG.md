@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Moved `shrinkBatchRawData` to its own module for readablity and easy mocking
+  in test
+- Increased threshold by which we continue to shrink rawData from 6 million
+  bytes to 5.5 million bytes
+- change core loop of `shrinkBatchRawData` to a `do while` loop instead of
+  `while`. This guarantees that at least 1 property will be attempted to be
+  truncated on each call to `shrinkBatchRawData`. We only call this function
+  when there has been an upload error due to payload size.
+
 ## [8.13.7] - 2022-05-18
 
 ### Changed
