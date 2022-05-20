@@ -754,10 +754,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@jupiterone/data-model@^0.48.0":
-  version "0.48.0"
-  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.48.0.tgz#c65fef5d24d5b1d5875e53bfe5492e0a567873d3"
-  integrity sha512-jbDhAbnM7iz/VfvaOIqZTnTQPI5VQnlzY/46XH2ZE8bKcSxNIGnsLzI719tMTNLKeBpN93NtG/x6L39a6ovwFQ==
+"@jupiterone/data-model@^0.49.0":
+  version "0.49.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.49.0.tgz#453dc055ab2dd5fc3f913fde53579e28cecd0f24"
+  integrity sha512-BG3ld27HbZ7X5b4o6vbP0ugZawUCOSHxYhWK0H3eaQRg8zBNK4lxgeH1ZqnaRuoRqs/nxOuZlt77ozhPyCLQMQ==
   dependencies:
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
