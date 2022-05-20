@@ -144,8 +144,9 @@ function unzipGzippedRecordingEntry(entry: RecordingEntry): void {
     const hexChunks = JSON.parse(responseText) as string[];
     hexChunks.forEach((chunk) => {
       let responseContentEncoding: BufferEncoding = 'hex';
-      if (entry.response.content.encoding === 'base64') {
-        responseContentEncoding = entry.response.content.encoding;
+      if (entry.response.content.encoding) {
+        responseContentEncoding = entry.response.content
+          .encoding as BufferEncoding;
       }
 
       const chunkBuffer = Buffer.from(chunk, responseContentEncoding);
@@ -176,6 +177,8 @@ function unzipGzippedRecordingEntry(entry: RecordingEntry): void {
     // Remove recording binary marker
     delete (entry.response.content as any)._isBinary;
     entry.response.content.text = responseText;
+    // Remove encoding
+    delete entry.response.content.encoding;
   }
 }
 
