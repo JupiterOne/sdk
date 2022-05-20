@@ -14,7 +14,7 @@ and this project adheres to
 ### Fixed
 
 - Fixed issue when unzipping gzipped polly recording entries. Now removes the
-  content.encoding value once post-processing of the content is complete.
+  content.encoding value once content is decoded.
 - Fixes issue introduced in 8.13.4
 
 ## [8.13.8] - 2022-05-19
