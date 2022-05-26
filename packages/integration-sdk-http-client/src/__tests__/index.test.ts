@@ -45,7 +45,7 @@ test('it throws a forbidden error code', async () => {
         accept: 'application/json',
       },
     }),
-  ).rejects.toThrowError('API request error for http://testUrl: 403 Forbidden');
+  ).rejects.toThrowError('GET http://testUrl: 403 Forbidden');
 });
 
 test('it handles a rate limit code with no headers', async () => {

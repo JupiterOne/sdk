@@ -18,3 +18,44 @@ export function isNonRetryableError(statusCode: number): boolean {
   }
   return false;
 }
+
+export function isRetryableStatusCode(statusCode: number): boolean {
+  if (
+    statusCode === 429 ||
+    statusCode === 408 ||
+    (statusCode >= 500 && statusCode !== 501)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export async function handleRateLimitError(headers, rateLimitConfig) {
+  const rateLimitState = {
+    limitRemaining: Number(headers.get('X-RateLimit-Remaining')),
+    perMinuteLimit: Number(headers.get('X-RateLimit-Limit')),
+    retryAfter:
+      headers.get('X-RateLimit-RetryAfter') &&
+      Number(headers.get('X-RateLimit-RetryAfter')),
+  };
+
+  const unixTimeNow = getUnixTimeNow();
+
+  // calculate the time to sleep based on header values and additional rateLimitConfig values
+  const timeToSleepInSeconds = rateLimitState.retryAfter
+    ? Math.max(
+        rateLimitState.retryAfter +
+          rateLimitConfig.sleepAdditionalSeconds -
+          unixTimeNow,
+        0,
+      )
+    : 0;
+
+  await sleep(timeToSleepInSeconds * 1000);
+  if (
+    rateLimitState.limitRemaining &&
+    rateLimitState.limitRemaining <= rateLimitConfig.reserveLimit
+  ) {
+    await sleep(rateLimitConfig.cooldownPeriod);
+  }
+}
