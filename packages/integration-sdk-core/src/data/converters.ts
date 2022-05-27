@@ -64,6 +64,10 @@ type ConvertPropertiesOptions = {
   prefix?: string;
 };
 
+/**
+ * @deprecated
+ * convertProperties will be removed in the next major version.
+ */
 export function convertProperties(
   object: any = {},
   options: ConvertPropertiesOptions = {},
