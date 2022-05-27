@@ -4,6 +4,12 @@ export type APIRequest = {
   headers: Object;
 };
 
+export type APIRequestOptions = {
+  rateLimitConfig?: RateLimitConfig;
+  errorHandler?: ErrorHandlerFunction;
+  isRetryable?: IsRetryableFunction;
+};
+
 export type APIResponse = {
   data: any;
   headers: any;
@@ -154,3 +160,22 @@ export type APIClientRateLimitConfig = {
 export type APIClientConfiguration = {
   rateLimitConfig: APIClientRateLimitConfig;
 };
+
+/**
+ * ErrorHandlerFunction is a function that will be called when the API
+ * request is not 200.
+ */
+export type ErrorHandlerFunction = (
+  request: APIRequest,
+  response: Response,
+) => Promise<void> | void;
+
+/**
+ * IsRetryableFunction determines if a request should be retried.
+ * @returns true if the request should be retried, false otherwise.
+ */
+export type IsRetryableFunction = (
+  retries: number,
+  request: APIRequest,
+  response: Response,
+) => boolean;

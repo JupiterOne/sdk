@@ -30,6 +30,7 @@ export function isRetryableStatusCode(statusCode: number): boolean {
   return false;
 }
 
+// TODO (adam-in-ict) abstract out which headers we want to use
 export async function handleRateLimitError(headers, rateLimitConfig) {
   const rateLimitState = {
     limitRemaining: Number(headers.get('X-RateLimit-Remaining')),
