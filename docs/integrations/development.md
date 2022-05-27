@@ -1526,3 +1526,63 @@ immediately reflect that in the graph.
 We hope to provide a good interface via this SDK for providing an interface for
 handling events via this SDK and providing commands/utilities for testing events
 to get an understanding of how they may affect the JupiterOne graph.
+
+## j1 CLI
+
+In addition to the `j1-integration` CLI, this project exposes a `j1` CLI for
+`import` and `export` processes.
+
+### Authentication
+
+For commands that require interaction with JupiterOne's API, the CLI will
+provide ways of inputing credentials. To support that, all commands that
+interact with an API will accept an `--api-key` option.
+
+For convenience when developing locally, we will also look for a
+`JUPITERONE_API_KEY` environment variable for an API key to use.
+
+### Supported commands
+
+Currently, the CLI supports a limited interface consisting of only two commands:
+`export` and `import`.
+
+#### Command `j1 export`
+
+```
+Usage: j1 export [options]
+
+Exports account's entities/relationships into csv files
+
+Options:
+  -d, --data-dir <relative_directory>  The directory where entities/relationships will be downloaded (default: ".j1/export")
+  --account <account>                  The JupiterOne account you are exporting entities/relationships from
+  --api-key <key>                      The key used to initiate api calls with your instance of JupiterOne
+  --include-entities                   Include entities in export (default: true)
+  --include-relationships              Include relationships in export (default: true)
+  --include-deleted                    Include deleted entities/relationships in export (default: true)
+  --no-include-entities                Exclude entities in export
+  --no-include-relationships           Exclude relationships in export
+  --no-include-deleted                 Exclude deleted entities/relationships in export
+  --api-base-url <url>                 The base URL used to initiate api calls with your instance of JupiterOne (defaults to `https://api.us.jupiterone.io`)
+  -h, --help                           display help for command
+```
+
+#### Command `j1 import`
+
+```
+Usage: j1 import [options]
+
+Imports exported account entities/relationships into JupiterOne account
+
+Options:
+  -d --data-dir <relative_directory>  The directory where entities and relationships can be found (default: ".j1/export")
+  --scope <scope>                     A unique id that identifies the synchronization job that will be importing your assets, use any id of your choosing.
+  --account <account>                 The JupiterOne account you are importing entities/relationships into
+  --api-key <key>                     The key used to initiate api calls with your instance of JupiterOne
+  --include-relationships             Include relationships in import (default: true)
+  --include-deleted                   Include deleted entities/relationships in import (default: true)
+  --no-include-entities               Exclude entities in import
+  --no-include-relationships          Exclude relationships in import
+  --api-base-url <url>                The base URL used to initiate api calls with your instance of JupiterOne (defaults to `https://api.us.jupiterone.io`)
+  -h, --help                          display help for command
+```
