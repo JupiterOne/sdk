@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.11] - 2022-05-27
+
+### Changed
+
+- `j1-integration run` command now supports `--disable-schema-validation` flag.
+
 ## [8.13.10] - 2022-05-20
 
 ### Changed
