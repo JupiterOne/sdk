@@ -66,7 +66,15 @@ type ConvertPropertiesOptions = {
 
 /**
  * @deprecated
- * convertProperties will be removed in the next major version.
+ * `convertProperties` will be removed in the next major version. Using the `convertProperties`
+ * function is an anti-pattern. It assumes that every single property from the source object is
+ * useful as an entity property. Additionally, `convertProperties` is pretty opinionated in the way
+ * that it plucks properties from the source object and names the target entity property. The
+ * opinionated nature has caused confusion to developers in the past.
+ *
+ * Integrations that are currently using `convertProperties` should transition away from
+ * `convertProperties` to manually copying useful properties from the source object onto
+ * the target entity.
  */
 export function convertProperties(
   object: any = {},
