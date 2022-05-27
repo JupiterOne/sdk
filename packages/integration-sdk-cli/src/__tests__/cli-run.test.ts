@@ -61,6 +61,25 @@ test('enables graph object schema validation', async () => {
   expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
 });
 
+test('disables graph object schema validation', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--disable-schema-validation',
+  ]);
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+});
+
 test('executes integration and performs upload', async () => {
   const job = generateSynchronizationJob();
 
