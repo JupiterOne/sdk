@@ -61,6 +61,102 @@ test('enables graph object schema validation', async () => {
   expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
 });
 
+test('disables graph object schema validation', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--disable-schema-validation',
+  ]);
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+});
+
+test('step should fail if enableSchemaValidation = true', async () => {
+  loadProjectStructure('instanceWithNonValidatingSteps');
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+  ]);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+  expect(log.displayExecutionResults).toHaveBeenCalledWith({
+    integrationStepResults: [
+      {
+        id: 'fetch-users',
+        name: 'Fetch Users',
+        declaredTypes: ['my_user'],
+        partialTypes: [],
+        encounteredTypes: [],
+        status: StepResultStatus.FAILURE,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: ['my_user'],
+      },
+    },
+  });
+});
+
+test('step should pass if enableSchemaValidation = false', async () => {
+  loadProjectStructure('instanceWithNonValidatingSteps');
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--disable-schema-validation',
+  ]);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+  expect(log.displayExecutionResults).toHaveBeenCalledWith({
+    integrationStepResults: [
+      {
+        id: 'fetch-users',
+        name: 'Fetch Users',
+        declaredTypes: ['my_user'],
+        partialTypes: [],
+        encounteredTypes: ['my_user'],
+        status: StepResultStatus.SUCCESS,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: [],
+      },
+    },
+  });
+});
+
 test('executes integration and performs upload', async () => {
   const job = generateSynchronizationJob();
 

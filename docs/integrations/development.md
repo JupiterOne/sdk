@@ -1319,6 +1319,8 @@ The `j1-integration run` command combines the functionality of the `collect` and
 `sync` commands, essentially running the commands back to back.
 
 The `run` command accepts the same options that the `sync` command accepts.
+Additionally, `run` accepts the `--disable-schema-validation` option that allows
+disabling schema validation in the same way as the `collect` command.
 
 There are some differences when performing `run` compared to individually
 running `collect` and `sync`.

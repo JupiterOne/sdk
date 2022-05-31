@@ -41,6 +41,7 @@ export function run() {
       !!process.env.JUPITERONE_DEV,
     )
     .option('--api-base-url <url>', 'API base URL used during run operation.')
+    .option('-V, --disable-schema-validation', 'disable schema validation')
     .action(async (options) => {
       const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -111,6 +112,7 @@ export function run() {
       });
 
       try {
+        const enableSchemaValidation = !options.disableSchemaValidation;
         const executionResults = await executeIntegrationInstance(
           logger,
           createIntegrationInstanceForLocalExecution(invocationConfig),
@@ -121,7 +123,7 @@ export function run() {
             },
           },
           {
-            enableSchemaValidation: true,
+            enableSchemaValidation,
             graphObjectStore,
             createStepGraphObjectDataUploader(stepId) {
               return createPersisterApiStepGraphObjectDataUploader({
