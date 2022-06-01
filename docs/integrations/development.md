@@ -1534,12 +1534,12 @@ In addition to the `j1-integration` CLI, this project exposes a `j1` CLI for
 
 ### Authentication
 
-For commands that require interaction with JupiterOne's API, the CLI will
-provide ways of inputing credentials. To support that, all commands that
-interact with an API will accept an `--api-key` option.
+For commands that require interaction with JupiterOne's API, the CLI provides
+two options for providing credentials:
 
-For convenience when developing locally, we will also look for a
-`JUPITERONE_API_KEY` environment variable for an API key to use.
+1. All commands that interact with an API will accept an --api-key option.
+2. For added convenience when developing locally, we will also look for a
+   JUPITERONE_API_KEY environment variable to be used as the API key.
 
 ### Supported commands
 
@@ -1576,7 +1576,7 @@ Imports exported account entities/relationships into JupiterOne account
 
 Options:
   -d --data-dir <relative_directory>  The directory where entities and relationships can be found (default: ".j1/export")
-  --scope <scope>                     A unique id that identifies the synchronization job that will be importing your assets, use any id of your choosing.
+  --scope <scope>                     (REQUIRED) A unique id that identifies the synchronization job that will be importing your assets, use any id of your choosing.
   --account <account>                 The JupiterOne account you are importing entities/relationships into
   --api-key <key>                     The key used to initiate api calls with your instance of JupiterOne
   --include-relationships             Include relationships in import (default: true)
