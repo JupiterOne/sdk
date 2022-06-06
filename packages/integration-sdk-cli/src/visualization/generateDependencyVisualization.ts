@@ -22,13 +22,13 @@ export async function generateDependencyVisualization(
 
   const nodeDataSets: any = [];
   const explicitEdgeDataSets: any = [];
-  for ( const step of Object.values<any>(stepDependencyGraph['nodes'])) {
+  for (const step of Object.values<any>(stepDependencyGraph['nodes'])) {
     nodeDataSets.push({
       id: step.id,
-      label: step.name
+      label: step.name,
     });
-    if(step['dependsOn']) {
-      for ( const dependency of step['dependsOn']) {
+    if (step['dependsOn']) {
+      for (const dependency of step['dependsOn']) {
         explicitEdgeDataSets.push({
           from: step.id,
           to: dependency,

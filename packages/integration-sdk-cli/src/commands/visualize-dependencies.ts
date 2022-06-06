@@ -5,9 +5,7 @@ import { generateDependencyVisualization } from '../visualization';
 
 export function visualizeDependencies() {
   return createCommand('visualize-dependencies')
-    .description(
-      'visualize dependency graph of integration',
-    )
+    .description('visualize dependency graph of integration')
     .option(
       '-p, --project-path <directory>',
       'path to integration project directory',
@@ -23,4 +21,4 @@ export function visualizeDependencies() {
       const outputFile = path.resolve(options.outputFile);
       await generateDependencyVisualization(integrationDir, outputFile);
     });
-} 
+}
