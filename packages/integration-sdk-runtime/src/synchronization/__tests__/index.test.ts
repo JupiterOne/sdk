@@ -59,6 +59,30 @@ describe('initiateSynchronization', () => {
     });
   });
 
+  test('starts a synchronization job with integration job id if provided', async () => {
+    const mockIntegrationJobId = 'test-integration-job-id';
+    const mockSyncJob = generateSynchronizationJob();
+    mockSyncJob.integrationJobId = mockIntegrationJobId;
+
+    const context = createTestContext();
+    context['integrationJobId'] = mockIntegrationJobId;
+    const { apiClient } = context;
+
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: { job: mockSyncJob },
+    });
+
+    const synchronizationContext = await initiateSynchronization(context);
+
+    expect(synchronizationContext.job).toEqual(mockSyncJob);
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+      source: 'integration-managed',
+      integrationInstanceId: context.integrationInstanceId,
+      integrationJobId: mockIntegrationJobId,
+    });
+  });
+
   test('throws error if integration instance cannot be found', async () => {
     const context = createTestContext();
     const { apiClient } = context;
