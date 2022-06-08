@@ -6,8 +6,13 @@ export type APIRequest = {
 
 export type APIRequestOptions = {
   rateLimitConfig?: RateLimitConfig;
-  errorHandler?: ErrorHandlerFunction;
+  retryConfig?: RetryConfig;
+};
+
+export type RetryConfig = {
   isRetryable?: IsRetryableFunction;
+  maxAttempts?: number;
+  currentAttempt?: number;
 };
 
 export type APIResponse = {
@@ -175,7 +180,6 @@ export type ErrorHandlerFunction = (
  * @returns true if the request should be retried, false otherwise.
  */
 export type IsRetryableFunction = (
-  retries: number,
   request: APIRequest,
   response: Response,
 ) => boolean;

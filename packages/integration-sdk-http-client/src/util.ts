@@ -6,6 +6,13 @@ export async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function retiresAvailable(
+  currentAttempt: number,
+  maxAttempts: number,
+): boolean {
+  return currentAttempt < maxAttempts;
+}
+
 /**
  * Returns true when we have a status code that is an error but not retryable.
  * @param statusCode

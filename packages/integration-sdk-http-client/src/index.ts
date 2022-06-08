@@ -1,10 +1,38 @@
 import fetch from 'node-fetch';
-import { APIResponse, APIRequest, APIRequestOptions } from './types';
+import {
+  APIResponse,
+  APIRequest,
+  APIRequestOptions,
+  RetryConfig,
+  RateLimitConfig,
+} from './types';
 import { APIError } from './errors';
 export type APIResourceIterationCallback<T> = (
   resources: T[],
 ) => boolean | void | Promise<boolean | void>;
-import { DEFAULT_REQUEST_OPTIONS } from './defaults';
+import { retiresAvailable } from './util';
+import { defaultIsRetryable } from './defaults';
+
+type ResolvedAPIRequestOptions = {
+  retryConfig: Required<RetryConfig>;
+  rateLimitConfig: Required<RateLimitConfig>;
+};
+
+export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
+  maxAttempts: 5,
+  reserveLimit: 30,
+  cooldownPeriod: 1000,
+  sleepAdditionalSeconds: 0,
+};
+
+export const DEFAULT_REQUEST_OPTIONS: ResolvedAPIRequestOptions = {
+  rateLimitConfig: DEFAULT_RATE_LIMIT_CONFIG,
+  retryConfig: {
+    isRetryable: defaultIsRetryable,
+    maxAttempts: 5 as const,
+    currentAttempt: 0,
+  },
+};
 
 export class APIClient {
   // TODO (adam-in-ict) make rateLimitConfig configurable and only use the default values when none are provided
@@ -15,22 +43,24 @@ export class APIClient {
   ): Promise<APIResponse> {
     // TODO: Need a better way to resolve options specified in constructor,
     // request, and defaults
-    const resolvedOptions = {
+    const resolvedOptions: ResolvedAPIRequestOptions = {
       rateLimitConfig:
         options?.rateLimitConfig === undefined
-          ? DEFAULT_REQUEST_OPTIONS.rateLimitConfig!
+          ? DEFAULT_REQUEST_OPTIONS.rateLimitConfig
           : options.rateLimitConfig,
-      errorHandler:
-        options?.errorHandler === undefined
-          ? DEFAULT_REQUEST_OPTIONS.errorHandler!
-          : options.errorHandler,
-      isRetryable:
-        options?.isRetryable === undefined
-          ? DEFAULT_REQUEST_OPTIONS.isRetryable!
-          : options.isRetryable,
+      retryConfig: {
+        currentAttempt:
+          options?.retryConfig?.currentAttempt ??
+          DEFAULT_REQUEST_OPTIONS.retryConfig.currentAttempt,
+        maxAttempts:
+          options?.retryConfig?.maxAttempts ??
+          DEFAULT_REQUEST_OPTIONS.retryConfig.maxAttempts,
+        isRetryable:
+          options?.retryConfig?.isRetryable ??
+          DEFAULT_REQUEST_OPTIONS.retryConfig.isRetryable,
+      },
     };
 
-    let attempts = 0;
     let response: Response;
     do {
       response = await fetch(request.url, request);
@@ -43,11 +73,15 @@ export class APIClient {
           status: response.status,
           statusText: response.statusText,
         };
-      } else {
-        await resolvedOptions.errorHandler(request, response);
       }
-      attempts += 1;
-    } while (resolvedOptions.isRetryable(attempts, request, response));
+      resolvedOptions.retryConfig.currentAttempt += 1;
+    } while (
+      retiresAvailable(
+        resolvedOptions.retryConfig.currentAttempt,
+        resolvedOptions.retryConfig.maxAttempts,
+      ) &&
+      resolvedOptions.isRetryable(request, response)
+    );
 
     throw new APIError({
       message: `Could not complete request within ${attempts} attempts!`,

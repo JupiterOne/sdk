@@ -4,15 +4,9 @@ import {
   ErrorHandlerFunction,
   IsRetryableFunction,
   RateLimitConfig,
+  RetryConfig,
 } from './types';
 import { handleRateLimitError, isRetryableStatusCode } from './util';
-
-export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
-  maxAttempts: 5,
-  reserveLimit: 30,
-  cooldownPeriod: 1000,
-  sleepAdditionalSeconds: 0,
-};
 
 export const defaultErrorHandler: ErrorHandlerFunction = async (
   request,
@@ -33,20 +27,10 @@ export const defaultErrorHandler: ErrorHandlerFunction = async (
   }
 };
 
-export const defaultIsRetryable: IsRetryableFunction = (
-  retries,
-  request,
-  response,
-) => {
-  if (retries <= 4 && isRetryableStatusCode(response.status)) {
+export const defaultIsRetryable: IsRetryableFunction = (request, response) => {
+  if (isRetryableStatusCode(response.status)) {
     return true;
   } else {
     return false;
   }
-};
-
-export const DEFAULT_REQUEST_OPTIONS: APIRequestOptions = {
-  rateLimitConfig: DEFAULT_RATE_LIMIT_CONFIG,
-  errorHandler: defaultErrorHandler,
-  isRetryable: defaultIsRetryable,
 };
