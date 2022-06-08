@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.12] - 2022-06-08
+
+### Changed
+
+- Allow an integration job id to be passed in when initializing syncronization.
+
+## Unreleased
+
 ## [8.13.11] - 2022-05-27
 
 ### Changed

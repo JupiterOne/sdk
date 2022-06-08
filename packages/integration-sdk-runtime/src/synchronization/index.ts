@@ -36,10 +36,11 @@ export enum RequestHeaders {
   CorrelationId = 'JupiterOne-Correlation-Id',
 }
 
-interface SynchronizeInput {
+export interface SynchronizeInput {
   logger: IntegrationLogger;
   apiClient: ApiClient;
   integrationInstanceId: string;
+  integrationJobId?: string;
 }
 
 /**
@@ -95,6 +96,7 @@ export async function initiateSynchronization({
   logger,
   apiClient,
   integrationInstanceId,
+  integrationJobId,
 }: SynchronizeInput): Promise<SynchronizationJobContext> {
   logger.info('Initiating synchronization job...');
 
@@ -103,6 +105,7 @@ export async function initiateSynchronization({
     const response = await apiClient.post('/persister/synchronization/jobs', {
       source: 'integration-managed',
       integrationInstanceId,
+      integrationJobId,
     });
 
     job = response.data.job;
