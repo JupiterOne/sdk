@@ -1,3 +1,5 @@
+import { APIRequestOptions, ResolvedAPIRequestOptions } from './types';
+
 export function getUnixTimeNow() {
   return Date.now() / 1000;
 }
@@ -66,4 +68,33 @@ export async function handleRateLimitError(headers, rateLimitConfig) {
   ) {
     await sleep(rateLimitConfig.cooldownPeriod);
   }
+}
+export function resolveOptions(
+  options: APIRequestOptions,
+  defaultOptions: ResolvedAPIRequestOptions,
+): ResolvedAPIRequestOptions {
+  return {
+    retryConfig: {
+      currentAttempt:
+        options?.retryConfig?.currentAttempt ??
+        defaultOptions.retryConfig.currentAttempt,
+      maxAttempts:
+        options?.retryConfig?.maxAttempts ??
+        defaultOptions.retryConfig.maxAttempts,
+      isRetryable:
+        options?.retryConfig?.isRetryable ??
+        defaultOptions.retryConfig.isRetryable,
+      rateLimitConfig: {
+        reserveLimit:
+          options?.retryConfig?.rateLimitConfig?.reserveLimit ??
+          defaultOptions.retryConfig.rateLimitConfig.reserveLimit,
+        cooldownPeriod:
+          options?.retryConfig?.rateLimitConfig?.cooldownPeriod ??
+          defaultOptions.retryConfig.rateLimitConfig.cooldownPeriod,
+        sleepAdditionalSeconds:
+          options?.retryConfig?.rateLimitConfig?.sleepAdditionalSeconds ??
+          defaultOptions.retryConfig.rateLimitConfig.sleepAdditionalSeconds,
+      },
+    },
+  };
 }

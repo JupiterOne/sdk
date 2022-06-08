@@ -1,3 +1,5 @@
+import { APIError } from './errors';
+
 export type APIRequest = {
   url: string;
   method: string;
@@ -5,15 +7,30 @@ export type APIRequest = {
 };
 
 export type APIRequestOptions = {
-  rateLimitConfig?: RateLimitConfig;
   retryConfig?: RetryConfig;
+};
+
+export type ResolvedAPIRequestOptions = {
+  retryConfig: {
+    isRetryable: IsRetryableFunction;
+    maxAttempts: number;
+    currentAttempt: number;
+    rateLimitConfig: Required<RateLimitConfig>;
+  };
 };
 
 export type RetryConfig = {
   isRetryable?: IsRetryableFunction;
   maxAttempts?: number;
   currentAttempt?: number;
+  rateLimitConfig?: RateLimitConfig;
 };
+
+/**
+ * IsRetryableFunction determines if a request should be retried.
+ * @returns true if the request should be retried, false otherwise.
+ */
+export type IsRetryableFunction = (err: APIError) => boolean;
 
 export type APIResponse = {
   data: any;
@@ -91,16 +108,6 @@ export type RateLimitConfig = {
   cooldownPeriod: number;
 
   /**
-   * Maximum number of times to retry a request that continues to receive 429
-   * responses.
-   *
-   * The client will respect `x-ratelimit-retryafter`, but should it end up in a
-   * battle to get the next allowed request, it will give up after this many
-   * tries.
-   */
-  maxAttempts: number;
-
-  /**
    * Optional number of additional seconds to sleep in the event of a rate limit
    * event.
    */
@@ -128,6 +135,17 @@ export type RateLimitState = {
    * request available.
    */
   retryAfter?: number;
+
+  /**
+   * The rate limit headers to be used.
+   * @param rateLimitLimit Often cooresponds to `X-RateLimit-Limit` header.
+   */
+  rateLimitHeaders?: {
+    rateLimitLimit: string;
+    rateLimitRemaining: string;
+    rateLimitReset: string;
+    retryAfter: string;
+  };
 };
 
 /**
@@ -165,21 +183,3 @@ export type APIClientRateLimitConfig = {
 export type APIClientConfiguration = {
   rateLimitConfig: APIClientRateLimitConfig;
 };
-
-/**
- * ErrorHandlerFunction is a function that will be called when the API
- * request is not 200.
- */
-export type ErrorHandlerFunction = (
-  request: APIRequest,
-  response: Response,
-) => Promise<void> | void;
-
-/**
- * IsRetryableFunction determines if a request should be retried.
- * @returns true if the request should be retried, false otherwise.
- */
-export type IsRetryableFunction = (
-  request: APIRequest,
-  response: Response,
-) => boolean;

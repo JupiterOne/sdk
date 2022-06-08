@@ -1,36 +1,30 @@
 import { APIError } from './errors';
 import {
-  APIRequestOptions,
-  ErrorHandlerFunction,
   IsRetryableFunction,
   RateLimitConfig,
-  RetryConfig,
+  ResolvedAPIRequestOptions,
 } from './types';
-import { handleRateLimitError, isRetryableStatusCode } from './util';
+import { isRetryableStatusCode } from './util';
 
-export const defaultErrorHandler: ErrorHandlerFunction = async (
-  request,
-  response,
-) => {
-  if (response.status === 429) {
-    await handleRateLimitError(response.headers, DEFAULT_RATE_LIMIT_CONFIG);
-  } else if (
-    (response.status >= 400 && response.status !== 408) ||
-    response.status === 501
-  ) {
-    throw new APIError({
-      message: `${request.method} ${request.url}: ${response.status} ${response.statusText}`,
-      status: response.status,
-      statusText: response.statusText,
-      endpoint: request.url,
-    });
-  }
-};
-
-export const defaultIsRetryable: IsRetryableFunction = (request, response) => {
-  if (isRetryableStatusCode(response.status)) {
+export const defaultIsRetryable: IsRetryableFunction = (err: APIError) => {
+  if (isRetryableStatusCode(err.status)) {
     return true;
   } else {
     return false;
   }
+};
+
+export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
+  reserveLimit: 30,
+  cooldownPeriod: 1000,
+  sleepAdditionalSeconds: 0,
+};
+
+export const DEFAULT_REQUEST_OPTIONS: ResolvedAPIRequestOptions = {
+  retryConfig: {
+    isRetryable: defaultIsRetryable,
+    maxAttempts: 5,
+    currentAttempt: 0,
+    rateLimitConfig: DEFAULT_RATE_LIMIT_CONFIG,
+  },
 };
