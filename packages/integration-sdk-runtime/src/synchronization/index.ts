@@ -36,7 +36,7 @@ export enum RequestHeaders {
   CorrelationId = 'JupiterOne-Correlation-Id',
 }
 
-interface SynchronizeInput {
+export interface SynchronizeInput {
   logger: IntegrationLogger;
   apiClient: ApiClient;
   integrationInstanceId: string;

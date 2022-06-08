@@ -19,6 +19,7 @@ import {
   synchronizeCollectedData,
   abortSynchronization,
   uploadDataChunk,
+  SynchronizeInput,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -62,15 +63,19 @@ describe('initiateSynchronization', () => {
   test('starts a synchronization job with integration job id if provided', async () => {
     const mockIntegrationJobId = 'test-integration-job-id';
     const mockSyncJob = generateSynchronizationJob();
+    mockSyncJob.id = mockIntegrationJobId; // sync job ID should be same as integration job ID
     mockSyncJob.integrationJobId = mockIntegrationJobId;
 
     const context = createTestContext();
-    context['integrationJobId'] = mockIntegrationJobId;
+    context.integrationJobId = mockIntegrationJobId;
     const { apiClient } = context;
 
     const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
       data: { job: mockSyncJob },
     });
+    const loggerSpy = jest
+      .spyOn(context.logger, 'child')
+      .mockImplementation(noop as any);
 
     const synchronizationContext = await initiateSynchronization(context);
 
@@ -80,6 +85,11 @@ describe('initiateSynchronization', () => {
       source: 'integration-managed',
       integrationInstanceId: context.integrationInstanceId,
       integrationJobId: mockIntegrationJobId,
+    });
+    expect(loggerSpy).toHaveBeenCalledWith({
+      synchronizationJobId: mockIntegrationJobId,
+      integrationJobId: mockIntegrationJobId,
+      integrationInstanceId: context.integrationInstanceId,
     });
   });
 
@@ -518,7 +528,7 @@ describe('uploadDataChunk', () => {
   });
 });
 
-function createTestContext() {
+function createTestContext(): SynchronizeInput {
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
@@ -528,5 +538,5 @@ function createTestContext() {
     name: 'test',
   });
 
-  return { apiClient, logger, integrationInstanceId: 'test-instance' };
+  return { apiClient, logger, integrationInstanceId: 'test-instance-id' };
 }
