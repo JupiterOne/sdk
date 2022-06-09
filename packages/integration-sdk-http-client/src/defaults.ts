@@ -2,6 +2,7 @@ import { APIError } from './errors';
 import {
   IsRetryableFunction,
   RateLimitConfig,
+  RateLimitHeaders,
   ResolvedAPIRequestOptions,
 } from './types';
 import { isRetryableStatusCode } from './util';
@@ -14,10 +15,18 @@ export const defaultIsRetryable: IsRetryableFunction = (err: APIError) => {
   }
 };
 
-export const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
+export const DEFAULT_RATE_LIMIT_HEADERS: Required<RateLimitHeaders> = {
+  rateLimitRemaining: 'X-RateLimit-Remaining',
+  rateLimitLimit: 'X-RateLimit-Limit',
+  rateLimitReset: 'X-RateLimit-Reset',
+  retryAfter: 'Retry-After',
+};
+
+export const DEFAULT_RATE_LIMIT_CONFIG: Required<RateLimitConfig> = {
   reserveLimit: 30,
   cooldownPeriod: 1000,
   sleepAdditionalSeconds: 0,
+  rateLimitHeaders: DEFAULT_RATE_LIMIT_HEADERS,
 };
 
 export const DEFAULT_REQUEST_OPTIONS: ResolvedAPIRequestOptions = {

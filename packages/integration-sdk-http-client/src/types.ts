@@ -112,6 +112,21 @@ export type RateLimitConfig = {
    * event.
    */
   sleepAdditionalSeconds: number;
+  /**
+   * The rate limit headers to be used.
+   * @param rateLimitLimit Often corresponds to `X-RateLimit-Limit` header.
+   * @param rateLimitRemaining Often corresponds to `X-RateLimit-Remaining` header.
+   * @param rateLimitReset Often corresponds to `X-RateLimit-Reset` header.
+   * @param retryAfter
+   */
+  rateLimitHeaders?: RateLimitHeaders;
+};
+
+export type RateLimitHeaders = {
+  rateLimitLimit: string;
+  rateLimitRemaining: string;
+  rateLimitReset: string;
+  retryAfter: string;
 };
 
 /**
@@ -122,30 +137,19 @@ export type RateLimitState = {
    * Maximum number of requests per minute that can be made by all API clients
    * in a customer account. Initial value assumes the published default of 100.
    */
-  perMinuteLimit: number;
+  perMinuteLimit?: number;
 
   /**
    * Number of requests that remain in the account's rate limiting pool. The
    * total number available is not known.
    */
-  limitRemaining: number;
+  limitRemaining?: number;
 
   /**
    * The next time when an account's rate limit pool will have at least one
    * request available.
    */
   retryAfter?: number;
-
-  /**
-   * The rate limit headers to be used.
-   * @param rateLimitLimit Often cooresponds to `X-RateLimit-Limit` header.
-   */
-  rateLimitHeaders?: {
-    rateLimitLimit: string;
-    rateLimitRemaining: string;
-    rateLimitReset: string;
-    retryAfter: string;
-  };
 };
 
 /**
