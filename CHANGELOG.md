@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.13.13] - 2022-06-09
+
+### Changed
+
+- Fixed publish lerna command.
+
 ## [8.13.12] - 2022-06-08
 
 ### Changed
