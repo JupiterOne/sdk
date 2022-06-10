@@ -2,9 +2,14 @@ import { writeFileToPath } from '@jupiterone/integration-sdk-runtime';
 
 import { loadConfig } from '../config';
 import * as path from 'path';
-import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 
 import { generateVisHTML } from '../utils/generateVisHTML';
+
+import { Node, Edge } from 'vis';
+
+// Color list to denote which steps have more direct dependencies.
+// Starting from cooler colors to warmer colors.
+const colorList = ['cyan', 'lime', 'yellow', 'orange', 'red']
 
 /**
  * Generate a graph visualization of steps and their dependencies.
@@ -18,20 +23,22 @@ export async function generateDependencyVisualization(
   visualizationOutputPath: string,
 ): Promise<void> {
   const config = await loadConfig(path.join(graphDataPath, 'src'));
-  const stepDependencyGraph = buildStepDependencyGraph(config.integrationSteps);
 
-  const nodeDataSets: any = [];
-  const explicitEdgeDataSets: any = [];
-  for (const step of Object.values<any>(stepDependencyGraph['nodes'])) {
+  const nodeDataSets: Node[] = [];
+  const explicitEdgeDataSets: Edge[] = [];
+  for (const step of config.integrationSteps) {
+    const dependencyCount = step.dependsOn ? step.dependsOn.length : 0;
     nodeDataSets.push({
       id: step.id,
       label: step.name,
+      color: colorList[Math.min(dependencyCount, colorList.length-1)]
     });
-    if (step['dependsOn']) {
-      for (const dependency of step['dependsOn']) {
+    if (step.dependsOn) {
+      for (const dependency of step.dependsOn) {
         explicitEdgeDataSets.push({
-          from: step.id,
-          to: dependency,
+          from: dependency,
+          to: step.id,
+          color: 'black',
         });
       }
     }
