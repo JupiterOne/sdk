@@ -9,7 +9,7 @@ import { Node, Edge } from 'vis';
 
 // Color list to denote which steps have more direct dependencies.
 // Starting from cooler colors to warmer colors.
-const colorList = ['cyan', 'lime', 'yellow', 'orange', 'red']
+const colorList = ['cyan', 'lime', 'yellow', 'orange', 'red'];
 
 /**
  * Generate a graph visualization of steps and their dependencies.
@@ -31,7 +31,7 @@ export async function generateDependencyVisualization(
     nodeDataSets.push({
       id: step.id,
       label: step.name,
-      color: colorList[Math.min(dependencyCount, colorList.length-1)]
+      color: colorList[Math.min(dependencyCount, colorList.length - 1)],
     });
     if (step.dependsOn) {
       for (const dependency of step.dependsOn) {
