@@ -413,18 +413,18 @@ export function createErrorEventDescription(
   let errorCode: string;
   let errorReason: string;
 
-  if (err instanceof IntegrationError) {
+  if (isProviderAuthError(err)) {
+    errorCode = err.code;
+    errorReason = err.message;
+    // add additional instructions to the displayed message
+    // if we know that this is an auth error
+    message += PROVIDER_AUTH_ERROR_HELP;
+  } else if (err instanceof IntegrationError) {
     errorCode = err.code;
     errorReason = err.message;
   } else {
     errorCode = UNEXPECTED_ERROR_CODE;
     errorReason = UNEXPECTED_ERROR_REASON;
-  }
-
-  if (isProviderAuthError(err)) {
-    // add additional instructions to the displayed message
-    // if we know that this is an auth error
-    message += PROVIDER_AUTH_ERROR_HELP;
   }
 
   const nameValuePairs: NameValuePair[] = [

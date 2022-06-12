@@ -537,6 +537,46 @@ describe('createErrorEventDescription', () => {
       `testing (errorCode="${error.code}", errorId="${errorId}", reason="soba")`,
     );
   });
+
+  test('displays code and message from error if error is an IntegrationProviderAuthorizationError', () => {
+    const cause = new Error('original error');
+
+    const error = new IntegrationProviderAuthorizationError({
+      cause,
+      endpoint: 'https://api.jupiterone.io',
+      status: 403,
+      statusText: 'status text',
+    });
+
+    const { description, errorId } = createErrorEventDescription(
+      error,
+      'some job log event message',
+    );
+
+    expect(description).toEqual(
+      `some job log event message Failed to access provider resource. This integration is likely misconfigured or has insufficient permissions required to access the resource. Please ensure your integration's configuration settings are set up correctly. (errorCode="${error.code}", errorId="${errorId}", reason="Provider authorization failed at https://api.jupiterone.io: 403 status text")`,
+    );
+  });
+
+  test('displays code and message from error if error is an IntegrationProviderAuthenticationError', () => {
+    const cause = new Error('original error');
+
+    const error = new IntegrationProviderAuthenticationError({
+      cause,
+      endpoint: 'https://api.jupiterone.io',
+      status: 403,
+      statusText: 'status text',
+    });
+
+    const { description, errorId } = createErrorEventDescription(
+      error,
+      'some job log event message',
+    );
+
+    expect(description).toEqual(
+      `some job log event message Failed to access provider resource. This integration is likely misconfigured or has insufficient permissions required to access the resource. Please ensure your integration's configuration settings are set up correctly. (errorCode="${error.code}", errorId="${errorId}", reason="Provider authentication failed at https://api.jupiterone.io: 403 status text")`,
+    );
+  });
 });
 
 describe('publishMetric', () => {
