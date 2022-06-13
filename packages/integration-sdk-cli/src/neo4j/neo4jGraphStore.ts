@@ -49,6 +49,9 @@ export class Neo4jGraphStore {
         defaultAccessMode: neo4j.session.WRITE,
       });
       const result = await session.run(cypherCommand, cypherParameters);
+      // TODO (adam-in-ict) strictly speaking, using writeTransaction instead of run would be more correct and
+      // potentially faster in some instances.
+      // const result = await session.writeTransaction(cypherCommand, cypherParameters);
       await session.close();
       return result;
     }
