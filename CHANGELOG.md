@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.14.0] - 2022-06-13
+
+## Added
+
+- `j1-integration` now has the command `visualize-dependencies` to create a
+  visualization of the integration's step dependencies.
+
 ## [8.13.13] - 2022-06-09
 
 ### Changed
