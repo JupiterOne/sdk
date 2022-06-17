@@ -32,6 +32,10 @@ export function sync() {
       !!process.env.JUPITERONE_DEV,
     )
     .option('--api-base-url <url>', 'API base URL used during sync operation.')
+    .option(
+      '-u, --upload-batch-size <number>',
+      'specify number of items per batch for upload (default 250)',
+    )
     .action(async (options) => {
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
@@ -73,11 +77,11 @@ export function sync() {
         name: 'local',
         pretty: true,
       });
-
       const job = await synchronizeCollectedData({
         logger: logger.child({ integrationInstanceId }),
         apiClient,
         integrationInstanceId,
+        uploadBatchSize: options.uploadBatchSize,
       });
 
       log.displaySynchronizationResults(job);

@@ -41,6 +41,7 @@ export interface SynchronizeInput {
   apiClient: ApiClient;
   integrationInstanceId: string;
   integrationJobId?: string;
+  uploadBatchSize?: number | undefined;
 }
 
 /**
@@ -50,7 +51,6 @@ export async function synchronizeCollectedData(
   input: SynchronizeInput,
 ): Promise<SynchronizationJob> {
   const jobContext = await initiateSynchronization(input);
-
   const eventPublishingQueue = createEventPublishingQueue(jobContext);
   jobContext.logger.on('event', (event) => eventPublishingQueue.enqueue(event));
 
@@ -87,6 +87,7 @@ export interface SynchronizationJobContext {
   apiClient: ApiClient;
   job: SynchronizationJob;
   logger: IntegrationLogger;
+  uploadBatchSize?: number | undefined;
 }
 
 /**
@@ -97,6 +98,7 @@ export async function initiateSynchronization({
   apiClient,
   integrationInstanceId,
   integrationJobId,
+  uploadBatchSize,
 }: SynchronizeInput): Promise<SynchronizationJobContext> {
   logger.info('Initiating synchronization job...');
 
@@ -124,6 +126,7 @@ export async function initiateSynchronization({
       integrationJobId: job.integrationJobId,
       integrationInstanceId: job.integrationInstanceId,
     }),
+    uploadBatchSize,
   };
 }
 
@@ -245,7 +248,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
 
   async function uploadGraphObjectFile(parsedData: FlushedGraphObjectData) {
-    await uploadGraphObjectData(context, parsedData);
+    await uploadGraphObjectData(context, parsedData, context.uploadBatchSize);
   }
 
   await timeOperation({
