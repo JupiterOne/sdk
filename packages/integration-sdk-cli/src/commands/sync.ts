@@ -32,7 +32,10 @@ export function sync() {
       !!process.env.JUPITERONE_DEV,
     )
     .option('--api-base-url <url>', 'API base URL used during sync operation.')
-    .option('-u, --upload-batch-size <number>', 'specify number of items per batch for upload (default 250)')
+    .option(
+      '-u, --upload-batch-size <number>',
+      'specify number of items per batch for upload (default 250)',
+    )
     .action(async (options) => {
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
