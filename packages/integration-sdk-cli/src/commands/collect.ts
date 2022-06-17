@@ -43,7 +43,7 @@ export function collect() {
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .option(
       '-b, --buffer-size <number>',
-      'specify buffer size for use in data collection (default 500)',
+      'specify maximum number of entities and relationships per buffer or file (default 500)',
     )
     .action(async (options) => {
       if (!options.cache && options.step.length === 0) {
