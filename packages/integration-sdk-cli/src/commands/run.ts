@@ -42,10 +42,6 @@ export function run() {
     )
     .option('--api-base-url <url>', 'API base URL used during run operation.')
     .option('-V, --disable-schema-validation', 'disable schema validation')
-    .option(
-      '-b, --buffer-size <number>',
-      'specify maximum number of entities and relationships per buffer or file (default 500)',
-    )
     .action(async (options) => {
       const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -113,7 +109,6 @@ export function run() {
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,
         integrationSteps: invocationConfig.integrationSteps,
-        graphObjectBufferThreshold: options.bufferSize,
       });
 
       try {
