@@ -244,19 +244,26 @@ export function executeStepDependencyGraph<
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
          */
-        if (isStepEnabled(stepId) && stepDependenciesAreComplete(stepId)) {
-          removeStepFromWorkingGraph(stepId);
-          void promiseQueue.add(() =>
-            timeOperation({
-              logger: executionContext.logger,
-              metricName: `duration-step`,
-              dimensions: {
-                stepId,
-                cached: hasCachePath(stepId).toString(),
-              },
-              operation: () => executeStep(step),
-            }).catch(handleUnexpectedError),
-          );
+        if (stepDependenciesAreComplete(stepId)) {
+          if (isStepEnabled(stepId)) {
+            removeStepFromWorkingGraph(stepId);
+            void promiseQueue.add(() =>
+              timeOperation({
+                logger: executionContext.logger,
+                metricName: `duration-step`,
+                dimensions: {
+                  stepId,
+                  cached: hasCachePath(stepId).toString(),
+                },
+                operation: () => executeStep(step),
+              }).catch(handleUnexpectedError),
+            );
+          } else {
+            // Step is disabled
+            executionContext.logger
+              .child({ stepId })
+              .stepSkip(step, stepStartStates[stepId]?.disabledReason);
+          }
         }
       });
     }

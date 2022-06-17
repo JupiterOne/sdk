@@ -64,7 +64,7 @@ export async function executeSteps<
     if (!steps) {
       executionContext.logger.warn(
         { graphId },
-        'A graphId in the dependencyGraphOrder was not refrenced by any steps.',
+        'A graphId in the dependencyGraphOrder was not referenced by any steps.',
       );
       continue;
     }

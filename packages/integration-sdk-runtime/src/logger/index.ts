@@ -286,6 +286,16 @@ export class IntegrationLogger
     this.publishEvent({ name, description });
   }
 
+  stepSkip(step: StepMetadata, reason?: string) {
+    const name = 'step_skip';
+    let description = `Skipped step "${step.name}".`;
+    if (reason) {
+      description += ` ${reason}`;
+    }
+    this.info(description);
+    this.publishEvent({ name, description });
+  }
+
   stepFailure(step: StepMetadata, err: Error) {
     const eventName = 'step_failure';
     const { errorId, description } = createErrorEventDescription(

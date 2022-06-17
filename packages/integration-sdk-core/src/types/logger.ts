@@ -11,6 +11,7 @@ interface ChildLogFunction {
 }
 
 type StepLogFunction = (step: StepMetadata) => void;
+type StepLogFunctionWithMessage = (step: StepMetadata, reason?: string) => void;
 type StepLogFunctionWithError = (step: StepMetadata, err: Error) => void;
 type SynchronizationLogFunction = (job: SynchronizationJob) => void;
 type ValidationLogFunction = (err: Error) => void;
@@ -112,6 +113,7 @@ export interface IntegrationLoggerFunctions {
   stepStart: StepLogFunction;
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
+  stepSkip: StepLogFunctionWithMessage;
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
 

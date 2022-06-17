@@ -312,12 +312,13 @@ describe('step event publishing', () => {
 
     logger.stepStart(step);
     logger.stepSuccess(step);
+    logger.stepSkip(step, 'Beta feature, please contact J1 to enable.');
 
     // just use some error that contains a code
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(3);
+    expect(onEmitEvent).toHaveBeenCalledTimes(4);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
       level: PublishEventLevel.Info,
@@ -329,6 +330,12 @@ describe('step event publishing', () => {
       description: 'Completed step "Mochi".',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(3, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". Beta feature, please contact J1 to enable.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(4, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
       description: expect.stringMatching(

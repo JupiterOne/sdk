@@ -19,6 +19,12 @@ export interface StepStartState {
   disabled: boolean;
 
   /**
+   * Message to user describing why the step was disabled.
+   * Should be user-friendly!
+   */
+  disabledReason?: string;
+
+  /**
    * Provides a filepath to a cache for the given step.
    * This cache will be loaded instead of executing the step.
    */
