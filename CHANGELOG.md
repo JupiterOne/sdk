@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.14.1] - 2022-06-17
+
+## Added
+
+- `j1-integration` `sync` and `run` commands now have the option
+  `--upload-batch-size` to specify how many objects to upload in each batch.
+
 ## [8.14.0] - 2022-06-13
 
 ## Added
