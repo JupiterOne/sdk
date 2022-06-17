@@ -98,7 +98,7 @@ export async function initiateSynchronization({
   apiClient,
   integrationInstanceId,
   integrationJobId,
-  uploadBatchSize
+  uploadBatchSize,
 }: SynchronizeInput): Promise<SynchronizationJobContext> {
   logger.info('Initiating synchronization job...');
 
