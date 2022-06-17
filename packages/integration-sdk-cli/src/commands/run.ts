@@ -42,6 +42,7 @@ export function run() {
     )
     .option('--api-base-url <url>', 'API base URL used during run operation.')
     .option('-V, --disable-schema-validation', 'disable schema validation')
+    .option('-u, --upload-batch-size <number>', 'specify number of items per batch for upload (default 250)')
     .action(async (options) => {
       const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -130,6 +131,7 @@ export function run() {
                 stepId,
                 synchronizationJobContext: synchronizationContext,
                 uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
+                uploadBatchSize: options.uploadBatchSize
               });
             },
           },
