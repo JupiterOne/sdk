@@ -41,6 +41,10 @@ export function collect() {
       'Can be used with the `--step` to specify a path to a non-default cache location.',
     )
     .option('-V, --disable-schema-validation', 'disable schema validation')
+    .option(
+      '-b, --buffer-size <number>',
+      'specify buffer size for use in data collection (default 500)',
+    )
     .action(async (options) => {
       if (!options.cache && options.step.length === 0) {
         throw new Error(
@@ -81,6 +85,7 @@ export function collect() {
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,
         integrationSteps: config.integrationSteps,
+        graphObjectBufferThreshold: options.bufferSize,
       });
 
       const enableSchemaValidation = !options.disableSchemaValidation;
