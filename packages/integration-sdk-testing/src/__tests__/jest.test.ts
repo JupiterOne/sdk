@@ -386,6 +386,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
       _class: ['Host', 'Device'],
       _type: 'user_endpoint',
       _key: 'enum-set-test',
+      hostname: 'test',
       name: 'test',
       displayName: 'test',
       category: 'endpoint',
