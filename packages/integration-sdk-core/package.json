@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-core",
-  "version": "8.14.1",
+  "version": "8.15.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -23,7 +23,7 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/data-model": "^0.49.0",
+    "@jupiterone/data-model": "^0.50.0",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2"
   },
