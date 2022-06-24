@@ -6,7 +6,6 @@ import {
   GraphObjectSchema,
   IntegrationInvocationConfig,
   IntegrationSpecConfig,
-  IntegrationStep,
   MappedRelationship,
   Relationship,
   RelationshipClass,
@@ -21,6 +20,7 @@ import {
 } from '../jest';
 import { v4 as uuid } from 'uuid';
 import { toMatchStepMetadata } from '..';
+import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 
 describe('#toMatchGraphObjectSchema', () => {
   function generateCollectedEntity(partial?: Partial<Entity>): Entity {
@@ -1041,19 +1041,6 @@ describe('#toMatchStepMetadata', () => {
   ): IntegrationInvocationConfig {
     return {
       integrationSteps: [],
-      ...config,
-    };
-  }
-
-  function getMockIntegrationStep(
-    config?: Partial<IntegrationStep>,
-  ): IntegrationStep {
-    return {
-      id: 'id',
-      name: 'name',
-      entities: [],
-      relationships: [],
-      executionHandler: () => undefined,
       ...config,
     };
   }

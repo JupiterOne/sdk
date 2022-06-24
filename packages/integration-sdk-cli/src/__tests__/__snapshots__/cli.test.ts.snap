@@ -461,3 +461,5 @@ END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
 -->
 <!-- {J1_DOCUMENTATION_MARKER_END} -->"
 `;
+
+exports[`generate-integration-graph-schema should generate integration graph schema 1`] = `"{\\"entities\\":[{\\"resourceName\\":\\"The User\\",\\"_class\\":\\"User\\",\\"_type\\":\\"my_user\\"},{\\"resourceName\\":\\"The Group\\",\\"_class\\":[\\"Group\\",\\"Other\\"],\\"_type\\":\\"my_group\\"}],\\"relationships\\":[{\\"_class\\":\\"HAS\\",\\"sourceType\\":\\"my_group\\",\\"targetType\\":\\"my_user\\"}],\\"mappedRelationships\\":[{\\"sourceType\\":\\"my_user\\",\\"_class\\":\\"IS\\",\\"targetType\\":\\"employee\\",\\"direction\\":\\"FORWARD\\"}]}"`;
