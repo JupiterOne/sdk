@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added an optional `encounteredEntityKeys` property on `.toMatchStepMetadata()`
+  to verify that any relationship `_fromEntityKey` and `_toEntityKey` has
+  actually been encountered in the job state.
+
 ## [8.15.0] - 2022-06-22
 
 ### Changed
