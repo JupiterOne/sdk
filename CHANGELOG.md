@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.16.0] - 2022-06-27
+
 ### Added
 
 - Added an optional `encounteredEntityKeys` property on `.toMatchStepMetadata()`
