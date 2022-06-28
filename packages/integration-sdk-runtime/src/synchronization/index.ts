@@ -183,7 +183,12 @@ export async function uploadGraphObjectData(
   synchronizationJobContext: SynchronizationJobContext,
   graphObjectData: FlushedGraphObjectData,
   uploadBatchSize?: number,
+  uploadRelationshipsBatchSize?: number,
 ) {
+  const entityBatchSize = uploadBatchSize;
+  const relationshipsBatchSize =
+    uploadRelationshipsBatchSize || uploadBatchSize;
+
   try {
     if (
       Array.isArray(graphObjectData.entities) &&
@@ -200,7 +205,7 @@ export async function uploadGraphObjectData(
         synchronizationJobContext,
         'entities',
         graphObjectData.entities,
-        uploadBatchSize,
+        entityBatchSize,
       );
 
       synchronizationJobContext.logger.info(
@@ -226,7 +231,7 @@ export async function uploadGraphObjectData(
         synchronizationJobContext,
         'relationships',
         graphObjectData.relationships,
-        uploadBatchSize,
+        relationshipsBatchSize,
       );
 
       synchronizationJobContext.logger.info(

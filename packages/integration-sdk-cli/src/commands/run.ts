@@ -46,6 +46,10 @@ export function run() {
       '-u, --upload-batch-size <number>',
       'specify number of items per batch for upload (default 250)',
     )
+    .option(
+      '-ur, --upload-relationship-batch-size <number>',
+      'specify number of relationships per batch for upload (default 250)',
+    )
     .action(async (options) => {
       const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -135,6 +139,8 @@ export function run() {
                 synchronizationJobContext: synchronizationContext,
                 uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
                 uploadBatchSize: options.uploadBatchSize,
+                uploadRelationshipsBatchSize:
+                  options.uploadRelationshipBatchSize,
               });
             },
           },
