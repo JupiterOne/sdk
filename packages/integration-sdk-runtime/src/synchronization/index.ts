@@ -42,6 +42,7 @@ export interface SynchronizeInput {
   integrationInstanceId: string;
   integrationJobId?: string;
   uploadBatchSize?: number | undefined;
+  uploadRelationshipBatchSize?: number | undefined;
 }
 
 /**
@@ -88,6 +89,7 @@ export interface SynchronizationJobContext {
   job: SynchronizationJob;
   logger: IntegrationLogger;
   uploadBatchSize?: number | undefined;
+  uploadRelationshipBatchSize?: number | undefined;
 }
 
 /**
@@ -99,6 +101,7 @@ export async function initiateSynchronization({
   integrationInstanceId,
   integrationJobId,
   uploadBatchSize,
+  uploadRelationshipBatchSize,
 }: SynchronizeInput): Promise<SynchronizationJobContext> {
   logger.info('Initiating synchronization job...');
 
@@ -127,6 +130,7 @@ export async function initiateSynchronization({
       integrationInstanceId: job.integrationInstanceId,
     }),
     uploadBatchSize,
+    uploadRelationshipBatchSize,
   };
 }
 
@@ -253,7 +257,12 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
 
   async function uploadGraphObjectFile(parsedData: FlushedGraphObjectData) {
-    await uploadGraphObjectData(context, parsedData, context.uploadBatchSize);
+    await uploadGraphObjectData(
+      context,
+      parsedData,
+      context.uploadBatchSize,
+      context.uploadRelationshipBatchSize,
+    );
   }
 
   await timeOperation({
