@@ -14,11 +14,11 @@ function createFlushedGraphObjectData(
   numEntity: number,
   numRelationship: number,
 ): FlushedGraphObjectData {
-  let entities: Entity[] = [];
+  const entities: Entity[] = [];
   for (let i = 0; i < numEntity; i++) {
     entities.push(createTestEntity());
   }
-  let relationships: Relationship[] = [];
+  const relationships: Relationship[] = [];
   for (let i = 0; i < numRelationship; i++) {
     relationships.push(createTestRelationship());
   }
