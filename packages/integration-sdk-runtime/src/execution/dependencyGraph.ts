@@ -108,6 +108,8 @@ export function executeStepDependencyGraph<
   const typeTracker = new TypeTracker();
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
 
+  const skippedStepTracker = new Set<string>();
+
   function isStepEnabled(stepId: string) {
     return stepStartStates[stepId].disabled === false;
   }
@@ -246,8 +248,8 @@ export function executeStepDependencyGraph<
          * and prevents dependent steps from executing.
          */
         if (stepDependenciesAreComplete(stepId)) {
-          removeStepFromWorkingGraph(stepId);
           if (isStepEnabled(stepId)) {
+            removeStepFromWorkingGraph(stepId);
             void promiseQueue.add(() =>
               timeOperation({
                 logger: executionContext.logger,
@@ -261,13 +263,16 @@ export function executeStepDependencyGraph<
             );
           } else {
             // Step is disabled
-            executionContext.logger
-              .child({ stepId })
-              .stepSkip(
-                step,
-                stepStartStates[stepId]?.disabledReason ??
-                  DisabledStepReason.NONE,
-              );
+            if (!skippedStepTracker.has(stepId)) {
+              executionContext.logger
+                .child({ stepId })
+                .stepSkip(
+                  step,
+                  stepStartStates[stepId]?.disabledReason ??
+                    DisabledStepReason.NONE,
+                );
+            }
+            skippedStepTracker.add(stepId);
           }
         }
       });
