@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-cli",
-  "version": "8.16.0",
+  "version": "8.17.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -22,7 +22,7 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-runtime": "^8.16.0",
+    "@jupiterone/integration-sdk-runtime": "^8.17.0",
     "chalk": "^4",
     "commander": "^5.0.0",
     "fs-extra": "^10.1.0",
@@ -37,7 +37,7 @@
     "vis": "^4.21.0-EOL"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^8.16.0",
+    "@jupiterone/integration-sdk-private-test-utils": "^8.17.0",
     "@pollyjs/adapter-node-http": "^6.0.5",
     "@pollyjs/core": "^6.0.5",
     "@pollyjs/persister-fs": "^6.0.5",
