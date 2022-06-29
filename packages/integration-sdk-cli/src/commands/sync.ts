@@ -36,6 +36,10 @@ export function sync() {
       '-u, --upload-batch-size <number>',
       'specify number of items per batch for upload (default 250)',
     )
+    .option(
+      '-ur, --upload-relationship-batch-size <number>',
+      'specify number of relationships per batch for upload (default 250)',
+    )
     .action(async (options) => {
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
@@ -82,6 +86,7 @@ export function sync() {
         apiClient,
         integrationInstanceId,
         uploadBatchSize: options.uploadBatchSize,
+        uploadRelationshipBatchSize: options.uploadRelationshipBatchSize,
       });
 
       log.displaySynchronizationResults(job);
