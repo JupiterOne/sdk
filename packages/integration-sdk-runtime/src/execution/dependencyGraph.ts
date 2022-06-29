@@ -3,6 +3,7 @@ import PromiseQueue from 'p-queue';
 
 import {
   BeforeAddEntityHookFunction,
+  DisabledStepReason,
   Entity,
   ExecutionContext,
   IntegrationStepResult,
@@ -155,7 +156,7 @@ export function executeStepDependencyGraph<
 
   /**
    * Safely removes a step from the workingGraph, ensuring
-   * that dependencys are removed.
+   * that dependencies are removed.
    *
    * This function helps create new leaf nodes to execute.
    */
@@ -245,8 +246,8 @@ export function executeStepDependencyGraph<
          * and prevents dependent steps from executing.
          */
         if (stepDependenciesAreComplete(stepId)) {
+          removeStepFromWorkingGraph(stepId);
           if (isStepEnabled(stepId)) {
-            removeStepFromWorkingGraph(stepId);
             void promiseQueue.add(() =>
               timeOperation({
                 logger: executionContext.logger,
@@ -262,7 +263,11 @@ export function executeStepDependencyGraph<
             // Step is disabled
             executionContext.logger
               .child({ stepId })
-              .stepSkip(step, stepStartStates[stepId]?.disabledReason);
+              .stepSkip(
+                step,
+                stepStartStates[stepId]?.disabledReason ??
+                  DisabledStepReason.NONE,
+              );
           }
         }
       });
