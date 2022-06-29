@@ -271,8 +271,8 @@ export function executeStepDependencyGraph<
                   stepStartStates[stepId]?.disabledReason ??
                     DisabledStepReason.NONE,
                 );
+              skippedStepTracker.add(stepId);
             }
-            skippedStepTracker.add(stepId);
           }
         }
       });
