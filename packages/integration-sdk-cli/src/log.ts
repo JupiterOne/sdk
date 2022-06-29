@@ -1,6 +1,9 @@
 import chalk from 'chalk';
 
-import { ExecuteIntegrationResult } from '@jupiterone/integration-sdk-runtime';
+import {
+  ExecuteIntegrationResult,
+  processDeclaredTypesDiff,
+} from '@jupiterone/integration-sdk-runtime';
 import {
   IntegrationStepResult,
   StepResultStatus,
@@ -36,29 +39,17 @@ export function displayExecutionResults(results: ExecuteIntegrationResult) {
 
   let undeclaredTypesDetected: boolean = false;
 
-  results.integrationStepResults.forEach((step) => {
+  processDeclaredTypesDiff(results, (step, undeclaredTypes) => {
     logStepStatus(step);
 
-    if (step.status === StepResultStatus.SUCCESS) {
-      const { declaredTypes, encounteredTypes } = step;
-
-      const declaredTypeSet = new Set(declaredTypes);
-      const undeclaredTypes = encounteredTypes.filter(
-        (type) => !declaredTypeSet.has(type),
+    if (step.status === StepResultStatus.SUCCESS && undeclaredTypes.length) {
+      undeclaredTypesDetected = true;
+      const undeclaredTypesList = undeclaredTypes.map((type) => {
+        return `\n  - ${type}`;
+      });
+      warn(
+        `The following types were encountered but are not declared in the step's "types" field:${undeclaredTypesList}`,
       );
-
-      if (undeclaredTypes.length) {
-        undeclaredTypesDetected = true;
-
-        const undeclaredTypesList = undeclaredTypes.map((type) => {
-          return `\n  - ${type}`;
-        });
-        warn(
-          `The following types were encountered but are not declared in the step's "types" field:${undeclaredTypesList}`,
-        );
-
-        console.log('');
-      }
     }
   });
 

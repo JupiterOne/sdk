@@ -15,3 +15,4 @@ export {
   CreatePersisterApiStepGraphObjectDataUploaderParams,
   createPersisterApiStepGraphObjectDataUploader,
 } from './uploader';
+export { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';

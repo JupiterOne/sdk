@@ -386,6 +386,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
       _class: ['Host', 'Device'],
       _type: 'user_endpoint',
       _key: 'enum-set-test',
+      hostname: 'test',
       name: 'test',
       displayName: 'test',
       category: 'endpoint',
@@ -1358,6 +1359,87 @@ describe('#toMatchStepMetadata', () => {
       expect(result.message()).toMatch(
         'Error validating graph object against schema',
       );
+    });
+
+    describe('encounteredEntityKeys', () => {
+      test('should pass if _fromEntityType and _toEntityType have been encountered', () => {
+        const result = toMatchStepMetadata(
+          {
+            collectedEntities: [],
+            collectedRelationships: [
+              getMockRelationship({
+                _type: 'declared-type',
+                _class: RelationshipClass.HAS,
+                _fromEntityKey: 'from-entity-key',
+                _toEntityKey: 'to-entity-key',
+              }),
+            ],
+            encounteredEntityKeys: new Set([
+              'from-entity-key',
+              'to-entity-key',
+            ]),
+          },
+          {
+            stepId: 'step-id',
+            invocationConfig: getMockInvocationConfig({
+              integrationSteps: [
+                getMockIntegrationStep({
+                  id: 'step-id',
+                  relationships: [
+                    {
+                      _type: 'declared-type',
+                      _class: RelationshipClass.HAS,
+                      sourceType: 'source-entity-type',
+                      targetType: 'target-entity-type',
+                    },
+                  ],
+                }),
+              ],
+            }),
+          },
+        );
+
+        expect(result).toMatchObject({ pass: true });
+      });
+
+      test('should fail if relationship includes entity _keys that have not been encountered', () => {
+        const result = toMatchStepMetadata(
+          {
+            collectedEntities: [],
+            collectedRelationships: [
+              getMockRelationship({
+                _type: 'declared-type',
+                _fromEntityKey: 'from-entity-key',
+                _toEntityKey: 'to-entity-key',
+              }),
+            ],
+            encounteredEntityKeys: new Set(),
+          },
+          {
+            stepId: 'step-id',
+            invocationConfig: getMockInvocationConfig({
+              integrationSteps: [
+                getMockIntegrationStep({
+                  id: 'step-id',
+                  relationships: [
+                    {
+                      _type: 'declared-type',
+                      _class: RelationshipClass.HAS,
+                      sourceType: 'source-entity-type',
+                      targetType: 'target-entity-type',
+                    },
+                  ],
+                }),
+              ],
+            }),
+          },
+        );
+
+        expect(result).toMatchObject({ pass: false });
+        expect(result.message()).toBe(
+          'Some direct relationships contain from/to entity keys which do not exist in the jobState: {\n  "declared-type": {\n    "missingFromEntityKey": true,\n    "missingToEntityKey": true\n  }\n}',
+        );
+      });
     });
   });
 

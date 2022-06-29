@@ -9,16 +9,40 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.17.0] - 2022-06-29
+
+### Added
+
+- Added ability to set a separate `uploadRelationshipsBatchSize`. `sync` and
+  `run` commands can specify the relationship-specific batch size with the `-ur`
+  or `--upload-relationship-batch-size` flags. Existing behavior remains the
+  same. If a `uploadBatchSize` is set, but no `uploadRelationshipsBatchSize`,
+  then relationships will be uploaded in batches of size `uploadBatchSize`.
+
+## [8.16.0] - 2022-06-27
+
+### Added
+
+- Added an optional `encounteredEntityKeys` property on `.toMatchStepMetadata()`
+  to verify that any relationship `_fromEntityKey` and `_toEntityKey` has
+  actually been encountered in the job state.
+
+## [8.15.0] - 2022-06-22
+
+### Changed
+
+- `@jupiterone/data-model` has been bumped to `0.50.0`
+
 ## [8.14.1] - 2022-06-17
 
-## Added
+### Added
 
 - `j1-integration` `sync` and `run` commands now have the option
   `--upload-batch-size` to specify how many objects to upload in each batch.
 
 ## [8.14.0] - 2022-06-13
 
-## Added
+### Added
 
 - `j1-integration` now has the command `visualize-dependencies` to create a
   visualization of the integration's step dependencies.
