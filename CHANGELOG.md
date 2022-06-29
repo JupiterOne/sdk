@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.17.0] - 2022-06-29
+
+### Added
+
+- Added ability to set a separate `uploadRelationshipsBatchSize`. Added new
+  option to specify a relationship batch upload size. `sync` and `run` commands
+  can specify the relationship-specific batch size with the `-ur` or
+  `--upload-relationship-batch-size` flags. Existing behavior remains the same.
+  If a `uploadBatchSize` is set, but no `uploadRelationshipsBatchSize`, then
+  relationships will be uploaded in batches of size `uploadBatchSize`.
+
 ## [8.16.0] - 2022-06-27
 
 ### Added
