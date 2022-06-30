@@ -70,6 +70,14 @@ test('logs an error if publish fails', async () => {
   const { apiClient, logger, queue } = createContext();
 
   const error = new Error('Failed to post event');
+  Object.assign(error, {
+    code: 'TEST_CODE',
+    response: {
+      data: {
+        error: 'AN ERROR OCCURRED',
+      },
+    },
+  });
   jest.spyOn(apiClient, 'post').mockRejectedValue(error);
 
   const logErrorSpy = jest.spyOn(logger, 'error');
@@ -82,6 +90,8 @@ test('logs an error if publish fails', async () => {
   expect(logErrorSpy).toHaveBeenCalledWith(
     {
       err: error,
+      code: 'TEST_CODE',
+      systemErrorResponseData: 'AN ERROR OCCURRED',
     },
     'Failed to publish integration event',
   );
