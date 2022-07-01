@@ -317,7 +317,7 @@ type SystemErrorResponseData = {
  *   }
  * }
  */
-function getSystemErrorResponseData(
+export function getSystemErrorResponseData(
   err: any,
 ): SystemErrorResponseData | undefined {
   return err.response?.data?.error;
