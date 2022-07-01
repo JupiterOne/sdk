@@ -9,6 +9,37 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.18.0] - 2022-07-01
+
+### Added
+
+- Added the ability to specify a reason for why a step is disabled. This can be
+  set in the `StepStartState` interface using the `DisabledStepReason` enum.
+  Valid reasons include: `PERMISSION`, `CONFIG`, `BETA`, and `NONE`. `NONE` is
+  the equivalent to not specifying a reason. If `NONE` or undefined are
+  specified, logging to the job event log is disabled. Here is an example of
+  usage:
+
+```typescript
+{
+  ['fetch-prs']: {
+    disabled: false
+  },
+  ['fetch-issues']: {
+    disabled: !scopes.repoIssues,
+    disabledReason: DisabledStepReason.PERMISSION
+  }
+}
+```
+
+Sample text output:
+
+```
+Skipped step "Fetch Issues". The required permission was not provided to perform this step.
+Skipped step "Fetch Issues". This step is disabled via configuration. Please contact support to enabled.
+Skipped step "Fetch Issues". Beta feature, please contact support to enable.
+```
+
 ## [8.17.0] - 2022-06-29
 
 ### Added
