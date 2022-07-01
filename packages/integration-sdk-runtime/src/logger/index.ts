@@ -27,6 +27,7 @@ import {
   IntegrationEvent,
   PublishInfoEventInput,
   PublishErrorEventInput,
+  DisabledStepReason,
 } from '@jupiterone/integration-sdk-core';
 
 export * from './registerEventHandlers';
@@ -282,6 +283,32 @@ export class IntegrationLogger
   stepSuccess(step: StepMetadata) {
     const name = 'step_end';
     const description = `Completed step "${step.name}".`;
+    this.info(description);
+    this.publishEvent({ name, description });
+  }
+
+  stepSkip(step: StepMetadata, reason: DisabledStepReason) {
+    if (!reason || reason === DisabledStepReason.NONE) {
+      return;
+    }
+
+    const name = 'step_skip';
+    let description = `Skipped step "${step.name}". `;
+
+    switch (reason) {
+      case DisabledStepReason.BETA: {
+        description += `Beta feature, please contact support to enable.`;
+        break;
+      }
+      case DisabledStepReason.PERMISSION: {
+        description += `The required permission was not provided to perform this step.`;
+        break;
+      }
+      case DisabledStepReason.CONFIG: {
+        description += `This step is disabled via configuration. Please contact support to enabled.`;
+      }
+    }
+
     this.info(description);
     this.publishEvent({ name, description });
   }

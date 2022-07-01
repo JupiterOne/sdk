@@ -45,7 +45,7 @@ export interface InvocationConfig<
    * graphs in a specific order. These values should match the
    * StepMetadata `dependencyGraphId` prpoperties.
    *
-   * If this is not provided, all steps will be evalueted in
+   * If this is not provided, all steps will be evaluated in
    * the same dependency graph.
    */
   dependencyGraphOrder?: string[];

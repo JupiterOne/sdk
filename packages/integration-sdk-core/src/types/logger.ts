@@ -1,4 +1,4 @@
-import { StepMetadata } from './';
+import { DisabledStepReason, StepMetadata } from './';
 import { SynchronizationJob } from './synchronization';
 import { Metric } from './metric';
 
@@ -11,6 +11,10 @@ interface ChildLogFunction {
 }
 
 type StepLogFunction = (step: StepMetadata) => void;
+type StepLogFunctionWithReason = (
+  step: StepMetadata,
+  reason: DisabledStepReason,
+) => void;
 type StepLogFunctionWithError = (step: StepMetadata, err: Error) => void;
 type SynchronizationLogFunction = (job: SynchronizationJob) => void;
 type ValidationLogFunction = (err: Error) => void;
@@ -112,6 +116,7 @@ export interface IntegrationLoggerFunctions {
   stepStart: StepLogFunction;
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
+  stepSkip: StepLogFunctionWithReason;
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
 
