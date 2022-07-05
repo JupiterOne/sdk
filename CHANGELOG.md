@@ -9,6 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Added the following arguments to `j1-integration diff` command:
+  ```
+  -i, --ignore-types <type-1>,<type-2>  ignore graph objects with _type: <type> (default: [])
+  -S, --ignore-system-mapper            ignore graph objects with _source: 'system-mapper'
+  -I, --ignore-system-internal          ignore graph objects with _source: 'system-internal'
+  ```
+
 ## [8.18.0] - 2022-07-01
 
 ### Added

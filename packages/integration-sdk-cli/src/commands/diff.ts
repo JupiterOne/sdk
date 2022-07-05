@@ -3,6 +3,12 @@ import fs from 'fs';
 import { diffString } from 'json-diff';
 import path from 'path';
 
+// coercion function to collect multiple values for a flag
+const collector = (value: string, arr: string[]) => {
+  arr.push(...value.split(','));
+  return arr;
+};
+
 declare module 'json-diff' {
   /**
    * The exported types from @types/json-diff exclude an optional fourth parameter, `diffOptions`,
@@ -28,11 +34,30 @@ export function diff() {
       'compare results from \'find * with _integrationInstanceId="abc-123" that RELATES TO * return tree\'',
     )
     .option('-k, --keys-only', 'only diff _key properties')
+    .option(
+      '-i, --ignore-types <type-1>,<type-2>',
+      'ignore graph objects with _type: <type>',
+      collector,
+      [],
+    )
+    .option(
+      '-M, --ignore-system-mapper',
+      "ignore graph objects with _source: 'system-mapper'",
+    )
+    .option(
+      '-I, --ignore-system-internal',
+      "ignore graph objects with _source: 'system-internal'",
+    )
     .action((oldExportPath, newExportPath, options) => {
       findDifferences(
         path.resolve(oldExportPath),
         path.resolve(newExportPath),
-        options.keysOnly,
+        {
+          keysOnly: options.keysOnly,
+          ignoreSystemMapper: options.ignoreSystemMapper,
+          ignoreSystemInternal: options.ignoreSystemInternal,
+          ignoreTypes: options.ignoreTypes,
+        },
       );
     });
 }
@@ -94,7 +119,12 @@ interface EdgeExport {
 export function findDifferences(
   oldJsonDataPath: string,
   newJsonDataPath: string,
-  keysOnly?: boolean,
+  options?: {
+    keysOnly?: boolean;
+    ignoreSystemMapper?: boolean;
+    ignoreSystemInternal?: boolean;
+    ignoreTypes?: string[];
+  },
 ) {
   const oldExport: JupiterOneTreeExport = JSON.parse(
     fs.readFileSync(oldJsonDataPath, 'utf8'),
@@ -103,8 +133,8 @@ export function findDifferences(
     fs.readFileSync(newJsonDataPath, 'utf8'),
   );
 
-  diffEntities(oldExport.data.vertices, newExport.data.vertices, keysOnly);
-  diffRelationships(oldExport.data.edges, newExport.data.edges, keysOnly);
+  diffEntities(oldExport.data.vertices, newExport.data.vertices, options);
+  diffRelationships(oldExport.data.edges, newExport.data.edges, options);
 }
 
 interface DiffableEntity {
@@ -122,10 +152,25 @@ interface DiffableEntities {
 function diffEntities(
   oldVertices: VertexExport[],
   newVertices: VertexExport[],
-  keysOnly?: boolean,
+  options?: {
+    keysOnly?: boolean;
+    ignoreSystemMapper?: boolean;
+    ignoreSystemInternal?: boolean;
+    ignoreTypes?: string[];
+  },
 ) {
   const oldEntities: DiffableEntities = {};
   for (const vertex of oldVertices) {
+    if (options?.ignoreSystemMapper) {
+      if (vertex.entity._source === 'system-mapper') continue;
+    }
+    if (options?.ignoreSystemInternal) {
+      if (vertex.entity._source === 'system-internal') continue;
+    }
+    if (options?.ignoreTypes) {
+      if (options.ignoreTypes.includes(vertex.entity._type[0] as string))
+        continue;
+    }
     oldEntities[vertex.entity._key] = {
       _type: vertex.entity._type,
       _class: vertex.entity._class,
@@ -137,6 +182,16 @@ function diffEntities(
 
   const newEntities: DiffableEntities = {};
   for (const vertex of newVertices) {
+    if (options?.ignoreSystemMapper) {
+      if (vertex.entity._source === 'system-mapper') continue;
+    }
+    if (options?.ignoreSystemInternal) {
+      if (vertex.entity._source === 'system-internal') continue;
+    }
+    if (options?.ignoreTypes) {
+      if (options.ignoreTypes.includes(vertex.entity._type[0] as string))
+        continue;
+    }
     newEntities[vertex.entity._key] = {
       _type: vertex.entity._type,
       _class: vertex.entity._class,
@@ -147,7 +202,11 @@ function diffEntities(
   }
 
   console.log('--- ENTITY DIFF ---');
-  console.log(diffString(oldEntities, newEntities, undefined, { keysOnly }));
+  console.log(
+    diffString(oldEntities, newEntities, undefined, {
+      keysOnly: options?.keysOnly,
+    }),
+  );
 }
 
 interface DiffableRelationship {
@@ -167,10 +226,25 @@ interface DiffableRelationships {
 function diffRelationships(
   oldEdges: EdgeExport[],
   newEdges: EdgeExport[],
-  keysOnly?: boolean,
+  options?: {
+    keysOnly?: boolean;
+    ignoreSystemMapper?: boolean;
+    ignoreSystemInternal?: boolean;
+    ignoreTypes?: string[];
+  },
 ) {
   const oldRelationships: DiffableRelationships = {};
   for (const edge of oldEdges) {
+    if (options?.ignoreSystemMapper) {
+      if (edge.relationship._source === 'system-mapper') continue;
+    }
+    if (options?.ignoreSystemInternal) {
+      if (edge.relationship._source === 'system-internal') continue;
+    }
+    if (options?.ignoreTypes) {
+      if (options.ignoreTypes.includes(edge.relationship._type as string))
+        continue;
+    }
     oldRelationships[edge.relationship._key] = {
       _type: edge.relationship._type,
       _class: edge.relationship._class,
@@ -184,6 +258,16 @@ function diffRelationships(
 
   const newRelationships: DiffableRelationships = {};
   for (const edge of newEdges) {
+    if (options?.ignoreSystemMapper) {
+      if (edge.relationship._source === 'system-mapper') continue;
+    }
+    if (options?.ignoreSystemInternal) {
+      if (edge.relationship._source === 'system-internal') continue;
+    }
+    if (options?.ignoreTypes) {
+      if (options.ignoreTypes.includes(edge.relationship._type as string))
+        continue;
+    }
     newRelationships[edge.relationship._key] = {
       _type: edge.relationship._type,
       _class: edge.relationship._class,
@@ -197,6 +281,8 @@ function diffRelationships(
 
   console.log('--- RELATIONSHIP DIFF ---');
   console.log(
-    diffString(oldRelationships, newRelationships, undefined, { keysOnly }),
+    diffString(oldRelationships, newRelationships, undefined, {
+      keysOnly: options?.keysOnly,
+    }),
   );
 }
