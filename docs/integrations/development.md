@@ -1444,6 +1444,9 @@ Options:
   -h, --help                      display help for command
 ```
 
+NOTE: When the `--output-file` flag is not specified, the generated graph schema
+will be written to stdout.
+
 #### Future commands and utilities
 
 ##### More commands and options
