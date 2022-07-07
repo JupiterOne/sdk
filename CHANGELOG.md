@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## [8.19.0] - 2022-07-07
+
 ### Added
 
 - New `j1-integration generate-integration-graph-schema` CLI command added
