@@ -1431,6 +1431,22 @@ Options:
   -h, --help                                         display help for command
 ```
 
+#### Command `j1-integration generate-integration-graph-schema`
+
+```
+Usage: j1-integration generate-integration-graph-schema [options]
+
+generate integration graph metadata summary from step metadata
+
+Options:
+  -o, --output-file <path>        project relative path to generated integration graph schema file
+  -p, --project-path <directory>  path to integration project directory (default: "{CWD}")
+  -h, --help                      display help for command
+```
+
+NOTE: When the `--output-file` flag is not specified, the generated graph schema
+will be written to stdout.
+
 #### Future commands and utilities
 
 ##### More commands and options

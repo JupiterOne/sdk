@@ -9,6 +9,21 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- New `j1-integration generate-integration-graph-schema` CLI command added
+
+```
+Usage: j1-integration generate-integration-graph-schema [options]
+
+generate integration graph metadata summary from step metadata
+
+Options:
+  -o, --output-file <path>        project relative path to generated integration graph schema file
+  -p, --project-path <directory>  path to integration project directory (default: "{CWD}")
+  -h, --help                      display help for command
+```
+
 ## [8.18.1] - 2022-07-05
 
 ### Changed
@@ -181,8 +196,8 @@ Skipped step "Fetch Issues". Beta feature, please contact support to enable.
 
 ## Changed
 
-- Updated dependency `@lifeomic/attempt` to version 3.0.3  
-  Fixes an error handling issues when using the timeout option.
+- Updated dependency `@lifeomic/attempt` to version 3.0.3 Fixes an error
+  handling issues when using the timeout option.
 
 ## [8.12.0] - 2022-04-20
 
