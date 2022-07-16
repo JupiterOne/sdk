@@ -350,7 +350,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
     beforeAddRelationship(
       context: IntegrationExecutionContext<IntegrationConfig>,
       relationship: Relationship,
-    ): Entity {
+    ): Relationship {
       return relationship;
     },
   };
