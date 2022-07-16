@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.20.0 - 2021-07-16
+
+### Added
+
+- Introduce `beforeAddRelationship` hook into `IntegrationInvocationConfig`. See
+  the development documentation for more information on its usage.
+
 ## [8.19.0] - 2022-07-07
 
 ### Added
