@@ -323,6 +323,39 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
   };
 ```
 
+#### `beforeAddRelationship`
+
+`beforeAddRelationship` is an optional hook function that can be provided. The
+function is called before a relationship is added to the job state internally
+and the return value of the function is the relationship that will ultimately be
+added to the job state. The hook is particularly useful for when a specific
+property should be added to every relationship that is produced by the
+integration.
+
+Example:
+
+```typescript
+import {
+  Relationship,
+  IntegrationInvocationConfig,
+} from '@jupiterone/integration-sdk-core';
+import { IntegrationConfig, IntegrationStepContext } from './types';
+import getStepStartStates from './getStepStartStates';
+
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
+  {
+    instanceConfigFields: {},
+    integrationSteps: [],
+
+    beforeAddRelationship(
+      context: IntegrationExecutionContext<IntegrationConfig>,
+      relationship: Relationship,
+    ): Entity {
+      return relationship;
+    },
+  };
+```
+
 ### How integrations are executed
 
 The `IntegrationInvocationConfig` declaratively defines how an integration runs.

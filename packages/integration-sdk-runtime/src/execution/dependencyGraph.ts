@@ -3,10 +3,12 @@ import PromiseQueue from 'p-queue';
 
 import {
   BeforeAddEntityHookFunction,
+  BeforeAddRelationshipHookFunction,
   DisabledStepReason,
   Entity,
   ExecutionContext,
   IntegrationStepResult,
+  Relationship,
   Step,
   StepExecutionContext,
   StepResultStatus,
@@ -84,6 +86,7 @@ export function executeStepDependencyGraph<
   dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
+  beforeAddRelationship,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -93,6 +96,7 @@ export function executeStepDependencyGraph<
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -304,6 +308,7 @@ export function executeStepDependencyGraph<
         dataStore,
         stepId,
         beforeAddEntity,
+        beforeAddRelationship,
         uploader,
       });
 
@@ -440,6 +445,7 @@ function buildStepContext<
   dataStore,
   uploader,
   beforeAddEntity,
+  beforeAddRelationship,
 }: {
   stepId: string;
   context: TExecutionContext;
@@ -449,6 +455,7 @@ function buildStepContext<
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
 }): TStepExecutionContext {
   // Purposely assigned to `undefined` instead of a noop function even though
   // this code is a bit messier. The jobState code is fairly hot and checking
@@ -461,6 +468,11 @@ function buildStepContext<
         }
       : undefined;
 
+  const jobStateBeforeAddRelationship =
+    typeof beforeAddRelationship !== 'undefined'
+      ? (r: Relationship): Relationship => beforeAddRelationship(context, r)
+      : undefined;
+
   const jobState = createStepJobState({
     stepId,
     duplicateKeyTracker,
@@ -468,6 +480,7 @@ function buildStepContext<
     graphObjectStore,
     dataStore,
     beforeAddEntity: jobStateBeforeAddEntity,
+    beforeAddRelationship: jobStateBeforeAddRelationship,
     uploader,
   });
 

@@ -230,6 +230,7 @@ export async function executeWithContext<
       dataStore: new MemoryDataStore(),
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
+      beforeAddRelationship: config.beforeAddRelationship,
       dependencyGraphOrder: config.dependencyGraphOrder,
     });
 

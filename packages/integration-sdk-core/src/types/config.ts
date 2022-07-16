@@ -9,6 +9,7 @@ import {
   IntegrationExecutionConfig,
 } from './context';
 import { Entity } from './entity';
+import { Relationship } from './relationship';
 
 /**
  * Normalization transform for tracking keys in an integration. Allows
@@ -25,6 +26,10 @@ export type BeforeAddEntityHookFunction<
   TExecutionContext extends ExecutionContext,
 > = (context: TExecutionContext, entity: Entity) => Entity;
 
+export type BeforeAddRelationshipHookFunction<
+  TExecutionContext extends ExecutionContext,
+> = (context: TExecutionContext, relationship: Relationship) => Relationship;
+
 export type LoadExecutionConfigFunction<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
@@ -39,6 +44,7 @@ export interface InvocationConfig<
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   loadExecutionConfig?: LoadExecutionConfigFunction;
   /**
    * An optional array of identifiers used to execute dependency

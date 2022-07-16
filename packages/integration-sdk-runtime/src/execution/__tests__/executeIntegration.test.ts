@@ -42,6 +42,35 @@ function sleep(ms: number) {
   });
 }
 
+interface FlushedGraphObjectDataWithFilePath extends FlushedGraphObjectData {
+  filePath;
+}
+
+async function getSortedLocalGraphData(): Promise<
+  FlushedGraphObjectDataWithFilePath[]
+> {
+  const flushedGraphData: FlushedGraphObjectDataWithFilePath[] = [];
+
+  await integrationFileSystem.walkDirectory({
+    path: path.join(integrationFileSystem.getRootStorageDirectory(), 'graph'),
+    iteratee: async ({ filePath }) => {
+      const fileData = (await fs.readFile(filePath)).toString('utf-8');
+
+      flushedGraphData.push({
+        ...JSON.parse(fileData),
+        filePath,
+      });
+    },
+  });
+
+  return flushedGraphData
+    .sort((a, b) => (a.filePath > b.filePath ? 1 : -1))
+    .map((flushed) => {
+      delete flushed.filePath;
+      return flushed;
+    });
+}
+
 export interface InstanceConfigurationData<
   TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
@@ -556,6 +585,121 @@ describe('executeIntegrationInstance', () => {
             _type: 'test',
             _class: 'Test',
             displayName: 'Bob',
+          },
+        ],
+      },
+    ]);
+  });
+
+  test('should call "beforeAddRelationship" hook if provided to config', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        beforeAddRelationship(_, relationship) {
+          return {
+            ...relationship,
+            customProp:
+              typeof relationship.customProp === 'undefined'
+                ? true
+                : relationship.customProp,
+          };
+        },
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              const e1 = await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const e2 = await jobState.addEntity({
+                _key: 'test1',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const e3 = await jobState.addEntity({
+                _key: 'test2',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: e2,
+                  to: e1,
+                }),
+              );
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: e3,
+                  to: e2,
+                  properties: {
+                    customProp: false,
+                  },
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    await executeIntegrationInstanceWithConfig(config);
+    const sortedLocalGraphData = await getSortedLocalGraphData();
+
+    expect(sortedLocalGraphData).toEqual([
+      {
+        entities: [
+          {
+            _key: 'test',
+            _type: 'test',
+            _class: 'Test',
+          },
+          {
+            _key: 'test1',
+            _type: 'test',
+            _class: 'Test',
+          },
+          {
+            _key: 'test2',
+            _type: 'test',
+            _class: 'Test',
+          },
+        ],
+      },
+      {
+        relationships: [
+          {
+            _key: 'test1|has|test',
+            _type: 'test_has_',
+            _class: 'HAS',
+            _fromEntityKey: 'test1',
+            _toEntityKey: 'test',
+            displayName: 'HAS',
+            customProp: true,
+          },
+          {
+            _key: 'test2|has|test1',
+            _type: 'test_has_',
+            _class: 'HAS',
+            _fromEntityKey: 'test2',
+            _toEntityKey: 'test1',
+            displayName: 'HAS',
+            customProp: false,
           },
         ],
       },
