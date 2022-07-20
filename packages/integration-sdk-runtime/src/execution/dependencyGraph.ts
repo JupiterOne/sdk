@@ -470,7 +470,8 @@ function buildStepContext<
 
   const jobStateBeforeAddRelationship =
     typeof beforeAddRelationship !== 'undefined'
-      ? (r: Relationship): Relationship => beforeAddRelationship(context, r)
+      ? (r: Relationship): Promise<Relationship> | Relationship =>
+          beforeAddRelationship(context, r)
       : undefined;
 
   const jobState = createStepJobState({

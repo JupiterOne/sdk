@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.22.0 - 2021-07-20
+
+- Support async `beforeAddRelationship` hook in `IntegrationInvocationConfig`.
+  See the development documentation for more information on its usage.
+
 ## 8.21.0 - 2021-07-20
 
 ### Added
