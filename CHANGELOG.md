@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.21.0 - 2021-07-20
+
+### Added
+
+- Added `IntegrationInfoEventName.Results` and
+  `IntegrationWarnEventName.MissingEntity`.
+
 ## 8.20.0 - 2021-07-16
 
 ### Added
