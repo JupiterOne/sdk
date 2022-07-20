@@ -40,6 +40,7 @@ export type PublishEventInput = {
 
 export enum IntegrationInfoEventName {
   Stats = 'stats',
+  Results = 'results',
 }
 
 export interface PublishInfoEventInput extends PublishEventInput {
@@ -54,6 +55,7 @@ export enum IntegrationWarnEventName {
    * We would like to indicate to the end-user when this limit is encountered
    */
   IngestionLimitEncountered = 'warn_ingestion_limit_encountered',
+  MissingEntity = 'warn_missing_entity',
 }
 
 export interface PublishWarnEventInput extends PublishEventInput {
