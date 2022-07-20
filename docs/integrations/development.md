@@ -286,7 +286,7 @@ data retrieved in the step as a partial dataset. See the
 [Failure handling](#failure-handling) section below for more information on
 partial datasets.
 
-#### `beforeAddEntity`
+#### `beforeAddEntity(context: IntegrationExecutionContext<IntegrationConfig>, e: Entity): Entity`
 
 `beforeAddEntity` is an optional hook function that can be provided. The
 function is called before an entity is added to the job state internally and the
@@ -323,7 +323,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
   };
 ```
 
-#### `beforeAddRelationship`
+#### `beforeAddRelationship(context: IntegrationExecutionContext<IntegrationConfig>, r: Relationship): Promise<Relationship> | Relationship`
 
 `beforeAddRelationship` is an optional hook function that can be provided. The
 function is called before a relationship is added to the job state internally

@@ -706,6 +706,123 @@ describe('executeIntegrationInstance', () => {
     ]);
   });
 
+  test('should call async "beforeAddRelationship" hook if provided to config', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        async beforeAddRelationship(_, relationship) {
+          await sleep(50);
+
+          return {
+            ...relationship,
+            customProp:
+              typeof relationship.customProp === 'undefined'
+                ? true
+                : relationship.customProp,
+          };
+        },
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              const e1 = await jobState.addEntity({
+                _key: 'test',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const e2 = await jobState.addEntity({
+                _key: 'test1',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              const e3 = await jobState.addEntity({
+                _key: 'test2',
+                _type: 'test',
+                _class: 'Test',
+              });
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: e2,
+                  to: e1,
+                }),
+              );
+
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  _class: RelationshipClass.HAS,
+                  from: e3,
+                  to: e2,
+                  properties: {
+                    customProp: false,
+                  },
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    await executeIntegrationInstanceWithConfig(config);
+    const sortedLocalGraphData = await getSortedLocalGraphData();
+
+    expect(sortedLocalGraphData).toEqual([
+      {
+        entities: [
+          {
+            _key: 'test',
+            _type: 'test',
+            _class: 'Test',
+          },
+          {
+            _key: 'test1',
+            _type: 'test',
+            _class: 'Test',
+          },
+          {
+            _key: 'test2',
+            _type: 'test',
+            _class: 'Test',
+          },
+        ],
+      },
+      {
+        relationships: [
+          {
+            _key: 'test1|has|test',
+            _type: 'test_has_',
+            _class: 'HAS',
+            _fromEntityKey: 'test1',
+            _toEntityKey: 'test',
+            displayName: 'HAS',
+            customProp: true,
+          },
+          {
+            _key: 'test2|has|test1',
+            _type: 'test_has_',
+            _class: 'HAS',
+            _fromEntityKey: 'test2',
+            _toEntityKey: 'test1',
+            displayName: 'HAS',
+            customProp: false,
+          },
+        ],
+      },
+    ]);
+  });
+
   test('publishes disk usage metric', async () => {
     const config = createInstanceConfiguration({
       invocationConfig: {
