@@ -179,11 +179,40 @@ export function getTime(
  * Date(time).getTime()`.
  *
  * @param time a time value
+ * @param precision - the precision of the numeric value being supplied. Will be converted to ms.
+ *          ms - milliseconds
+ *          sec - seconds
  */
 export function parseTimePropertyValue(
   time: Date | string | number | undefined | null,
+  precision?: 'ms' | 'sec',
 ): number | undefined {
   if (time) {
+    // Required because isNaN(new Date()) === false
+    if (time instanceof Date) {
+      return time.getTime();
+    }
+
+    // Convert numeric strings to a float
+    if (typeof time === 'string' && !isNaN(Number(time))) {
+      time = parseFloat(time);
+    }
+
+    // Require precision if time is a number
+    if (typeof time === 'number' && !isNaN(time)) {
+      if (!precision) {
+        throw new Error(
+          'Argument precision is required when parsing a number.',
+        );
+      } else if (precision === 'sec') {
+        time = Number(time) * 1000;
+      } else if (precision === 'ms' && !Number.isInteger(time)) {
+        throw new Error(
+          'Argument time must not be a float when precision is set to ms.',
+        );
+      }
+    }
+
     const parsed = new Date(time).getTime();
     if (!isNaN(parsed)) {
       return parsed;
