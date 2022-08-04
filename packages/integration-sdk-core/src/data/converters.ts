@@ -179,7 +179,7 @@ export function getTime(
  * Date(time).getTime()`.
  *
  * @param time a time value
- * @param precision - the precision of the numeric value being supplied. Will be converted to ms.
+ * @param precision - the precision of the numeric value being supplied. Used to determine how to convert to ms.
  *          ms - milliseconds
  *          sec - seconds
  */
