@@ -169,7 +169,7 @@ export function convertNameValuePairs(
  * @see parseTimePropertyValue
  */
 export function getTime(
-  time: Date | string | number | undefined | null,
+  time: Date | string | undefined | null,
 ): number | undefined {
   return parseTimePropertyValue(time);
 }
@@ -179,13 +179,20 @@ export function getTime(
  * Date(time).getTime()`.
  *
  * @param time a time value
- * @param precision - the precision of the numeric value being supplied. Used to determine how to convert to ms.
+ * @param sourcePrecision - the precision of the numeric value being supplied. Used to determine how to convert to ms.
  *          ms - milliseconds
  *          sec - seconds
  */
 export function parseTimePropertyValue(
+  time: number,
+  sourcePrecision: 'ms' | 'sec',
+): number | undefined;
+export function parseTimePropertyValue(
+  time: Date | string | undefined | null,
+): number | undefined;
+export function parseTimePropertyValue(
   time: Date | string | number | undefined | null,
-  precision?: 'ms' | 'sec',
+  sourcePrecision?: 'ms' | 'sec',
 ): number | undefined {
   if (time) {
     // Required because isNaN(new Date()) === false
@@ -198,18 +205,14 @@ export function parseTimePropertyValue(
       time = parseFloat(time);
     }
 
-    // Require precision if time is a number
+    // Require sourcePrecision if time is a number
     if (typeof time === 'number' && !isNaN(time)) {
-      if (!precision) {
+      if (!sourcePrecision) {
         throw new Error(
-          'Argument precision is required when parsing a number.',
+          'Argument sourcePrecision is required when parsing a number.',
         );
-      } else if (precision === 'sec') {
+      } else if (sourcePrecision === 'sec') {
         time = Number(time) * 1000;
-      } else if (precision === 'ms' && !Number.isInteger(time)) {
-        throw new Error(
-          'Argument time must not be a float when precision is set to ms.',
-        );
       }
     }
 

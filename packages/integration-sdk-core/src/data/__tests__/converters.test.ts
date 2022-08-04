@@ -157,7 +157,7 @@ describe('#parseTimePropertyValue', () => {
     expect(parseTimePropertyValue(null)).toBeUndefined();
     expect(parseTimePropertyValue(undefined)).toBeUndefined();
     expect(parseTimePropertyValue('')).toBeUndefined();
-    expect(parseTimePropertyValue(0)).toBeUndefined();
+    expect(parseTimePropertyValue(0 as any)).toBeUndefined();
     expect(parseTimePropertyValue('bargbklselk')).toBeUndefined();
   });
   test('should correctly parse Date', () => {
@@ -175,12 +175,19 @@ describe('#parseTimePropertyValue', () => {
     expect(parseTimePropertyValue('2020-10-06T17:41:28.9999+00:00')).toBe(
       1602006088999,
     );
-    expect(parseTimePropertyValue('1601942400', 'sec')).toBe(1601942400000);
-    expect(parseTimePropertyValue('1601942400.887', 'sec')).toBe(1601942400887);
+    expect(parseTimePropertyValue('1601942400' as any, 'sec')).toBe(
+      1601942400000,
+    );
+    expect(parseTimePropertyValue('1601942400.887' as any, 'sec')).toBe(
+      1601942400887,
+    );
   });
   test('parsing number without precision', () => {
-    expect(() => parseTimePropertyValue(123)).toThrowError(
-      new Error('Argument precision is required when parsing a number.'),
+    expect(() => parseTimePropertyValue(1601942400 as any)).toThrowError(
+      new Error('Argument sourcePrecision is required when parsing a number.'),
+    );
+    expect(() => parseTimePropertyValue('1601942400' as any)).toThrowError(
+      new Error('Argument sourcePrecision is required when parsing a number.'),
     );
   });
   test('parsing number', () => {
@@ -197,10 +204,6 @@ describe('#parseTimePropertyValue', () => {
     );
     // Milliseconds
     expect(parseTimePropertyValue(1601942400000, 'ms')).toBe(1601942400000);
-    expect(() => parseTimePropertyValue(1601942400.001, 'ms')).toThrowError(
-      new Error(
-        'Argument time must not be a float when precision is set to ms.',
-      ),
-    );
+    expect(parseTimePropertyValue(1601942400000.999, 'ms')).toBe(1601942400000);
   });
 });
