@@ -21,26 +21,51 @@ export function loadConfigFromEnvironmentVariables<
   dotenvExpand(dotenv.config());
 
   return Object.entries(configMap)
-    .map(([field, config]): [string, string | boolean] => {
+    .map(([field, config]): [string, string | boolean | undefined] => {
       const environmentVariableName = snakeCase(field).toUpperCase();
 
       const environmentVariableValue = process.env[environmentVariableName];
 
-      if (environmentVariableValue === undefined) {
-        throw configFieldMissingError(field, environmentVariableName);
-      }
-      const convertedValue = convertEnvironmentVariableValueForField(
+      const value = getConfigValueForField({
         field,
         config,
+        environmentVariableName,
         environmentVariableValue,
-      );
+      });
 
-      return [field, convertedValue];
+      return [field, value];
     })
     .reduce((acc: Record<string, string | boolean>, [field, value]) => {
-      acc[field] = value;
+      if (value !== undefined) {
+        acc[field] = value;
+      }
       return acc;
     }, {}) as TConfig;
+}
+
+function getConfigValueForField(params: {
+  field: string;
+  config: IntegrationInstanceConfigField;
+  environmentVariableName: string;
+  environmentVariableValue?: string;
+}): string | boolean | undefined {
+  const { field, config, environmentVariableName, environmentVariableValue } =
+    params;
+  if (environmentVariableValue === undefined) {
+    if (config.defaultValue) {
+      return config.defaultValue;
+    }
+    if (!config.optional) {
+      throw configFieldMissingError(field, environmentVariableName);
+    }
+    return undefined;
+  } else {
+    return convertEnvironmentVariableValueForField(
+      field,
+      config,
+      environmentVariableValue,
+    );
+  }
 }
 
 function convertEnvironmentVariableValueForField(
