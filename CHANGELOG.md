@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+- Added `optional` and `defaultValue` parameters to
+  `IntegrationInstanceConfigField`.
+
 ## 8.22.0 - 2021-07-20
 
 - Support async `beforeAddRelationship` hook in `IntegrationInvocationConfig`.
