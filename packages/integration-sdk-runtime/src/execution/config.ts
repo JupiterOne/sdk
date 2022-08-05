@@ -52,7 +52,7 @@ function getConfigValueForField(params: {
   const { field, config, environmentVariableName, environmentVariableValue } =
     params;
   if (environmentVariableValue === undefined) {
-    if (config.defaultValue) {
+    if (config.defaultValue !== undefined) {
       return config.defaultValue;
     }
     if (!config.optional) {
