@@ -52,13 +52,11 @@ function getConfigValueForField(params: {
   const { field, config, environmentVariableName, environmentVariableValue } =
     params;
   if (environmentVariableValue === undefined) {
-    if (config.defaultValue !== undefined) {
-      return config.defaultValue;
-    }
-    if (!config.optional) {
+    if (config.optional) {
+       return config.defaultValue;
+    } else {
       throw configFieldMissingError(field, environmentVariableName);
     }
-    return undefined;
   } else {
     return convertEnvironmentVariableValueForField(
       field,
