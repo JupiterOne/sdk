@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
 - Added `optional` and `defaultValue` parameters to
   `IntegrationInstanceConfigField`.
 
