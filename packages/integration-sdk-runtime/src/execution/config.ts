@@ -26,14 +26,20 @@ export function loadConfigFromEnvironmentVariables<
 
       const environmentVariableValue = process.env[environmentVariableName];
 
-      const value = getConfigValueForField({
+      if (environmentVariableValue === undefined) {
+        if (config.optional) {
+          return [field, undefined];
+        } else {
+          throw configFieldMissingError(field, environmentVariableName);
+        }
+      }
+      const convertedValue = convertEnvironmentVariableValueForField(
         field,
         config,
-        environmentVariableName,
         environmentVariableValue,
-      });
+      );
 
-      return [field, value];
+      return [field, convertedValue];
     })
     .reduce((acc: Record<string, string | boolean>, [field, value]) => {
       if (value !== undefined) {
@@ -41,29 +47,6 @@ export function loadConfigFromEnvironmentVariables<
       }
       return acc;
     }, {}) as TConfig;
-}
-
-function getConfigValueForField(params: {
-  field: string;
-  config: IntegrationInstanceConfigField;
-  environmentVariableName: string;
-  environmentVariableValue?: string;
-}): string | boolean | undefined {
-  const { field, config, environmentVariableName, environmentVariableValue } =
-    params;
-  if (environmentVariableValue === undefined) {
-    if (config.optional) {
-       return config.defaultValue;
-    } else {
-      throw configFieldMissingError(field, environmentVariableName);
-    }
-  } else {
-    return convertEnvironmentVariableValueForField(
-      field,
-      config,
-      environmentVariableValue,
-    );
-  }
 }
 
 function convertEnvironmentVariableValueForField(

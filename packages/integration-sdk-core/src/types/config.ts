@@ -71,11 +71,6 @@ export interface IntegrationInvocationConfig<
 
 export interface IntegrationInstanceConfigField {
   type?: 'string' | 'boolean';
-  /**
-   * Defines a default value for the config.
-   * Overrides the optional parameter if defined.
-   */
-  defaultValue?: string | boolean;
   mask?: boolean;
   optional?: boolean;
 }

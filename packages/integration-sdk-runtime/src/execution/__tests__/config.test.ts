@@ -42,53 +42,6 @@ test('loads config fields from environment variables', () => {
   });
 });
 
-test('loads config fields from environment variables when default value exists', () => {
-  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
-    Record<'stringVariable' | 'booleanVariable', IntegrationInstanceConfigField>
-  > = {
-    stringVariable: {
-      type: 'string',
-      defaultValue: 'notString',
-    },
-    booleanVariable: {
-      type: 'boolean',
-      defaultValue: false,
-    },
-  };
-
-  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
-
-  expect(config).toEqual({
-    stringVariable: 'string',
-    booleanVariable: true,
-  });
-});
-
-test('loads default values in config fields', () => {
-  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
-    Record<
-      'otherStringVariable' | 'otherBooleanVariable',
-      IntegrationInstanceConfigField
-    >
-  > = {
-    otherStringVariable: {
-      type: 'string',
-      defaultValue: 'otherString',
-    },
-    otherBooleanVariable: {
-      type: 'boolean',
-      defaultValue: true,
-    },
-  };
-
-  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
-
-  expect(config).toEqual({
-    otherStringVariable: 'otherString',
-    otherBooleanVariable: true,
-  });
-});
-
 test('throws error if expected environment is not set for config field', () => {
   const instanceConfigFields: IntegrationInstanceConfigFieldMap<
     Record<'mySuperAwesomeEnvironmentVariable', IntegrationInstanceConfigField>
@@ -107,17 +60,26 @@ test('throws error if expected environment is not set for config field', () => {
 
 test('does not throws error if optional environment is not set for config field', () => {
   const instanceConfigFields: IntegrationInstanceConfigFieldMap<
-    Record<'mySuperAwesomeEnvironmentVariable', IntegrationInstanceConfigField>
+    Record<
+      'mySuperAwesomeEnvironmentVariable' | 'booleanVariable',
+      IntegrationInstanceConfigField
+    >
   > = {
     mySuperAwesomeEnvironmentVariable: {
       type: 'string',
+      optional: true,
+    },
+    booleanVariable: {
+      type: 'boolean',
       optional: true,
     },
   };
 
   const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
 
-  expect(config).toEqual({});
+  expect(config).toEqual({
+    booleanVariable: true,
+  });
 });
 
 test('throws error if expected environment boolean field does not match "true" or "false"', () => {

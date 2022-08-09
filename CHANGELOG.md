@@ -11,8 +11,7 @@ and this project adheres to
 
 ### Added
 
-- Added `optional` and `defaultValue` parameters to
-  `IntegrationInstanceConfigField`.
+- Added `optional` parameter to `IntegrationInstanceConfigField`.
 
 ## 8.22.0 - 2021-07-20
 
