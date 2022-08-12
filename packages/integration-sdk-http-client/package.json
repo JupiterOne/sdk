@@ -11,14 +11,13 @@
     "dist"
   ],
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "test": "jest",
-    "test:event-handlers": "ts-node ./test/index.ts",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"

@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2018",
-    "lib": ["es2018"],
+    "target": "es2021",
+    "lib": ["es2021"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,

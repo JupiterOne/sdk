@@ -13,7 +13,7 @@ import { expect } from './util/expect';
 function throwsUnhandledRejection() {
   async function throwsException() {
     await Promise.resolve();
-    throw new Error();
+    throw new Error('expected unhandled rejection');
   }
   void throwsException();
 }
