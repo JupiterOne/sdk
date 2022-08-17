@@ -35,7 +35,13 @@ type ProviderSourceData = {
    * and the tag values will be collected in the generated entity as `tags` (a
    * `string[]`);
    */
-  tags?: ResourceTagList | ResourceTagMap;
+  tags?:
+    | ResourceTagList
+    | ResourceTagMap
+    | string
+    | string[]
+    | undefined
+    | null;
 
   [key: string]: any;
 };
