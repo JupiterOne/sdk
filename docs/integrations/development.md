@@ -1348,6 +1348,30 @@ ex:
 
 #### Command `j1-integration run`
 
+```
+Usage: j1-integration run [options]
+
+collect and sync to upload entities and relationships
+
+Options:
+  -i, --integrationInstanceId <id>                _integrationInstanceId assigned to uploaded entities and relationships
+  -p, --project-path <directory>                  path to integration project directory (default: "/user/graph-mimecast")
+  -d, --development                               "true" to target apps.dev.jupiterone.io (default: false)
+  --api-base-url <url>                            API base URL used during run operation.
+  -V, --disable-schema-validation                 disable schema validation
+  -u, --upload-batch-size <number>                specify number of items per batch for upload (default 250)
+  -ur, --upload-relationship-batch-size <number>  specify number of relationships per batch for upload (default 250)
+  -h, --help                                      display help for command
+```
+
+CLI environment variables:
+
+- `JUPITERONE_API_KEY` (**required**): JupiterOne API key to authenticate with.
+  This API key may be a user API key with "Admin" permission to the Integrations
+  application or an integration API key.
+- `JUPITERONE_ACCOUNT` (**required**): The UUID of the JupiterOne account to
+  target.
+
 The `j1-integration run` command combines the functionality of the `collect` and
 `sync` commands, essentially running the commands back to back.
 
@@ -1367,6 +1391,12 @@ and work performed by steps will automatically be published to our event log via
 the
 `https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/events`
 API.
+
+Example usage:
+
+```
+JUPITERONE_API_KEY="..." JUPITERONE_ACCOUNT="..." yarn j1-integration run --integrationInstanceId 7ad16b51-e4d6-4e74-afbd-2fac6185f398
+```
 
 #### Command `j1-integration visualize`
 
