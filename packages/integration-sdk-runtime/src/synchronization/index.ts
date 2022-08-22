@@ -338,6 +338,11 @@ function handleUploadDataChunkError({
   batch,
   uploadCorrelationId,
 }: HandleUploadDataChunkErrorParams): void {
+  if (err.code !== 'CredentialsError') {
+    // we don't want to log on credential errors
+    logger.warn({ error: err }, 'Error uploading graph data chunk', err);
+  }
+
   /**
    * The JupiterOne system will encapsulate error details in the response in
    * some situations. For example:
