@@ -338,11 +338,6 @@ function handleUploadDataChunkError({
   batch,
   uploadCorrelationId,
 }: HandleUploadDataChunkErrorParams): void {
-  if (err.code !== 'CredentialsError') {
-    // we don't want to log on credential errors
-    logger.warn({ error: err }, 'Error uploading graph data chunk', err);
-  }
-
   /**
    * The JupiterOne system will encapsulate error details in the response in
    * some situations. For example:
@@ -421,13 +416,22 @@ export async function uploadDataChunk<
       delay: 200,
       factor: 1.05,
       handleError(err, attemptContext) {
-        handleUploadDataChunkError({
-          err,
-          attemptContext,
-          logger,
-          batch,
-          uploadCorrelationId,
-        });
+        try {
+          handleUploadDataChunkError({
+            err,
+            attemptContext,
+            logger,
+            batch,
+            uploadCorrelationId,
+          });
+        } catch (error) {
+          logger.warn(
+            { error },
+            'handleUploadDataChunkError function threw',
+            error,
+          );
+          throw error;
+        }
       },
     },
   );
