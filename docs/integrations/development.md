@@ -1355,7 +1355,7 @@ collect and sync to upload entities and relationships
 
 Options:
   -i, --integrationInstanceId <id>                _integrationInstanceId assigned to uploaded entities and relationships
-  -p, --project-path <directory>                  path to integration project directory (default: "/user/graph-mimecast")
+  -p, --project-path <directory>                  path to integration project directory (default: "/user/my-graph-integration-project")
   -d, --development                               "true" to target apps.dev.jupiterone.io (default: false)
   --api-base-url <url>                            API base URL used during run operation.
   -V, --disable-schema-validation                 disable schema validation
