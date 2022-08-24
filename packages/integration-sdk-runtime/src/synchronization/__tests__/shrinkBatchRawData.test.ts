@@ -304,7 +304,6 @@ describe('shrinkBatchRawData', () => {
       shrinkBatchRawData(data, logger);
       shrinkBatchRawDataSucceeded = true;
     } catch (err) {
-      expect(shrinkBatchRawDataSucceeded).toEqual(false);
       expect(err).toBeInstanceOf(IntegrationError);
       expect(logger.error).toBeCalledTimes(1);
       // should give details on largest entity in batch after finished shrinking, this should be item with _key=testKey3
@@ -333,5 +332,7 @@ describe('shrinkBatchRawData', () => {
       expect(logger.info).toBeCalledTimes(1);
       expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
     }
+
+    expect(shrinkBatchRawDataSucceeded).toEqual(false);
   });
 });
