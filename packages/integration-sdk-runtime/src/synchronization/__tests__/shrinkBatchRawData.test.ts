@@ -261,4 +261,74 @@ describe('shrinkBatchRawData', () => {
     expect(logger.info).toBeCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
   });
+
+  it('should assign 0 to the size of an undefined property when building the property map', () => {
+    const largeData = new Array(700000).join('aaaaaaaaaa');
+    const data = [
+      {
+        _class: 'test',
+        _key: 'testKey',
+        _type: 'testType',
+        _rawData: [
+          {
+            name: 'test',
+            rawData: {
+              largeRawDataProp: largeData + 'more',
+              testRawData: 'test123',
+              testFinalData: 'test789',
+              anotherLargeRawDataProp: largeData,
+            },
+          },
+        ],
+      },
+      {
+        _class: 'test',
+        _key: 'testKey2',
+        _type: 'testType',
+        largeProperty: largeData,
+        undefProp: undefined,
+        falseyProp: false,
+        _rawData: [
+          {
+            name: 'test2',
+            rawData: {
+              testRawData: 'test123',
+              testFinalData: 'test789',
+            },
+          },
+        ],
+      },
+    ];
+    try {
+      shrinkBatchRawData(data, logger);
+    } catch (err) {
+      expect(err).toBeInstanceOf(IntegrationError);
+      expect(logger.error).toBeCalledTimes(1);
+      // should give details on largest entity in batch after finished shrinking, this should be item with _key=testKey3
+      expect(logger.error).toBeCalledWith(
+        expect.objectContaining({
+          largestEntityPropSizeMap: {
+            _class: 6,
+            _key: 10,
+            _rawData: 80,
+            _type: 10,
+            largeProperty: 6999992,
+            falseyProp: 5,
+            undefProp: 0,
+          },
+        }),
+        expect.stringContaining(
+          'Encountered upload size error after fully shrinking.',
+        ),
+      );
+      expect(logger.publishErrorEvent).toBeCalledTimes(1);
+      expect(logger.publishErrorEvent).toBeCalledWith(
+        expect.objectContaining({
+          name: IntegrationErrorEventName.EntitySizeLimitEncountered,
+        }),
+      );
+      expect(logger.info).toBeCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Attempting to shrink rawData');
+    }
+  });
 });

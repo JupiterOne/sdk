@@ -220,7 +220,7 @@ function getPropSizeMapFromEntity(data: Entity): any {
   const propSizeMap = {};
 
   for (const [key, value] of Object.entries(data)) {
-    if (!value) {
+    if (value === undefined) {
       propSizeMap[key] = 0;
     } else {
       propSizeMap[key] = Buffer.byteLength(JSON.stringify(value));
