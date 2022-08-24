@@ -184,7 +184,7 @@ export function getTime(
  *          sec - seconds
  */
 export function parseTimePropertyValue(
-  time: number,
+  time: number | undefined | null,
   sourcePrecision: 'ms' | 'sec',
 ): number | undefined;
 export function parseTimePropertyValue(
