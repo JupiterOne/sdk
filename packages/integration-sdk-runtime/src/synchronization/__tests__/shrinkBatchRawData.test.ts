@@ -263,6 +263,7 @@ describe('shrinkBatchRawData', () => {
   });
 
   it('should assign 0 to the size of an undefined property when building the property map', () => {
+    let shrinkBatchRawDataSucceeded = false;
     const largeData = new Array(700000).join('aaaaaaaaaa');
     const data = [
       {
@@ -301,7 +302,9 @@ describe('shrinkBatchRawData', () => {
     ];
     try {
       shrinkBatchRawData(data, logger);
+      shrinkBatchRawDataSucceeded = true;
     } catch (err) {
+      expect(shrinkBatchRawDataSucceeded).toEqual(false);
       expect(err).toBeInstanceOf(IntegrationError);
       expect(logger.error).toBeCalledTimes(1);
       // should give details on largest entity in batch after finished shrinking, this should be item with _key=testKey3
