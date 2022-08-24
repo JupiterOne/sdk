@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.22.5 - 2022-08-24
+
 ### Fixed
 
 - Allow the use of possibly null or undefined `number` in
