@@ -43,6 +43,7 @@ export function neo4j() {
       await uploadToNeo4j({
         pathToData: finalDir,
         integrationInstanceID: options.integrationInstanceId,
+        neo4jDatabase: options.databaseName,
       });
       log.info(`Data uploaded to local neo4j`);
     });
