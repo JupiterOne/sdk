@@ -66,6 +66,7 @@ export function neo4j() {
     .action(async (options) => {
       await wipeNeo4jByID({
         integrationInstanceID: options.integrationInstanceId,
+        neo4jDatabase: options.databaseName,
       });
     });
 
@@ -78,7 +79,9 @@ export function neo4j() {
       'neo4j',
     )
     .action(async (options) => {
-      await wipeAllNeo4j({});
+      await wipeAllNeo4j({
+        neo4jDatabase: options.databaseName,
+      });
     });
 
   return neo4jCommand;
