@@ -28,6 +28,11 @@ export function neo4j() {
       '_integrationInstanceId assigned to uploaded entities',
       'defaultLocalInstanceID',
     )
+    .option(
+      '-db, --database-name <database>',
+      'optional database to push data to (only available for enterprise Neo4j databases)',
+      'neo4j',
+    )
     .action(async (options) => {
       log.info(`Beginning data upload to local neo4j`);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -52,6 +57,11 @@ export function neo4j() {
       '_integrationInstanceId assigned to uploaded entities',
       'defaultLocalInstanceID',
     )
+    .option(
+      '-db, --database-name <database>',
+      'optional database to wipe data from (only available for enterprise Neo4j databases)',
+      'neo4j',
+    )
     .action(async (options) => {
       await wipeNeo4jByID({
         integrationInstanceID: options.integrationInstanceId,
@@ -61,6 +71,11 @@ export function neo4j() {
   neo4jCommand
     .command('wipe-all')
     .description('wipe all entities and relationships in the Neo4j database')
+    .option(
+      '-db, --database-name <database>',
+      'optional database to wipe data from (only available for enterprise Neo4j databases)',
+      'neo4j',
+    )
     .action(async (options) => {
       await wipeAllNeo4j({});
     });
