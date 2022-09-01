@@ -11,6 +11,7 @@ import {
   FileSystemGraphObjectStore,
   DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD,
   FileSystemGraphObjectStoreParams,
+  DEFAULT_GRAPH_OBJECT_FILE_SIZE,
 } from '../FileSystemGraphObjectStore';
 
 import {
@@ -134,6 +135,44 @@ describe('flushEntitiesToDisk', () => {
     const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenStepData);
   });
+
+  test('should write files of size <= graphObjectFileSize', async () => {
+    const numOfGraphObjects = 1000;
+
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 1000,
+    });
+    const entityType = uuid();
+    const entities = times(numOfGraphObjects, () =>
+      createTestEntity({ _type: entityType }),
+    );
+
+    await store.addEntities(storageDirectoryPath, entities);
+    await store.flushEntitiesToDisk();
+
+    const entitiesDirectory = path.join(
+      getRootStorageDirectory(),
+      'graph',
+      storageDirectoryPath,
+      'entities',
+    );
+
+    const storageDirectoryPathDataFiles = await fs.readdir(entitiesDirectory);
+
+    const numOfExpectedFiles = Math.ceil(
+      numOfGraphObjects / DEFAULT_GRAPH_OBJECT_FILE_SIZE,
+    );
+
+    expect(storageDirectoryPathDataFiles).toHaveLength(numOfExpectedFiles);
+
+    for (const file of storageDirectoryPathDataFiles) {
+      const entityDataFilePath = path.join(entitiesDirectory, file);
+      const writtenData = await fs.readFile(entityDataFilePath, 'utf-8');
+      expect(JSON.parse(writtenData).entities.length).toBeLessThanOrEqual(
+        DEFAULT_GRAPH_OBJECT_FILE_SIZE,
+      );
+    }
+  });
 });
 
 describe('flushRelationshipsToDisk', () => {
@@ -182,6 +221,45 @@ describe('flushRelationshipsToDisk', () => {
 
     const symlinkedData = await fs.readFile(expectedIndexFilePath, 'utf8');
     expect(symlinkedData).toEqual(writtenData);
+  });
+
+  test('should write files of size <= graphObjectFileSize', async () => {
+    const numOfGraphObjects = 1000;
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 1000,
+    });
+    const relationshipType = uuid();
+    const relationships = times(numOfGraphObjects, () =>
+      createTestRelationship({ _type: relationshipType }),
+    );
+
+    await store.addRelationships(storageDirectoryPath, relationships);
+    await store.flushEntitiesToDisk();
+
+    const relationshipsDirectory = path.join(
+      getRootStorageDirectory(),
+      'graph',
+      storageDirectoryPath,
+      'relationships',
+    );
+
+    const storageDirectoryPathDataFiles = await fs.readdir(
+      relationshipsDirectory,
+    );
+
+    const numOfExpectedFiles = Math.ceil(
+      numOfGraphObjects / DEFAULT_GRAPH_OBJECT_FILE_SIZE,
+    );
+
+    expect(storageDirectoryPathDataFiles).toHaveLength(numOfExpectedFiles);
+
+    for (const file of storageDirectoryPathDataFiles) {
+      const relationshipDataFilePath = path.join(relationshipsDirectory, file);
+      const writtenData = await fs.readFile(relationshipDataFilePath, 'utf-8');
+      expect(JSON.parse(writtenData).relationships.length).toBeLessThanOrEqual(
+        DEFAULT_GRAPH_OBJECT_FILE_SIZE,
+      );
+    }
   });
 });
 
