@@ -86,6 +86,21 @@ describe('#neo4jGraphStore', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  // TODO (adam-in-ict) add in additional testing to verify the correct database is used in a generated session.
+  test('should generate call to create a driver connection to a database other than the default', () => {
+    const spy = jest.spyOn(neo4j, 'driver').mockReturnValue(mockDriverResp);
+
+    const emptyStore = new Neo4jGraphStore({
+      uri: '',
+      username: '',
+      password: '',
+      integrationInstanceID: testInstanceID,
+      database: 'testDatabase',
+    });
+    expect(async () => await emptyStore.close()).toReturn;
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   test('should generate call to create an Entity', () => {
     expect(async () => await store.addEntities(testEntityData)).toReturn;
   });
