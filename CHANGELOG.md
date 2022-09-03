@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.22.6 - 2022-09-03
+
 ### Added
 
 - Added optional flag to specify a different Neo4j database name to push to or
