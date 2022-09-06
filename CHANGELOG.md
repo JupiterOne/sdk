@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.23.0 - 2022-09-06
+
+### Added
+
+- Added `graphObjectFileSize` configuration option to
+  `FileSystemGraphObjectStore`
+
 ## 8.22.7 - 2022-09-03
 
 ### Added
