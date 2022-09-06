@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.22.7 - 2022-09-03
+
+### Added
+
+- Added optional flag to specify a different Neo4j database name to push to or
+  wipe from than the default 'neo4j' (only available on enterprise instances of
+  Neo4j).
+
 ## 8.22.5 - 2022-08-24
 
 ### Fixed
