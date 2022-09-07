@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.23.1 - 2022-09-07
+
+### Fixed
+
+- Support backwards compatibility for old integration npm package dist format
+  when using `j1-integration generate-integration-graph-schema`.
+
+  The way that integration npm packages are distributed has changed over time.
+  We are now handling invocation config loading from different file paths to
+  support backwards compatibility and make adoption easier.
+
 ## 8.23.0 - 2022-09-06
 
 ### Added
