@@ -623,9 +623,15 @@ describe('document', () => {
 });
 
 describe('generate-integration-graph-schema', () => {
-  test('should generate integration graph schema', async () => {
+  test('should generate integration graph schema with TypeScript integration', async () => {
     await generateIntegrationGraphSchemaTest(
       'generate-integration-graph-schema_all-graph-data-types',
+    );
+  });
+
+  test('should generate integration graph schema with integration JavaScript dist', async () => {
+    await generateIntegrationGraphSchemaTest(
+      'generate-integration-graph-schema_all-graph-data-types-dist',
     );
   });
 });
