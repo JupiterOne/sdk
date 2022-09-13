@@ -20,6 +20,7 @@ import {
   abortSynchronization,
   uploadDataChunk,
   SynchronizeInput,
+  synchronizationStatus,
 } from '../index';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -294,6 +295,34 @@ describe('finalizeSynchronization', () => {
       {
         partialDatasets,
       },
+    );
+  });
+});
+
+describe('synchronizationStatus', () => {
+  test('fetches status of job', async () => {
+    loadProjectStructure('synchronization');
+
+    const job = generateSynchronizationJob();
+    const context = createTestContext();
+    const { apiClient } = context;
+
+    const getSpy = jest.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const returnedJob = await synchronizationStatus({
+      ...context,
+      job,
+    });
+
+    expect(returnedJob).toEqual(job);
+
+    expect(getSpy).toHaveBeenCalledTimes(1);
+    expect(getSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}`,
     );
   });
 });

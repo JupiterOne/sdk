@@ -134,6 +134,29 @@ export async function initiateSynchronization({
   };
 }
 
+type SynchronizationStatusInput = SynchronizationJobContext;
+
+export async function synchronizationStatus({
+  apiClient,
+  job,
+}: SynchronizationStatusInput): Promise<SynchronizationJob> {
+  let status: SynchronizationJob;
+
+  try {
+    const response = await apiClient.get(
+      `/persister/synchronization/jobs/${job.id}`,
+    );
+    status = response.data.job;
+  } catch (err) {
+    throw synchronizationApiError(
+      err,
+      'Error occurred fetching synchronization job status.',
+    );
+  }
+
+  return status;
+}
+
 interface FinalizeSynchronizationInput extends SynchronizationJobContext {
   partialDatasets: PartialDatasets;
 }
@@ -251,7 +274,7 @@ export async function uploadGraphObjectData(
 }
 
 /**
- * Uploads data collected by the integration into the
+ * Uploads data collected by the integration.
  */
 export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
