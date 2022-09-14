@@ -15,6 +15,9 @@ and this project adheres to
   integration run. This is useful for scenarios where you want to run the
   integration to collect and upload data to a synchronization job, but do not
   want to initiate the finalization process.
+- `j1-integration [run|sync] --source api --scope anystring` options to allow
+  use of the SDK without configuring an integration instance.
+  `--integrationInstanceId` is not required when using these options.
 
 ## 8.23.1 - 2022-09-07
 

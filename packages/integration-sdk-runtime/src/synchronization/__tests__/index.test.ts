@@ -13,17 +13,17 @@ import {
 } from '@jupiterone/integration-sdk-private-test-utils';
 
 import {
-  initiateSynchronization,
-  uploadCollectedData,
-  finalizeSynchronization,
-  synchronizeCollectedData,
   abortSynchronization,
-  uploadDataChunk,
-  SynchronizeInput,
+  finalizeSynchronization,
+  initiateSynchronization,
   synchronizationStatus,
+  synchronizeCollectedData,
+  SynchronizeInput,
+  uploadCollectedData,
+  uploadDataChunk,
 } from '../index';
 
-import { getApiBaseUrl, createApiClient } from '../../api';
+import { createApiClient, getApiBaseUrl } from '../../api';
 import { ExecuteIntegrationResult } from '../../execution';
 import { createIntegrationLogger } from '../../logger';
 
@@ -88,9 +88,32 @@ describe('initiateSynchronization', () => {
       integrationJobId: mockIntegrationJobId,
     });
     expect(loggerSpy).toHaveBeenCalledWith({
+      source: 'integration-managed',
       synchronizationJobId: mockIntegrationJobId,
       integrationJobId: mockIntegrationJobId,
       integrationInstanceId: context.integrationInstanceId,
+    });
+  });
+
+  test('configures scope when source is "api"', async () => {
+    const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
+
+    const context = createTestContext({ source: 'api', scope: 'test' });
+    const { apiClient } = context;
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const synchronizationContext = await initiateSynchronization(context);
+
+    expect(synchronizationContext.job).toEqual(job);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+      source: 'api',
+      scope: 'test',
     });
   });
 
@@ -557,7 +580,9 @@ describe('uploadDataChunk', () => {
   });
 });
 
-function createTestContext(): SynchronizeInput {
+function createTestContext(
+  options?: Pick<SynchronizeInput, 'source' | 'scope'>,
+): SynchronizeInput {
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
@@ -567,5 +592,12 @@ function createTestContext(): SynchronizeInput {
     name: 'test',
   });
 
-  return { apiClient, logger, integrationInstanceId: 'test-instance-id' };
+  return {
+    apiClient,
+    logger,
+    source: options?.source || 'integration-managed',
+    scope: options?.scope,
+    integrationInstanceId:
+      options?.source == 'api' ? undefined : 'test-instance-id',
+  };
 }

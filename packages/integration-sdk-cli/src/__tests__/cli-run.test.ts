@@ -303,6 +303,37 @@ test('executes integration and skips finalization with skip-finalize', async () 
   });
 });
 
+test('does not publish events for source "api" since there is no integrationJobId', async () => {
+  const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  let eventsPublished = false;
+  polly.server
+    .post(`https://example.com/persister/synchronization/jobs/${job.id}/events`)
+    .intercept((req, res) => {
+      eventsPublished = true;
+    });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--source',
+    'api',
+    '--scope',
+    'test',
+  ]);
+
+  expect(eventsPublished).toBe(false);
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+});
+
 test('throws an error if --api-base-url is set with --development', async () => {
   const job = generateSynchronizationJob();
 
