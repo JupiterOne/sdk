@@ -99,6 +99,8 @@ test('step should fail if enableSchemaValidation = true', async () => {
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -138,6 +140,8 @@ test('step should pass if enableSchemaValidation = false', async () => {
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -170,8 +174,7 @@ test('executes integration and performs upload', async () => {
     'test',
   ]);
 
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -229,8 +232,7 @@ test('executes integration and performs upload with api-base-url', async () => {
     'https://api.TEST.jupiterone.io',
   ]);
 
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -261,6 +263,38 @@ test('executes integration and performs upload with api-base-url', async () => {
   expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
     ...job,
     status: SynchronizationJobStatus.FINALIZE_PENDING,
+    // These are the expected number of entities and relationships
+    // collected when executing the
+    // 'typeScriptIntegrationProject' fixture
+    numEntitiesUploaded: 2,
+    numRelationshipsUploaded: 1,
+  });
+});
+
+test('executes integration and skips finalization with skip-finalize', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--skip-finalize',
+  ]);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
+    ...job,
+    status: SynchronizationJobStatus.AWAITING_UPLOADS,
     // These are the expected number of entities and relationships
     // collected when executing the
     // 'typeScriptIntegrationProject' fixture

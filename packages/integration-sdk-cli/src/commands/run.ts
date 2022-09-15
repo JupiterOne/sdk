@@ -15,6 +15,7 @@ import {
   getApiBaseUrl,
   getApiKeyFromEnvironment,
   initiateSynchronization,
+  synchronizationStatus,
 } from '@jupiterone/integration-sdk-runtime';
 import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
 
@@ -40,7 +41,8 @@ export function run() {
       '"true" to target apps.dev.jupiterone.io',
       !!process.env.JUPITERONE_DEV,
     )
-    .option('--api-base-url <url>', 'API base URL used during run operation.')
+    .option('--api-base-url <url>', 'API base URL used during run operation')
+    .option('--skip-finalize', 'skip synchronization finalization')
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .option(
       '-u, --upload-batch-size <number>',
@@ -150,12 +152,19 @@ export function run() {
 
         log.displayExecutionResults(executionResults);
 
-        const synchronizationResult = await finalizeSynchronization({
-          ...synchronizationContext,
-          partialDatasets: executionResults.metadata.partialDatasets,
-        });
-
-        log.displaySynchronizationResults(synchronizationResult);
+        if (!options.skipFinalize) {
+          const synchronizationResult = await finalizeSynchronization({
+            ...synchronizationContext,
+            partialDatasets: executionResults.metadata.partialDatasets,
+          });
+          log.displaySynchronizationResults(synchronizationResult);
+        } else {
+          log.info(
+            'Skipping synchronization finalization. Job will remain in "AWAITING_UPLOADS" state.',
+          );
+          const jobStatus = await synchronizationStatus(synchronizationContext);
+          log.displaySynchronizationResults(jobStatus);
+        }
       } catch (err) {
         await eventPublishingQueue.onIdle();
         if (!logger.isHandledError(err)) {

@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- `j1-integration run --skip-finalize` option to avoid finalizing the
+  integration run. This is useful for scenarios where you want to run the
+  integration to collect and upload data to a synchronization job, but do not
+  want to initiate the finalization process.
+
 ## 8.23.1 - 2022-09-07
 
 ### Fixed
