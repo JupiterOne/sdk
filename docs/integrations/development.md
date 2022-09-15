@@ -36,25 +36,25 @@ required for authenticating with provider APIs and otherwise necessary to
 configure the integration for execution. This varies between services.
 
 The `type` will ensure the values are cast when
-[read from `.env`](#j1-integration-collect). It is important to mark secrets
-with `mask: true` to facilitate safe logging.
+[read from `.env`](#command-j1-integration-collect). It is important to mark
+secrets with `mask: true` to facilitate safe logging.
 
 Example:
 
 ```typescript
 {
   clientId: {
-    type: 'string',
-    mask: false,
-  },
+    type: 'string';
+    mask: false;
+  }
   clientSecret: {
-    type: 'string',
-    mask: true,
-  },
+    type: 'string';
+    mask: true;
+  }
   ingestGroups: {
-    type: boolean,
-    mask: true,
-  },
+    type: boolean;
+    mask: true;
+  }
 }
 ```
 
@@ -65,7 +65,7 @@ across multiple steps. This method is most often used to create shared
 credentials for API clients.
 
 The `loadExecutionConfig` method runs before `validateInvocation`,
-`getStepStartStates`, and `integrationSteps`. The loaded config is accessable in
+`getStepStartStates`, and `integrationSteps`. The loaded config is accessible in
 any of these contexts as `context.executionConfig`.
 
 Example:
@@ -74,9 +74,12 @@ Example:
 import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 import { v4 as uuid } from 'uuid';
 
-export function loadExecutionConfig({
-  config: { roleArn: string, externalId: string },
-}) {
+interface InstanceConfig extends IntegrationInstanceConfig {
+  roleArn: string;
+  externalId: string;
+}
+
+export function loadExecutionConfig({ config: InstanceConfig }) {
   return {
     credentials: fromTemporaryCredentials({
       params: {
@@ -358,9 +361,9 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
 
 ### How integrations are executed
 
-The `IntegrationInvocationConfig` declaratively defines how an integration runs.
-The CLI that is provided by this package will consume the invocation
-configuration and construct a state machine to execute work in a specific order.
+The `IntegrationInvocationConfig` informs how an integration runs. The CLI that
+is provided by this package will consume the invocation configuration and
+construct a state machine to execute work in a specific order.
 
 #### Validation
 
@@ -423,18 +426,18 @@ logger.publishInfoEvent({
 ```
 
 `logger.publishWarnEvent` is used primarily to indicate to the end-user that
-some notable issue/event has occured that isn't significant enough to mark the
+some notable issue/event has occurred that isn't significant enough to mark the
 ingestion as a failure, but is still actionable Example usage:
 
 ```typescript
-  logger.publishWarnEvent({
-    name: IntegrationWarnEventName.MissingPermission,
-    description: `Missing permissions to read X from Y. In ${platform}, please do Z to remedy this issue. More information can be found here: ${link to docs}`
-  });
+logger.publishWarnEvent({
+  name: IntegrationWarnEventName.MissingPermission,
+  description: `Missing permissions to read X from Y. In ${platform}, please do Z to remedy this issue. More information can be found here: ${link_to_docs}`,
+});
 ```
 
 `logger.publishErrorEvent` is much like warn, except that this is a case where
-the issue/event that occured **is** significant enough to mark the ingestion as
+the issue/event that occurred **is** significant enough to mark the ingestion as
 a failure. Execution will continue as planned (as it is expected that you would
 not throw an error in your step in this case), but the execution will still be
 marked a failure on completion.
@@ -442,10 +445,10 @@ marked a failure on completion.
 Example usage:
 
 ```typescript
-  logger.publishErrorEvent({
-    name: IntegrationErrorEventName.MissingPermission,
-    description: `Missing permissions to read W from X. Since this integration relies on the last successful execution timestamp to do Y, this execution will be marked as a failure. In ${platform}, please do Z to remedy this issue. More information can be found here: ${link to docs}`
-  });
+logger.publishErrorEvent({
+  name: IntegrationErrorEventName.MissingPermission,
+  description: `Missing permissions to read W from X. Since this integration relies on the last successful execution timestamp to do Y, this execution will be marked as a failure. In ${platform}, please do Z to remedy this issue. More information can be found here: ${link_to_docs}`,
+});
 ```
 
 A `logger.auth` function for displaying authorization related warnings or errors
@@ -477,8 +480,8 @@ have been created throughout the integration run via the `addEntities` and
 
 Previously collected integration data can be collected via the `iterateEntities`
 and `iterateRelationships` function. These functions will initially allow for
-data to be fetched via the `_type` property, but in the future will allow
-provide more options for collecting.
+data to be fetched via the `_type` property, but in the future may allow more
+options for collecting.
 
 Example usage:
 
@@ -848,8 +851,8 @@ later.
 
 #### Testing
 
-Please see [testing.md](./testing.md) for more information about testing
-utilities exposed by this project.
+Please see [testing.md](testing.md) for more information about testing utilities
+exposed by this project.
 
 ### Auto-magic behind the framework
 
@@ -862,7 +865,7 @@ to keep track of how the integration is progressing without the need to
 explicitly add logging information themselves.
 
 When the integration is run with context about an integration instance (via the
-`run` command exposed by the [The CLI](#the-cli)), the transitions between each
+`run` command exposed by the [CLI](#the-cli)), the transitions between each
 `step` will be published to the JupiterOne integration events log. `auth` and
 `error` logs will also be published there.
 
@@ -874,7 +877,7 @@ The `executionContext` that is provided in the `executionHandler` step exposes a
 automatically flush the data to disk as a certain threshold of entities and
 relationships is met. The data flushed to disk are grouped in folders that are
 based on the step that was run. Entities and relationships will also be grouped
-by the `_type` and linked into separate directories to provide faster look ups.
+by the `_type` and linked into separate directories to provide faster look up.
 These directories will be used by the `findEntity`, `iterateEntities`, and
 `iterateRelationships` functions to provide faster lookups.
 
@@ -889,8 +892,8 @@ Using the integration configuration that was provided as a sample earlier, data
 will be written to disk in the following structure (relative to the
 integration's current working directory).
 
-To assist with debugging and visibilty into exactly what data was collected, the
-integration will bucket data collected from each step. Here is an example of
+To assist with debugging and visibility into exactly what data was collected,
+the integration will bucket data collected from each step. Here is an example of
 what the `.j1-integration` directory may look like.
 
 ```
@@ -1013,7 +1016,7 @@ future.
 ##### Step status codes
 
 For steps: `success` - the step has successfully completed without any errors
-occurring `failure` - an error has occurred and it is possible that we have a
+occurring `failure` - an error has occurred, and it is possible that we have a
 partial dataset `partial_success_from_dependency_failure` - the step has
 successfully completed but a dependent step was found in the `failure` or
 `partial_success_from_dependency_failure`, meaning it is possible that a failure
@@ -1030,8 +1033,8 @@ and what data is safe to delete. The information about partial datasets will be
 sent when starting the synchronization process to prevent data that should be
 retained in the graph from being removed.
 
-After the collection phase, the integration summary and partial datasets
-metadata will be written to disk in the `.j1-integration/summary.json` file.
+After the collection phase, the integration summary and partial dataset metadata
+will be written to disk in the `.j1-integration/summary.json` file.
 
 Here is an example of what the summary file would look like.
 
@@ -1109,17 +1112,16 @@ CLI tool will also be exposed by this project.
 
 ### Authentication
 
-For commands that require interaction with JupiterOne's API, the CLI will
-provide ways of inputing credentials. To support that, all commands that
-interact with an API will accept an `--api-key` option.
+For commands that require interaction with JupiterOne's API, the CLI requires
+credentials.
 
-For convenience when developing locally, we will also look for a
-`JUPITERONE_API_KEY` environment variable for an API key to use.
+- `JUPITERONE_API_KEY` or `--api-key`: JupiterOne API key for authentication.
+  This API key may be a user API key with "Admin" permission to the Integrations
+  application or an integration API key.
+- `JUPITERONE_ACCOUNT` or `--account`: The UUID of the JupiterOne account to
+  target.
 
 ### Supported commands
-
-Initially, the CLI will support a limited interface consisting of only three
-commands: `collect`, `sync`, and `run`.
 
 #### Command `j1-integration collect`
 
@@ -1136,10 +1138,10 @@ the following order relative to the current working directory:
 3. `src/index.ts`
 
 Data will be written to disk under a generated `.j1-integration` directory
-(described in [this section](#data-collection). A JupiterOne API key or set of
+(described in [this section](#data-collection)). A JupiterOne API key or set of
 credentials do not have to be supplied since the JupiterOne synchronization API
-will not be hit. An exception to this is when the `--instance` option is
-provided. (see `Options` below).
+will not be hit. An exception to this is when the `--integrationInstanceId`
+option is provided. (see `Options` below).
 
 To assist with making the integrations easier to develop, a mock integration
 instance will be provided with fake values.
@@ -1150,9 +1152,9 @@ automatically load and populate config values for what was supplied in the
 `instanceConfigFields`.
 
 An `.env` file for the
-[example integration configuration](#instanceConfigFields) would look like this:
+[example integration configuration](#instanceconfigfields) would look like this:
 
-```bash
+```shell
 CLIENT_ID="<insert provider client id here>"
 CLIENT_SECRET="<insert provider client secret here>"
 INGEST_GROUPS="<true or false>"
@@ -1178,17 +1180,17 @@ and provide a path to your integration file.
 
 ex: `j1-integration collect --module path/to/my/integration.ts`
 
-###### Option `--instance` or `-i`
+###### Option `--integrationInstanceId` or `-i`
 
 If you are working with an existing integration instance and would prefer to
 leverage the configuration field values from that instance, you can optionally
 supply an instance id. The CLI will leverage the values stored on the
 integration instance instead of locally defined environment variables.
 
-By default, when an `--instance` is specified, a developer will be prompted to
-input some credentials or provide an `--api-key` option.
+By default, when an `--integrationInstanceId` is specified, a developer will be
+prompted to input some credentials or provide an `--api-key` option.
 
-ex: `j1-integration collect --instance <integration instance id>`
+ex: `j1-integration collect --integrationInstanceId <integration instance id>`
 
 ###### Option `--api-key` or `-k`
 
@@ -1196,7 +1198,7 @@ For developers that have an API key or prefer to not input credentials, an
 `--api-key` option can be specified to access the synchronization API.
 
 ex:
-`j1-integration collect --instance <integration instance id> --api-key <my api key>`
+`j1-integration collect --integrationInstanceId <integration instance id> --api-key <my api key>`
 
 ###### Option `--step` or `-s`
 
@@ -1211,7 +1213,7 @@ run.
 
 ex: `j1-integration collect --step step-fetch-users --step step-fetch-groups`
 
-For convenience, steps can allow be provided as a comma delimited list.
+For convenience, steps may be provided as a comma delimited list.
 
 ex: `j1-integration collect --step step-fetch-users,step-fetch-groups`
 
@@ -1260,43 +1262,37 @@ Disables schema validation.
 
 #### Command `j1-integration sync`
 
-The `sync` command will validate data placed in the `.j1-integration/graph`
-directory has been formatted correctly and later format the data to allow for
-data to be uploaded to JupiterOne for synchronization. Since the `sync` command
-does interact with the JupiterOne synchronization API, the developer will need
-to provide either credentials or an API key.
+Validates data collected by the `collect` command and uploads it to JupiterOne.
+Data is read from `.j1-integration/graph`. An API key is required to upload data
+to JupiterOne.
 
-After validation is performed, `sync` will provision an integration job via a
-`POST` to
-`https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs` which
-will be used for scoping integration data that is uploaded for synchronization.
+`sync` provisions a bulk upload job, uploads data, and finalizes the job.
+`--skip-finalize` may be used to defer this step. The integration instance ID
+specified by `--integrationInstanceId` or the `--source` and `--scope` are used
+to scope uploaded data. When `--integrationInstanceId` is specified, an
+integration job is also created to record integration job events.
 
-Entity data will be published to
-`https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/entities`.
-
-Relationship data will be published to
-`https://api.us.jupiterone.io//synchronization/:integrationInstanceId/jobs/:jobId/relationships`.
-
-After all of the data under the `.j1-integration/graph` directory has been
-published, the CLI will `POST` to
-`https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/finalize`
-with `metadata` that was stored in `.j1-integration/summary.json`.
-
-This will signal JupiterOne that it is time to synchronize the published data
-with the graph.
-
-After this point, by default the CLI will end and log out a URL that can be used
-to track the job status.
-`https://api.us.jupiterone.io/synchronization/:integrationInstanceId/job/:jobId`
+A successful operation will produce a summary of the upload job, including the
+number of entities and relationships uploaded, to
+`.j1-integration/summary.json`.
 
 Optionally, developers can specify the `--tail` flag to automatically poll the
 integration job for status updates. The polling will end once the job has been
 marked as completed and metadata about the synchronization status will be
 returned.
 
+Using the `--api-base-url` option, the following endpoints are used to upload
+data:
+
+- `POST /synchronization/jobs`: Initiates a bulk upload job.
+- `POST /synchronization/jobs/:id/entities`: Publishes entity data.
+- `POST /synchronization/jobs/:id/relationships`: Publishes relationship data.
+- `POST /synchronization/jobs/:id/finalize`: Finalizes the bulk upload job.
+- `GET /synchronization/jobs/:id`: Fetch the bulk upload job status.
+
 ##### Keeping the door open for developers not using JavaScript or TypeScript
 
-Not everyone uses the Node.js ecosystem and we understand that. For developers
+Not everyone uses the Node.js ecosystem, and we understand that. For developers
 that would prefer to use a different language for building integrations, the
 `sync` command does not require that a developer use the JupiterOne integration
 framework at all. The `sync` command will just recursively walk the
@@ -1315,13 +1311,29 @@ framework for developing integrations, let us know!
 Much like the `collect` command, you can optionally specify an `--module` or
 `-m` option to specify the path to the integration configuration file.
 
-###### Option `--instance` or `-i`
+###### Option `--integrationInstanceId` or `-i`
 
-For the `sync` command, an integration instance must be specified to know which
-integration instance data the collected data should be associated with.
+The integration instance ID with which to associate the integration job. All
+data published to the synchronization API will be scoped to this integration
+instance and integration events will be published to the integration's job log.
 
 ex:
-`j1-integration sync --instance <integration instance id> --api-key <my api key>`
+`j1-integration sync --integrationInstanceId <integration instance id> --api-key <my api key>`
+
+Alternatively, `--source` and `--scope` may be used for a bulk upload unrelated
+to an integration.
+
+###### Option `--source`
+
+Specifies the bulk upload job `source` property. This is not required when
+`--integrationInstanceId` is specified. `--scope` is required when `--source` is
+specified.
+
+###### Option `--scope`
+
+Specifies the bulk upload job `scope` property. This is not required when
+`--integrationInstanceId` is specified. `--source` is required when `--scope` is
+specified.
 
 ###### Option `--api-key` or `-k`
 
@@ -1329,14 +1341,15 @@ Like the `collect` command, an API key can be optionally passed in to use for
 synchronization.
 
 ex:
-`j1-integration sync --instance <integration instance id> --api-key <my api key>`
+`j1-integration sync --integrationInstanceId <integration instance id> --api-key <my api key>`
 
 ###### Option `--tail` or `-t`
 
 If provided this option poll the integration job to and display the status of
 the job run. The polling will stop once the job was marked as complete.
 
-ex: `j1-integration sync --instance <integration instance id> --tail`
+ex:
+`j1-integration sync --integrationInstanceId <integration instance id> --tail`
 
 ###### Option `--api-base-url`
 
@@ -1348,55 +1361,20 @@ ex:
 
 #### Command `j1-integration run`
 
-```
-Usage: j1-integration run [options]
-
-collect and sync to upload entities and relationships
-
-Options:
-  -i, --integrationInstanceId <id>                _integrationInstanceId assigned to uploaded entities and relationships
-  -p, --project-path <directory>                  path to integration project directory (default: "/user/my-graph-integration-project")
-  -d, --development                               "true" to target apps.dev.jupiterone.io (default: false)
-  --api-base-url <url>                            API base URL used during run operation.
-  -V, --disable-schema-validation                 disable schema validation
-  -u, --upload-batch-size <number>                specify number of items per batch for upload (default 250)
-  -ur, --upload-relationship-batch-size <number>  specify number of relationships per batch for upload (default 250)
-  -h, --help                                      display help for command
-```
-
-CLI environment variables:
-
-- `JUPITERONE_API_KEY` (**required**): JupiterOne API key to authenticate with.
-  This API key may be a user API key with "Admin" permission to the Integrations
-  application or an integration API key.
-- `JUPITERONE_ACCOUNT` (**required**): The UUID of the JupiterOne account to
-  target.
-
 The `j1-integration run` command combines the functionality of the `collect` and
-`sync` commands, essentially running the commands back to back.
-
-The `run` command accepts the same options that the `sync` command accepts.
-Additionally, `run` accepts the `--disable-schema-validation` option that allows
-disabling schema validation in the same way as the `collect` command.
-
-There are some differences when performing `run` compared to individually
-running `collect` and `sync`.
-
-Instead of using a mock integration instance for during the `collect` phase,
-`run` will always pull down an actual integration instance prior to data
-collection.
-
-After initial integration validation, `run` will provision an integration job
-and work performed by steps will automatically be published to our event log via
-the
-`https://api.us.jupiterone.io/synchronization/:integrationInstanceId/jobs/:jobId/events`
-API.
+`sync` commands, essentially running the commands back to back. See those
+commands for additional options.
 
 Example usage:
 
+```shell
+yarn j1-integration run --integrationInstanceId 7ad16b51-e4d6-4e74-afbd-2fac6185f398
 ```
-JUPITERONE_API_KEY="..." JUPITERONE_ACCOUNT="..." yarn j1-integration run --integrationInstanceId 7ad16b51-e4d6-4e74-afbd-2fac6185f398
-```
+
+###### Option `--skip-finalize`
+
+The command will not finalize the bulk upload job. This is useful for deferred
+finalization. Additional data may be uploaded to the job by another script.
 
 #### Command `j1-integration visualize`
 
@@ -1405,7 +1383,7 @@ The `j1-integration visualize` command reads JSON files from the
 found using [vis-network](https://visjs.github.io/vis-network/docs/network/).
 
 The `visualize` command accepts an optional parameter `--data-dir` allowing the
-user to specify a custom directory to read JSON files from. By default the
+user to specify a custom directory to read JSON files from. By default, the
 `visualize` command will read from the `.j1-integrations/graph` directory
 generated by the `collect` command.
 
@@ -1413,20 +1391,17 @@ When supplying the `--data-dir` ensure the following format within your JSON
 files:
 
 ```json
-// Entities
 {
   "entities": [
     {
       "_key": "...",
       "displayName": "..."
     }
-    // ...
   ]
 }
 ```
 
 ```json
-// Relationships
 {
   "relationships": [
     {
@@ -1434,7 +1409,6 @@ files:
       "_toEntityKey": "...",
       "displayName": "..."
     }
-    // ...
   ]
 }
 ```
@@ -1453,8 +1427,8 @@ Options:
   -h, --help                      display help for command
 ```
 
-`j1-integration visualize-types` generates a [visjs](http://www.visjs.org) graph
-based on the metadata defined in each step.
+`j1-integration visualize-types` generates a [vis.js](http://www.visjs.org)
+graph based on the metadata defined in each step.
 
 #### Command `j1-integration document`
 
@@ -1530,7 +1504,7 @@ collected data may affect their JupiterOne graph. We plan to support a
 about what kind of changes will be applied to the graph.
 
 This dry run function will give metrics about how many creates, updates, and
-deletes will be performed, categoried by the entity and relationhip `_type`
+deletes will be performed, categorized by the entity and relationship `_type`
 field.
 
 ###### Command `j1-integration generate`
@@ -1554,7 +1528,7 @@ constructing the `j1-integration` CLI to the project that handles the `j1` cli.
 In the future, the `j1` CLI will provide a suite of commands for interfacing
 with queries, questions, rules, and various other JupiterOne features. This may
 end up living under a `@jupiterone/dev-tools` project. That repo might even end
-up becoming a monorepo and become a one stop shop for all JupiterOne related
+up becoming a monorepo and become a one-stop shop for all JupiterOne related
 development tools.
 
 ##### Better methods of authentication with JupiterOne
@@ -1569,13 +1543,9 @@ integration with this as well.
 
 ## Does JupiterOne use this SDK for managed integrations?
 
-We plan utilize this framework and the `j1-integration run` command for all new
-integrations made. For our older integrations, we plan to eventually be migrate
-them over to using this SDK.
-
-Also since we have internal access to our APIs, we have some bypasses in place
-that allow for us to directly access those apis without going through our usual
-gateway.
+Yes. All managed integrations are built using this SDK. However, integrations
+deployed to the JupiterOne managed integration platform are executed with a
+custom runtime instead of the `@jupiterone/integration-sdk-cli` tool.
 
 ## Future work around integrations
 
