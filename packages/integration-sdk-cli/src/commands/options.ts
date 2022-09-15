@@ -35,6 +35,10 @@ interface SynchronizationJobSourceOptions {
  * - --source - a specific source to use
  * - --scope - a specific scope to use, required when --source is "api"
  * - --integrationInstanceId - a specific integrationInstanceId to use, required when --source is not "api"
+ *
+ * @throws Error if --source is "api" and --scope is not specified
+ * @throws Error if --source is "api" and --integrationInstanceId is specified
+ * @throws Error if one of --integrationInstanceId or --source is not specified
  */
 export function getSynchronizationJobSourceOptions(
   options: any,

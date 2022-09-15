@@ -42,20 +42,21 @@ secrets with `mask: true` to facilitate safe logging.
 Example:
 
 ```typescript
-{
-  clientId: {
-    type: 'string';
-    mask: false;
-  }
-  clientSecret: {
-    type: 'string';
-    mask: true;
-  }
-  ingestGroups: {
-    type: boolean;
-    mask: true;
-  }
-}
+const instanceConfigFields: IntegrationInstanceConfigFieldMap<MyIntegrationConfigFields> =
+  {
+    clientId: {
+      type: 'string',
+      mask: false,
+    },
+    clientSecret: {
+      type: 'string',
+      mask: true,
+    },
+    ingestGroups: {
+      type: boolean,
+      mask: true,
+    },
+  };
 ```
 
 #### `loadExecutionConfig`
