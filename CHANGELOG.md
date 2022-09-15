@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.24.0 - 2022-09-15
+
 ### Added
 
 - `j1-integration run --skip-finalize` option to avoid finalizing the
