@@ -3,11 +3,11 @@ import chunk from 'lodash/chunk';
 import pMap from 'p-map';
 
 import {
-  PartialDatasets,
   Entity,
+  IntegrationError,
+  PartialDatasets,
   Relationship,
   SynchronizationJob,
-  IntegrationError,
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationLogger } from '../logger';
@@ -21,12 +21,12 @@ import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
 import { AttemptContext, retry } from '@lifeomic/attempt';
 import { v4 as uuid } from 'uuid';
-
-export { synchronizationApiError };
 import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
+
+export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
 const UPLOAD_BATCH_SIZE = 250;
@@ -39,8 +39,37 @@ export enum RequestHeaders {
 export interface SynchronizeInput {
   logger: IntegrationLogger;
   apiClient: ApiClient;
-  integrationInstanceId: string;
+
+  /**
+   * The synchronization job `source` value.
+   *
+   * The JupiterOne bulk upload API requires a `source` value is provided to identify the source
+   * of the data being uploaded. When running in the managed infrastructure, `'integration-managed'` is used. When running
+   * outside the managed infrastructure, `'integration-managed'`, `'integration-external'`, or `'api'` can be used.
+   *
+   * Using `'api'` will allow data to be uploaded without associating it with a specific integration instance. This is
+   * useful when using the SDK to upload data from a script or other non-integration source.
+   */
+  source: 'integration-managed' | 'integration-external' | 'api';
+
+  /**
+   * The `scope` value used when creating the synchronization job. This value will be null when the
+   * synchronization job is configured with source `'integration-managed'` or `'integration-external'`.
+   */
+  scope?: string;
+
+  /**
+   * The integration instance ID provided to execute a synchronization job. This value will be null when the
+   * synchronization job is configured with source `'api'`.
+   */
+  integrationInstanceId?: string;
+
+  /**
+   * The integration job ID to associate with the synchronization job. This will be used as the synchronization job ID.
+   * When no value is provided, a new job will be created.
+   */
   integrationJobId?: string;
+
   uploadBatchSize?: number | undefined;
   uploadRelationshipBatchSize?: number | undefined;
 }
@@ -84,6 +113,28 @@ export async function synchronizeCollectedData(
   }
 }
 
+/**
+ * Build a synchronization job configuration for the specified source.
+ *
+ * The synchronization job API requires `integration-*` sources to provide an `integrationInstanceId` and optionally
+ * a known `integrationJobId`. The latter is used by the synchronization job API as the synchronization job ID. When no value is
+ * provided, the API will create a new integration job and synchronization job, both with the same ID.
+ *
+ * The synchronization job API requires an `api` source to provide a `scope`. An integration job will not be associated
+ * with the synchronization job and no integration job will be created. This allows the SDK to be used to upload data
+ * without associating it with a specific integration instance.
+ */
+function buildJobConfiguration({
+  source,
+  scope,
+  integrationInstanceId,
+  integrationJobId,
+}: SynchronizeInput) {
+  return source === 'api'
+    ? { source, scope }
+    : { source, integrationInstanceId, integrationJobId };
+}
+
 export interface SynchronizationJobContext {
   apiClient: ApiClient;
   job: SynchronizationJob;
@@ -95,24 +146,22 @@ export interface SynchronizationJobContext {
 /**
  * Initializes a synchronization job
  */
-export async function initiateSynchronization({
-  logger,
-  apiClient,
-  integrationInstanceId,
-  integrationJobId,
-  uploadBatchSize,
-  uploadRelationshipBatchSize,
-}: SynchronizeInput): Promise<SynchronizationJobContext> {
+export async function initiateSynchronization(
+  input: SynchronizeInput,
+): Promise<SynchronizationJobContext> {
+  const { logger, apiClient, uploadBatchSize, uploadRelationshipBatchSize } =
+    input;
+
+  const jobConfiguration = buildJobConfiguration(input);
+
   logger.info('Initiating synchronization job...');
 
   let job: SynchronizationJob;
   try {
-    const response = await apiClient.post('/persister/synchronization/jobs', {
-      source: 'integration-managed',
-      integrationInstanceId,
-      integrationJobId,
-    });
-
+    const response = await apiClient.post(
+      '/persister/synchronization/jobs',
+      jobConfiguration,
+    );
     job = response.data.job;
   } catch (err) {
     throw synchronizationApiError(
@@ -125,9 +174,8 @@ export async function initiateSynchronization({
     apiClient,
     job,
     logger: logger.child({
+      ...jobConfiguration,
       synchronizationJobId: job.id,
-      integrationJobId: job.integrationJobId,
-      integrationInstanceId: job.integrationInstanceId,
     }),
     uploadBatchSize,
     uploadRelationshipBatchSize,

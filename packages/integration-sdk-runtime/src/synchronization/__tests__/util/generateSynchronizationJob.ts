@@ -1,13 +1,20 @@
 import {
-  SynchronizationJobStatus,
   SynchronizationJob,
+  SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
 
-export function generateSynchronizationJob(): SynchronizationJob {
+export function generateSynchronizationJob(
+  options?: Pick<
+    SynchronizationJob,
+    'source' | 'scope' | 'integrationInstanceId' | 'integrationJobId'
+  >,
+): SynchronizationJob {
   return {
     id: 'test',
-    integrationJobId: 'test-job-id',
-    integrationInstanceId: 'test-instance-id',
+    source: options?.source || 'integration-managed',
+    scope: options?.scope,
+    integrationJobId: options?.integrationJobId || 'test-job-id',
+    integrationInstanceId: options?.integrationInstanceId || 'test-instance-id',
     status: SynchronizationJobStatus.AWAITING_UPLOADS,
     startTimestamp: Date.now(),
     numEntitiesUploaded: 0,

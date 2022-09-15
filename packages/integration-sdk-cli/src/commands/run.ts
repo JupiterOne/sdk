@@ -12,7 +12,6 @@ import {
   FileSystemGraphObjectStore,
   finalizeSynchronization,
   getAccountFromEnvironment,
-  getApiBaseUrl,
   getApiKeyFromEnvironment,
   initiateSynchronization,
   synchronizationStatus,
@@ -21,13 +20,17 @@ import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integ
 
 import { loadConfig } from '../config';
 import * as log from '../log';
+import {
+  getApiBaseUrlOption,
+  getSynchronizationJobSourceOptions,
+} from './options';
 
 const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
 export function run() {
   return createCommand('run')
     .description('collect and sync to upload entities and relationships')
-    .requiredOption(
+    .option(
       '-i, --integrationInstanceId <id>',
       '_integrationInstanceId assigned to uploaded entities and relationships',
     )
@@ -43,6 +46,15 @@ export function run() {
     )
     .option('--api-base-url <url>', 'API base URL used during run operation')
     .option('--skip-finalize', 'skip synchronization finalization')
+    .option(
+      '--source <integration-managed|integration-external|api>',
+      'configure the synchronization job source value',
+      'integration-managed',
+    )
+    .option(
+      '--scope <anystring>',
+      'configure the synchronization job scope value',
+    )
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .option(
       '-u, --upload-batch-size <number>',
@@ -67,19 +79,7 @@ export function run() {
       log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
       const account = getAccountFromEnvironment();
 
-      let apiBaseUrl: string;
-      if (options.apiBaseUrl) {
-        if (options.development) {
-          throw new Error(
-            'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
-          );
-        }
-        apiBaseUrl = options.apiBaseUrl;
-      } else {
-        apiBaseUrl = getApiBaseUrl({
-          dev: options.development,
-        });
-      }
+      const apiBaseUrl = getApiBaseUrlOption(options);
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const startTime = Date.now();
@@ -90,7 +90,8 @@ export function run() {
         account,
       });
 
-      const { integrationInstanceId } = options;
+      const synchronizationJobSourceOptions =
+        getSynchronizationJobSourceOptions(options);
 
       let logger = createIntegrationLogger({
         name: 'local',
@@ -100,7 +101,7 @@ export function run() {
       const synchronizationContext = await initiateSynchronization({
         logger,
         apiClient,
-        integrationInstanceId,
+        ...synchronizationJobSourceOptions,
       });
 
       logger = synchronizationContext.logger;

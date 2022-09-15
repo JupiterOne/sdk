@@ -94,6 +94,36 @@ test('hits dev urls if JUPITERONE_DEV environment variable is set', async () => 
   });
 });
 
+test('does not publish events for source "api" since there is no integrationJobId', async () => {
+  const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  let eventsPublished = false;
+  polly.server
+    .post(`https://example.com/persister/synchronization/jobs/${job.id}/events`)
+    .intercept((req, res) => {
+      eventsPublished = true;
+    });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'sync',
+    '--source',
+    'api',
+    '--scope',
+    'test',
+  ]);
+
+  expect(eventsPublished).toBe(false);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+});
+
 test('hits different url if --api-base-url is set', async () => {
   const job = generateSynchronizationJob();
 
