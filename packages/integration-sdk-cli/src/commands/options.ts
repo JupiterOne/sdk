@@ -1,51 +1,93 @@
-import { getApiBaseUrl } from '@jupiterone/integration-sdk-runtime';
+import {
+  DEFAULT_UPLOAD_BATCH_SIZE,
+  getAccountFromEnvironment,
+  getApiKeyFromEnvironment,
+  JUPITERONE_DEV_API_BASE_URL,
+  JUPITERONE_PROD_API_BASE_URL,
+} from '@jupiterone/integration-sdk-runtime';
+import { Command, OptionValues } from 'commander';
+import path from 'path';
 
-/**
- * Determines the JupiterOne `apiBaseUrl` based on these mutually-exclusive `options`:
- * - --api-base-url - a specific URL to use
- * - --development - use the development API
- *
- * @throws Error if both --api-base-url and --development are specified
- */
-export function getApiBaseUrlOption(options: any): string {
-  let apiBaseUrl: string;
-  if (options.apiBaseUrl) {
-    if (options.development) {
-      throw new Error(
-        'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
-      );
-    }
-    apiBaseUrl = options.apiBaseUrl;
-  } else {
-    apiBaseUrl = getApiBaseUrl({
-      dev: options.development,
-    });
-  }
-  return apiBaseUrl;
+export interface PathOptions {
+  projectPath: string;
 }
 
-interface SynchronizationJobSourceOptions {
+export function addPathOptionsToCommand(command: Command): Command {
+  return command.option(
+    '-p, --project-path <directory>',
+    'path to integration project directory',
+    process.cwd(),
+  );
+}
+
+/**
+ * Configure the filesystem interaction code to function against `${options.projectPath}/.j1-integration by setting the
+ * global `process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY` variable.
+ */
+export function configureRuntimeFilesystem(options: PathOptions): void {
+  process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
+    options.projectPath,
+    '.j1-integration',
+  );
+}
+
+export interface SyncOptions {
   source: 'integration-managed' | 'integration-external' | 'api';
-  scope?: string;
-  integrationInstanceId?: string;
+  scope?: string | undefined;
+  integrationInstanceId?: string | undefined;
+  uploadBatchSize: number;
+  uploadRelationshipBatchSize: number;
+  skipFinalize: boolean;
+}
+
+export function addSyncOptionsToCommand(command: Command): Command {
+  return command
+    .option(
+      '-i, --integrationInstanceId <id>',
+      '_integrationInstanceId assigned to uploaded entities and relationships',
+    )
+    .option(
+      '--source <integration-managed|integration-external|api>',
+      'specify synchronization job source value',
+      (value: string) => {
+        if (
+          value !== 'integration-managed' &&
+          value !== 'integration-external' &&
+          value !== 'api'
+        ) {
+          throw new Error(
+            `--source must be one of "integration-managed", "integration-external", or "api"`,
+          );
+        } else {
+          return value;
+        }
+      },
+      'integration-managed',
+    )
+    .option('--scope <anystring>', 'specify synchronization job scope value')
+    .option(
+      '-u, --upload-batch-size <number>',
+      'specify number of items per batch for upload',
+      (value, _previous: Number) => Number(value),
+      DEFAULT_UPLOAD_BATCH_SIZE,
+    )
+    .option(
+      '-ur, --upload-relationship-batch-size <number>',
+      'specify number of relationships per batch for upload',
+      (value, _previous: Number) => Number(value),
+      DEFAULT_UPLOAD_BATCH_SIZE,
+    )
+    .option('--skip-finalize', 'skip synchronization finalization', false);
 }
 
 /**
- * Determines the `source` configuration for the synchronization job based on these `options`:
- * - --source - a specific source to use
- * - --scope - a specific scope to use, required when --source is "api"
- * - --integrationInstanceId - a specific integrationInstanceId to use, required when --source is not "api"
+ * Validates options for the synchronization job.
  *
- * @throws Error if --source is "api" and --scope is not specified
- * @throws Error if --source is "api" and --integrationInstanceId is specified
- * @throws Error if one of --integrationInstanceId or --source is not specified
+ * @throws {Error} if --source is "api" and --scope is not specified
+ * @throws {Error} if --source is "api" and --integrationInstanceId is specified
+ * @throws {Error} if one of --integrationInstanceId or --source is not specified
  */
-export function getSynchronizationJobSourceOptions(
-  options: any,
-): SynchronizationJobSourceOptions {
-  const synchronizeOptions: SynchronizationJobSourceOptions = {
-    source: options.source,
-  };
+export function validateSyncOptions(options: SyncOptions): SyncOptions {
   if (options.source === 'api') {
     if (options.integrationInstanceId)
       throw new Error(
@@ -55,19 +97,90 @@ export function getSynchronizationJobSourceOptions(
       throw new Error(
         'Invalid configuration supplied. --source api requires --scope flag.',
       );
-    synchronizeOptions.scope = options.scope;
   } else if (
     !['integration-managed', 'integration-external'].includes(options.source)
   ) {
     throw new Error(
       `Invalid configuration supplied. --source must be one of: integration-managed, integration-external, api. Received: ${options.source}.`,
     );
-  } else if (options.integrationInstanceId) {
-    synchronizeOptions.integrationInstanceId = options.integrationInstanceId;
-  } else {
+  } else if (!options.integrationInstanceId) {
     throw new Error(
       'Invalid configuration supplied. --integrationInstanceId or --source api and --scope required.',
     );
   }
-  return synchronizeOptions;
+  return options;
+}
+
+/**
+ * Returns an object containing only `SyncOptions` properties. This helps to ensure other properties of `OptionValues` are not passed to the `SynchronizationJob`.
+ */
+export function getSyncOptions(options: OptionValues): SyncOptions {
+  return {
+    source: options.source,
+    scope: options.scope,
+    integrationInstanceId: options.integrationInstanceId,
+    uploadBatchSize: options.uploadBatchSize,
+    uploadRelationshipBatchSize: options.uploadRelationshipBatchSize,
+    skipFinalize: options.skipFinalize,
+  };
+}
+
+export interface ApiClientOptions {
+  development: boolean;
+  apiBaseUrl: string;
+  apiKey?: string;
+  account?: string;
+}
+
+export function addApiClientOptionsToCommand(command: Command): Command {
+  return command
+    .option(
+      '--api-base-url <url>',
+      'specify synchronization API base URL',
+      JUPITERONE_PROD_API_BASE_URL,
+    )
+    .option(
+      '-d, --development',
+      '"true" to target apps.dev.jupiterone.io (JUPITERONE_DEV environment variable)',
+      !!process.env.JUPITERONE_DEV,
+    )
+    .option(
+      '--account <account>',
+      'JupiterOne account ID (JUPITERONE_ACCOUNT environment variable)',
+      process.env.JUPITERONE_ACCOUNT,
+    )
+    .option(
+      '--api-key <key>',
+      'JupiterOne API key (JUPITERONE_API_KEY environment variable)',
+      process.env.JUPITERONE_API_KEY?.replace(/./, '*'),
+    );
+}
+
+export function validateApiClientOptions(options: ApiClientOptions) {
+  if (
+    options.development &&
+    ![JUPITERONE_PROD_API_BASE_URL, JUPITERONE_DEV_API_BASE_URL].includes(
+      options.apiBaseUrl,
+    )
+  ) {
+    throw new Error(
+      `Invalid configuration supplied. Cannot specify both --development and --api-base-url flags.`,
+    );
+  }
+}
+
+/**
+ * Builds a set of options for the 'createApiClient' function.
+ *
+ * @throws IntegrationApiKeyRequiredError
+ * @throws IntegrationAccountRequiredError
+ */
+export function getApiClientOptions(options: ApiClientOptions) {
+  return {
+    apiBaseUrl: options.development
+      ? JUPITERONE_DEV_API_BASE_URL
+      : options.apiBaseUrl,
+    accessToken: options.apiKey || getApiKeyFromEnvironment(),
+    account: options.account || getAccountFromEnvironment(),
+  };
 }

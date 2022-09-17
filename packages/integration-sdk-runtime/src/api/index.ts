@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 
 import {
-  IntegrationApiKeyRequiredError,
   IntegrationAccountRequiredError,
+  IntegrationApiKeyRequiredError,
 } from './error';
 
 export type ApiClient = AxiosInstance;
@@ -60,12 +60,15 @@ interface GetApiBaseUrlInput {
   dev: boolean;
 }
 
+export const JUPITERONE_PROD_API_BASE_URL = 'https://api.us.jupiterone.io';
+export const JUPITERONE_DEV_API_BASE_URL = 'https://api.dev.jupiterone.io';
+
 export function getApiBaseUrl({ dev }: GetApiBaseUrlInput = { dev: false }) {
   if (dev) {
-    return 'https://api.dev.jupiterone.io';
+    return JUPITERONE_DEV_API_BASE_URL;
+  } else {
+    return JUPITERONE_PROD_API_BASE_URL;
   }
-
-  return 'https://api.us.jupiterone.io';
 }
 
 function getFromEnv(
