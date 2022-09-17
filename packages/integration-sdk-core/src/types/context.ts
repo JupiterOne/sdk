@@ -27,25 +27,25 @@ export interface ExecutionContext {
 export type IntegrationExecutionConfig = object;
 
 /**
- * @param TConfig the integration specific type of the `instance.config`
+ * @param TInstanceConfig the integration specific type of the `instance.config`
  * property
  */
 export type IntegrationLoadExecutionConfigContext<
-  TConfig extends IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig,
 > = ExecutionContext & {
-  instance: IntegrationInstance<TConfig>;
+  instance: IntegrationInstance<TInstanceConfig>;
 };
 
 /**
- * @param TConfig the integration specific type of the `instance.config`
+ * @param TInstanceConfig the integration specific type of the `instance.config`
  * property
  * @param TExecutionConfig the configuration type produced by the
  * integration's optional `loadExecutionConfig` function
  */
 export type IntegrationExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
-> = IntegrationLoadExecutionConfigContext<TConfig> & {
+> = IntegrationLoadExecutionConfigContext<TInstanceConfig> & {
   executionConfig: TExecutionConfig;
 };
 
@@ -54,13 +54,13 @@ export type StepExecutionContext = ExecutionContext & {
 };
 
 /**
- * @param TConfig the integration specific type of the `instance.config`
+ * @param TInstanceConfig the integration specific type of the `instance.config`
  * property
  * @param TExecutionConfig the configuration type produced by the
  * integration's optional `loadExecutionConfig` function
  */
 export interface IntegrationStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
-> extends IntegrationExecutionContext<TConfig, TExecutionConfig>,
+> extends IntegrationExecutionContext<TInstanceConfig, TExecutionConfig>,
     StepExecutionContext {}

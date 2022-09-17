@@ -7,6 +7,7 @@ import * as zlib from 'zlib';
 import {
   createDirectRelationship,
   Entity,
+  IntegrationExecutionConfig,
   IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInstanceConfig,
@@ -72,11 +73,18 @@ async function getSortedLocalGraphData(): Promise<
 }
 
 export interface InstanceConfigurationData<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > {
-  validateInvocation: IntegrationInvocationValidationFunction<TIntegrationConfig>;
-  instance: IntegrationInstance<TIntegrationConfig>;
-  invocationConfig: IntegrationInvocationConfig<TIntegrationConfig>;
+  validateInvocation: IntegrationInvocationValidationFunction<
+    TInstanceConfig,
+    TExecutionConfig
+  >;
+  instance: IntegrationInstance<TInstanceConfig>;
+  invocationConfig: IntegrationInvocationConfig<
+    TInstanceConfig,
+    TExecutionConfig
+  >;
   logger: IntegrationLogger;
 }
 
@@ -89,12 +97,13 @@ describe('executeIntegrationInstance', () => {
   const executionStartedOn = Date.now();
 
   async function executeIntegrationInstanceWithConfig<
-    TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+    TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+    TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
   >(
-    config: InstanceConfigurationData<TIntegrationConfig>,
+    config: InstanceConfigurationData<TInstanceConfig>,
     options: ExecuteIntegrationOptions = {},
   ) {
-    return executeIntegrationInstance<TIntegrationConfig>(
+    return executeIntegrationInstance<TInstanceConfig>(
       config.logger,
       config.instance,
       config.invocationConfig,

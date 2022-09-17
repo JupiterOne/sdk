@@ -3,10 +3,14 @@ import { EventEmitter } from 'events';
 import { v4 as uuid } from 'uuid';
 
 import {
+  DisabledStepReason,
   ExecutionContext,
   IntegrationError,
+  IntegrationEvent,
+  IntegrationExecutionConfig,
   IntegrationExecutionContext,
   IntegrationInstance,
+  IntegrationInstanceConfig,
   IntegrationInstanceConfigFieldMap,
   IntegrationInvocationConfig,
   IntegrationLogger as IntegrationLoggerType,
@@ -14,27 +18,24 @@ import {
   InvocationConfig,
   isProviderAuthError,
   Metric,
+  PublishErrorEventInput,
+  PublishEventInput,
+  PublishEventLevel,
+  PublishInfoEventInput,
+  PublishWarnEventInput,
   shouldReportErrorToOperator,
   StepExecutionContext,
   StepMetadata,
   SynchronizationJob,
   UNEXPECTED_ERROR_CODE,
   UNEXPECTED_ERROR_REASON,
-  IntegrationInstanceConfig,
-  PublishEventInput,
-  PublishWarnEventInput,
-  PublishEventLevel,
-  IntegrationEvent,
-  PublishInfoEventInput,
-  PublishErrorEventInput,
-  DisabledStepReason,
 } from '@jupiterone/integration-sdk-core';
 
 export * from './registerEventHandlers';
 
 export const PROVIDER_AUTH_ERROR_HELP =
   ' Failed to access provider resource.' +
-  ' This integration is likely misconfigured or has insufficient permissions required to access the resource.' +
+  ' This integration is likely mis-configured or has insufficient permissions required to access the resource.' +
   " Please ensure your integration's configuration settings are set up correctly.";
 
 // eslint-disable-next-line
@@ -52,12 +53,16 @@ interface CreateLoggerInput<
 }
 
 interface CreateIntegrationLoggerInput<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > extends CreateLoggerInput<
-    IntegrationExecutionContext<TIntegrationConfig>,
-    IntegrationStepExecutionContext<TIntegrationConfig>
+    IntegrationExecutionContext<TInstanceConfig, TExecutionConfig>,
+    IntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig>
   > {
-  invocationConfig?: IntegrationInvocationConfig<TIntegrationConfig>;
+  invocationConfig?: IntegrationInvocationConfig<
+    TInstanceConfig,
+    TExecutionConfig
+  >;
 }
 
 interface PublishMetricOptions {
@@ -113,14 +118,18 @@ export function createLogger<
  * serializers common to all integrations.
  */
 export function createIntegrationLogger<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 >({
   name,
   invocationConfig,
   pretty,
   serializers,
   onFailure,
-}: CreateIntegrationLoggerInput<TIntegrationConfig>): IntegrationLogger {
+}: CreateIntegrationLoggerInput<
+  TInstanceConfig,
+  TExecutionConfig
+>): IntegrationLogger {
   const serializeInstanceConfig = createInstanceConfigSerializer(
     invocationConfig?.instanceConfigFields,
   );
@@ -144,8 +153,8 @@ export function createIntegrationLogger<
 }
 
 function createInstanceConfigSerializer<
-  TConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig,
->(fields?: IntegrationInstanceConfigFieldMap<TConfig>) {
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig,
+>(fields?: IntegrationInstanceConfigFieldMap<TInstanceConfig>) {
   return (config: any) => {
     if (!config) {
       return config;
@@ -185,8 +194,8 @@ export class IntegrationLogger
   extends EventEmitter
   implements IntegrationLoggerType
 {
-  private _logger: Logger;
-  private _errorSet: Set<Error>;
+  private readonly _logger: Logger;
+  private readonly _errorSet: Set<Error>;
   readonly onFailure: OnFailureFunction;
 
   constructor(input: IntegrationLoggerInput) {
@@ -199,7 +208,7 @@ export class IntegrationLogger
   }
 
   /**
-   * Answers `true` when the err has been reported to the logger instance
+   * Answers `true` when err has been reported to the logger instance
    * through these functions:
    *
    * * warn(err, ...)

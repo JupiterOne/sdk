@@ -1,10 +1,11 @@
 import {
-  RelationshipClass,
   IntegrationEntitySchema,
+  RelationshipClass,
 } from '@jupiterone/data-model';
 
 import {
   ExecutionContext,
+  IntegrationExecutionConfig,
   IntegrationStepExecutionContext,
   StepExecutionContext,
 } from './context';
@@ -48,10 +49,6 @@ export type ExecutionHandlerFunction<T extends StepExecutionContext> = (
   context: T,
 ) => Promise<void> | void;
 
-export type StepExecutionHandlerFunction<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> = ExecutionHandlerFunction<IntegrationStepExecutionContext<TConfig>>;
-
 export enum StepResultStatus {
   SUCCESS = 'success',
   CACHED = 'cached',
@@ -63,7 +60,7 @@ export enum StepResultStatus {
 
 export type Step<T extends StepExecutionContext> = StepMetadata & {
   /**
-   * Function that runs to perform the stpe that
+   * Function that runs to perform the work of a `Step`.
    */
   executionHandler: ExecutionHandlerFunction<T>;
 };
@@ -92,13 +89,15 @@ export type IntegrationStepResult = Omit<
 };
 
 export type IntegrationStep<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> = StepMetadata & Step<IntegrationStepExecutionContext<TConfig>>;
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+> = StepMetadata &
+  Step<IntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig>>;
 
 export interface GraphObjectIndexMetadata {
   /**
    * Whether the index of the graph object store is enabled or not. For example,
-   * in the case leveraging the `FileSystemGraphObjectStore`, this value
+   * in the case of leveraging the `FileSystemGraphObjectStore`, this value
    * determines whether we need to write the specific graph object to disk.
    */
   enabled: boolean;
@@ -142,7 +141,7 @@ export interface StepGraphObjectMetadata {
   partial?: boolean;
 
   /**
-   * Contains metadadata that can be leveraged inside of the graph object store
+   * Contains metadata that can be leveraged inside the graph object store.
    */
   indexMetadata?: GraphObjectIndexMetadata;
 }

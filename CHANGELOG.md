@@ -56,6 +56,9 @@ and this project adheres to
   `--api-base-url` so it is shown in the help output. Any other value for
   `--api-base-url` will cause an error to be thrown if `--development` is set to
   `"true"`.
+- Improved type definitions to allow for expressing the type of the
+  `IntegrationExecutionConfig` that is returned from `loadExecutionConfig` and
+  passed to `executionHandler` functions.
 
 ## 8.24.0 - 2022-09-15
 
@@ -162,25 +165,25 @@ Options:
   specified, logging to the job event log is disabled. Here is an example of
   usage:
 
-```typescript
-{
-  ['fetch-prs']: {
-    disabled: false
-  },
-  ['fetch-issues']: {
-    disabled: !scopes.repoIssues,
-    disabledReason: DisabledStepReason.PERMISSION
-  }
-}
-```
+  ```typescript
+  const stepStartStates: StepStartStates = {
+    ['fetch-prs']: {
+      disabled: false,
+    },
+    ['fetch-issues']: {
+      disabled: !scopes.repoIssues,
+      disabledReason: DisabledStepReason.PERMISSION,
+    },
+  };
+  ```
 
-Sample text output:
+  Sample text output:
 
-```
-Skipped step "Fetch Issues". The required permission was not provided to perform this step.
-Skipped step "Fetch Issues". This step is disabled via configuration. Please contact support to enabled.
-Skipped step "Fetch Issues". Beta feature, please contact support to enable.
-```
+  ```
+  Skipped step "Fetch Issues". The required permission was not provided to perform this step.
+  Skipped step "Fetch Issues". This step is disabled via configuration. Please contact support to enabled.
+  Skipped step "Fetch Issues". Beta feature, please contact support to enable.
+  ```
 
 ## [8.17.0] - 2022-06-29
 
@@ -663,13 +666,16 @@ of the support.jupiterone.io site.
   ```ts
   import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 
+  type IntegrationConfig = {
+    roleArn: string;
+    externalId: string;
+  };
+
   /**
    * The AWS integration uses shared `fromTemporaryCredentials` across all of
    * its clients.
    */
-  export function loadExecutionConfig({
-    config: { roleArn: string, externalId: string },
-  }) {
+  export function loadExecutionConfig({ config: IntegrationConfig }) {
     return {
       credentials: fromTemporaryCredentials({
         params: {
@@ -740,7 +746,9 @@ of the support.jupiterone.io site.
   const virtualMachineId = await jobState.findEntity(
     nic.virtualMachine?.id as string,
   );
+  ```
 
+  ```ts
   // by allowing `undefined`, we can more safely use these methods without type assertions
   const virtualMachineId = await jobState.findEntity(nic.virtualMachine?.id);
   ```
@@ -1201,7 +1209,7 @@ getData: <T>(key: string) => Promise<T | undefined>;
   Usage in an integration step:
 
   ```typescript
-  {
+  const integrationMetadata = {
     id: 'my-step',
     name: 'My step',
     entities: [
@@ -1217,9 +1225,9 @@ getData: <T>(key: string) => Promise<T | undefined>;
     ],
     relationships: [],
     async exeutionHandler() {
-      ...
-    }
-  }
+      // work here
+    },
+  };
   ```
 
   See PR [#404](https://github.com/JupiterOne/sdk/pull/404)
@@ -1584,16 +1592,14 @@ Example:
 ```typescript
 const entity = await jobState.addEntity(convertToEntity(data));
 const entity2 = await jobState.addEntity(convertToOtherEntity(entity2));
-await jobState.addRelationship(
-  convertToRelationship(entity, entity2)
-);
+await jobState.addRelationship(convertToRelationship(entity, entity2));
 
 // Or this:
 await jobState.addRelationship(
   convertToRelationship(
-    await jobState.addEntity(convertToEntity(data))
-    await jobState.addEntity(convertToOtherEntity(entity2))
-  )
+    await jobState.addEntity(convertToEntity(data)),
+    await jobState.addEntity(convertToOtherEntity(entity2)),
+  ),
 );
 ```
 
@@ -1641,8 +1647,9 @@ expect(context.jobState.collectedEntities).toMatchGraphObjectSchema({
       _rawData: {
         type: 'array',
         items: { type: 'object' },
-      }
-   }
+      },
+    },
+  },
 });
 ```
 
@@ -1832,4 +1839,4 @@ into the following packages:
 - `@jupiterone/integration-sdk-cli`
 
 To view the changes that went into `@jupiterone/integration-sdk`, please see
-[LEGACY_SDK_CHANGELOG.md](./LEGACY_SDK_CHANGELOG.md).
+[LEGACY_SDK_CHANGELOG.md](packages/integration-sdk/LEGACY_SDK_CHANGELOG.md).
