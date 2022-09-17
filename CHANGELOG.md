@@ -233,7 +233,7 @@ Options:
 
 ### Changed
 
-- Allow an integration job id to be passed in when initializing syncronization.
+- Allow an integration job id to be passed in when initializing synchronization.
 
 ## [8.13.11] - 2022-05-27
 
@@ -252,14 +252,14 @@ Options:
 ### Fixed
 
 - Fixed issue when unzipping gzipped polly recording entries. Now removes the
-  content.encoding value once content is decoded.
+  `content.encoding` value once content is decoded.
 - Fixes issue introduced in 8.13.4
 
 ## [8.13.8] - 2022-05-19
 
 ### Changed
 
-- Moved `shrinkBatchRawData` to its own module for readablity and easy mocking
+- Moved `shrinkBatchRawData` to its own module for readability and easy mocking
   in test
 - Increased threshold by which we continue to shrink rawData from 6 million
   bytes to 5.5 million bytes
@@ -344,8 +344,8 @@ Options:
 ### Added
 
 - Additional error type `IntegrationProviderRetriesExceededError` to be used
-  when integration has exhausted all of the retries. This error type won't be
-  sent in as an alert to the operators.
+  when integration has exhausted all the retries. This error type won't be sent
+  in as an alert to the operators.
 
 ## [8.10.1] - 2022-04-08
 
@@ -755,8 +755,8 @@ of the support.jupiterone.io site.
 
 ### Fixed
 
-- Fixed the way that symlinks are created on windows machines. Directories are
-  still created as simlinks, but files are now hardlinks to prevent the
+- Fixed the way that symlinks are created on Windows machines. Directories are
+  still created as symlinks, but files are now hardlinks to prevent the
   requirement that `yarn start` be run with admin credentials.
 
 ## [7.4.0] - 2021-11-03
@@ -904,7 +904,7 @@ of the support.jupiterone.io site.
 
 - Fix `j1-integration document --output-file` to reflect that it is a path
   relative to `--project-path`
-- Fixed the way that symlinks are created on windows machines, which previously
+- Fixed the way that symlinks are created on Windows machines, which previously
   threw `EPERM: operation not permitted, symlink`
 
 ## [6.15.0] - 2021-08-19
@@ -949,8 +949,8 @@ of the support.jupiterone.io site.
 ### Added
 
 - a `dependencyGraphOrder` property to the InvocationConfig and a
-  `dependencyGraphId` property to the StepMetadata which togeather can be used
-  to create multiple ordered dependency graphs per execution.
+  `dependencyGraphId` property to the StepMetadata which together can be used to
+  create multiple ordered dependency graphs per execution.
 
 ## 6.10.0 - 2021-07-09
 
@@ -980,7 +980,7 @@ of the support.jupiterone.io site.
 
 ### Added
 
-- Added `j1-integration diff` command to ouptut colorized diffs of old/new
+- Added `j1-integration diff` command to output colorized diffs of old/new
   integrations.
 - Allow overriding integration instance properties when running integrations
   locally.
@@ -1755,7 +1755,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = 
   convert properties that are named with common suffixes (on, at, time, date) to
   a UNIX timestamp (number).
 - Added `publishMetric` function to `IntegrationLogger` that now causes a
-  `metric` event to be emit.
+  `metric` event to be emitted.
 
 ## 1.1.1 - 2020-06-08
 
@@ -1774,7 +1774,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = 
 ### Fixed
 
 - `createIntegrationRelationship` made `_key` optional for relationship
-  mappings, a fine thing to do because specifying the `_key` for those insn't
+  mappings, a fine thing to do because specifying the `_key` for them isn't
   necessary. However, the function was changed at the same time to stop
   generating a `_key`, which is required to ensure the collected relationships
   are unique. This fixes things so the `_key` remains an optional argument, and
@@ -1788,8 +1788,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = 
   `_type` for relationship mappings, overriding the generated value or values
   provided in `properties` option.
 - Removed `@types/vis` from dependencies to devDependencies because having the
-  type forces typescript consumers to have `DOM` in the their `lib` compiler
-  option.
+  type forces typescript consumers to have `DOM` in their `lib` compiler option.
 
 ## 1.0.1 - 2020-06-03
 
