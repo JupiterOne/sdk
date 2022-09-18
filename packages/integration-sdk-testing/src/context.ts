@@ -7,6 +7,7 @@ import {
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
   IntegrationStepExecutionContext,
+  StepMetadata,
 } from '@jupiterone/integration-sdk-core';
 import {
   loadConfigFromEnvironmentVariables,
@@ -38,6 +39,7 @@ interface CreateMockExecutionContextOptionsWithConfigs<
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > {
   instanceConfig: TInstanceConfig;
+  executionConfig: TExecutionConfig;
   executionHistory?: ExecutionHistory;
 }
 
@@ -67,7 +69,7 @@ export function createMockExecutionContext<
     LOCAL_INTEGRATION_INSTANCE.accountId;
 
   // copy local instance properties so that tests cannot
-  // mutate the original object and cause unpredicable behavior
+  // mutate the original object and cause unpredictable behavior
   const instance = {
     ...LOCAL_INTEGRATION_INSTANCE,
     accountId,
@@ -119,13 +121,16 @@ export type CreateMockStepExecutionContextOptions<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = CreateMockExecutionContextOptions<TInstanceConfig, TExecutionConfig> &
-  CreateMockJobStateOptions;
+  CreateMockJobStateOptions & {
+    stepMetadata: StepMetadata;
+  };
 
 export interface MockIntegrationStepExecutionContext<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > extends IntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig> {
   jobState: MockJobState;
+  stepMetadata: StepMetadata;
 }
 
 export function createMockStepExecutionContext<
@@ -138,10 +143,12 @@ export function createMockStepExecutionContext<
   > = {
     instanceConfigFields:
       {} as IntegrationInstanceConfigFieldMap<TInstanceConfig>,
+    stepMetadata: {} as StepMetadata,
   },
 ): MockIntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig> {
   return {
     ...createMockExecutionContext<TInstanceConfig, TExecutionConfig>(options),
+    stepMetadata: options.stepMetadata,
     jobState: createMockJobState(options),
   };
 }

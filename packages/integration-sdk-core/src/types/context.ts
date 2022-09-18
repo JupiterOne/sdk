@@ -1,6 +1,7 @@
 import { IntegrationInstance, IntegrationInstanceConfig } from './instance';
 import { JobState } from './jobState';
 import { IntegrationLogger } from './logger';
+import { StepMetadata } from './step';
 
 export type Execution = {
   startedOn: number;
@@ -24,7 +25,7 @@ export interface ExecutionContext {
  * `IntegrationInstanceConfig`, containing dynamic values perhaps calculated
  * based on the instance config.
  */
-export type IntegrationExecutionConfig = object;
+export type IntegrationExecutionConfig = Record<string, any>;
 
 /**
  * @param TInstanceConfig the integration specific type of the `instance.config`
@@ -51,6 +52,7 @@ export type IntegrationExecutionContext<
 
 export type StepExecutionContext = ExecutionContext & {
   jobState: JobState;
+  stepMetadata: StepMetadata;
 };
 
 /**

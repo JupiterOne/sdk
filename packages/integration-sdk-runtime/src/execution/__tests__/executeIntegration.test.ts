@@ -14,6 +14,7 @@ import {
   IntegrationInvocationConfig,
   IntegrationInvocationValidationFunction,
   IntegrationLogger,
+  IntegrationStepExecutionContext,
   IntegrationValidationError,
   Relationship,
   RelationshipClass,
@@ -100,10 +101,10 @@ describe('executeIntegrationInstance', () => {
     TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
     TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
   >(
-    config: InstanceConfigurationData<TInstanceConfig>,
+    config: InstanceConfigurationData<TInstanceConfig, TExecutionConfig>,
     options: ExecuteIntegrationOptions = {},
   ) {
-    return executeIntegrationInstance<TInstanceConfig>(
+    return executeIntegrationInstance<TInstanceConfig, TExecutionConfig>(
       config.logger,
       config.instance,
       config.invocationConfig,
@@ -121,6 +122,35 @@ describe('executeIntegrationInstance', () => {
     jest
       .spyOn(integrationFileSystem, 'getRootStorageDirectorySize')
       .mockResolvedValue(Promise.resolve(1000));
+  });
+
+  test('provides stepMetadata to executionHandler context', async () => {
+    let stepContext: IntegrationStepExecutionContext | undefined;
+    const executionHandler = jest
+      .fn()
+      .mockImplementation((context: IntegrationStepExecutionContext) => {
+        stepContext = context;
+      });
+
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'step',
+            name: 'Step',
+            entities: [],
+            relationships: [],
+            executionHandler,
+          },
+        ],
+      },
+    });
+
+    await executeIntegrationInstanceWithConfig(config);
+
+    expect(stepContext).toBeDefined();
+    expect(stepContext?.stepMetadata).toBeDefined();
+    expect(stepContext?.stepMetadata.id).toEqual('step');
   });
 
   test('executes validateInvocation function if provided in config', async () => {

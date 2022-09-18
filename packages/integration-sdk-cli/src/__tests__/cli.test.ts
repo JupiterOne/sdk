@@ -509,6 +509,11 @@ describe('collect/visualize integration', () => {
   });
 });
 
+test('custom context and config types', async () => {
+  loadProjectStructure('typeScriptCustomConfigsProject');
+  await createCli().parseAsync(['node', 'j1-integration', 'collect']);
+});
+
 describe('document', () => {
   test('loads the integration with entities and relationships and writes documentation results', async () => {
     await documentCommandSnapshotTest('docsInstanceWithRelationships');

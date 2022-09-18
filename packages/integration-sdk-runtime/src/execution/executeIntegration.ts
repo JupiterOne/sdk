@@ -101,7 +101,7 @@ export async function executeIntegrationInstance<
 >(
   logger: IntegrationLogger,
   instance: IntegrationInstance<TInstanceConfig>,
-  config: IntegrationInvocationConfig<TInstanceConfig>,
+  config: IntegrationInvocationConfig<TInstanceConfig, TExecutionConfig>,
   executionHistory: ExecutionHistory,
   options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
@@ -122,8 +122,9 @@ export async function executeIntegrationInstance<
           instance: instanceWithTrimmedConfig,
           logger,
           executionHistory,
-          executionConfig:
-            config.loadExecutionConfig?.(instanceWithTrimmedConfig) || {},
+          executionConfig: (config.loadExecutionConfig?.(
+            instanceWithTrimmedConfig,
+          ) || {}) as TExecutionConfig,
         },
         config,
         options,

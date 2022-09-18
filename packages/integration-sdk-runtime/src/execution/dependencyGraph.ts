@@ -11,6 +11,7 @@ import {
   Relationship,
   Step,
   StepExecutionContext,
+  StepMetadata,
   StepResultStatus,
   StepStartStates,
 } from '@jupiterone/integration-sdk-core';
@@ -306,7 +307,7 @@ export function executeStepDependencyGraph<
         typeTracker,
         graphObjectStore,
         dataStore,
-        stepId,
+        stepMetadata: step,
         beforeAddEntity,
         beforeAddRelationship,
         uploader,
@@ -437,7 +438,7 @@ function buildStepContext<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
 >({
-  stepId,
+  stepMetadata,
   context,
   duplicateKeyTracker,
   typeTracker,
@@ -447,7 +448,7 @@ function buildStepContext<
   beforeAddEntity,
   beforeAddRelationship,
 }: {
-  stepId: string;
+  stepMetadata: StepMetadata;
   context: TExecutionContext;
   duplicateKeyTracker: DuplicateKeyTracker;
   typeTracker: TypeTracker;
@@ -475,7 +476,7 @@ function buildStepContext<
       : undefined;
 
   const jobState = createStepJobState({
-    stepId,
+    stepId: stepMetadata.id,
     duplicateKeyTracker,
     typeTracker,
     graphObjectStore,
@@ -488,9 +489,10 @@ function buildStepContext<
   const stepExecutionContext: StepExecutionContext = {
     ...context,
     logger: context.logger.child({
-      stepId,
+      stepId: stepMetadata.id,
     }),
     jobState,
+    stepMetadata,
   };
 
   return stepExecutionContext as TStepExecutionContext;
