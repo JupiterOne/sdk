@@ -59,6 +59,8 @@ and this project adheres to
 - Improved type definitions to allow for expressing the type of the
   `IntegrationExecutionConfig` that is returned from `loadExecutionConfig` and
   passed to `executionHandler` functions.
+- Added `IntegrationStepExecutionContext.stepMetadata` to allow
+  `executionHandler` functions to readily access their `StepMetadata`.
 
 ## 8.24.0 - 2022-09-15
 
