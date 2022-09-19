@@ -11,7 +11,7 @@
     "clean": "yarn lerna clean --yes && yarn clean:build && rm -r node_modules",
     "clean:build": "yarn lerna exec \"rm -rf ./dist tsconfig.tsbuildinfo\"",
     "prebuild": "yarn clean:build",
-    "build": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing",
+    "build": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing packages/integration-sdk-http-client",
     "prebuild:dist": "yarn clean:build",
     "build:dist": "lerna run build:dist",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml}\"",
@@ -33,7 +33,8 @@
     "lint-staged": "^10.2.6",
     "prettier": "^2.2.1",
     "ts-jest": "^27.1.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "@jupiterone/integration-sdk-dev-tools": "^8.11.0"
   },
   "version": "0.0.0"
 }

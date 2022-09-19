@@ -1,6 +1,7 @@
 import {
   convertNameValuePairs,
   convertProperties,
+  parseTimePropertyValue,
   truncateEntityPropertyValue,
 } from '../converters';
 
@@ -148,5 +149,61 @@ describe('#truncateEntityPropertyValue', () => {
     expect(truncateEntityPropertyValue(value)).toEqual(
       value.substr(0, 4096 - 3) + '...',
     );
+  });
+});
+
+describe('#parseTimePropertyValue', () => {
+  test('should return undefined', () => {
+    expect(parseTimePropertyValue(null)).toBeUndefined();
+    expect(parseTimePropertyValue(undefined)).toBeUndefined();
+    expect(parseTimePropertyValue('')).toBeUndefined();
+    expect(parseTimePropertyValue(0 as any)).toBeUndefined();
+    expect(parseTimePropertyValue('bargbklselk')).toBeUndefined();
+  });
+  test('should correctly parse Date', () => {
+    expect(parseTimePropertyValue(new Date('2020-10-06T17:41:28Z'))).toBe(
+      1602006088000,
+    );
+    expect(parseTimePropertyValue(new Date('2020-10-06'))).toBe(1601942400000);
+  });
+  test('should correctly parse string', () => {
+    expect(parseTimePropertyValue('2020-10-06T17:41:28Z')).toBe(1602006088000);
+    expect(parseTimePropertyValue('2020-10-06')).toBe(1601942400000);
+    expect(parseTimePropertyValue('2020-10-06T17:41:28.999999999Z')).toBe(
+      1602006088999,
+    );
+    expect(parseTimePropertyValue('2020-10-06T17:41:28.9999+00:00')).toBe(
+      1602006088999,
+    );
+    expect(parseTimePropertyValue('1601942400' as any, 'sec')).toBe(
+      1601942400000,
+    );
+    expect(parseTimePropertyValue('1601942400.887' as any, 'sec')).toBe(
+      1601942400887,
+    );
+  });
+  test('parsing number without precision', () => {
+    expect(() => parseTimePropertyValue(1601942400 as any)).toThrowError(
+      new Error('Argument sourcePrecision is required when parsing a number.'),
+    );
+    expect(() => parseTimePropertyValue('1601942400' as any)).toThrowError(
+      new Error('Argument sourcePrecision is required when parsing a number.'),
+    );
+  });
+  test('parsing number', () => {
+    // Seconds
+    expect(parseTimePropertyValue(parseInt('1601942400', 10), 'sec')).toBe(
+      1601942400000,
+    );
+    expect(parseTimePropertyValue(Number(1601942400), 'sec')).toBe(
+      1601942400000,
+    );
+    expect(parseTimePropertyValue(1601942400.99999, 'sec')).toBe(1601942400999);
+    expect(parseTimePropertyValue(1601942400.0083234234, 'sec')).toBe(
+      1601942400008,
+    );
+    // Milliseconds
+    expect(parseTimePropertyValue(1601942400000, 'ms')).toBe(1601942400000);
+    expect(parseTimePropertyValue(1601942400000.999, 'ms')).toBe(1601942400000);
   });
 });

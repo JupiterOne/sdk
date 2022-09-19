@@ -6,6 +6,7 @@ import { pick } from 'lodash';
 
 import {
   BeforeAddEntityHookFunction,
+  BeforeAddRelationshipHookFunction,
   ExecutionContext,
   IntegrationStepResult,
   InvocationConfig,
@@ -40,6 +41,7 @@ export async function executeSteps<
   dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
+  beforeAddRelationship,
   dependencyGraphOrder,
 }: {
   executionContext: TExecutionContext;
@@ -50,6 +52,7 @@ export async function executeSteps<
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
@@ -64,7 +67,7 @@ export async function executeSteps<
     if (!steps) {
       executionContext.logger.warn(
         { graphId },
-        'A graphId in the dependencyGraphOrder was not refrenced by any steps.',
+        'A graphId in the dependencyGraphOrder was not referenced by any steps.',
       );
       continue;
     }
@@ -80,6 +83,7 @@ export async function executeSteps<
         dataStore,
         createStepGraphObjectDataUploader,
         beforeAddEntity,
+        beforeAddRelationship,
       }),
     );
   }

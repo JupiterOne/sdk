@@ -133,6 +133,7 @@ export interface CreatePersisterApiStepGraphObjectDataUploaderParams {
   synchronizationJobContext: SynchronizationJobContext;
   uploadConcurrency: number;
   uploadBatchSize?: number;
+  uploadRelationshipsBatchSize?: number;
 }
 
 export function createPersisterApiStepGraphObjectDataUploader({
@@ -140,6 +141,7 @@ export function createPersisterApiStepGraphObjectDataUploader({
   synchronizationJobContext,
   uploadConcurrency,
   uploadBatchSize,
+  uploadRelationshipsBatchSize,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
   return createQueuedStepGraphObjectDataUploader({
     stepId,
@@ -152,13 +154,19 @@ export function createPersisterApiStepGraphObjectDataUploader({
       });
 
       try {
-        await uploadGraphObjectData(context, graphObjectData, uploadBatchSize);
+        await uploadGraphObjectData(
+          context,
+          graphObjectData,
+          uploadBatchSize,
+          uploadRelationshipsBatchSize,
+        );
       } catch (err) {
         context.logger.error(
           {
             err,
             uploadConcurrency,
             uploadBatchSize,
+            uploadRelationshipsBatchSize,
           },
           'Error uploading graph object data',
         );

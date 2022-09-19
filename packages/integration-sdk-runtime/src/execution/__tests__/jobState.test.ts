@@ -14,14 +14,22 @@ import {
   createTestEntity,
   createTestRelationship,
   sleep,
+  createTestEntities,
 } from '@jupiterone/integration-sdk-private-test-utils';
 import {
   createQueuedStepGraphObjectDataUploader,
   CreateQueuedStepGraphObjectDataUploaderParams,
 } from '../uploader';
 import { FlushedGraphObjectData } from '../../storage/types';
+import pMap from 'p-map';
 
 jest.mock('fs');
+
+function entitiesToEntityKeySet(entities: Entity[]): Set<string> {
+  const s = new Set<string>();
+  for (const e of entities) s.add(e._key);
+  return s;
+}
 
 function createInMemoryStepGraphObjectDataUploaderCollector(
   partial?: CreateQueuedStepGraphObjectDataUploaderParams,
@@ -171,6 +179,35 @@ describe('#hasKey', () => {
     await jobState.addEntity(createTestEntity({ _key: 'A' }));
     expect(await jobState.hasKey('A')).toBeTrue();
     expect(await jobState.hasKey('a')).toBeTrue();
+  });
+
+  test('should handle concurrent reads from in-memory key store when using synchronous hasKey', async () => {
+    const jobState = createTestStepJobState();
+    const entities = createTestEntities(100);
+
+    const tenthEntity = entities[9];
+    entities.splice(10, 0, tenthEntity);
+
+    const results = await pMap(entities, async (e) => {
+      // NOTE: Due to the event loop queue order in the Node.js, awaiting
+      // the `hasKey` promise while handling multiple entities concurrently,
+      // could result in a `hasKey` returning `false` because neither of the
+      // duplicate entities have been fully added to the job state yet.
+      if (jobState.hasKey(e._key)) return;
+
+      // We should not reach this line if the `_key` already exists. Therefore,
+      // a duplicate key error should _not_ be thrown.
+      return await jobState.addEntity(e);
+    });
+
+    const resultEntities = results.filter((e) => e !== undefined) as Entity[];
+
+    expect(resultEntities.length).toEqual(entities.length - 1);
+    const entityKeySet = entitiesToEntityKeySet(resultEntities);
+
+    for (const entity of entities) {
+      expect(entityKeySet.has(entity._key)).toEqual(true);
+    }
   });
 });
 

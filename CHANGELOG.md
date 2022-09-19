@@ -9,9 +9,286 @@ and this project adheres to
 
 ## Unreleased
 
-### Changed
+### Fixed
 
 - Allow relationships to have `undefined` top-level properties
+
+## 8.24.0 - 2022-09-15
+
+### Added
+
+- `j1-integration run --skip-finalize` option to avoid finalizing the
+  integration run. This is useful for scenarios where you want to run the
+  integration to collect and upload data to a synchronization job, but do not
+  want to initiate the finalization process.
+- `j1-integration [run|sync] --source api --scope anystring` options to allow
+  use of the SDK without configuring an integration instance.
+  `--integrationInstanceId` is not required when using these options.
+
+## 8.23.1 - 2022-09-07
+
+### Fixed
+
+- Support backwards compatibility for old integration npm package dist format
+  when using `j1-integration generate-integration-graph-schema`.
+
+  The way that integration npm packages are distributed has changed over time.
+  We are now handling invocation config loading from different file paths to
+  support backwards compatibility and make adoption easier.
+
+## 8.23.0 - 2022-09-06
+
+### Added
+
+- Added `graphObjectFileSize` configuration option to
+  `FileSystemGraphObjectStore`
+
+## 8.22.7 - 2022-09-03
+
+### Added
+
+- Added optional flag to specify a different Neo4j database name to push to or
+  wipe from than the default 'neo4j' (only available on enterprise instances of
+  Neo4j).
+
+## 8.22.5 - 2022-08-24
+
+### Fixed
+
+- Allow the use of possibly null or undefined `number` in
+  `parseTimePropertyValue`
+
+## 8.22.2 - 2022-08-18
+
+### Added
+
+- Added `optional` parameter to `IntegrationInstanceConfigField`.
+- Update `ProviderSourceData` `tags` type to match `assignTags`
+
+## 8.22.0 - 2021-07-20
+
+- Support async `beforeAddRelationship` hook in `IntegrationInvocationConfig`.
+  See the development documentation for more information on its usage.
+
+## 8.21.0 - 2021-07-20
+
+### Added
+
+- Added `IntegrationInfoEventName.Results` and
+  `IntegrationWarnEventName.MissingEntity`.
+
+## 8.20.0 - 2021-07-16
+
+### Added
+
+- Introduce `beforeAddRelationship` hook into `IntegrationInvocationConfig`. See
+  the development documentation for more information on its usage.
+
+## [8.19.0] - 2022-07-07
+
+### Added
+
+- New `j1-integration generate-integration-graph-schema` CLI command added
+
+```
+Usage: j1-integration generate-integration-graph-schema [options]
+
+generate integration graph metadata summary from step metadata
+
+Options:
+  -o, --output-file <path>        project relative path to generated integration graph schema file
+  -p, --project-path <directory>  path to integration project directory (default: "{CWD}")
+  -h, --help                      display help for command
+```
+
+## [8.18.1] - 2022-07-05
+
+### Changed
+
+- Bumped `@jupiterone/data-model@v0.51.0`
+
+## [8.18.0] - 2022-07-01
+
+### Added
+
+- Added the ability to specify a reason for why a step is disabled. This can be
+  set in the `StepStartState` interface using the `DisabledStepReason` enum.
+  Valid reasons include: `PERMISSION`, `CONFIG`, `BETA`, and `NONE`. `NONE` is
+  the equivalent to not specifying a reason. If `NONE` or undefined are
+  specified, logging to the job event log is disabled. Here is an example of
+  usage:
+
+```typescript
+{
+  ['fetch-prs']: {
+    disabled: false
+  },
+  ['fetch-issues']: {
+    disabled: !scopes.repoIssues,
+    disabledReason: DisabledStepReason.PERMISSION
+  }
+}
+```
+
+Sample text output:
+
+```
+Skipped step "Fetch Issues". The required permission was not provided to perform this step.
+Skipped step "Fetch Issues". This step is disabled via configuration. Please contact support to enabled.
+Skipped step "Fetch Issues". Beta feature, please contact support to enable.
+```
+
+## [8.17.0] - 2022-06-29
+
+### Added
+
+- Added ability to set a separate `uploadRelationshipsBatchSize`. `sync` and
+  `run` commands can specify the relationship-specific batch size with the `-ur`
+  or `--upload-relationship-batch-size` flags. Existing behavior remains the
+  same. If a `uploadBatchSize` is set, but no `uploadRelationshipsBatchSize`,
+  then relationships will be uploaded in batches of size `uploadBatchSize`.
+
+## [8.16.0] - 2022-06-27
+
+### Added
+
+- Added an optional `encounteredEntityKeys` property on `.toMatchStepMetadata()`
+  to verify that any relationship `_fromEntityKey` and `_toEntityKey` has
+  actually been encountered in the job state.
+
+## [8.15.0] - 2022-06-22
+
+### Changed
+
+- `@jupiterone/data-model` has been bumped to `0.50.0`
+
+## [8.14.1] - 2022-06-17
+
+### Added
+
+- `j1-integration` `sync` and `run` commands now have the option
+  `--upload-batch-size` to specify how many objects to upload in each batch.
+
+## [8.14.0] - 2022-06-13
+
+### Added
+
+- `j1-integration` now has the command `visualize-dependencies` to create a
+  visualization of the integration's step dependencies.
+
+## [8.13.13] - 2022-06-09
+
+### Changed
+
+- Fixed publish lerna command.
+
+## [8.13.12] - 2022-06-08
+
+### Changed
+
+- Allow an integration job id to be passed in when initializing syncronization.
+
+## [8.13.11] - 2022-05-27
+
+### Changed
+
+- `j1-integration run` command now supports `--disable-schema-validation` flag.
+
+## [8.13.10] - 2022-05-20
+
+### Changed
+
+- Bumped version `@jupiterone/data-model` to v0.49.0
+
+## [8.13.9] - 2022-05-20
+
+### Fixed
+
+- Fixed issue when unzipping gzipped polly recording entries. Now removes the
+  content.encoding value once content is decoded.
+- Fixes issue introduced in 8.13.4
+
+## [8.13.8] - 2022-05-19
+
+### Changed
+
+- Moved `shrinkBatchRawData` to its own module for readablity and easy mocking
+  in test
+- Increased threshold by which we continue to shrink rawData from 6 million
+  bytes to 5.5 million bytes
+- change core loop of `shrinkBatchRawData` to a `do while` loop instead of
+  `while`. This guarantees that at least 1 property will be attempted to be
+  truncated on each call to `shrinkBatchRawData`. We only call this function
+  when there has been an upload error due to payload size.
+
+## [8.13.7] - 2022-05-18
+
+### Changed
+
+- Bumped version `@jupiterone/data-model` to v0.48.0
+
+## [8.13.6] - 2022-05-12
+
+### Fixed
+
+- Neo4j uploads no longer occasionally create duplicate nodes on relationship
+  creation.
+
+## [8.13.5] - 2022-05-11
+
+### Fixed
+
+- Hanging execution when encountering upload failure due to entity properties
+  being too large
+- add logging surrounding the size distribution of upload batch and its largest
+  entity when such a situation occurs
+- throw fatal error when such a situation occurs
+
+## [8.13.4] - 2022-05-10
+
+### Fixed
+
+- Added base64 support for unzipping gzipped polly recording entries.
+
+## [8.13.2] - 2022-05-05
+
+### Changed
+
+- Updated Neo4j upload commands to improve performance.
+
+## [8.13.1] - 2022-04-27
+
+## Fixed
+
+- Fixed CodeQL warning around Neo4j value sanitization previously not properly
+  accounting for potential escape characters.
+
+## [8.13.0] - 2022-04-26
+
+## Added
+
+- Initial release of HTTP client with basic rate limit retry handling.
+
+## [8.12.1] - 2022-04-26
+
+## Changed
+
+- Updated dependency `@lifeomic/attempt` to version 3.0.3 Fixes an error
+  handling issues when using the timeout option.
+
+## [8.12.0] - 2022-04-20
+
+### Changed
+
+- The following packages have been upgraded:
+
+  - `@pollyjs/adapter-node-http`
+  - `@pollyjs/core`
+  - `@pollyjs/persister-fs`
+
+- The new Polly.JS packages ship with TypeScript definition files, so the old
+  `@type/pollyjs__` packages have been removed
+
 - Support `executeStepWithDependencies` for steps with no `dependencyGraphId`,
   even if `invocationConfig.dependencyGraphOrder` is present
 

@@ -39,6 +39,33 @@ async function documentCommandSnapshotTest(fixtureName: string) {
   expect(writeFileSpy.mock.calls[0][1]).toMatchSnapshot();
 }
 
+async function generateIntegrationGraphSchemaTest(fixtureName: string) {
+  loadProjectStructure(fixtureName);
+
+  const writeFileSpy = jest
+    .spyOn(fs, 'writeFile')
+    .mockResolvedValueOnce(Promise.resolve());
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'generate-integration-graph-schema',
+    '--output-file',
+    '/path/to/graph-schema.json',
+  ]);
+
+  expect(writeFileSpy).toHaveBeenCalledTimes(1);
+  expect(writeFileSpy).toHaveBeenCalledWith(
+    '/path/to/graph-schema.json',
+    expect.any(String),
+    {
+      encoding: 'utf-8',
+    },
+  );
+
+  expect(writeFileSpy.mock.calls[0][1]).toMatchSnapshot();
+}
+
 afterEach(() => {
   delete process.env.MY_CONFIG;
 });
@@ -592,5 +619,19 @@ describe('document', () => {
       `Error loading documentation file from path (path=${documentationFilePath}, err=${expectedErrorMessageThrown})`,
     );
     expect(writeFileSpy).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe('generate-integration-graph-schema', () => {
+  test('should generate integration graph schema with TypeScript integration', async () => {
+    await generateIntegrationGraphSchemaTest(
+      'generate-integration-graph-schema_all-graph-data-types',
+    );
+  });
+
+  test('should generate integration graph schema with integration JavaScript dist', async () => {
+    await generateIntegrationGraphSchemaTest(
+      'generate-integration-graph-schema_all-graph-data-types-dist',
+    );
   });
 });

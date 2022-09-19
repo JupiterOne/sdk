@@ -3,9 +3,12 @@ import PromiseQueue from 'p-queue';
 
 import {
   BeforeAddEntityHookFunction,
+  BeforeAddRelationshipHookFunction,
+  DisabledStepReason,
   Entity,
   ExecutionContext,
   IntegrationStepResult,
+  Relationship,
   Step,
   StepExecutionContext,
   StepResultStatus,
@@ -83,6 +86,7 @@ export function executeStepDependencyGraph<
   dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
+  beforeAddRelationship,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -92,6 +96,7 @@ export function executeStepDependencyGraph<
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -106,6 +111,8 @@ export function executeStepDependencyGraph<
 
   const typeTracker = new TypeTracker();
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
+
+  const skippedStepTracker = new Set<string>();
 
   function isStepEnabled(stepId: string) {
     return stepStartStates[stepId].disabled === false;
@@ -155,7 +162,7 @@ export function executeStepDependencyGraph<
 
   /**
    * Safely removes a step from the workingGraph, ensuring
-   * that dependencys are removed.
+   * that dependencies are removed.
    *
    * This function helps create new leaf nodes to execute.
    */
@@ -244,19 +251,33 @@ export function executeStepDependencyGraph<
          * This allows for dependencies to remain in the graph
          * and prevents dependent steps from executing.
          */
-        if (isStepEnabled(stepId) && stepDependenciesAreComplete(stepId)) {
-          removeStepFromWorkingGraph(stepId);
-          void promiseQueue.add(() =>
-            timeOperation({
-              logger: executionContext.logger,
-              metricName: `duration-step`,
-              dimensions: {
-                stepId,
-                cached: hasCachePath(stepId).toString(),
-              },
-              operation: () => executeStep(step),
-            }).catch(handleUnexpectedError),
-          );
+        if (stepDependenciesAreComplete(stepId)) {
+          if (isStepEnabled(stepId)) {
+            removeStepFromWorkingGraph(stepId);
+            void promiseQueue.add(() =>
+              timeOperation({
+                logger: executionContext.logger,
+                metricName: `duration-step`,
+                dimensions: {
+                  stepId,
+                  cached: hasCachePath(stepId).toString(),
+                },
+                operation: () => executeStep(step),
+              }).catch(handleUnexpectedError),
+            );
+          } else {
+            // Step is disabled
+            if (!skippedStepTracker.has(stepId)) {
+              executionContext.logger
+                .child({ stepId })
+                .stepSkip(
+                  step,
+                  stepStartStates[stepId]?.disabledReason ??
+                    DisabledStepReason.NONE,
+                );
+              skippedStepTracker.add(stepId);
+            }
+          }
         }
       });
     }
@@ -287,6 +308,7 @@ export function executeStepDependencyGraph<
         dataStore,
         stepId,
         beforeAddEntity,
+        beforeAddRelationship,
         uploader,
       });
 
@@ -423,6 +445,7 @@ function buildStepContext<
   dataStore,
   uploader,
   beforeAddEntity,
+  beforeAddRelationship,
 }: {
   stepId: string;
   context: TExecutionContext;
@@ -432,6 +455,7 @@ function buildStepContext<
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
 }): TStepExecutionContext {
   // Purposely assigned to `undefined` instead of a noop function even though
   // this code is a bit messier. The jobState code is fairly hot and checking
@@ -444,6 +468,12 @@ function buildStepContext<
         }
       : undefined;
 
+  const jobStateBeforeAddRelationship =
+    typeof beforeAddRelationship !== 'undefined'
+      ? (r: Relationship): Promise<Relationship> | Relationship =>
+          beforeAddRelationship(context, r)
+      : undefined;
+
   const jobState = createStepJobState({
     stepId,
     duplicateKeyTracker,
@@ -451,6 +481,7 @@ function buildStepContext<
     graphObjectStore,
     dataStore,
     beforeAddEntity: jobStateBeforeAddEntity,
+    beforeAddRelationship: jobStateBeforeAddRelationship,
     uploader,
   });
 

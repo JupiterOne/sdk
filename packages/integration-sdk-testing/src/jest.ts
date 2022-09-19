@@ -655,6 +655,7 @@ export function toMatchStepMetadata(
   results: {
     collectedEntities: Entity[];
     collectedRelationships: Relationship[];
+    encounteredEntityKeys?: Set<string>;
   },
   testConfig: Omit<StepTestConfig, 'instanceConfig'>,
 ): SyncExpectationResult {
@@ -765,6 +766,55 @@ export function toMatchStepMetadata(
       message: () =>
         `Expected 0 mapped relationships, got ${collectedMappedRelationships.length}. (declaredTypes=${declaredTypes}, encounteredTypes=${encounteredTypes})`,
     };
+  }
+
+  if (results.encounteredEntityKeys != undefined) {
+    const relationshipsMissingEntityKeys: {
+      [relationshipType: string]: {
+        missingFromEntityKey: boolean;
+        missingToEntityKey: boolean;
+      };
+    } = {};
+    for (const directRelationship of collectedDirectRelationships) {
+      const fromEntityKeyExists = results.encounteredEntityKeys.has(
+        directRelationship._fromEntityKey as string,
+      );
+      const toEntityKeyExists = results.encounteredEntityKeys.has(
+        directRelationship._toEntityKey as string,
+      );
+      if (!fromEntityKeyExists || !toEntityKeyExists) {
+        if (!relationshipsMissingEntityKeys[directRelationship._type]) {
+          relationshipsMissingEntityKeys[directRelationship._type] = {
+            missingFromEntityKey: false,
+            missingToEntityKey: false,
+          };
+        }
+
+        if (!fromEntityKeyExists) {
+          relationshipsMissingEntityKeys[
+            directRelationship._type
+          ].missingFromEntityKey = true;
+        }
+
+        if (!toEntityKeyExists) {
+          relationshipsMissingEntityKeys[
+            directRelationship._type
+          ].missingToEntityKey = true;
+        }
+      }
+    }
+
+    if (Object.keys(relationshipsMissingEntityKeys).length > 0) {
+      return {
+        pass: false,
+        message: () =>
+          `Some direct relationships contain from/to entity keys which do not exist in the jobState: ${JSON.stringify(
+            relationshipsMissingEntityKeys,
+            null,
+            2,
+          )}`,
+      };
+    }
   }
 
   return {

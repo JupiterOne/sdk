@@ -58,6 +58,30 @@ test('throws error if expected environment is not set for config field', () => {
   );
 });
 
+test('does not throws error if optional environment is not set for config field', () => {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<
+      'mySuperAwesomeEnvironmentVariable' | 'booleanVariable',
+      IntegrationInstanceConfigField
+    >
+  > = {
+    mySuperAwesomeEnvironmentVariable: {
+      type: 'string',
+      optional: true,
+    },
+    booleanVariable: {
+      type: 'boolean',
+      optional: true,
+    },
+  };
+
+  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
+
+  expect(config).toEqual({
+    booleanVariable: true,
+  });
+});
+
 test('throws error if expected environment boolean field does not match "true" or "false"', () => {
   process.env.BOOLEAN_VARIABLE = 'mochi';
   const instanceConfigFields: IntegrationInstanceConfigFieldMap<

@@ -16,6 +16,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import * as log from '../log';
+import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
 
@@ -28,15 +29,7 @@ beforeEach(() => {
   process.env.JUPITERONE_API_KEY = 'testing-key';
   process.env.JUPITERONE_ACCOUNT = 'mochi';
 
-  polly = new Polly('run-cli', {
-    adapters: ['node-http'],
-    persister: 'fs',
-    logging: false,
-    matchRequestsBy: {
-      headers: false,
-    },
-  });
-
+  polly = createTestPolly('run-cli');
   loadProjectStructure('typeScriptIntegrationProject');
 
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
@@ -68,6 +61,106 @@ test('enables graph object schema validation', async () => {
   expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeDefined();
 });
 
+test('disables graph object schema validation', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--disable-schema-validation',
+  ]);
+
+  expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
+});
+
+test('step should fail if enableSchemaValidation = true', async () => {
+  loadProjectStructure('instanceWithNonValidatingSteps');
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+  ]);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+  expect(log.displayExecutionResults).toHaveBeenCalledWith({
+    integrationStepResults: [
+      {
+        id: 'fetch-users',
+        name: 'Fetch Users',
+        declaredTypes: ['my_user'],
+        partialTypes: [],
+        encounteredTypes: [],
+        status: StepResultStatus.FAILURE,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: ['my_user'],
+      },
+    },
+  });
+});
+
+test('step should pass if enableSchemaValidation = false', async () => {
+  loadProjectStructure('instanceWithNonValidatingSteps');
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--disable-schema-validation',
+  ]);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+  expect(log.displayExecutionResults).toHaveBeenCalledWith({
+    integrationStepResults: [
+      {
+        id: 'fetch-users',
+        name: 'Fetch Users',
+        declaredTypes: ['my_user'],
+        partialTypes: [],
+        encounteredTypes: ['my_user'],
+        status: StepResultStatus.SUCCESS,
+      },
+    ],
+    metadata: {
+      partialDatasets: {
+        types: [],
+      },
+    },
+  });
+});
+
 test('executes integration and performs upload', async () => {
   const job = generateSynchronizationJob();
 
@@ -81,8 +174,7 @@ test('executes integration and performs upload', async () => {
     'test',
   ]);
 
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -140,8 +232,7 @@ test('executes integration and performs upload with api-base-url', async () => {
     'https://api.TEST.jupiterone.io',
   ]);
 
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -178,6 +269,69 @@ test('executes integration and performs upload with api-base-url', async () => {
     numEntitiesUploaded: 2,
     numRelationshipsUploaded: 1,
   });
+});
+
+test('executes integration and skips finalization with skip-finalize', async () => {
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+    '--skip-finalize',
+  ]);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
+    ...job,
+    status: SynchronizationJobStatus.AWAITING_UPLOADS,
+    // These are the expected number of entities and relationships
+    // collected when executing the
+    // 'typeScriptIntegrationProject' fixture
+    numEntitiesUploaded: 2,
+    numRelationshipsUploaded: 1,
+  });
+});
+
+test('does not publish events for source "api" since there is no integrationJobId', async () => {
+  const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  let eventsPublished = false;
+  polly.server
+    .post(`https://example.com/persister/synchronization/jobs/${job.id}/events`)
+    .intercept((req, res) => {
+      eventsPublished = true;
+    });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--source',
+    'api',
+    '--scope',
+    'test',
+  ]);
+
+  expect(eventsPublished).toBe(false);
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
 });
 
 test('throws an error if --api-base-url is set with --development', async () => {

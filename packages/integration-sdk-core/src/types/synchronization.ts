@@ -11,8 +11,30 @@ export enum SynchronizationJobStatus {
 
 export interface SynchronizationJob {
   id: string;
-  integrationJobId: string;
-  integrationInstanceId: string;
+
+  /**
+   * The `source` value used when creating the synchronization job.
+   */
+  source: string;
+
+  /**
+   * The `scope` value used when creating the synchronization job. This value will be null when the
+   * synchronization job is configured with source `'integration-managed'` or `'integration-external'`.
+   */
+  scope?: string;
+
+  /**
+   * The integration instance ID provided to execute a synchronization job. This value will be null when the
+   * synchronization job is configured with source `'api'`.
+   */
+  integrationInstanceId?: string;
+
+  /**
+   * The integration job ID associated with the synchronization job. This value will be null when the
+   * synchronization job is configured with source `'api'`.
+   */
+  integrationJobId?: string;
+
   status: SynchronizationJobStatus;
   startTimestamp: number;
   numEntitiesUploaded: number;

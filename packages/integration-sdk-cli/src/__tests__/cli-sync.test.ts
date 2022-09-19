@@ -13,6 +13,7 @@ import {
 } from './util/synchronization';
 
 import * as log from '../log';
+import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
 
@@ -25,15 +26,7 @@ beforeEach(() => {
   process.env.JUPITERONE_API_KEY = 'testing-key';
   process.env.JUPITERONE_ACCOUNT = 'mochi';
 
-  polly = new Polly('sync-cli', {
-    adapters: ['node-http'],
-    persister: 'fs',
-    logging: false,
-    matchRequestsBy: {
-      headers: false,
-    },
-  });
-
+  polly = createTestPolly('sync-cli');
   loadProjectStructure('synchronization');
 
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
@@ -99,6 +92,36 @@ test('hits dev urls if JUPITERONE_DEV environment variable is set', async () => 
     numEntitiesUploaded: 6,
     numRelationshipsUploaded: 3,
   });
+});
+
+test('does not publish events for source "api" since there is no integrationJobId', async () => {
+  const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+  });
+
+  let eventsPublished = false;
+  polly.server
+    .post(`https://example.com/persister/synchronization/jobs/${job.id}/events`)
+    .intercept((req, res) => {
+      eventsPublished = true;
+    });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'sync',
+    '--source',
+    'api',
+    '--scope',
+    'test',
+  ]);
+
+  expect(eventsPublished).toBe(false);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
 });
 
 test('hits different url if --api-base-url is set', async () => {

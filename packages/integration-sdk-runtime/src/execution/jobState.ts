@@ -163,6 +163,9 @@ export interface CreateStepJobStateParams {
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
   beforeAddEntity?: (entity: Entity) => Entity;
+  beforeAddRelationship?: (
+    relationship: Relationship,
+  ) => Promise<Relationship> | Relationship;
 }
 
 export function createStepJobState({
@@ -172,6 +175,7 @@ export function createStepJobState({
   graphObjectStore,
   dataStore,
   beforeAddEntity,
+  beforeAddRelationship,
   uploader,
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
@@ -201,19 +205,37 @@ export function createStepJobState({
     return entities;
   };
 
-  const addRelationships = (relationships: Relationship[]) => {
-    relationships.forEach((r) => {
-      duplicateKeyTracker.registerKey(r._key, {
-        _type: r._type,
-        _key: r._key,
-      });
-
-      typeTracker.addStepGraphObjectType({
-        stepId,
-        _type: r._type,
-        count: 1,
-      });
+  function registerRelationshipInTrackers(r: Relationship) {
+    duplicateKeyTracker.registerKey(r._key, {
+      _type: r._type,
+      _key: r._key,
     });
+
+    typeTracker.addStepGraphObjectType({
+      stepId,
+      _type: r._type,
+      count: 1,
+    });
+  }
+
+  const addRelationships = async (relationshipsToAdd: Relationship[]) => {
+    let relationships: Relationship[];
+
+    if (beforeAddRelationship) {
+      relationships = [];
+
+      for (const relationship of relationshipsToAdd) {
+        const newRelationship = await beforeAddRelationship(relationship);
+        relationships.push(newRelationship);
+
+        // Avoid iterating the entire set of relationships again later by
+        // registering now.
+        registerRelationshipInTrackers(newRelationship);
+      }
+    } else {
+      relationships = relationshipsToAdd;
+      relationships.forEach(registerRelationshipInTrackers);
+    }
 
     return graphObjectStore.addRelationships(
       stepId,

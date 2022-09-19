@@ -1,4 +1,4 @@
-import { StepMetadata } from './';
+import { DisabledStepReason, StepMetadata } from './';
 import { SynchronizationJob } from './synchronization';
 import { Metric } from './metric';
 
@@ -11,6 +11,10 @@ interface ChildLogFunction {
 }
 
 type StepLogFunction = (step: StepMetadata) => void;
+type StepLogFunctionWithReason = (
+  step: StepMetadata,
+  reason: DisabledStepReason,
+) => void;
 type StepLogFunctionWithError = (step: StepMetadata, err: Error) => void;
 type SynchronizationLogFunction = (job: SynchronizationJob) => void;
 type ValidationLogFunction = (err: Error) => void;
@@ -36,6 +40,7 @@ export type PublishEventInput = {
 
 export enum IntegrationInfoEventName {
   Stats = 'stats',
+  Results = 'results',
 }
 
 export interface PublishInfoEventInput extends PublishEventInput {
@@ -50,6 +55,7 @@ export enum IntegrationWarnEventName {
    * We would like to indicate to the end-user when this limit is encountered
    */
   IngestionLimitEncountered = 'warn_ingestion_limit_encountered',
+  MissingEntity = 'warn_missing_entity',
 }
 
 export interface PublishWarnEventInput extends PublishEventInput {
@@ -69,6 +75,12 @@ export enum IntegrationErrorEventName {
    * We would like to indicate to the end-user when this limit is encountered, and then fail the execution on completion.
    */
   IngestionLimitEncountered = 'error_ingestion_limit_encountered',
+  /**
+   * In some rare cases, the mapped properties of an entity can be so large that they trigger upload errors due to payload size.
+   * This points to a possible poison pill in the api the integration is consuming. We would like to indicate to the end-user when this
+   * error is encountered.
+   */
+  EntitySizeLimitEncountered = 'error_entity_size_limit_encountered',
 }
 
 export interface PublishErrorEventInput extends PublishEventInput {
@@ -106,6 +118,7 @@ export interface IntegrationLoggerFunctions {
   stepStart: StepLogFunction;
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
+  stepSkip: StepLogFunctionWithReason;
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
 

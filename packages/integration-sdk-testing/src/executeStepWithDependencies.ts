@@ -56,5 +56,9 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
     collectedRelationships: context.jobState.collectedRelationships,
     collectedData: context.jobState.collectedData,
     encounteredTypes: context.jobState.encounteredTypes,
+    encounteredEntityKeys: new Set<string>([
+      ...context.jobState.collectedEntities.map((e) => e._key),
+      ...preContext.jobState.collectedEntities.map((e) => e._key),
+    ]),
   };
 }

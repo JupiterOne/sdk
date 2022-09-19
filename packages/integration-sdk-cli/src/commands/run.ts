@@ -12,21 +12,25 @@ import {
   FileSystemGraphObjectStore,
   finalizeSynchronization,
   getAccountFromEnvironment,
-  getApiBaseUrl,
   getApiKeyFromEnvironment,
   initiateSynchronization,
+  synchronizationStatus,
 } from '@jupiterone/integration-sdk-runtime';
 import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
 
 import { loadConfig } from '../config';
 import * as log from '../log';
+import {
+  getApiBaseUrlOption,
+  getSynchronizationJobSourceOptions,
+} from './options';
 
 const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
 export function run() {
   return createCommand('run')
     .description('collect and sync to upload entities and relationships')
-    .requiredOption(
+    .option(
       '-i, --integrationInstanceId <id>',
       '_integrationInstanceId assigned to uploaded entities and relationships',
     )
@@ -40,7 +44,26 @@ export function run() {
       '"true" to target apps.dev.jupiterone.io',
       !!process.env.JUPITERONE_DEV,
     )
-    .option('--api-base-url <url>', 'API base URL used during run operation.')
+    .option('--api-base-url <url>', 'API base URL used during run operation')
+    .option('--skip-finalize', 'skip synchronization finalization')
+    .option(
+      '--source <integration-managed|integration-external|api>',
+      'configure the synchronization job source value',
+      'integration-managed',
+    )
+    .option(
+      '--scope <anystring>',
+      'configure the synchronization job scope value',
+    )
+    .option('-V, --disable-schema-validation', 'disable schema validation')
+    .option(
+      '-u, --upload-batch-size <number>',
+      'specify number of items per batch for upload (default 250)',
+    )
+    .option(
+      '-ur, --upload-relationship-batch-size <number>',
+      'specify number of relationships per batch for upload (default 250)',
+    )
     .action(async (options) => {
       const projectPath = path.resolve(options.projectPath);
       // Point `fileSystem.ts` functions to expected location relative to
@@ -56,19 +79,7 @@ export function run() {
       log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
       const account = getAccountFromEnvironment();
 
-      let apiBaseUrl: string;
-      if (options.apiBaseUrl) {
-        if (options.development) {
-          throw new Error(
-            'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
-          );
-        }
-        apiBaseUrl = options.apiBaseUrl;
-      } else {
-        apiBaseUrl = getApiBaseUrl({
-          dev: options.development,
-        });
-      }
+      const apiBaseUrl = getApiBaseUrlOption(options);
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const startTime = Date.now();
@@ -79,7 +90,8 @@ export function run() {
         account,
       });
 
-      const { integrationInstanceId } = options;
+      const synchronizationJobSourceOptions =
+        getSynchronizationJobSourceOptions(options);
 
       let logger = createIntegrationLogger({
         name: 'local',
@@ -89,7 +101,7 @@ export function run() {
       const synchronizationContext = await initiateSynchronization({
         logger,
         apiClient,
-        integrationInstanceId,
+        ...synchronizationJobSourceOptions,
       });
 
       logger = synchronizationContext.logger;
@@ -111,6 +123,7 @@ export function run() {
       });
 
       try {
+        const enableSchemaValidation = !options.disableSchemaValidation;
         const executionResults = await executeIntegrationInstance(
           logger,
           createIntegrationInstanceForLocalExecution(invocationConfig),
@@ -121,13 +134,16 @@ export function run() {
             },
           },
           {
-            enableSchemaValidation: true,
+            enableSchemaValidation,
             graphObjectStore,
             createStepGraphObjectDataUploader(stepId) {
               return createPersisterApiStepGraphObjectDataUploader({
                 stepId,
                 synchronizationJobContext: synchronizationContext,
                 uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
+                uploadBatchSize: options.uploadBatchSize,
+                uploadRelationshipsBatchSize:
+                  options.uploadRelationshipBatchSize,
               });
             },
           },
@@ -137,12 +153,19 @@ export function run() {
 
         log.displayExecutionResults(executionResults);
 
-        const synchronizationResult = await finalizeSynchronization({
-          ...synchronizationContext,
-          partialDatasets: executionResults.metadata.partialDatasets,
-        });
-
-        log.displaySynchronizationResults(synchronizationResult);
+        if (!options.skipFinalize) {
+          const synchronizationResult = await finalizeSynchronization({
+            ...synchronizationContext,
+            partialDatasets: executionResults.metadata.partialDatasets,
+          });
+          log.displaySynchronizationResults(synchronizationResult);
+        } else {
+          log.info(
+            'Skipping synchronization finalization. Job will remain in "AWAITING_UPLOADS" state.',
+          );
+          const jobStatus = await synchronizationStatus(synchronizationContext);
+          log.displaySynchronizationResults(jobStatus);
+        }
       } catch (err) {
         await eventPublishingQueue.onIdle();
         if (!logger.isHandledError(err)) {

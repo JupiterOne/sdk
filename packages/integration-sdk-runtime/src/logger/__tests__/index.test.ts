@@ -2,6 +2,7 @@ import Logger from 'bunyan';
 import { Writable } from 'stream';
 
 import {
+  DisabledStepReason,
   IntegrationErrorEventName,
   IntegrationInfoEventName,
   IntegrationInvocationConfig,
@@ -312,12 +313,16 @@ describe('step event publishing', () => {
 
     logger.stepStart(step);
     logger.stepSuccess(step);
+    logger.stepSkip(step, DisabledStepReason.BETA);
+    logger.stepSkip(step, DisabledStepReason.PERMISSION);
+    logger.stepSkip(step, DisabledStepReason.CONFIG);
+    logger.stepSkip(step, DisabledStepReason.NONE);
 
     // just use some error that contains a code
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(3);
+    expect(onEmitEvent).toHaveBeenCalledTimes(6);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
       level: PublishEventLevel.Info,
@@ -329,6 +334,24 @@ describe('step event publishing', () => {
       description: 'Completed step "Mochi".',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(3, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". Beta feature, please contact support to enable.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(4, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". The required permission was not provided to perform this step.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(5, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enabled.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(6, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
       description: expect.stringMatching(

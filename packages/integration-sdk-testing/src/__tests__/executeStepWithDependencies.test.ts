@@ -3,31 +3,18 @@ import {
   Entity,
   IntegrationInstanceConfig,
   IntegrationInvocationConfig,
-  IntegrationStep,
   Relationship,
   RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
 import { v4 as uuid } from 'uuid';
 import { executeStepWithDependencies } from '../executeStepWithDependencies';
+import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 
 function getMockInvocationConfig(
   config?: Partial<IntegrationInvocationConfig>,
 ): IntegrationInvocationConfig {
   return {
     integrationSteps: [],
-    ...config,
-  };
-}
-
-function getMockIntegrationStep(
-  config?: Partial<IntegrationStep>,
-): IntegrationStep {
-  return {
-    id: 'id',
-    name: 'name',
-    entities: [],
-    relationships: [],
-    executionHandler: () => undefined,
     ...config,
   };
 }

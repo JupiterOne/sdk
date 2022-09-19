@@ -10,6 +10,8 @@ import {
   visualizeTypes,
   validateQuestionFile,
   neo4j,
+  visualizeDependencies,
+  generateIntegrationGraphSchemaCommand,
 } from './commands';
 
 export function createCli() {
@@ -22,5 +24,7 @@ export function createCli() {
     .addCommand(visualizeTypes())
     .addCommand(document())
     .addCommand(validateQuestionFile())
-    .addCommand(neo4j());
+    .addCommand(neo4j())
+    .addCommand(visualizeDependencies())
+    .addCommand(generateIntegrationGraphSchemaCommand());
 }

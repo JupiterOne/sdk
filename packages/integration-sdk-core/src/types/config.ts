@@ -9,6 +9,7 @@ import {
   IntegrationExecutionConfig,
 } from './context';
 import { Entity } from './entity';
+import { Relationship } from './relationship';
 
 /**
  * Normalization transform for tracking keys in an integration. Allows
@@ -25,6 +26,13 @@ export type BeforeAddEntityHookFunction<
   TExecutionContext extends ExecutionContext,
 > = (context: TExecutionContext, entity: Entity) => Entity;
 
+export type BeforeAddRelationshipHookFunction<
+  TExecutionContext extends ExecutionContext,
+> = (
+  context: TExecutionContext,
+  relationship: Relationship,
+) => Promise<Relationship> | Relationship;
+
 export type LoadExecutionConfigFunction<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
@@ -39,13 +47,14 @@ export interface InvocationConfig<
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
+  beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   loadExecutionConfig?: LoadExecutionConfigFunction;
   /**
    * An optional array of identifiers used to execute dependency
    * graphs in a specific order. These values should match the
-   * StepMetadata `dependencyGraphId` prpoperties.
+   * StepMetadata `dependencyGraphId` properties.
    *
-   * If this is not provided, all steps will be evalueted in
+   * If this is not provided, all steps will be evaluated in
    * the same dependency graph.
    */
   dependencyGraphOrder?: string[];
@@ -63,6 +72,7 @@ export interface IntegrationInvocationConfig<
 export interface IntegrationInstanceConfigField {
   type?: 'string' | 'boolean';
   mask?: boolean;
+  optional?: boolean;
 }
 
 export type IntegrationInstanceConfigFieldMap<

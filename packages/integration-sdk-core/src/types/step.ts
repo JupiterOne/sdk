@@ -11,12 +11,25 @@ import {
 import { IntegrationInstanceConfig } from './instance';
 import { RelationshipDirection } from './relationship';
 
+export enum DisabledStepReason {
+  NONE = 'none', // No reason was provided
+  PERMISSION = 'permission', // Missing permission disabled this step
+  BETA = 'beta', // Step is in beta and only enabled on request
+  CONFIG = 'config', // Step was disabled via config
+}
+
 export interface StepStartState {
   /**
    * Indicates the step is disabled and should not be
    * executed by the state machine.
    */
   disabled: boolean;
+
+  /**
+   * Allows for a user-friendly message to explain
+   * why a step is disabled.
+   */
+  disabledReason?: DisabledStepReason;
 
   /**
    * Provides a filepath to a cache for the given step.
@@ -200,7 +213,7 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    * An optional array of identifiers used to execute dependency
    * graphs in a specific order. These values should match the
    * IntegrationInvocationConfig `dependencyGraphOrder`
-   * prpoperty.
+   * property.
    *
    * Steps that do not have a `dependencyGraphId` will be added to
    * the default dependency graph which is executed first.

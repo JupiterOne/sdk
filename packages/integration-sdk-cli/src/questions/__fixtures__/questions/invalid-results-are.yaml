@@ -1,0 +1,16 @@
+---
+sourceId: managed:google_cloud
+integrationDefinitionId: "${integration_definition_id}"
+questions:
+- id: integration-question-google-cloud-corporate-login-credentials
+  title: Ensure that corporate login credentials are used
+  description:
+    Use corporate login credentials instead of personal accounts, such as Gmail accounts.
+  queries:
+  - name: invalid
+    query: find google_user with email $="@{{domain}}"
+    resultsAre: INVALID_RESULTS_ARE_VALUE
+  tags:
+  - google-cloud
+  - user
+  - access

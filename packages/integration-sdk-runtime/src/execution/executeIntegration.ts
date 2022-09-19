@@ -9,6 +9,7 @@ import {
   InvocationConfig,
   PartialDatasets,
   StepExecutionContext,
+  StepResultStatus,
   StepStartStates,
 } from '@jupiterone/integration-sdk-core';
 
@@ -37,6 +38,7 @@ import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
 import { getMaskedFields } from './utils/getMaskedFields';
 import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
+import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -228,6 +230,7 @@ export async function executeWithContext<
       dataStore: new MemoryDataStore(),
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
+      beforeAddRelationship: config.beforeAddRelationship,
       dependencyGraphOrder: config.dependencyGraphOrder,
     });
 
@@ -251,6 +254,16 @@ export async function executeWithContext<
       { collectionResult: summary },
       'Integration data collection has completed.',
     );
+
+    processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
+      if (step.status === StepResultStatus.SUCCESS && undeclaredTypes.length) {
+        context.logger.error(
+          { undeclaredTypes },
+          `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
+            ` all known entity and relationship types are declared.`,
+        );
+      }
+    });
 
     return summary;
   } finally {

@@ -1,3 +1,8 @@
+import {
+  Relationship,
+  RelationshipMapping,
+} from '@jupiterone/integration-sdk-core';
+
 export function startsWithNumeric(str: string): boolean {
   return /^\d/.test(str);
 }
@@ -16,7 +21,7 @@ export function sanitizePropertyName(propertyName: string): string {
 }
 
 export function sanitizeValue(value: string): string {
-  return value.replace(/"/gi, '\\"');
+  return value.replace(/\\*"/gi, '\\"');
 }
 
 export function buildPropertyParameters(propList: Object) {
@@ -49,4 +54,26 @@ export function buildPropertyParameters(propList: Object) {
   }
 
   return propertyParameters;
+}
+
+// Start and end type helper functions.  Prepends a : to any nonempty results for
+// immediate use in a Neo4j command.
+export function getFromTypeLabel(relationship: Relationship): String {
+  if (relationship._fromType) {
+    return ':' + relationship._fromType.toString();
+  }
+  return '';
+}
+
+export function getToTypeLabel(relationship: Relationship): String {
+  if (relationship._toType) {
+    return ':' + relationship._toType.toString();
+  } else if (
+    (relationship._mapping as RelationshipMapping)?.targetEntity?._type
+  ) {
+    return (
+      ':' + (relationship._mapping as RelationshipMapping).targetEntity._type
+    );
+  }
+  return '';
 }

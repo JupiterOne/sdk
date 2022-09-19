@@ -13,22 +13,25 @@ import {
 } from '@jupiterone/integration-sdk-private-test-utils';
 
 import {
-  initiateSynchronization,
-  uploadCollectedData,
-  finalizeSynchronization,
-  synchronizeCollectedData,
   abortSynchronization,
+  finalizeSynchronization,
+  initiateSynchronization,
+  synchronizationStatus,
+  synchronizeCollectedData,
+  SynchronizeInput,
+  uploadCollectedData,
   uploadDataChunk,
-  shrinkRawData,
 } from '../index';
 
-import { getApiBaseUrl, createApiClient } from '../../api';
+import { createApiClient, getApiBaseUrl } from '../../api';
 import { ExecuteIntegrationResult } from '../../execution';
 import { createIntegrationLogger } from '../../logger';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../../fileSystem';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { getExpectedRequestHeaders } from '../../../test/util/request';
+
+import * as shrinkBatchRawData from '../shrinkBatchRawData';
 
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
@@ -55,6 +58,62 @@ describe('initiateSynchronization', () => {
     expect(postSpy).toHaveBeenCalledWith('/persister/synchronization/jobs', {
       source: 'integration-managed',
       integrationInstanceId: context.integrationInstanceId,
+    });
+  });
+
+  test('starts a synchronization job with integration job id if provided', async () => {
+    const mockIntegrationJobId = 'test-integration-job-id';
+    const mockSyncJob = generateSynchronizationJob();
+    mockSyncJob.id = mockIntegrationJobId; // sync job ID should be same as integration job ID
+    mockSyncJob.integrationJobId = mockIntegrationJobId;
+
+    const context = createTestContext();
+    context.integrationJobId = mockIntegrationJobId;
+    const { apiClient } = context;
+
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: { job: mockSyncJob },
+    });
+    const loggerSpy = jest
+      .spyOn(context.logger, 'child')
+      .mockImplementation(noop as any);
+
+    const synchronizationContext = await initiateSynchronization(context);
+
+    expect(synchronizationContext.job).toEqual(mockSyncJob);
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+      source: 'integration-managed',
+      integrationInstanceId: context.integrationInstanceId,
+      integrationJobId: mockIntegrationJobId,
+    });
+    expect(loggerSpy).toHaveBeenCalledWith({
+      source: 'integration-managed',
+      synchronizationJobId: mockIntegrationJobId,
+      integrationJobId: mockIntegrationJobId,
+      integrationInstanceId: context.integrationInstanceId,
+    });
+  });
+
+  test('configures scope when source is "api"', async () => {
+    const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
+
+    const context = createTestContext({ source: 'api', scope: 'test' });
+    const { apiClient } = context;
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const synchronizationContext = await initiateSynchronization(context);
+
+    expect(synchronizationContext.job).toEqual(job);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+    expect(postSpy).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+      source: 'api',
+      scope: 'test',
     });
   });
 
@@ -263,6 +322,34 @@ describe('finalizeSynchronization', () => {
   });
 });
 
+describe('synchronizationStatus', () => {
+  test('fetches status of job', async () => {
+    loadProjectStructure('synchronization');
+
+    const job = generateSynchronizationJob();
+    const context = createTestContext();
+    const { apiClient } = context;
+
+    const getSpy = jest.spyOn(apiClient, 'get').mockResolvedValue({
+      data: {
+        job,
+      },
+    });
+
+    const returnedJob = await synchronizationStatus({
+      ...context,
+      job,
+    });
+
+    expect(returnedJob).toEqual(job);
+
+    expect(getSpy).toHaveBeenCalledTimes(1);
+    expect(getSpy).toHaveBeenCalledWith(
+      `/persister/synchronization/jobs/${job.id}`,
+    );
+  });
+});
+
 describe('abortSynchronization', () => {
   test('sends reason to payload', async () => {
     loadProjectStructure('synchronization');
@@ -420,6 +507,9 @@ describe('uploadDataChunk', () => {
         };
       });
 
+    // don't allow shrinkBatchRawData throw error due to unshrinkable payload
+    jest.spyOn(shrinkBatchRawData, 'shrinkBatchRawData').mockReturnValue();
+
     await expect(
       uploadDataChunk({
         logger: context.logger,
@@ -490,157 +580,9 @@ describe('uploadDataChunk', () => {
   });
 });
 
-describe('shrinkLargeUpload', () => {
-  it('should shrink rawData', () => {
-    const largeData = new Array(700000).join('aaaaaaaaaa');
-
-    const data = [
-      {
-        _class: 'test',
-        _key: 'testKey',
-        _type: 'testType',
-        _rawData: [
-          {
-            name: 'test',
-            rawData: {
-              testRawData: 'test123',
-              testLargeRawData: largeData,
-              testFinalData: 'test789',
-            },
-          },
-        ],
-      },
-      {
-        _class: 'test',
-        _key: 'testKey2',
-        _type: 'testType',
-        _rawData: [
-          {
-            name: 'test2',
-            rawData: {
-              testRawData: 'test123',
-              testLargeRawData: largeData,
-              testFinalData: 'test789',
-            },
-          },
-        ],
-      },
-      {
-        _class: 'test',
-        _key: 'testKey3',
-        _type: 'testType',
-        _rawData: [
-          {
-            name: 'test3',
-            rawData: {
-              testRawData: 'test123',
-              testLargeRawData: largeData,
-              testFinalData: 'test789',
-            },
-          },
-        ],
-      },
-    ];
-    const finalData = [
-      {
-        _class: 'test',
-        _key: 'testKey',
-        _type: 'testType',
-        _rawData: [
-          {
-            name: 'test',
-            rawData: {
-              testRawData: 'test123',
-              testLargeRawData: 'TRUNCATED',
-              testFinalData: 'test789',
-            },
-          },
-        ],
-      },
-      {
-        _class: 'test',
-        _key: 'testKey2',
-        _type: 'testType',
-        _rawData: [
-          {
-            name: 'test2',
-            rawData: {
-              testRawData: 'test123',
-              testLargeRawData: 'TRUNCATED',
-              testFinalData: 'test789',
-            },
-          },
-        ],
-      },
-      {
-        _class: 'test',
-        _key: 'testKey3',
-        _type: 'testType',
-        _rawData: [
-          {
-            name: 'test3',
-            rawData: {
-              testRawData: 'test123',
-              testLargeRawData: 'TRUNCATED',
-              testFinalData: 'test789',
-            },
-          },
-        ],
-      },
-    ];
-
-    const shrinkResults = shrinkRawData(data);
-
-    expect(shrinkResults.itemsRemoved).toEqual(3);
-    expect(data).toEqual(finalData);
-  });
-});
-
-describe('shrinkFailNoEntities', () => {
-  it('should fail to shrink rawData due to no entities', () => {
-    const data = [];
-
-    let shrinkErr;
-    try {
-      shrinkRawData(data, 0);
-    } catch (err) {
-      shrinkErr = err;
-      expect(shrinkErr instanceof IntegrationError).toEqual(true);
-      expect(shrinkErr.message).toEqual(
-        'Failed to upload integration data because payload is too large and cannot shrink',
-      );
-      expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
-    }
-    expect(shrinkErr).not.toBe(undefined);
-  });
-});
-
-describe('shrinkFailNo_rawData', () => {
-  it('should fail to shrink rawData due to no _rawData entries', () => {
-    const data = [
-      {
-        _class: 'test',
-        _key: 'testKey',
-        _type: 'testType',
-      },
-    ];
-
-    let shrinkErr;
-    try {
-      shrinkRawData(data, 0);
-    } catch (err) {
-      shrinkErr = err;
-      expect(shrinkErr instanceof IntegrationError).toEqual(true);
-      expect(shrinkErr.message).toEqual(
-        'Failed to upload integration data because payload is too large and cannot shrink',
-      );
-      expect(shrinkErr.code).toEqual('INTEGRATION_UPLOAD_FAILED');
-    }
-    expect(shrinkErr).not.toBe(undefined);
-  });
-});
-
-function createTestContext() {
+function createTestContext(
+  options?: Pick<SynchronizeInput, 'source' | 'scope'>,
+): SynchronizeInput {
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
@@ -650,5 +592,12 @@ function createTestContext() {
     name: 'test',
   });
 
-  return { apiClient, logger, integrationInstanceId: 'test-instance' };
+  return {
+    apiClient,
+    logger,
+    source: options?.source || 'integration-managed',
+    scope: options?.scope,
+    integrationInstanceId:
+      options?.source == 'api' ? undefined : 'test-instance-id',
+  };
 }

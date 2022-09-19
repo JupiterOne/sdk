@@ -35,7 +35,13 @@ type ProviderSourceData = {
    * and the tag values will be collected in the generated entity as `tags` (a
    * `string[]`);
    */
-  tags?: ResourceTagList | ResourceTagMap;
+  tags?:
+    | ResourceTagList
+    | ResourceTagMap
+    | string
+    | string[]
+    | undefined
+    | null;
 
   [key: string]: any;
 };
@@ -88,9 +94,6 @@ export type IntegrationEntityBuilderInput = {
 
 /**
  * Generates an `Entity` using the provided `entityData`.
- *
- * WARNING: This is a work in progress. Only certain schemas are supported as
- * the API is worked out in the Azure integration.
  */
 export function createIntegrationEntity(
   input: IntegrationEntityBuilderInput,

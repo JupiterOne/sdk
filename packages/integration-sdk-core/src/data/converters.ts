@@ -64,6 +64,18 @@ type ConvertPropertiesOptions = {
   prefix?: string;
 };
 
+/**
+ * @deprecated
+ * `convertProperties` will be removed in the next major version. Using the `convertProperties`
+ * function is an anti-pattern. It assumes that every single property from the source object is
+ * useful as an entity property. Additionally, `convertProperties` is pretty opinionated in the way
+ * that it plucks properties from the source object and names the target entity property. The
+ * opinionated nature has caused confusion to developers in the past.
+ *
+ * Integrations that are currently using `convertProperties` should transition away from
+ * `convertProperties` to manually copying useful properties from the source object onto
+ * the target entity.
+ */
 export function convertProperties(
   object: any = {},
   options: ConvertPropertiesOptions = {},
@@ -157,7 +169,7 @@ export function convertNameValuePairs(
  * @see parseTimePropertyValue
  */
 export function getTime(
-  time: Date | string | number | undefined | null,
+  time: Date | string | undefined | null,
 ): number | undefined {
   return parseTimePropertyValue(time);
 }
@@ -167,11 +179,43 @@ export function getTime(
  * Date(time).getTime()`.
  *
  * @param time a time value
+ * @param sourcePrecision - the precision of the numeric value being supplied. Used to determine how to convert to ms.
+ *          ms - milliseconds
+ *          sec - seconds
  */
 export function parseTimePropertyValue(
+  time: number | undefined | null,
+  sourcePrecision: 'ms' | 'sec',
+): number | undefined;
+export function parseTimePropertyValue(
+  time: Date | string | undefined | null,
+): number | undefined;
+export function parseTimePropertyValue(
   time: Date | string | number | undefined | null,
+  sourcePrecision?: 'ms' | 'sec',
 ): number | undefined {
   if (time) {
+    // Required because isNaN(new Date()) === false
+    if (time instanceof Date) {
+      return time.getTime();
+    }
+
+    // Convert numeric strings to a float
+    if (typeof time === 'string' && !isNaN(Number(time))) {
+      time = parseFloat(time);
+    }
+
+    // Require sourcePrecision if time is a number
+    if (typeof time === 'number' && !isNaN(time)) {
+      if (!sourcePrecision) {
+        throw new Error(
+          'Argument sourcePrecision is required when parsing a number.',
+        );
+      } else if (sourcePrecision === 'sec') {
+        time = Number(time) * 1000;
+      }
+    }
+
     const parsed = new Date(time).getTime();
     if (!isNaN(parsed)) {
       return parsed;

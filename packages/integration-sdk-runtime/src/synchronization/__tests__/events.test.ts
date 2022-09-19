@@ -8,7 +8,7 @@ import { createApiClient } from '../../api';
 import { createEventPublishingQueue } from '../index';
 import noop from 'lodash/noop';
 
-test('publishes events added to the queue in the order they were enqueued', async () => {
+test('publishes integration events added to the queue in the order they were enqueued', async () => {
   const eventA = {
     name: 'a',
     description: 'Event A',
@@ -60,6 +60,22 @@ test('publishes events added to the queue in the order they were enqueued', asyn
   );
 });
 
+test('publishes no integration events when there is no integrationJobId', async () => {
+  const { apiClient, queue } = createContext({ integrationJobId: undefined });
+
+  const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
+
+  await queue.enqueue({
+    name: 'a',
+    description: 'Event A',
+    level: PublishEventLevel.Info,
+  });
+
+  await queue.onIdle();
+
+  expect(postSpy).not.toHaveBeenCalled();
+});
+
 test('logs an error if publish fails', async () => {
   const event = {
     name: 'a',
@@ -70,6 +86,14 @@ test('logs an error if publish fails', async () => {
   const { apiClient, logger, queue } = createContext();
 
   const error = new Error('Failed to post event');
+  Object.assign(error, {
+    code: 'TEST_CODE',
+    response: {
+      data: {
+        error: 'AN ERROR OCCURRED',
+      },
+    },
+  });
   jest.spyOn(apiClient, 'post').mockRejectedValue(error);
 
   const logErrorSpy = jest.spyOn(logger, 'error');
@@ -82,12 +106,14 @@ test('logs an error if publish fails', async () => {
   expect(logErrorSpy).toHaveBeenCalledWith(
     {
       err: error,
+      code: 'TEST_CODE',
+      systemErrorResponseData: 'AN ERROR OCCURRED',
     },
     'Failed to publish integration event',
   );
 });
 
-function createContext() {
+function createContext(options?: Pick<SynchronizationJob, 'integrationJobId'>) {
   const apiClient = createApiClient({
     apiBaseUrl: 'https://mochi:8080',
     account: 'mochi',
@@ -97,7 +123,11 @@ function createContext() {
     name: 'test',
   });
 
-  const job = { id: 'test' } as SynchronizationJob;
+  const job = {
+    id: 'test',
+    integrationJobId: 'test',
+    ...options,
+  } as SynchronizationJob;
 
   return {
     apiClient,

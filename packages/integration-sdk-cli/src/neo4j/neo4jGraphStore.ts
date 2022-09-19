@@ -3,6 +3,8 @@ import {
   sanitizeValue,
   buildPropertyParameters,
   sanitizePropertyName,
+  getFromTypeLabel,
+  getToTypeLabel,
 } from './neo4jUtilities';
 
 import * as neo4j from 'neo4j-driver';
@@ -13,6 +15,7 @@ export interface Neo4jGraphObjectStoreParams {
   password: string;
   integrationInstanceID: string;
   session?: neo4j.Session;
+  database?: string;
 }
 
 export class Neo4jGraphStore {
@@ -32,6 +35,9 @@ export class Neo4jGraphStore {
       );
     }
     this.integrationInstanceID = params.integrationInstanceID;
+    if (params.database) {
+      this.databaseName = params.database;
+    }
   }
 
   private async runCypherCommand(
@@ -54,6 +60,7 @@ export class Neo4jGraphStore {
 
   async addEntities(newEntities: Entity[]) {
     const nodeAlias: string = 'entityNode';
+    const promiseArray: Promise<neo4j.Result>[] = [];
     for (const entity of newEntities) {
       let classLabels = '';
       if (entity._class) {
@@ -82,21 +89,26 @@ export class Neo4jGraphStore {
         MERGE (${nodeAlias} {_key: $finalKeyValue, _integrationInstanceID: $integrationInstanceID}) 
         SET ${nodeAlias} += $propertyParameters
         SET ${nodeAlias}:${sanitizedType}${classLabels};`;
-      await this.runCypherCommand(buildCommand, {
-        propertyParameters: propertyParameters,
-        finalKeyValue: finalKeyValue,
-        integrationInstanceID: this.integrationInstanceID,
-      });
+      promiseArray.push(
+        this.runCypherCommand(buildCommand, {
+          propertyParameters: propertyParameters,
+          finalKeyValue: finalKeyValue,
+          integrationInstanceID: this.integrationInstanceID,
+        }),
+      );
     }
+    await Promise.all(promiseArray);
   }
 
   async addRelationships(newRelationships: Relationship[]) {
+    const promiseArray: Promise<neo4j.Result>[] = [];
     for (const relationship of newRelationships) {
       const relationshipAlias: string = 'relationship';
       const propertyParameters = buildPropertyParameters(relationship);
 
       let startEntityKey = '';
       let endEntityKey = '';
+
       //Get start and end _keys.  Will be overwritten if we're
       //working with a mapped relationship.
       if (relationship._fromEntityKey) {
@@ -105,6 +117,10 @@ export class Neo4jGraphStore {
       if (relationship._toEntityKey) {
         endEntityKey = sanitizeValue(relationship._toEntityKey.toString());
       }
+
+      //Attempt to get start and end types
+      const startEntityTypeLabel = getFromTypeLabel(relationship);
+      const endEntityTypeLabel = getToTypeLabel(relationship);
 
       if (relationship._mapping) {
         //Mapped Relationship
@@ -142,17 +158,20 @@ export class Neo4jGraphStore {
       );
 
       const buildCommand = `
-      MERGE (start {_key: $startEntityKey, _integrationInstanceID: $integrationInstanceID})
-      MERGE (end {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
+      MERGE (start${startEntityTypeLabel} {_key: $startEntityKey, _integrationInstanceID: $integrationInstanceID})
+      MERGE (end${endEntityTypeLabel} {_key: $endEntityKey, _integrationInstanceID: $integrationInstanceID})
       MERGE (start)-[${relationshipAlias}:${sanitizedRelationshipClass}]->(end)
       SET ${relationshipAlias} += $propertyParameters;`;
-      await this.runCypherCommand(buildCommand, {
-        propertyParameters: propertyParameters,
-        startEntityKey: startEntityKey,
-        endEntityKey: endEntityKey,
-        integrationInstanceID: this.integrationInstanceID,
-      });
+      promiseArray.push(
+        this.runCypherCommand(buildCommand, {
+          propertyParameters: propertyParameters,
+          startEntityKey: startEntityKey,
+          endEntityKey: endEntityKey,
+          integrationInstanceID: this.integrationInstanceID,
+        }),
+      );
     }
+    await Promise.all(promiseArray);
   }
 
   // TODO, if we get to very large databases we could reach a size where

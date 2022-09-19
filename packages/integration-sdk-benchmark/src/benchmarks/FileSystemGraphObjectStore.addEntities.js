@@ -3,8 +3,7 @@ const {
   FileSystemGraphObjectStore,
 } = require('@jupiterone/integration-sdk-runtime');
 const { createMockEntities } = require('../util/entity');
-
-const suite = new Benchmark.Suite();
+const { createEventCollector } = require('../util/eventCollector');
 
 function createFileSystemGraphObjectStore(params) {
   return new FileSystemGraphObjectStore(params);
@@ -21,38 +20,50 @@ function createBenchmarkContext(params = {}) {
   return {
     stepId,
     newEntities,
+    fileSystemGraphObjectStoreParams: { graphObjectBufferThreshold: 500 },
   };
 }
+const inputSizes = [100, 1000, 10000, 100000];
 
-// --------------------------------
-// ---------- TEST SETUP ----------
-// Prepare test contexts _before_ the actual tests run, so that our benchmarks
-// will _not_ include any significant setup time
-const testContextWithOneHundredThousandEntities = createBenchmarkContext({
-  numNewEntities: 100000,
-});
-// -------- END TEST SETUP --------
-// --------------------------------
+const eventCollector = createEventCollector();
+
+const suite = new Benchmark.Suite();
+
+for (const size of inputSizes) {
+  // --------------------------------
+  // ---------- TEST SETUP ----------
+  // Prepare test contexts _before_ the actual tests run, so that our benchmarks
+  // will _not_ include any significant setup time
+  const context = createBenchmarkContext({
+    numNewEntities: size,
+  });
+  // -------- END TEST SETUP --------
+  // --------------------------------
+
+  // ---- TEST FUNCTION -------------
+  const fn = async function () {
+    const fileSystemGraphObjectStore = createFileSystemGraphObjectStore(
+      context.fileSystemGraphObjectStoreParams,
+    );
+
+    await fileSystemGraphObjectStore.addEntities(
+      context.stepId,
+      context.newEntities,
+    );
+  };
+
+  // Add the test function to the benchmark
+  suite.add(
+    `FileSystemGraphObjectStore#addEntities ${size.toString()} Entities`,
+    fn,
+  );
+}
 
 suite
-  .add(
-    'FileSystemGraphObjectStore#addEntity 100_000 Entities',
-    async function () {
-      const fileSystemGraphObjectStore = createFileSystemGraphObjectStore(
-        testContextWithOneHundredThousandEntities.fileSystemGraphObjectStoreParams,
-      );
-
-      await fileSystemGraphObjectStore.addEntities(
-        testContextWithOneHundredThousandEntities.stepId,
-        testContextWithOneHundredThousandEntities.newEntities,
-      );
-    },
-  )
   .on('cycle', function (event) {
-    console.log(String(event.target));
+    eventCollector.addEvent(event);
   })
   .on('complete', function () {
-    console.log('Fastest is ' + this.filter('fastest').map('name'));
+    eventCollector.publishEvents();
   })
-  // run async
   .run({ async: true });

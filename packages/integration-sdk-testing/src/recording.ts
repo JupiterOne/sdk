@@ -1,16 +1,16 @@
-import { Har, Entry } from 'har-format';
 import defaultsDeep from 'lodash/defaultsDeep';
 import { gunzipSync } from 'zlib';
 
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import { Polly, PollyConfig } from '@pollyjs/core';
 import FSPersister from '@pollyjs/persister-fs';
+import { HarEntry, Har } from '@pollyjs/persister';
 
 Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 export type Recording = Polly;
-export type RecordingEntry = Entry;
+export type RecordingEntry = HarEntry;
 
 export interface SetupRecordingInput {
   directory: string;
@@ -78,7 +78,7 @@ export function setupRecording({
       return 'JupiterOneIntegationFSPersister';
     }
 
-    saveRecording(recordingId: number, data: Har): void {
+    async onSaveRecording(recordingId: string, data: Har): Promise<void> {
       data.log.entries.forEach((entry) => {
         // Redact tokens, even though they expire
         entry.request.headers = entry.request.headers.map((header) => ({
@@ -104,7 +104,7 @@ export function setupRecording({
         mutateEntry?.(entry);
       });
 
-      super.saveRecording(recordingId, data);
+      return super.onSaveRecording(recordingId, data);
     }
   }
 
@@ -143,7 +143,13 @@ function unzipGzippedRecordingEntry(entry: RecordingEntry): void {
     const chunkBuffers: Buffer[] = [];
     const hexChunks = JSON.parse(responseText) as string[];
     hexChunks.forEach((chunk) => {
-      const chunkBuffer = Buffer.from(chunk, 'hex');
+      let responseContentEncoding: BufferEncoding = 'hex';
+      if (entry.response.content.encoding) {
+        responseContentEncoding = entry.response.content
+          .encoding as BufferEncoding;
+      }
+
+      const chunkBuffer = Buffer.from(chunk, responseContentEncoding);
       chunkBuffers.push(chunkBuffer);
     });
 
@@ -171,6 +177,8 @@ function unzipGzippedRecordingEntry(entry: RecordingEntry): void {
     // Remove recording binary marker
     delete (entry.response.content as any)._isBinary;
     entry.response.content.text = responseText;
+    // Remove encoding
+    delete entry.response.content.encoding;
   }
 }
 

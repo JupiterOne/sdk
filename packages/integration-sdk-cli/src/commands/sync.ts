@@ -5,19 +5,22 @@ import {
   createApiClient,
   createIntegrationLogger,
   getAccountFromEnvironment,
-  getApiBaseUrl,
   getApiKeyFromEnvironment,
   synchronizeCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
 
 import * as log from '../log';
+import {
+  getApiBaseUrlOption,
+  getSynchronizationJobSourceOptions,
+} from './options';
 
 export function sync() {
   return createCommand('sync')
     .description(
       'sync collected data with JupiterOne, requires JUPITERONE_API_KEY, JUPITERONE_ACCOUNT',
     )
-    .requiredOption(
+    .option(
       '-i, --integrationInstanceId <id>',
       '_integrationInstanceId assigned to uploaded entities and relationships',
     )
@@ -32,6 +35,23 @@ export function sync() {
       !!process.env.JUPITERONE_DEV,
     )
     .option('--api-base-url <url>', 'API base URL used during sync operation.')
+    .option(
+      '--source <integration-managed|integration-external|api>',
+      'configure the synchronization job source value',
+      'integration-managed',
+    )
+    .option(
+      '--scope <anystring>',
+      'configure the synchronization job scope value',
+    )
+    .option(
+      '-u, --upload-batch-size <number>',
+      'specify number of items per batch for upload (default 250)',
+    )
+    .option(
+      '-ur, --upload-relationship-batch-size <number>',
+      'specify number of relationships per batch for upload (default 250)',
+    )
     .action(async (options) => {
       // Point `fileSystem.ts` functions to expected location relative to
       // integration project path.
@@ -46,19 +66,7 @@ export function sync() {
       log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
       const account = getAccountFromEnvironment();
 
-      let apiBaseUrl: string;
-      if (options.apiBaseUrl) {
-        if (options.development) {
-          throw new Error(
-            'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
-          );
-        }
-        apiBaseUrl = options.apiBaseUrl;
-      } else {
-        apiBaseUrl = getApiBaseUrl({
-          dev: options.development,
-        });
-      }
+      const apiBaseUrl = getApiBaseUrlOption(options);
       log.debug(`Configuring client to access "${apiBaseUrl}"`);
 
       const apiClient = createApiClient({
@@ -67,17 +75,19 @@ export function sync() {
         accessToken,
       });
 
-      const { integrationInstanceId } = options;
+      const synchronizationJobSourceOptions =
+        getSynchronizationJobSourceOptions(options);
 
       const logger = createIntegrationLogger({
         name: 'local',
         pretty: true,
       });
-
       const job = await synchronizeCollectedData({
-        logger: logger.child({ integrationInstanceId }),
+        logger: logger.child(synchronizationJobSourceOptions),
         apiClient,
-        integrationInstanceId,
+        uploadBatchSize: options.uploadBatchSize,
+        uploadRelationshipBatchSize: options.uploadRelationshipBatchSize,
+        ...synchronizationJobSourceOptions,
       });
 
       log.displaySynchronizationResults(job);

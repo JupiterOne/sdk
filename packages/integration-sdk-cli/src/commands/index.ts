@@ -7,3 +7,5 @@ export * from './document';
 export * from './visualize-types';
 export * from './validate-question-file';
 export * from './neo4j';
+export * from './visualize-dependencies';
+export * from './generate-integration-graph-schema';
