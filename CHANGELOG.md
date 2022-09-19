@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Allow relationships to have `undefined` top-level properties
+
 ## 8.24.0 - 2022-09-15
 
 ### Added
