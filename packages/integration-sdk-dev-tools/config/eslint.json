@@ -47,6 +47,7 @@
   ],
   "rules": {
     "no-unused-vars": "off",
+    "no-console": "error",
     "no-undef": "error"
   },
   "env": {
