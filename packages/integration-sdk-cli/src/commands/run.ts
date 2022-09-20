@@ -1,4 +1,4 @@
-import { createCommand } from 'commander';
+import { Command, createCommand, OptionValues } from 'commander';
 import path from 'path';
 
 import { Metric } from '@jupiterone/integration-sdk-core';
@@ -11,8 +11,6 @@ import {
   executeIntegrationInstance,
   FileSystemGraphObjectStore,
   finalizeSynchronization,
-  getAccountFromEnvironment,
-  getApiKeyFromEnvironment,
   initiateSynchronization,
   synchronizationStatus,
 } from '@jupiterone/integration-sdk-runtime';
@@ -21,77 +19,40 @@ import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integ
 import { loadConfig } from '../config';
 import * as log from '../log';
 import {
-  getApiBaseUrlOption,
-  getSynchronizationJobSourceOptions,
+  addApiClientOptionsToCommand,
+  addPathOptionsToCommand,
+  addSyncOptionsToCommand,
+  configureRuntimeFilesystem,
+  getApiClientOptions,
+  getSyncOptions,
+  validateApiClientOptions,
+  validateSyncOptions,
 } from './options';
 
 const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
-export function run() {
-  return createCommand('run')
+export function run(): Command {
+  const command = createCommand('run');
+
+  addPathOptionsToCommand(command);
+  addApiClientOptionsToCommand(command);
+  addSyncOptionsToCommand(command);
+
+  return command
     .description('collect and sync to upload entities and relationships')
-    .option(
-      '-i, --integrationInstanceId <id>',
-      '_integrationInstanceId assigned to uploaded entities and relationships',
-    )
-    .option(
-      '-p, --project-path <directory>',
-      'path to integration project directory',
-      process.cwd(),
-    )
-    .option(
-      '-d, --development',
-      '"true" to target apps.dev.jupiterone.io',
-      !!process.env.JUPITERONE_DEV,
-    )
-    .option('--api-base-url <url>', 'API base URL used during run operation')
-    .option('--skip-finalize', 'skip synchronization finalization')
-    .option(
-      '--source <integration-managed|integration-external|api>',
-      'configure the synchronization job source value',
-      'integration-managed',
-    )
-    .option(
-      '--scope <anystring>',
-      'configure the synchronization job scope value',
-    )
     .option('-V, --disable-schema-validation', 'disable schema validation')
-    .option(
-      '-u, --upload-batch-size <number>',
-      'specify number of items per batch for upload (default 250)',
-    )
-    .option(
-      '-ur, --upload-relationship-batch-size <number>',
-      'specify number of relationships per batch for upload (default 250)',
-    )
-    .action(async (options) => {
-      const projectPath = path.resolve(options.projectPath);
-      // Point `fileSystem.ts` functions to expected location relative to
-      // integration project path.
-      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
-        projectPath,
-        '.j1-integration',
-      );
-
-      log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
-      const accessToken = getApiKeyFromEnvironment();
-
-      log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
-      const account = getAccountFromEnvironment();
-
-      const apiBaseUrl = getApiBaseUrlOption(options);
-      log.debug(`Configuring client to access "${apiBaseUrl}"`);
+    .action(async (options: OptionValues, actionCommand: Command) => {
+      configureRuntimeFilesystem(actionCommand.opts());
+      validateApiClientOptions(actionCommand.opts());
+      validateSyncOptions(actionCommand.opts());
 
       const startTime = Date.now();
 
-      const apiClient = createApiClient({
-        apiBaseUrl,
-        accessToken,
-        account,
-      });
-
-      const synchronizationJobSourceOptions =
-        getSynchronizationJobSourceOptions(options);
+      const clientApiOptions = getApiClientOptions(actionCommand.opts());
+      const apiClient = createApiClient(clientApiOptions);
+      log.debug(
+        `Configured JupiterOne API client. (apiBaseUrl: '${clientApiOptions.apiBaseUrl}', account: ${clientApiOptions.account})`,
+      );
 
       let logger = createIntegrationLogger({
         name: 'local',
@@ -101,7 +62,7 @@ export function run() {
       const synchronizationContext = await initiateSynchronization({
         logger,
         apiClient,
-        ...synchronizationJobSourceOptions,
+        ...getSyncOptions(actionCommand.opts()),
       });
 
       logger = synchronizationContext.logger;
@@ -115,7 +76,9 @@ export function run() {
         .on('event', (event) => eventPublishingQueue.enqueue(event))
         .on('metric', (metric) => metrics.push(metric));
 
-      const invocationConfig = await loadConfig(path.join(projectPath, 'src'));
+      const invocationConfig = await loadConfig(
+        path.resolve(options.projectPath, 'src'),
+      );
 
       const graphObjectStore = new FileSystemGraphObjectStore({
         prettifyFiles: true,
@@ -130,7 +93,7 @@ export function run() {
           invocationConfig,
           {
             current: {
-              startedOn: startTime,
+              startedOn: synchronizationContext.job.startTimestamp,
             },
           },
           {
@@ -153,18 +116,18 @@ export function run() {
 
         log.displayExecutionResults(executionResults);
 
-        if (!options.skipFinalize) {
-          const synchronizationResult = await finalizeSynchronization({
-            ...synchronizationContext,
-            partialDatasets: executionResults.metadata.partialDatasets,
-          });
-          log.displaySynchronizationResults(synchronizationResult);
-        } else {
+        if (options.skipFinalize) {
           log.info(
             'Skipping synchronization finalization. Job will remain in "AWAITING_UPLOADS" state.',
           );
           const jobStatus = await synchronizationStatus(synchronizationContext);
           log.displaySynchronizationResults(jobStatus);
+        } else {
+          const synchronizationResult = await finalizeSynchronization({
+            ...synchronizationContext,
+            partialDatasets: executionResults.metadata.partialDatasets,
+          });
+          log.displaySynchronizationResults(synchronizationResult);
         }
       } catch (err) {
         await eventPublishingQueue.onIdle();

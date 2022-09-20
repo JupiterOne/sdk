@@ -29,7 +29,7 @@ import { shrinkBatchRawData } from './shrinkBatchRawData';
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
-const UPLOAD_BATCH_SIZE = 250;
+export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 6;
 
 export enum RequestHeaders {
@@ -72,6 +72,8 @@ export interface SynchronizeInput {
 
   uploadBatchSize?: number | undefined;
   uploadRelationshipBatchSize?: number | undefined;
+
+  skipFinalize?: boolean;
 }
 
 /**
@@ -86,11 +88,14 @@ export async function synchronizeCollectedData(
 
   try {
     await uploadCollectedData(jobContext);
-
-    return await finalizeSynchronization({
-      ...jobContext,
-      partialDatasets: await getPartialDatasets(),
-    });
+    if (input.skipFinalize) {
+      return await synchronizationStatus(jobContext);
+    } else {
+      return await finalizeSynchronization({
+        ...jobContext,
+        partialDatasets: await getPartialDatasets(),
+      });
+    }
   } catch (err) {
     jobContext.logger.error(
       err,
@@ -514,7 +519,7 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
   uploadBatchSize?: number,
 ) {
-  const batches = chunk(data, uploadBatchSize || UPLOAD_BATCH_SIZE);
+  const batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
   await pMap(
     batches,
     async (batch: T[K][]) => {

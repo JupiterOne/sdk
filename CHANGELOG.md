@@ -9,6 +9,35 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Allow relationships to have `undefined` top-level properties
+
+### Added
+
+- `j1-integration sync` now supports the `--skip-finalize` option to avoid
+  finalizing the synchronization job. This brings parity with the `run` command.
+- `j1-integration` `run` and `sync` commands now support `--account` and
+  `--api-key` options to make them consistent with other commands that support
+  these options. The values provided to these options will override any values
+  set in the `JUPITERONE_ACCOUNT` and `JUPITERONE_API_KEY` environment
+  variables. Note: it is recommended to avoid `--api-key` in a CI/CD or server
+  environment because the values will be visible in the logs.
+
+### Changed
+
+- Upgrade CLI `commander` dependency to improve options type safety and
+  handling.
+- Changed some CLI options error messages to be consistent and clearer. Any
+  scripts that were relying on the previous error messages will need to be
+  updated.
+- CLI `--development` option can be set to `"true"` when `--api-base-url` is
+  either of `https://api.us.jupiterone.io` or `https://api.dev.jupiterone.io`
+  (an error will not be thrown). This allowed for declaring the default value of
+  `--api-base-url` so it is shown in the help output. Any other value for
+  `--api-base-url` will cause an error to be thrown if `--development` is set to
+  `"true"`.
+
 ## 8.24.0 - 2022-09-15
 
 ### Added
