@@ -37,6 +37,9 @@ and this project adheres to
   `--api-base-url` so it is shown in the help output. Any other value for
   `--api-base-url` will cause an error to be thrown if `--development` is set to
   `"true"`.
+- `multipleResolves` events are no longer forwarded to loggers `onFailure`
+  callback as they are not strict failures. Logging of `multipleResolves` at log
+  level error remains in place.
 
 ## 8.24.0 - 2022-09-15
 
