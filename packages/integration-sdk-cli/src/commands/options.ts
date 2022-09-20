@@ -67,17 +67,21 @@ export function addSyncOptionsToCommand(command: Command): Command {
     .option('--scope <anystring>', 'specify synchronization job scope value')
     .option(
       '-u, --upload-batch-size <number>',
-      'specify number of items per batch for upload',
+      'specify number of entities and relationships per upload batch',
       (value, _previous: Number) => Number(value),
       DEFAULT_UPLOAD_BATCH_SIZE,
     )
     .option(
       '-ur, --upload-relationship-batch-size <number>',
-      'specify number of relationships per batch for upload',
+      'specify number of relationships per upload batch, overrides --upload-batch-size',
       (value, _previous: Number) => Number(value),
       DEFAULT_UPLOAD_BATCH_SIZE,
     )
-    .option('--skip-finalize', 'skip synchronization finalization', false);
+    .option(
+      '--skip-finalize',
+      'skip synchronization finalization to leave job open for additional uploads',
+      false,
+    );
 }
 
 /**
