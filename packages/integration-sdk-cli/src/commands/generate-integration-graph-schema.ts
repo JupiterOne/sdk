@@ -12,6 +12,7 @@ import { IntegrationInvocationConfigLoadError, loadConfig } from '../config';
 import { promises as fs } from 'fs';
 import * as log from '../log';
 
+/* eslint-disable no-console */
 export function generateIntegrationGraphSchemaCommand() {
   return createCommand('generate-integration-graph-schema')
     .description(

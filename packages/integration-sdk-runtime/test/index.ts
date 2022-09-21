@@ -13,6 +13,7 @@ const eventEmitterTests = {
     executeIntegrationInstanceWithUnregisteredEventHandlers,
 };
 
+/* eslint-disable no-console */
 void (async () => {
   for (const [eventEmitterName, eventEmitterTest] of Object.entries(
     eventEmitterTests,

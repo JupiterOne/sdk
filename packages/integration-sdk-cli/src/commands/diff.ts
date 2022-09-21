@@ -146,6 +146,7 @@ function diffEntities(
     };
   }
 
+  /* eslint-disable no-console */
   console.log('--- ENTITY DIFF ---');
   console.log(diffString(oldEntities, newEntities, undefined, { keysOnly }));
 }
