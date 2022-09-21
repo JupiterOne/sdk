@@ -15,6 +15,9 @@ and this project adheres to
 
 ### Added
 
+- Add no-console lint rule to catch console.log accidentally left in projects.
+  Note: Possible breakage when this changes is adopted. The rule can be ignored
+  if needed using `/* eslint-disable no-console */`
 - `j1-integration sync` now supports the `--skip-finalize` option to avoid
   finalizing the synchronization job. This brings parity with the `run` command.
 - `j1-integration` `run` and `sync` commands now support `--account` and
