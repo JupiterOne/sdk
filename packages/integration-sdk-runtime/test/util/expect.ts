@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 export function expect(result) {
   return {
     toBe: (expected) => {
