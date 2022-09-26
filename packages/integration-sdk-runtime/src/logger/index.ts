@@ -217,10 +217,18 @@ export class IntegrationLogger
   info(...params: any[]) {
     return this._logger.info(...params);
   }
+
   warn(...params: any[]) {
     this.trackHandledError(params[0]);
+
+    this.publishMetric({
+      name: 'logged_warn',
+      value: 1,
+    });
+
     return this._logger.warn(...params);
   }
+
   fatal(...params: any[]) {
     return this._logger.fatal(...params);
   }
@@ -249,6 +257,12 @@ export class IntegrationLogger
 
   error(...params: any[]) {
     this.trackHandledError(params[0]);
+
+    this.publishMetric({
+      name: 'logged_error',
+      value: 1,
+    });
+
     this._logger.error(...params);
   }
 

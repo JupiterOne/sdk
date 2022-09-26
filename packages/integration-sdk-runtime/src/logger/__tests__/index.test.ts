@@ -864,3 +864,43 @@ describe('#handleFailure', () => {
     expect(handleFailureSpy).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('logged message metric emitting', () => {
+  test('logger.error emits metric event', () => {
+    const onEmitMetric = jest.fn();
+
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    logger.on('metric', onEmitMetric);
+    logger.error('expected');
+
+    expect(onEmitMetric).toBeCalledTimes(1);
+    expect(onEmitMetric).toHaveBeenCalledWith({
+      name: 'logged_error',
+      value: 1,
+      timestamp: expect.any(Number),
+    });
+  });
+
+  test('logger.warn emits metric event', () => {
+    const onEmitMetric = jest.fn();
+
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    logger.on('metric', onEmitMetric);
+    logger.warn('expected');
+
+    expect(onEmitMetric).toBeCalledTimes(1);
+    expect(onEmitMetric).toHaveBeenCalledWith({
+      name: 'logged_warn',
+      value: 1,
+      timestamp: expect.any(Number),
+    });
+  });
+});
