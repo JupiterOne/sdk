@@ -60,6 +60,15 @@ interface CreateIntegrationLoggerInput<
   invocationConfig?: IntegrationInvocationConfig<TIntegrationConfig>;
 }
 
+interface PublishMetricOptions {
+  /**
+   * Whether the metric data should be logged or not.
+   *
+   * Default: `true`
+   */
+  logMetric?: boolean;
+}
+
 export function createLogger<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
@@ -221,10 +230,15 @@ export class IntegrationLogger
   warn(...params: any[]) {
     this.trackHandledError(params[0]);
 
-    this.publishMetric({
-      name: 'logged_warn',
-      value: 1,
-    });
+    this.publishMetric(
+      {
+        name: 'logged_warn',
+        value: 1,
+      },
+      {
+        logMetric: false,
+      },
+    );
 
     return this._logger.warn(...params);
   }
@@ -258,10 +272,15 @@ export class IntegrationLogger
   error(...params: any[]) {
     this.trackHandledError(params[0]);
 
-    this.publishMetric({
-      name: 'logged_error',
-      value: 1,
-    });
+    this.publishMetric(
+      {
+        name: 'logged_error',
+        value: 1,
+      },
+      {
+        logMetric: false,
+      },
+    );
 
     this._logger.error(...params);
   }
@@ -396,13 +415,18 @@ export class IntegrationLogger
     });
   }
 
-  publishMetric(metric: Omit<Metric, 'timestamp'>) {
+  publishMetric(
+    metric: Omit<Metric, 'timestamp'>,
+    { logMetric = true }: PublishMetricOptions = {},
+  ) {
     const metricWithTimestamp = {
       ...metric,
       timestamp: Date.now(),
     };
 
-    this.info({ metric: metricWithTimestamp }, 'Collected metric.');
+    if (logMetric) {
+      this.info({ metric: metricWithTimestamp }, 'Collected metric.');
+    }
 
     // emit the metric so that consumers can collect the metric
     // and publish it if needed

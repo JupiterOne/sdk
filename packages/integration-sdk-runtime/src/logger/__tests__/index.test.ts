@@ -638,6 +638,28 @@ describe('publishMetric', () => {
       'Collected metric.',
     );
   });
+
+  test('should allow disabling logging when metric published', () => {
+    const logger = createIntegrationLogger({
+      name,
+      invocationConfig,
+    });
+
+    const infoSpy = jest.spyOn(logger, 'info');
+
+    logger.publishMetric(
+      {
+        name: 'metric',
+        value: 1000,
+        unit: 'Milliseconds',
+      },
+      {
+        logMetric: false,
+      },
+    );
+
+    expect(infoSpy).toHaveBeenCalledTimes(0);
+  });
 });
 
 describe('#publishEvent', () => {
@@ -874,9 +896,12 @@ describe('logged message metric emitting', () => {
       invocationConfig,
     });
 
+    const infoSpy = jest.spyOn(logger, 'info');
+
     logger.on('metric', onEmitMetric);
     logger.error('expected');
 
+    expect(infoSpy).toHaveBeenCalledTimes(0);
     expect(onEmitMetric).toBeCalledTimes(1);
     expect(onEmitMetric).toHaveBeenCalledWith({
       name: 'logged_error',
@@ -893,9 +918,11 @@ describe('logged message metric emitting', () => {
       invocationConfig,
     });
 
+    const infoSpy = jest.spyOn(logger, 'info');
     logger.on('metric', onEmitMetric);
     logger.warn('expected');
 
+    expect(infoSpy).toHaveBeenCalledTimes(0);
     expect(onEmitMetric).toBeCalledTimes(1);
     expect(onEmitMetric).toHaveBeenCalledWith({
       name: 'logged_warn',
