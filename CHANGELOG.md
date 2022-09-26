@@ -9,6 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.25.0 - 2022-09-26
+
+### Added
+
+- Emit `logged_error` and `logged_warn` metric counters when `IntegrationLogger`
+  `logger.error` and `logger.warn` are called respectively.
+
+## 8.24.1 - 2022-09-21
+
 ### Fixed
 
 - Allow relationships to have `undefined` top-level properties
