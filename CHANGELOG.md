@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.25.1 - 2022-09-26
+
+### Changed
+
+- Skip logging messages when `logged_error` and `logged_warn` metrics are
+  emitted.
+
 ## 8.25.0 - 2022-09-26
 
 ### Added
