@@ -18,4 +18,5 @@ module.exports = {
   setupFilesAfterEnv: [
     '<rootDir>/node_modules/@jupiterone/integration-sdk-dev-tools/config/setupJestTestFramework.js',
   ],
+  testTimeout: 20000,
 };
