@@ -1,5 +1,4 @@
 import {
-  registerIntegrationLoggerEventHandlers,
   registerEventHandlers,
 } from './registerEventHandlers';
 
