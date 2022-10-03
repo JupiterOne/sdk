@@ -1,6 +1,4 @@
-import {
-  registerEventHandlers,
-} from './registerEventHandlers';
+import { registerEventHandlers } from './registerEventHandlers';
 
 test('registerEventHandlers registers a handler for unhandledRejection, uncaughtException, and multipleResolves', () => {
   const noopCallback = (err, event) => {
