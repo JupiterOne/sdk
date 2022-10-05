@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+- Updated ESLint to override the `no-misused-promises` rule.
+
 ## 8.22.0 - 2021-07-20
 
 - Support async `beforeAddRelationship` hook in `IntegrationInvocationConfig`.
