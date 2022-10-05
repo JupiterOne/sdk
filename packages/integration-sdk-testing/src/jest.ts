@@ -363,6 +363,7 @@ export function toTargetEntities(
   entities: Entity[],
   options?: ToTargetEntitiesOptions,
 ) {
+  /* eslint-disable no-console */
   for (const mappedRelationship of mappedRelationships) {
     const _mapping = mappedRelationship._mapping;
     if (!_mapping) {
@@ -536,7 +537,24 @@ export function toMatchDirectRelationshipSchema<T extends ExplicitRelationship>(
     newRelationshipSchema.properties._type = { const: params._type };
   }
 
-  return toMatchSchema(received, newRelationshipSchema);
+  return toMatchSchema(
+    removeUndefinedProperties(received),
+    newRelationshipSchema,
+  );
+}
+
+function removeUndefinedProperties<T extends Entity | ExplicitRelationship>(
+  received: T | T[],
+) {
+  if (!Array.isArray(received)) {
+    received = [received];
+  }
+  return received.map((r) => {
+    for (const [key, value] of Object.entries(r)) {
+      if (value === undefined) delete r[key];
+    }
+    return r;
+  });
 }
 
 function toMatchSchema<T extends Entity | ExplicitRelationship>(

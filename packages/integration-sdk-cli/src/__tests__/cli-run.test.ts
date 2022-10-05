@@ -99,6 +99,8 @@ test('step should fail if enableSchemaValidation = true', async () => {
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -138,6 +140,8 @@ test('step should pass if enableSchemaValidation = false', async () => {
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
+
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -170,8 +174,7 @@ test('executes integration and performs upload', async () => {
     'test',
   ]);
 
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displayExecutionResults).toHaveBeenCalledWith({
     integrationStepResults: [
       {
@@ -210,13 +213,13 @@ test('executes integration and performs upload', async () => {
   });
 });
 
-test('executes integration and performs upload with api-base-url', async () => {
+test('executes integration and skips finalization with skip-finalize', async () => {
   const job = generateSynchronizationJob();
 
   setupSynchronizerApi({
     polly,
     job,
-    baseUrl: 'https://api.TEST.jupiterone.io',
+    baseUrl: 'https://api.us.jupiterone.io',
   });
 
   await createCli().parseAsync([
@@ -225,42 +228,15 @@ test('executes integration and performs upload with api-base-url', async () => {
     'run',
     '--integrationInstanceId',
     'test',
-    '--api-base-url',
-    'https://api.TEST.jupiterone.io',
+    '--skip-finalize',
   ]);
 
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-
-  expect(log.displayExecutionResults).toHaveBeenCalledWith({
-    integrationStepResults: [
-      {
-        id: 'fetch-accounts',
-        name: 'Fetch Accounts',
-        declaredTypes: ['my_account'],
-        partialTypes: [],
-        encounteredTypes: ['my_account'],
-        status: StepResultStatus.SUCCESS,
-      },
-      {
-        id: 'fetch-users',
-        name: 'Fetch Users',
-        declaredTypes: ['my_user', 'my_account_has_user'],
-        partialTypes: [],
-        encounteredTypes: ['my_user', 'my_account_has_user'],
-        status: StepResultStatus.SUCCESS,
-      },
-    ],
-    metadata: {
-      partialDatasets: {
-        types: [],
-      },
-    },
-  });
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
   expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
     ...job,
-    status: SynchronizationJobStatus.FINALIZE_PENDING,
+    status: SynchronizationJobStatus.AWAITING_UPLOADS,
     // These are the expected number of entities and relationships
     // collected when executing the
     // 'typeScriptIntegrationProject' fixture
@@ -269,27 +245,33 @@ test('executes integration and performs upload with api-base-url', async () => {
   });
 });
 
-test('throws an error if --api-base-url is set with --development', async () => {
-  const job = generateSynchronizationJob();
+test('does not publish events for source "api" since there is no integrationJobId', async () => {
+  const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
 
   setupSynchronizerApi({
     polly,
     job,
-    baseUrl: 'https://api.TEST.jupiterone.io',
+    baseUrl: 'https://api.us.jupiterone.io',
   });
 
-  await expect(
-    createCli().parseAsync([
-      'node',
-      'j1-integration',
-      'sync',
-      '--integrationInstanceId',
-      'test',
-      '--development',
-      '--api-base-url',
-      'https://api.TEST.jupiterone.io',
-    ]),
-  ).rejects.toThrow(
-    'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
-  );
+  let eventsPublished = false;
+  polly.server
+    .post(`https://example.com/persister/synchronization/jobs/${job.id}/events`)
+    .intercept((req, res) => {
+      eventsPublished = true;
+    });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--source',
+    'api',
+    '--scope',
+    'test',
+  ]);
+
+  expect(eventsPublished).toBe(false);
+  expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
+  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
 });

@@ -11,6 +11,7 @@ import {
 
 import { loadConfig } from '../config';
 import * as log from '../log';
+import { addPathOptionsToCommand, configureRuntimeFilesystem } from './options';
 
 // coercion function to collect multiple values for a flag
 const collector = (value: string, arr: string[]) => {
@@ -19,13 +20,11 @@ const collector = (value: string, arr: string[]) => {
 };
 
 export function collect() {
-  return createCommand('collect')
+  const command = createCommand('collect');
+  addPathOptionsToCommand(command);
+
+  return command
     .description('collect data and store entities and relationships to disk')
-    .option(
-      '-p, --project-path <directory>',
-      'path to integration project directory',
-      process.cwd(),
-    )
     .option(
       '-s, --step <steps>',
       'step(s) to run, comma separated. Utilizes available caches to speed up dependent steps.',
@@ -42,6 +41,8 @@ export function collect() {
     )
     .option('-V, --disable-schema-validation', 'disable schema validation')
     .action(async (options) => {
+      configureRuntimeFilesystem(options);
+
       if (!options.cache && options.step.length === 0) {
         throw new Error(
           'Invalid option: Option --no-cache requires option --step to also be specified.',
@@ -52,13 +53,6 @@ export function collect() {
           'Invalid option: Option --cache-path requires option --step to also be specified.',
         );
       }
-
-      // Point `fileSystem.ts` functions to expected location relative to
-      // integration project path.
-      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
-        options.projectPath,
-        '.j1-integration',
-      );
 
       if (options.step.length > 0 && options.cache && !options.cachePath) {
         // Step option was used, cache is wanted, and no cache path was provided

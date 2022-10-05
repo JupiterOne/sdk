@@ -11,6 +11,106 @@ and this project adheres to
 
 - Updated ESLint to override the `no-misused-promises` rule.
 
+## 8.25.1 - 2022-09-26
+
+### Changed
+
+- Skip logging messages when `logged_error` and `logged_warn` metrics are
+  emitted.
+
+## 8.25.0 - 2022-09-26
+
+### Added
+
+- Emit `logged_error` and `logged_warn` metric counters when `IntegrationLogger`
+  `logger.error` and `logger.warn` are called respectively.
+
+## 8.24.1 - 2022-09-21
+
+### Fixed
+
+- Allow relationships to have `undefined` top-level properties
+
+### Added
+
+- Add no-console lint rule to catch console.log accidentally left in projects.
+  Note: Possible breakage when this changes is adopted. The rule can be ignored
+  if needed using `/* eslint-disable no-console */`
+- `j1-integration sync` now supports the `--skip-finalize` option to avoid
+  finalizing the synchronization job. This brings parity with the `run` command.
+- `j1-integration` `run` and `sync` commands now support `--account` and
+  `--api-key` options to make them consistent with other commands that support
+  these options. The values provided to these options will override any values
+  set in the `JUPITERONE_ACCOUNT` and `JUPITERONE_API_KEY` environment
+  variables. Note: it is recommended to avoid `--api-key` in a CI/CD or server
+  environment because the values will be visible in the logs.
+
+### Changed
+
+- Upgrade CLI `commander` dependency to improve options type safety and
+  handling.
+- Changed some CLI options error messages to be consistent and clearer. Any
+  scripts that were relying on the previous error messages will need to be
+  updated.
+- CLI `--development` option can be set to `"true"` when `--api-base-url` is
+  either of `https://api.us.jupiterone.io` or `https://api.dev.jupiterone.io`
+  (an error will not be thrown). This allowed for declaring the default value of
+  `--api-base-url` so it is shown in the help output. Any other value for
+  `--api-base-url` will cause an error to be thrown if `--development` is set to
+  `"true"`.
+
+## 8.24.0 - 2022-09-15
+
+### Added
+
+- `j1-integration run --skip-finalize` option to avoid finalizing the
+  integration run. This is useful for scenarios where you want to run the
+  integration to collect and upload data to a synchronization job, but do not
+  want to initiate the finalization process.
+- `j1-integration [run|sync] --source api --scope anystring` options to allow
+  use of the SDK without configuring an integration instance.
+  `--integrationInstanceId` is not required when using these options.
+
+## 8.23.1 - 2022-09-07
+
+### Fixed
+
+- Support backwards compatibility for old integration npm package dist format
+  when using `j1-integration generate-integration-graph-schema`.
+
+  The way that integration npm packages are distributed has changed over time.
+  We are now handling invocation config loading from different file paths to
+  support backwards compatibility and make adoption easier.
+
+## 8.23.0 - 2022-09-06
+
+### Added
+
+- Added `graphObjectFileSize` configuration option to
+  `FileSystemGraphObjectStore`
+
+## 8.22.7 - 2022-09-03
+
+### Added
+
+- Added optional flag to specify a different Neo4j database name to push to or
+  wipe from than the default 'neo4j' (only available on enterprise instances of
+  Neo4j).
+
+## 8.22.5 - 2022-08-24
+
+### Fixed
+
+- Allow the use of possibly null or undefined `number` in
+  `parseTimePropertyValue`
+
+## 8.22.2 - 2022-08-18
+
+### Added
+
+- Added `optional` parameter to `IntegrationInstanceConfigField`.
+- Update `ProviderSourceData` `tags` type to match `assignTags`
+
 ## 8.22.0 - 2021-07-20
 
 - Support async `beforeAddRelationship` hook in `IntegrationInvocationConfig`.

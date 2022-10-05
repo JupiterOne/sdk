@@ -213,7 +213,7 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    * An optional array of identifiers used to execute dependency
    * graphs in a specific order. These values should match the
    * IntegrationInvocationConfig `dependencyGraphOrder`
-   * prpoperty.
+   * property.
    *
    * Steps that do not have a `dependencyGraphId` will be added to
    * the default dependency graph which is executed first.

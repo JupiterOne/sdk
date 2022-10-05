@@ -68,7 +68,7 @@ Steps to automatically build and link:
 
 To version all packages in this project and tag the repo with a new version
 number, run the following (where `major.minor.patch` is the version you expect
-to move to):
+to move to). Don't forget to update the `CHANGELOG.md` file!
 
 ```shell
 git checkout -b release-<major>.<minor>.<patch>

@@ -52,7 +52,7 @@ export interface InvocationConfig<
   /**
    * An optional array of identifiers used to execute dependency
    * graphs in a specific order. These values should match the
-   * StepMetadata `dependencyGraphId` prpoperties.
+   * StepMetadata `dependencyGraphId` properties.
    *
    * If this is not provided, all steps will be evaluated in
    * the same dependency graph.
@@ -72,6 +72,7 @@ export interface IntegrationInvocationConfig<
 export interface IntegrationInstanceConfigField {
   type?: 'string' | 'boolean';
   mask?: boolean;
+  optional?: boolean;
 }
 
 export type IntegrationInstanceConfigFieldMap<

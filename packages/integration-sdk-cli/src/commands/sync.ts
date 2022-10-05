@@ -1,92 +1,60 @@
-import { createCommand } from 'commander';
-import path from 'path';
+import { Command, createCommand, OptionValues } from 'commander';
 
 import {
   createApiClient,
   createIntegrationLogger,
-  getAccountFromEnvironment,
-  getApiBaseUrl,
-  getApiKeyFromEnvironment,
   synchronizeCollectedData,
 } from '@jupiterone/integration-sdk-runtime';
 
 import * as log from '../log';
+import {
+  addApiClientOptionsToCommand,
+  addPathOptionsToCommand,
+  addSyncOptionsToCommand,
+  configureRuntimeFilesystem,
+  getApiClientOptions,
+  getSyncOptions,
+  validateApiClientOptions,
+  validateSyncOptions,
+} from './options';
 
-export function sync() {
-  return createCommand('sync')
+export function sync(): Command {
+  const command = createCommand('sync');
+
+  addPathOptionsToCommand(command);
+  addApiClientOptionsToCommand(command);
+  addSyncOptionsToCommand(command);
+
+  return command
     .description(
       'sync collected data with JupiterOne, requires JUPITERONE_API_KEY, JUPITERONE_ACCOUNT',
     )
-    .requiredOption(
-      '-i, --integrationInstanceId <id>',
-      '_integrationInstanceId assigned to uploaded entities and relationships',
-    )
-    .option(
-      '-p, --project-path <directory>',
-      'path to integration project directory',
-      process.cwd(),
-    )
-    .option(
-      '-d, --development',
-      '"true" to target apps.dev.jupiterone.io',
-      !!process.env.JUPITERONE_DEV,
-    )
-    .option('--api-base-url <url>', 'API base URL used during sync operation.')
-    .option(
-      '-u, --upload-batch-size <number>',
-      'specify number of items per batch for upload (default 250)',
-    )
-    .option(
-      '-ur, --upload-relationship-batch-size <number>',
-      'specify number of relationships per batch for upload (default 250)',
-    )
-    .action(async (options) => {
-      // Point `fileSystem.ts` functions to expected location relative to
-      // integration project path.
-      process.env.JUPITERONE_INTEGRATION_STORAGE_DIRECTORY = path.resolve(
-        options.projectPath,
-        '.j1-integration',
+    .action(async (options: OptionValues, actionCommand: Command) => {
+      configureRuntimeFilesystem(actionCommand.opts());
+      validateApiClientOptions(actionCommand.opts());
+      validateSyncOptions(actionCommand.opts());
+
+      const clientApiOptions = getApiClientOptions(actionCommand.opts());
+      const apiClient = createApiClient(clientApiOptions);
+      log.debug(
+        `Configured JupiterOne API client. (apiBaseUrl: '${clientApiOptions.apiBaseUrl}', account: ${clientApiOptions.account})`,
       );
-
-      log.debug('Loading API Key from JUPITERONE_API_KEY environment variable');
-      const accessToken = getApiKeyFromEnvironment();
-
-      log.debug('Loading account from JUPITERONE_ACCOUNT environment variable');
-      const account = getAccountFromEnvironment();
-
-      let apiBaseUrl: string;
-      if (options.apiBaseUrl) {
-        if (options.development) {
-          throw new Error(
-            'Invalid configuration supplied.  Cannot specify both --api-base-url and --development(-d) flags.',
-          );
-        }
-        apiBaseUrl = options.apiBaseUrl;
-      } else {
-        apiBaseUrl = getApiBaseUrl({
-          dev: options.development,
-        });
-      }
-      log.debug(`Configuring client to access "${apiBaseUrl}"`);
-
-      const apiClient = createApiClient({
-        apiBaseUrl,
-        account,
-        accessToken,
-      });
-
-      const { integrationInstanceId } = options;
 
       const logger = createIntegrationLogger({
         name: 'local',
         pretty: true,
       });
+
+      const syncOptions = getSyncOptions(actionCommand.opts());
+      if (syncOptions.skipFinalize)
+        log.info(
+          'Skipping synchronization finalization. Job will remain in "AWAITING_UPLOADS" state.',
+        );
+
       const job = await synchronizeCollectedData({
-        logger: logger.child({ integrationInstanceId }),
+        logger: logger.child(syncOptions),
         apiClient,
-        integrationInstanceId,
-        uploadBatchSize: options.uploadBatchSize,
-        uploadRelationshipBatchSize: options.uploadRelationshipBatchSize,
+        ...syncOptions,
       });
 
       log.displaySynchronizationResults(job);

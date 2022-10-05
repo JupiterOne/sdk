@@ -11,6 +11,7 @@ type UploadToNeo4jParams = {
   neo4jUri?: string;
   neo4jUser?: string;
   neo4jPassword?: string;
+  neo4jDatabase?: string;
 };
 
 export async function uploadToNeo4j({
@@ -19,6 +20,7 @@ export async function uploadToNeo4j({
   neo4jUri = process.env.NEO4J_URI,
   neo4jUser = process.env.NEO4J_USER,
   neo4jPassword = process.env.NEO4J_PASSWORD,
+  neo4jDatabase,
 }: UploadToNeo4jParams) {
   if (!neo4jUri || !neo4jUser || !neo4jPassword) {
     throw new Error(
@@ -34,6 +36,7 @@ export async function uploadToNeo4j({
     username: neo4jUser,
     password: neo4jPassword,
     integrationInstanceID: integrationInstanceID,
+    database: neo4jDatabase,
   });
 
   async function handleGraphObjectEntityFiles(

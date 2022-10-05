@@ -19,6 +19,13 @@ export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
     });
 
   polly.server
+    .get(`${baseUrl}/persister/synchronization/jobs/${job.id}`)
+    .intercept((req, res) => {
+      allowCrossOrigin(req, res);
+      res.status(200).json({ job });
+    });
+
+  polly.server
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/entities`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
@@ -72,11 +79,18 @@ function allowCrossOrigin(req, res) {
   });
 }
 
-export function generateSynchronizationJob(): SynchronizationJob {
+export function generateSynchronizationJob(
+  options?: Pick<
+    SynchronizationJob,
+    'source' | 'scope' | 'integrationInstanceId' | 'integrationJobId'
+  >,
+): SynchronizationJob {
   return {
     id: 'test',
-    integrationJobId: 'test-job-id',
-    integrationInstanceId: 'test-instance-id',
+    source: options?.source || 'integration-managed',
+    scope: options?.scope,
+    integrationJobId: options?.integrationJobId || 'test-job-id',
+    integrationInstanceId: options?.integrationInstanceId || 'test-instance-id',
     status: SynchronizationJobStatus.AWAITING_UPLOADS,
     startTimestamp: Date.now(),
     numEntitiesUploaded: 0,

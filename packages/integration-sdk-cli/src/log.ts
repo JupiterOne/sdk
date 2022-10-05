@@ -11,6 +11,7 @@ import {
   Metric,
 } from '@jupiterone/integration-sdk-core';
 
+/* eslint-disable no-console */
 export function debug(msg: string) {
   console.log(`${chalk.gray(msg)}`);
 }

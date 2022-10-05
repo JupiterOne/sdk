@@ -7,10 +7,17 @@ import {
   SynchronizationJobContext,
 } from '../synchronization';
 
+type EventPublishingQueue = {
+  enqueue: (event: IntegrationEvent) => Promise<void>;
+  onIdle: () => Promise<void>;
+};
+
 export const createEventPublishingQueue = (
   { apiClient, logger, job }: SynchronizationJobContext,
   config?: AxiosRequestConfig,
-) => {
+): EventPublishingQueue => {
+  if (!job.integrationJobId) return createNoopEventPublishingQueue();
+
   const queue = new PromiseQueue({ concurrency: 1 });
 
   return {
@@ -42,3 +49,17 @@ export const createEventPublishingQueue = (
     onIdle: () => queue.onIdle(),
   };
 };
+
+/**
+ * Creates a no-op queue for use when there is no integrationJobId for publishing events.
+ */
+function createNoopEventPublishingQueue(): EventPublishingQueue {
+  return {
+    enqueue: async (_event) => {
+      // noop
+    },
+    onIdle: async () => {
+      // noop
+    },
+  };
+}

@@ -21,13 +21,17 @@ export function loadConfigFromEnvironmentVariables<
   dotenvExpand(dotenv.config());
 
   return Object.entries(configMap)
-    .map(([field, config]): [string, string | boolean] => {
+    .map(([field, config]): [string, string | boolean | undefined] => {
       const environmentVariableName = snakeCase(field).toUpperCase();
 
       const environmentVariableValue = process.env[environmentVariableName];
 
       if (environmentVariableValue === undefined) {
-        throw configFieldMissingError(field, environmentVariableName);
+        if (config.optional) {
+          return [field, undefined];
+        } else {
+          throw configFieldMissingError(field, environmentVariableName);
+        }
       }
       const convertedValue = convertEnvironmentVariableValueForField(
         field,
@@ -38,7 +42,9 @@ export function loadConfigFromEnvironmentVariables<
       return [field, convertedValue];
     })
     .reduce((acc: Record<string, string | boolean>, [field, value]) => {
-      acc[field] = value;
+      if (value !== undefined) {
+        acc[field] = value;
+      }
       return acc;
     }, {}) as TConfig;
 }

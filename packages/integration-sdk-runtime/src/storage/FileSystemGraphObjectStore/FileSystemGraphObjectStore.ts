@@ -22,8 +22,10 @@ import { InMemoryGraphObjectStore } from '../memory';
 import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
+import { chunk } from 'lodash';
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
+export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
 
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
@@ -40,6 +42,11 @@ export interface FileSystemGraphObjectStoreParams {
    * Default: 500
    */
   graphObjectBufferThreshold?: number;
+
+  /**
+   * The maximum number of entities/relationships stored in each file.
+   */
+  graphObjectFileSize?: number;
 
   /**
    * Whether the files that are written to disk should be minified or not
@@ -118,6 +125,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
   private readonly graphObjectBufferThreshold: number;
+  private readonly graphObjectFileSize: number;
   private readonly prettifyFiles: boolean;
   private readonly stepIdToGraphObjectIndexMetadataMap: Map<
     string,
@@ -133,6 +141,9 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.graphObjectBufferThreshold =
       params?.graphObjectBufferThreshold ||
       DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
+    this.graphObjectFileSize =
+      params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
+
     this.prettifyFiles = params?.prettifyFiles || false;
 
     if (params?.integrationSteps) {
@@ -251,23 +262,28 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           });
 
           if (indexable.length) {
-            const graphObjectsToFilePaths = await flushDataToDisk({
-              storageDirectoryPath: stepId,
-              collectionType: 'entities',
-              data: indexable,
-              pretty: this.prettifyFiles,
-            });
-            for (const {
-              graphDataPath,
-              collection,
-            } of graphObjectsToFilePaths) {
-              for (const [index, e] of collection.entries()) {
-                this.entityOnDiskLocationMap.set(e._key, {
-                  graphDataPath,
-                  index,
+            await Promise.all(
+              chunk(indexable, this.graphObjectFileSize).map(async (data) => {
+                const graphObjectsToFilePaths = await flushDataToDisk({
+                  storageDirectoryPath: stepId,
+                  collectionType: 'entities',
+                  data,
+                  pretty: this.prettifyFiles,
                 });
-              }
-            }
+
+                for (const {
+                  graphDataPath,
+                  collection,
+                } of graphObjectsToFilePaths) {
+                  for (const [index, e] of collection.entries()) {
+                    this.entityOnDiskLocationMap.set(e._key, {
+                      graphDataPath,
+                      index,
+                    });
+                  }
+                }
+              }),
+            );
           }
 
           this.localGraphObjectStore.flushEntities(entities);
@@ -302,12 +318,16 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           });
 
           if (indexable.length) {
-            await flushDataToDisk({
-              storageDirectoryPath: stepId,
-              collectionType: 'relationships',
-              data: indexable,
-              pretty: this.prettifyFiles,
-            });
+            await Promise.all(
+              chunk(indexable, this.graphObjectFileSize).map(async (data) => {
+                await flushDataToDisk({
+                  storageDirectoryPath: stepId,
+                  collectionType: 'relationships',
+                  data,
+                  pretty: this.prettifyFiles,
+                });
+              }),
+            );
           }
 
           this.localGraphObjectStore.flushRelationships(relationships);

@@ -15,6 +15,7 @@ export interface Neo4jGraphObjectStoreParams {
   password: string;
   integrationInstanceID: string;
   session?: neo4j.Session;
+  database?: string;
 }
 
 export class Neo4jGraphStore {
@@ -34,6 +35,9 @@ export class Neo4jGraphStore {
       );
     }
     this.integrationInstanceID = params.integrationInstanceID;
+    if (params.database) {
+      this.databaseName = params.database;
+    }
   }
 
   private async runCypherCommand(
