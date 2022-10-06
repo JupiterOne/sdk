@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+- Updated ESLint to override the `no-misused-promises` rule.
+
 ## 8.25.1 - 2022-09-26
 
 ### Changed
