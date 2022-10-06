@@ -2,10 +2,20 @@
 
 A collection of packages supporting integrations with JupiterOne.
 
+## Development Resources
+
+- [Getting Started With Integraiton Development](docs/integrations/development_guide)
+- [SDK and CLI Reference](docs/integrations/development.md)
+- [Common Step Patterns](docs/integrations/step-patterns.md)
+- [Testing Integrations](docs/integrations/testing.md)
+
 ## Introduction
 
 Integrating with JupiterOne may take one of these paths:
 
+1. A structured integration leveraging **this SDK** to dramatically simplify the
+   synchronization process, essential for any significant, ongoing integration
+   effort
 1. A command line script (sh, bash, zsh, etc.) using the [JupiterOne CLI
    tool][2] to easily query/create/update/delete entities and relationships in
    bulk
@@ -13,9 +23,6 @@ Integrating with JupiterOne may take one of these paths:
    [query/create/update/delete entities and relationships][1]
 1. A JavaScript program using the [JupiterOne Node.js client library][2] to
    query/create/update/delete entities and relationships
-1. A structured integration leveraging **this SDK** to dramatically simplify the
-   synchronization process, essential for any significant, ongoing integration
-   effort
 
 The integration SDK structures an integration as a collection of simple, atomic
 steps, executed in a particular order. It submits generated entities and
