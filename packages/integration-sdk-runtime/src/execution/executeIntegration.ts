@@ -1,6 +1,7 @@
 import {
   ExecutionContext,
   ExecutionHistory,
+  IntegrationExecutionConfig,
   IntegrationInstance,
   IntegrationInstanceConfig,
   IntegrationInvocationConfig,
@@ -95,11 +96,12 @@ export async function executeIntegrationLocally(
  * Starts execution of an integration instance.
  */
 export async function executeIntegrationInstance<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 >(
   logger: IntegrationLogger,
-  instance: IntegrationInstance<TIntegrationConfig>,
-  config: IntegrationInvocationConfig<TIntegrationConfig>,
+  instance: IntegrationInstance<TInstanceConfig>,
+  config: IntegrationInvocationConfig<TInstanceConfig, TExecutionConfig>,
   executionHistory: ExecutionHistory,
   options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
@@ -120,8 +122,9 @@ export async function executeIntegrationInstance<
           instance: instanceWithTrimmedConfig,
           logger,
           executionHistory,
-          executionConfig:
-            config.loadExecutionConfig?.(instanceWithTrimmedConfig) || {},
+          executionConfig: (config.loadExecutionConfig?.(
+            instanceWithTrimmedConfig,
+          ) || {}) as TExecutionConfig,
         },
         config,
         options,

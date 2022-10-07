@@ -1,4 +1,7 @@
-import { IntegrationExecutionConfig } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationExecutionConfig,
+  StepMetadata,
+} from '@jupiterone/integration-sdk-core';
 import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 import { StepTestConfig } from './config';
 import {
@@ -28,13 +31,25 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
   const preContext: MockIntegrationStepExecutionContext & {
     executionConfig: IntegrationExecutionConfig;
   } = {
-    ...createMockStepExecutionContext({ instanceConfig }),
+    ...createMockStepExecutionContext({
+      instanceConfig,
+      executionConfig,
+      stepMetadata: {} as StepMetadata,
+    }),
     executionConfig,
   };
 
   for (const dependencyStepId of dependencyStepIds) {
     const dependencyStep = stepDependencyGraph.getNodeData(dependencyStepId);
-    await dependencyStep.executionHandler(preContext);
+    await dependencyStep.executionHandler({
+      ...preContext,
+      stepMetadata: {
+        id: dependencyStep.id,
+        name: dependencyStep.name,
+        entities: dependencyStep.entities,
+        relationships: dependencyStep.relationships,
+      },
+    });
   }
 
   const context: MockIntegrationStepExecutionContext & {
@@ -42,6 +57,13 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
   } = {
     ...createMockStepExecutionContext({
       instanceConfig,
+      executionConfig,
+      stepMetadata: {
+        id: step.id,
+        name: step.name,
+        entities: step.entities,
+        relationships: step.relationships,
+      },
       entities: preContext.jobState.collectedEntities,
       relationships: preContext.jobState.collectedRelationships,
       setData: preContext.jobState.collectedData,

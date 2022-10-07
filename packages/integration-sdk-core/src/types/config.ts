@@ -3,10 +3,10 @@ import { GetStepStartStatesFunction, Step } from './step';
 import { InvocationValidationFunction } from './validation';
 import {
   ExecutionContext,
-  IntegrationExecutionContext,
-  StepExecutionContext,
-  IntegrationStepExecutionContext,
   IntegrationExecutionConfig,
+  IntegrationExecutionContext,
+  IntegrationStepExecutionContext,
+  StepExecutionContext,
 } from './context';
 import { Entity } from './entity';
 import { Relationship } from './relationship';
@@ -61,12 +61,13 @@ export interface InvocationConfig<
 }
 
 export interface IntegrationInvocationConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > extends InvocationConfig<
-    IntegrationExecutionContext<TConfig>,
-    IntegrationStepExecutionContext<TConfig>
+    IntegrationExecutionContext<TInstanceConfig, TExecutionConfig>,
+    IntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig>
   > {
-  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
+  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TInstanceConfig>;
 }
 
 export interface IntegrationInstanceConfigField {
@@ -76,5 +77,5 @@ export interface IntegrationInstanceConfigField {
 }
 
 export type IntegrationInstanceConfigFieldMap<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> = Record<keyof TConfig, IntegrationInstanceConfigField>;
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+> = Record<keyof TInstanceConfig, IntegrationInstanceConfigField>;

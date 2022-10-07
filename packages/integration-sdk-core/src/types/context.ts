@@ -1,6 +1,7 @@
 import { IntegrationInstance, IntegrationInstanceConfig } from './instance';
 import { JobState } from './jobState';
 import { IntegrationLogger } from './logger';
+import { StepMetadata } from './step';
 
 export type Execution = {
   startedOn: number;
@@ -24,43 +25,44 @@ export interface ExecutionContext {
  * `IntegrationInstanceConfig`, containing dynamic values perhaps calculated
  * based on the instance config.
  */
-export type IntegrationExecutionConfig = object;
+export type IntegrationExecutionConfig = Record<string, any>;
 
 /**
- * @param TConfig the integration specific type of the `instance.config`
+ * @param TInstanceConfig the integration specific type of the `instance.config`
  * property
  */
 export type IntegrationLoadExecutionConfigContext<
-  TConfig extends IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig,
 > = ExecutionContext & {
-  instance: IntegrationInstance<TConfig>;
+  instance: IntegrationInstance<TInstanceConfig>;
 };
 
 /**
- * @param TConfig the integration specific type of the `instance.config`
+ * @param TInstanceConfig the integration specific type of the `instance.config`
  * property
  * @param TExecutionConfig the configuration type produced by the
  * integration's optional `loadExecutionConfig` function
  */
 export type IntegrationExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
-> = IntegrationLoadExecutionConfigContext<TConfig> & {
+> = IntegrationLoadExecutionConfigContext<TInstanceConfig> & {
   executionConfig: TExecutionConfig;
 };
 
 export type StepExecutionContext = ExecutionContext & {
   jobState: JobState;
+  stepMetadata: StepMetadata;
 };
 
 /**
- * @param TConfig the integration specific type of the `instance.config`
+ * @param TInstanceConfig the integration specific type of the `instance.config`
  * property
  * @param TExecutionConfig the configuration type produced by the
  * integration's optional `loadExecutionConfig` function
  */
 export interface IntegrationStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
-> extends IntegrationExecutionContext<TConfig, TExecutionConfig>,
+> extends IntegrationExecutionContext<TInstanceConfig, TExecutionConfig>,
     StepExecutionContext {}

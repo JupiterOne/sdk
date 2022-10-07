@@ -58,6 +58,11 @@ and this project adheres to
   `--api-base-url` so it is shown in the help output. Any other value for
   `--api-base-url` will cause an error to be thrown if `--development` is set to
   `"true"`.
+- Improved type definitions to allow for expressing the type of the
+  `IntegrationExecutionConfig` that is returned from `loadExecutionConfig` and
+  passed to `executionHandler` functions.
+- Added `IntegrationStepExecutionContext.stepMetadata` to allow
+  `executionHandler` functions to readily access their `StepMetadata`.
 
 ## 8.24.0 - 2022-09-15
 
@@ -164,25 +169,25 @@ Options:
   specified, logging to the job event log is disabled. Here is an example of
   usage:
 
-```typescript
-{
-  ['fetch-prs']: {
-    disabled: false
-  },
-  ['fetch-issues']: {
-    disabled: !scopes.repoIssues,
-    disabledReason: DisabledStepReason.PERMISSION
-  }
-}
-```
+  ```typescript
+  const stepStartStates: StepStartStates = {
+    ['fetch-prs']: {
+      disabled: false,
+    },
+    ['fetch-issues']: {
+      disabled: !scopes.repoIssues,
+      disabledReason: DisabledStepReason.PERMISSION,
+    },
+  };
+  ```
 
-Sample text output:
+  Sample text output:
 
-```
-Skipped step "Fetch Issues". The required permission was not provided to perform this step.
-Skipped step "Fetch Issues". This step is disabled via configuration. Please contact support to enabled.
-Skipped step "Fetch Issues". Beta feature, please contact support to enable.
-```
+  ```
+  Skipped step "Fetch Issues". The required permission was not provided to perform this step.
+  Skipped step "Fetch Issues". This step is disabled via configuration. Please contact support to enabled.
+  Skipped step "Fetch Issues". Beta feature, please contact support to enable.
+  ```
 
 ## [8.17.0] - 2022-06-29
 
@@ -232,7 +237,7 @@ Skipped step "Fetch Issues". Beta feature, please contact support to enable.
 
 ### Changed
 
-- Allow an integration job id to be passed in when initializing syncronization.
+- Allow an integration job id to be passed in when initializing synchronization.
 
 ## [8.13.11] - 2022-05-27
 
@@ -251,14 +256,14 @@ Skipped step "Fetch Issues". Beta feature, please contact support to enable.
 ### Fixed
 
 - Fixed issue when unzipping gzipped polly recording entries. Now removes the
-  content.encoding value once content is decoded.
+  `content.encoding` value once content is decoded.
 - Fixes issue introduced in 8.13.4
 
 ## [8.13.8] - 2022-05-19
 
 ### Changed
 
-- Moved `shrinkBatchRawData` to its own module for readablity and easy mocking
+- Moved `shrinkBatchRawData` to its own module for readability and easy mocking
   in test
 - Increased threshold by which we continue to shrink rawData from 6 million
   bytes to 5.5 million bytes
@@ -343,8 +348,8 @@ Skipped step "Fetch Issues". Beta feature, please contact support to enable.
 ### Added
 
 - Additional error type `IntegrationProviderRetriesExceededError` to be used
-  when integration has exhausted all of the retries. This error type won't be
-  sent in as an alert to the operators.
+  when integration has exhausted all the retries. This error type won't be sent
+  in as an alert to the operators.
 
 ## [8.10.1] - 2022-04-08
 
@@ -665,13 +670,16 @@ of the support.jupiterone.io site.
   ```ts
   import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
 
+  type IntegrationConfig = {
+    roleArn: string;
+    externalId: string;
+  };
+
   /**
    * The AWS integration uses shared `fromTemporaryCredentials` across all of
    * its clients.
    */
-  export function loadExecutionConfig({
-    config: { roleArn: string, externalId: string },
-  }) {
+  export function loadExecutionConfig({ config: IntegrationConfig }) {
     return {
       credentials: fromTemporaryCredentials({
         params: {
@@ -742,15 +750,17 @@ of the support.jupiterone.io site.
   const virtualMachineId = await jobState.findEntity(
     nic.virtualMachine?.id as string,
   );
+  ```
 
+  ```ts
   // by allowing `undefined`, we can more safely use these methods without type assertions
   const virtualMachineId = await jobState.findEntity(nic.virtualMachine?.id);
   ```
 
 ### Fixed
 
-- Fixed the way that symlinks are created on windows machines. Directories are
-  still created as simlinks, but files are now hardlinks to prevent the
+- Fixed the way that symlinks are created on Windows machines. Directories are
+  still created as symlinks, but files are now hardlinks to prevent the
   requirement that `yarn start` be run with admin credentials.
 
 ## [7.4.0] - 2021-11-03
@@ -898,7 +908,7 @@ of the support.jupiterone.io site.
 
 - Fix `j1-integration document --output-file` to reflect that it is a path
   relative to `--project-path`
-- Fixed the way that symlinks are created on windows machines, which previously
+- Fixed the way that symlinks are created on Windows machines, which previously
   threw `EPERM: operation not permitted, symlink`
 
 ## [6.15.0] - 2021-08-19
@@ -943,8 +953,8 @@ of the support.jupiterone.io site.
 ### Added
 
 - a `dependencyGraphOrder` property to the InvocationConfig and a
-  `dependencyGraphId` property to the StepMetadata which togeather can be used
-  to create multiple ordered dependency graphs per execution.
+  `dependencyGraphId` property to the StepMetadata which together can be used to
+  create multiple ordered dependency graphs per execution.
 
 ## 6.10.0 - 2021-07-09
 
@@ -974,7 +984,7 @@ of the support.jupiterone.io site.
 
 ### Added
 
-- Added `j1-integration diff` command to ouptut colorized diffs of old/new
+- Added `j1-integration diff` command to output colorized diffs of old/new
   integrations.
 - Allow overriding integration instance properties when running integrations
   locally.
@@ -1203,7 +1213,7 @@ getData: <T>(key: string) => Promise<T | undefined>;
   Usage in an integration step:
 
   ```typescript
-  {
+  const integrationMetadata = {
     id: 'my-step',
     name: 'My step',
     entities: [
@@ -1219,9 +1229,9 @@ getData: <T>(key: string) => Promise<T | undefined>;
     ],
     relationships: [],
     async exeutionHandler() {
-      ...
-    }
-  }
+      // work here
+    },
+  };
   ```
 
   See PR [#404](https://github.com/JupiterOne/sdk/pull/404)
@@ -1586,16 +1596,14 @@ Example:
 ```typescript
 const entity = await jobState.addEntity(convertToEntity(data));
 const entity2 = await jobState.addEntity(convertToOtherEntity(entity2));
-await jobState.addRelationship(
-  convertToRelationship(entity, entity2)
-);
+await jobState.addRelationship(convertToRelationship(entity, entity2));
 
 // Or this:
 await jobState.addRelationship(
   convertToRelationship(
-    await jobState.addEntity(convertToEntity(data))
-    await jobState.addEntity(convertToOtherEntity(entity2))
-  )
+    await jobState.addEntity(convertToEntity(data)),
+    await jobState.addEntity(convertToOtherEntity(entity2)),
+  ),
 );
 ```
 
@@ -1643,8 +1651,9 @@ expect(context.jobState.collectedEntities).toMatchGraphObjectSchema({
       _rawData: {
         type: 'array',
         items: { type: 'object' },
-      }
-   }
+      },
+    },
+  },
 });
 ```
 
@@ -1750,7 +1759,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = 
   convert properties that are named with common suffixes (on, at, time, date) to
   a UNIX timestamp (number).
 - Added `publishMetric` function to `IntegrationLogger` that now causes a
-  `metric` event to be emit.
+  `metric` event to be emitted.
 
 ## 1.1.1 - 2020-06-08
 
@@ -1769,7 +1778,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = 
 ### Fixed
 
 - `createIntegrationRelationship` made `_key` optional for relationship
-  mappings, a fine thing to do because specifying the `_key` for those insn't
+  mappings, a fine thing to do because specifying the `_key` for them isn't
   necessary. However, the function was changed at the same time to stop
   generating a `_key`, which is required to ensure the collected relationships
   are unique. This fixes things so the `_key` remains an optional argument, and
@@ -1783,8 +1792,7 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> = 
   `_type` for relationship mappings, overriding the generated value or values
   provided in `properties` option.
 - Removed `@types/vis` from dependencies to devDependencies because having the
-  type forces typescript consumers to have `DOM` in the their `lib` compiler
-  option.
+  type forces typescript consumers to have `DOM` in their `lib` compiler option.
 
 ## 1.0.1 - 2020-06-03
 
@@ -1834,4 +1842,4 @@ into the following packages:
 - `@jupiterone/integration-sdk-cli`
 
 To view the changes that went into `@jupiterone/integration-sdk`, please see
-[LEGACY_SDK_CHANGELOG.md](./LEGACY_SDK_CHANGELOG.md).
+[LEGACY_SDK_CHANGELOG.md](packages/integration-sdk/LEGACY_SDK_CHANGELOG.md).

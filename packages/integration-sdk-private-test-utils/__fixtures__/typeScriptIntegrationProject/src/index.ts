@@ -3,8 +3,9 @@ import fetchUsers from './steps/fetchUsers';
 
 import validateInvocation from './validateInvocation';
 import getStepStartStates from './getStepStartStates';
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
 
-export const invocationConfig = {
+export const invocationConfig: IntegrationInvocationConfig = {
   instanceConfigFields: {
     myConfig: {
       mask: true,

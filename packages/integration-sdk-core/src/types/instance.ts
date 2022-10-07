@@ -4,10 +4,10 @@ export type IntegrationInstanceConfig = Record<string, any>;
  * A stored user configuration for executing the integration defined by
  * the associated `integrationDefinitionId`.
  *
- * @param TConfig the integration specific type of the `config` property
+ * @param TInstanceConfig the integration specific type of the `config` property
  */
 export interface IntegrationInstance<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   /**
    * Unique identifier for the activated integration instance.
@@ -44,5 +44,5 @@ export interface IntegrationInstance<
    * configuration upon invocation and provide useful configuration error
    * messages.
    */
-  config: TConfig;
+  config: TInstanceConfig;
 }

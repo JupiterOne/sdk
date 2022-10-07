@@ -1,11 +1,13 @@
 import {
   ExecutionHistory,
+  IntegrationExecutionConfig,
   IntegrationExecutionContext,
   IntegrationInstance,
   IntegrationInstanceConfig,
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
   IntegrationStepExecutionContext,
+  StepMetadata,
 } from '@jupiterone/integration-sdk-core';
 import {
   loadConfigFromEnvironmentVariables,
@@ -20,45 +22,60 @@ import {
 import { createMockIntegrationLogger } from './logger';
 
 export type CreateMockExecutionContextOptions<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > =
-  | CreateMockExecutionContextOptionsWithInstanceConfig<TConfig>
-  | CreateMockExecutionContextOptionsWithInstanceConfigFields<TConfig>;
+  | CreateMockExecutionContextOptionsWithConfigs<
+      TInstanceConfig,
+      TExecutionConfig
+    >
+  | CreateMockExecutionContextOptionsWithInstanceConfigFields<
+      TInstanceConfig,
+      TExecutionConfig
+    >;
 
-interface CreateMockExecutionContextOptionsWithInstanceConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+interface CreateMockExecutionContextOptionsWithConfigs<
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > {
-  instanceConfig: TConfig;
+  instanceConfig: TInstanceConfig;
+  executionConfig: TExecutionConfig;
   executionHistory?: ExecutionHistory;
 }
 
 interface CreateMockExecutionContextOptionsWithInstanceConfigFields<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > {
-  instanceConfigFields: IntegrationInstanceConfigFieldMap<TConfig>;
+  instanceConfigFields: IntegrationInstanceConfigFieldMap<TInstanceConfig>;
   executionHistory?: ExecutionHistory;
 }
 
 export function createMockExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 >(
-  options: CreateMockExecutionContextOptions<TConfig> = {
-    instanceConfigFields: {} as IntegrationInstanceConfigFieldMap<TConfig>,
+  options: CreateMockExecutionContextOptions<
+    TInstanceConfig,
+    TExecutionConfig
+  > = {
+    instanceConfigFields:
+      {} as IntegrationInstanceConfigFieldMap<TInstanceConfig>,
   },
-): IntegrationExecutionContext<TConfig> {
+): IntegrationExecutionContext<TInstanceConfig, TExecutionConfig> {
   const logger = createMockIntegrationLogger();
   const accountId =
     process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID ||
     LOCAL_INTEGRATION_INSTANCE.accountId;
 
   // copy local instance properties so that tests cannot
-  // mutate the original object and cause unpredicable behavior
+  // mutate the original object and cause unpredictable behavior
   const instance = {
     ...LOCAL_INTEGRATION_INSTANCE,
     accountId,
-  } as IntegrationInstance<TConfig>;
+  } as IntegrationInstance<TInstanceConfig>;
 
-  if (isOptionsWithInstanceConfig<TConfig>(options)) {
+  if (isOptionsWithInstanceConfig<TInstanceConfig>(options)) {
     instance.config = options.instanceConfig;
   } else {
     const { instanceConfigFields } = options;
@@ -75,14 +92,15 @@ export function createMockExecutionContext<
       // this would generally only happen when a developer does not
       // have an .env file configured or when an integration's test suite
       // runs in CI
-      instance.config = generateInstanceConfig<TConfig>(instanceConfigFields);
+      instance.config =
+        generateInstanceConfig<TInstanceConfig>(instanceConfigFields);
     }
   }
 
   return {
     logger,
     instance,
-    executionConfig: {},
+    executionConfig: {} as TExecutionConfig,
     executionHistory: options.executionHistory || {
       current: {
         startedOn: Date.now(),
@@ -92,32 +110,45 @@ export function createMockExecutionContext<
 }
 
 function isOptionsWithInstanceConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
-  options: CreateMockExecutionContextOptions<TConfig>,
-): options is CreateMockExecutionContextOptionsWithInstanceConfig<TConfig> {
+  options: CreateMockExecutionContextOptions<TInstanceConfig>,
+): options is CreateMockExecutionContextOptionsWithConfigs<TInstanceConfig> {
   return !!(options as any).instanceConfig;
 }
 
 export type CreateMockStepExecutionContextOptions<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> = CreateMockExecutionContextOptions<TConfig> & CreateMockJobStateOptions;
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+> = CreateMockExecutionContextOptions<TInstanceConfig, TExecutionConfig> &
+  CreateMockJobStateOptions & {
+    stepMetadata: StepMetadata;
+  };
 
 export interface MockIntegrationStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> extends IntegrationStepExecutionContext<TConfig> {
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+> extends IntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig> {
   jobState: MockJobState;
+  stepMetadata: StepMetadata;
 }
 
 export function createMockStepExecutionContext<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 >(
-  options: CreateMockStepExecutionContextOptions<TConfig> = {
-    instanceConfigFields: {} as IntegrationInstanceConfigFieldMap<TConfig>,
+  options: CreateMockStepExecutionContextOptions<
+    TInstanceConfig,
+    TExecutionConfig
+  > = {
+    instanceConfigFields:
+      {} as IntegrationInstanceConfigFieldMap<TInstanceConfig>,
+    stepMetadata: {} as StepMetadata,
   },
-): MockIntegrationStepExecutionContext<TConfig> {
+): MockIntegrationStepExecutionContext<TInstanceConfig, TExecutionConfig> {
   return {
-    ...createMockExecutionContext<TConfig>(options),
+    ...createMockExecutionContext<TInstanceConfig, TExecutionConfig>(options),
+    stepMetadata: options.stepMetadata,
     jobState: createMockJobState(options),
   };
 }

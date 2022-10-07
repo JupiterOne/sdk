@@ -1,4 +1,8 @@
-import { ExecutionContext, IntegrationExecutionContext } from './context';
+import {
+  ExecutionContext,
+  IntegrationExecutionConfig,
+  IntegrationExecutionContext,
+} from './context';
 import { IntegrationInstanceConfig } from './instance';
 
 export type InvocationValidationFunction<T extends ExecutionContext> = (
@@ -6,5 +10,8 @@ export type InvocationValidationFunction<T extends ExecutionContext> = (
 ) => Promise<void> | void;
 
 export type IntegrationInvocationValidationFunction<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> = InvocationValidationFunction<IntegrationExecutionContext<TConfig>>;
+  TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+> = InvocationValidationFunction<
+  IntegrationExecutionContext<TInstanceConfig, TExecutionConfig>
+>;

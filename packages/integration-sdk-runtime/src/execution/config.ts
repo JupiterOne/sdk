@@ -2,11 +2,11 @@ import dotenv from 'dotenv';
 import snakeCase from 'lodash/snakeCase';
 
 import {
-  IntegrationLocalConfigFieldMissingError,
-  IntegrationLocalConfigFieldTypeMismatchError,
   IntegrationInstanceConfig,
   IntegrationInstanceConfigField,
   IntegrationInstanceConfigFieldMap,
+  IntegrationLocalConfigFieldMissingError,
+  IntegrationLocalConfigFieldTypeMismatchError,
 } from '@jupiterone/integration-sdk-core';
 
 const dotenvExpand = require('dotenv-expand');
@@ -15,8 +15,10 @@ const dotenvExpand = require('dotenv-expand');
  * Reads integration configuration from environment variables
  */
 export function loadConfigFromEnvironmentVariables<
-  TConfig extends IntegrationInstanceConfig,
->(configMap: IntegrationInstanceConfigFieldMap<TConfig>): TConfig {
+  TInstanceConfig extends IntegrationInstanceConfig,
+>(
+  configMap: IntegrationInstanceConfigFieldMap<TInstanceConfig>,
+): TInstanceConfig {
   // pull in environment variables from .env file if available
   dotenvExpand(dotenv.config());
 
@@ -46,7 +48,7 @@ export function loadConfigFromEnvironmentVariables<
         acc[field] = value;
       }
       return acc;
-    }, {}) as TConfig;
+    }, {}) as TInstanceConfig;
 }
 
 function convertEnvironmentVariableValueForField(

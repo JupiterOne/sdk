@@ -1,3 +1,7 @@
-export default function validateInvocation() {
-  return 'loaded';
+import { IntegrationExecutionContext } from '@jupiterone/integration-sdk-core';
+
+export default function validateInvocation(
+  _context: IntegrationExecutionContext,
+) {
+  // no problem-o
 }

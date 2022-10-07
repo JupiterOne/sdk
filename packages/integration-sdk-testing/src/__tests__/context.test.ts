@@ -1,13 +1,16 @@
 import {
   Entity,
-  Relationship,
-  IntegrationStep,
+  IntegrationExecutionConfig,
+  IntegrationInstanceConfig,
   IntegrationInstanceConfigFieldMap,
+  IntegrationStep,
+  Relationship,
+  StepMetadata,
 } from '@jupiterone/integration-sdk-core';
 
 import {
-  LOCAL_INTEGRATION_INSTANCE,
   IntegrationLogger,
+  LOCAL_INTEGRATION_INSTANCE,
 } from '@jupiterone/integration-sdk-runtime';
 
 import {
@@ -23,20 +26,32 @@ import {
 } from '../context';
 import { v4 as uuid } from 'uuid';
 
-interface Config {
+interface InstanceConfig extends IntegrationInstanceConfig {
   myBooleanConfig: boolean;
   myStringConfig: string;
   myTypelessConfig: string;
 }
 
-const instanceConfigFields: IntegrationInstanceConfigFieldMap<Config> = {
-  myBooleanConfig: {
-    type: 'boolean',
-  },
-  myStringConfig: {
-    type: 'string',
-  },
-  myTypelessConfig: {},
+interface ExecutionConfig extends IntegrationExecutionConfig {
+  myExecutionConfig: string;
+}
+
+const instanceConfigFields: IntegrationInstanceConfigFieldMap<InstanceConfig> =
+  {
+    myBooleanConfig: {
+      type: 'boolean',
+    },
+    myStringConfig: {
+      type: 'string',
+    },
+    myTypelessConfig: {},
+  };
+
+const stepMetadata: StepMetadata = {
+  id: 'my-step',
+  name: 'My Step',
+  entities: [],
+  relationships: [],
 };
 
 /**
@@ -82,7 +97,7 @@ const instanceConfigFields: IntegrationInstanceConfigFieldMap<Config> = {
         });
       });
 
-      test('accepts an instanceConfig for prepopulating configuration values', () => {
+      test('accepts an instanceConfig for pre-populating configuration values', () => {
         const config = { test: true };
         const { instance } = createContext({ instanceConfig: config });
         expect(instance).toEqual({ ...LOCAL_INTEGRATION_INSTANCE, config });
@@ -125,7 +140,7 @@ const instanceConfigFields: IntegrationInstanceConfigFieldMap<Config> = {
 
 describe('createMockExecutionContext', () => {
   test('accepts generic for typed instance config', () => {
-    const { instance } = createMockExecutionContext<Config>({
+    const { instance } = createMockExecutionContext<InstanceConfig>({
       instanceConfigFields,
     });
 
@@ -136,9 +151,13 @@ describe('createMockExecutionContext', () => {
 });
 
 describe('createMockStepExecutionContext', () => {
-  test('accepts generic for typed instance config', () => {
-    const { instance } = createMockStepExecutionContext<Config>({
+  test('accepts generic for typed configs', () => {
+    const { instance } = createMockStepExecutionContext<
+      InstanceConfig,
+      ExecutionConfig
+    >({
       instanceConfigFields,
+      stepMetadata,
     });
 
     expect(instance.config.myTypelessConfig).toBeDefined();
@@ -167,6 +186,7 @@ describe('createMockStepExecutionContext', () => {
 
     const { jobState } = createMockStepExecutionContext({
       instanceConfigFields,
+      stepMetadata,
     });
 
     await jobState.addEntities(entities);
@@ -191,6 +211,7 @@ describe('createMockStepExecutionContext', () => {
     ];
     const { jobState } = createMockStepExecutionContext({
       instanceConfigFields,
+      stepMetadata,
     });
 
     await expect(jobState.addEntities(entities)).rejects.toThrow(
@@ -211,13 +232,17 @@ describe('createMockStepExecutionContext', () => {
       },
     };
 
-    const context = createMockStepExecutionContext({ instanceConfigFields });
+    const context = createMockStepExecutionContext({
+      instanceConfigFields,
+      stepMetadata,
+    });
     await step.executionHandler(context);
   });
 
   test('tracks encounteredTypes', async () => {
     const { jobState } = createMockStepExecutionContext({
       instanceConfigFields,
+      stepMetadata,
     });
 
     await jobState.addEntity({
