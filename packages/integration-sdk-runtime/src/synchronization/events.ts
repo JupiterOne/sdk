@@ -8,7 +8,7 @@ import {
 } from '../synchronization';
 
 type EventPublishingQueue = {
-  enqueue: (event: IntegrationEvent) => Promise<void>;
+  enqueue: (event: IntegrationEvent) => void;
   onIdle: () => Promise<void>;
 };
 
