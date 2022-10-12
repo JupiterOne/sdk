@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+- `multipleResolves` events are no longer forwarded to loggers `onFailure`
+  callback as they are not strict failures. Logging of `multipleResolves` at log
+  level error remains in place.
 - Updated ESLint to override the `no-misused-promises` rule.
 
 ## 8.25.1 - 2022-09-26
