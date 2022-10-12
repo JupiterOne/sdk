@@ -27,7 +27,7 @@ export async function uploadToNeo4j({
       'ERROR: must provide login information in function call or include NEO4J_URI, NEO4J_USER, and NEO4J_PASSWORD files in your .env file!',
     );
   }
-  if (!isDirectoryPresent(pathToData)) {
+  if (!(await isDirectoryPresent(pathToData))) {
     throw new Error('ERROR: graph directory does not exist!');
   }
 

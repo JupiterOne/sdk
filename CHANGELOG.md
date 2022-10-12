@@ -9,12 +9,33 @@ and this project adheres to
 
 ## Unreleased
 
+- Updated ESLint to override the `no-misused-promises` rule.
+
+## 8.25.1 - 2022-09-26
+
+### Changed
+
+- Skip logging messages when `logged_error` and `logged_warn` metrics are
+  emitted.
+
+## 8.25.0 - 2022-09-26
+
+### Added
+
+- Emit `logged_error` and `logged_warn` metric counters when `IntegrationLogger`
+  `logger.error` and `logger.warn` are called respectively.
+
+## 8.24.1 - 2022-09-21
+
 ### Fixed
 
 - Allow relationships to have `undefined` top-level properties
 
 ### Added
 
+- Add no-console lint rule to catch console.log accidentally left in projects.
+  Note: Possible breakage when this changes is adopted. The rule can be ignored
+  if needed using `/* eslint-disable no-console */`
 - `j1-integration sync` now supports the `--skip-finalize` option to avoid
   finalizing the synchronization job. This brings parity with the `run` command.
 - `j1-integration` `run` and `sync` commands now support `--account` and

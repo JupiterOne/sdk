@@ -21,6 +21,7 @@ class EventCollector {
       return event1.target.name > event2.target.name;
     });
 
+    /* eslint-disable no-console */
     for (const event of this.events) {
       console.log(
         event.target.name,
