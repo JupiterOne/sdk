@@ -11,8 +11,7 @@ and this project adheres to
 
 ## 8.27.1 - 2022-10-16
 
-- Added `debug` level log in `uploadDataChunk` to capture successful completion
-  of an upload
+- Added log in `uploadDataChunk` to capture successful completion of an upload
 
 ## 8.27.0 - 2022-10-16
 

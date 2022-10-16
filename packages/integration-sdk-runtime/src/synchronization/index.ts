@@ -487,7 +487,7 @@ export async function uploadDataChunk<
         },
       );
 
-      logger.debug(
+      logger.info(
         {
           uploadCorrelationId,
           uploadType: type,
