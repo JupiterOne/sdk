@@ -486,6 +486,16 @@ export async function uploadDataChunk<
           },
         },
       );
+
+      logger.info(
+        {
+          uploadCorrelationId,
+          uploadType: type,
+          attemptNum: ctx.attemptNum,
+          batchSize: batch.length,
+        },
+        'Finished uploading batch',
+      );
     },
     {
       maxAttempts: 5,
