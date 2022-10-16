@@ -108,10 +108,14 @@ describe('executeIntegrationInstance', () => {
   }
 
   beforeEach(() => {
-    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
     jest
       .spyOn(integrationFileSystem, 'getRootStorageDirectorySize')
       .mockResolvedValue(Promise.resolve(1000));
+  });
+
+  afterEach(() => {
+    delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
+    delete process.env.DISABLE_DISK_USAGE_METRIC;
   });
 
   test('executes validateInvocation function if provided in config', async () => {
@@ -848,6 +852,39 @@ describe('executeIntegrationInstance', () => {
     await executeIntegrationInstanceWithConfig(config);
 
     expect(publishMetricSpy).toHaveBeenCalledWith({
+      name: 'disk-usage',
+      unit: 'Bytes',
+      value: expect.any(Number),
+    });
+  });
+
+  test('should not publish disk usage metric when disabled', async () => {
+    process.env.DISABLE_DISK_USAGE_METRIC = '1';
+
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [
+              {
+                resourceName: 'The Test',
+                _type: 'test',
+                _class: 'Test',
+              },
+            ],
+            relationships: [],
+            executionHandler: jest.fn(),
+          },
+        ],
+      },
+    });
+
+    const publishMetricSpy = jest.spyOn(config.logger, 'publishMetric');
+    await executeIntegrationInstanceWithConfig(config);
+
+    expect(publishMetricSpy).not.toHaveBeenCalledWith({
       name: 'disk-usage',
       unit: 'Bytes',
       value: expect.any(Number),

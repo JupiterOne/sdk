@@ -164,6 +164,10 @@ export async function executeWithContext<
 ): Promise<ExecuteIntegrationResult> {
   const { logger } = context;
 
+  // NOTE (austinkelleher): There is a theory that there may be some issue
+  // with the disk publishing metric code causing the process to hang.
+  const shouldPublishDiskUsageMetric = !process.env.DISABLE_DISK_USAGE_METRIC;
+
   logger.info(
     {
       compressionEnabled: isCompressionEnabled(),
@@ -171,28 +175,15 @@ export async function executeWithContext<
     'Starting execution with config...',
   );
 
-  await tryPublishDiskUsageMetric(context);
+  if (shouldPublishDiskUsageMetric) {
+    await tryPublishDiskUsageMetric(context);
+  }
 
   let diskUsagePublishInterval: NodeJS.Timeout | undefined;
   let executionComplete = false;
 
-  try {
-    await removeStorageDirectory();
-
-    try {
-      await config.validateInvocation?.(context);
-    } catch (err) {
-      logger.validationFailure(err);
-      throw err;
-    }
-
-    const stepStartStates: StepStartStates =
-      (await config.getStepStartStates?.(context)) ??
-      getDefaultStepStartStates(config.integrationSteps);
-
-    validateStepStartStates(config.integrationSteps, stepStartStates);
-
-    diskUsagePublishInterval = setInterval(() => {
+  function createDiskUsagePublishInterval() {
+    return setInterval(() => {
       isRootStorageDirectoryPresent()
         .then((present) => {
           if (!present) return;
@@ -213,6 +204,27 @@ export async function executeWithContext<
           context.logger.error({ err }, 'Error publishing disk-usage metric');
         });
     }, THIRTY_SECONDS_STORAGE_INTERVAL_MS);
+  }
+
+  try {
+    await removeStorageDirectory();
+
+    try {
+      await config.validateInvocation?.(context);
+    } catch (err) {
+      logger.validationFailure(err);
+      throw err;
+    }
+
+    const stepStartStates: StepStartStates =
+      (await config.getStepStartStates?.(context)) ??
+      getDefaultStepStartStates(config.integrationSteps);
+
+    validateStepStartStates(config.integrationSteps, stepStartStates);
+
+    if (shouldPublishDiskUsageMetric) {
+      diskUsagePublishInterval = createDiskUsagePublishInterval();
+    }
 
     const {
       graphObjectStore = new FileSystemGraphObjectStore(),
@@ -273,6 +285,8 @@ export async function executeWithContext<
       clearInterval(diskUsagePublishInterval);
     }
 
-    await tryPublishDiskUsageMetric(context);
+    if (shouldPublishDiskUsageMetric) {
+      await tryPublishDiskUsageMetric(context);
+    }
   }
 }

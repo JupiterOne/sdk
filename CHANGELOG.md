@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.27.0 - 2022-10-16
+
+### Changed
+
+- Allow disabling the collection of the disk usage metric by specifying the
+  `DISABLE_DISK_USAGE_METRIC` environment variable
+
 ## 8.26.0 - 2022-10-12
 
 ### Changed
