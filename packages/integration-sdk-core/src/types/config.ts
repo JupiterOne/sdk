@@ -33,6 +33,14 @@ export type BeforeAddRelationshipHookFunction<
   relationship: Relationship,
 ) => Promise<Relationship> | Relationship;
 
+export type AfterAddEntityHookFunction<
+  TExecutionContext extends ExecutionContext,
+> = (context: TExecutionContext, entity: Entity) => Entity;
+
+export type AfterAddRelationshipHookFunction<
+  TExecutionContext extends ExecutionContext,
+> = (context: TExecutionContext, relationship: Relationship) => Relationship;
+
 export type LoadExecutionConfigFunction<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,

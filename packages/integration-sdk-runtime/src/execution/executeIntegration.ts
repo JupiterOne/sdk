@@ -1,4 +1,7 @@
 import {
+  AfterAddEntityHookFunction,
+  AfterAddRelationshipHookFunction,
+  Entity,
   ExecutionContext,
   ExecutionHistory,
   IntegrationInstance,
@@ -8,6 +11,7 @@ import {
   IntegrationStepResult,
   InvocationConfig,
   PartialDatasets,
+  Relationship,
   StepExecutionContext,
   StepResultStatus,
   StepStartStates,
@@ -25,7 +29,12 @@ import {
   registerIntegrationLoggerEventHandlers,
   unregisterIntegrationLoggerEventHandlers,
 } from '../logger';
-import { timeOperation } from '../metrics';
+import {
+  publishEntitiesCollectedMetric,
+  publishMappedRelationshipsCollectedMetric,
+  publishRelationshipsCollectedMetric,
+  timeOperation,
+} from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
@@ -164,6 +173,10 @@ export async function executeWithContext<
 ): Promise<ExecuteIntegrationResult> {
   const { logger } = context;
 
+  // NOTE (austinkelleher): There is a theory that there may be some issue
+  // with the disk publishing metric code causing the process to hang.
+  const shouldPublishDiskUsageMetric = !process.env.DISABLE_DISK_USAGE_METRIC;
+
   logger.info(
     {
       compressionEnabled: isCompressionEnabled(),
@@ -171,28 +184,15 @@ export async function executeWithContext<
     'Starting execution with config...',
   );
 
-  await tryPublishDiskUsageMetric(context);
+  if (shouldPublishDiskUsageMetric) {
+    await tryPublishDiskUsageMetric(context);
+  }
 
   let diskUsagePublishInterval: NodeJS.Timeout | undefined;
   let executionComplete = false;
 
-  try {
-    await removeStorageDirectory();
-
-    try {
-      await config.validateInvocation?.(context);
-    } catch (err) {
-      logger.validationFailure(err);
-      throw err;
-    }
-
-    const stepStartStates: StepStartStates =
-      (await config.getStepStartStates?.(context)) ??
-      getDefaultStepStartStates(config.integrationSteps);
-
-    validateStepStartStates(config.integrationSteps, stepStartStates);
-
-    diskUsagePublishInterval = setInterval(() => {
+  function createDiskUsagePublishInterval() {
+    return setInterval(() => {
       isRootStorageDirectoryPresent()
         .then((present) => {
           if (!present) return;
@@ -213,6 +213,27 @@ export async function executeWithContext<
           context.logger.error({ err }, 'Error publishing disk-usage metric');
         });
     }, THIRTY_SECONDS_STORAGE_INTERVAL_MS);
+  }
+
+  try {
+    await removeStorageDirectory();
+
+    try {
+      await config.validateInvocation?.(context);
+    } catch (err) {
+      logger.validationFailure(err);
+      throw err;
+    }
+
+    const stepStartStates: StepStartStates =
+      (await config.getStepStartStates?.(context)) ??
+      getDefaultStepStartStates(config.integrationSteps);
+
+    validateStepStartStates(config.integrationSteps, stepStartStates);
+
+    if (shouldPublishDiskUsageMetric) {
+      diskUsagePublishInterval = createDiskUsagePublishInterval();
+    }
 
     const {
       graphObjectStore = new FileSystemGraphObjectStore(),
@@ -231,6 +252,8 @@ export async function executeWithContext<
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
       beforeAddRelationship: config.beforeAddRelationship,
+      afterAddEntity: createAfterAddEntityInternalHook(logger),
+      afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
       dependencyGraphOrder: config.dependencyGraphOrder,
     });
 
@@ -273,6 +296,51 @@ export async function executeWithContext<
       clearInterval(diskUsagePublishInterval);
     }
 
-    await tryPublishDiskUsageMetric(context);
+    if (shouldPublishDiskUsageMetric) {
+      await tryPublishDiskUsageMetric(context);
+    }
   }
+}
+
+/**
+ * Internal hook called after an entity has been fully added to the job state.
+ * This hook publishes a count custom metric for the entity added.
+ */
+function createAfterAddEntityInternalHook<
+  TExecutionContext extends ExecutionContext,
+>(logger: IntegrationLogger): AfterAddEntityHookFunction<TExecutionContext> {
+  return (_: TExecutionContext, e: Entity) => {
+    publishEntitiesCollectedMetric({
+      logger,
+      entityType: e._type,
+    });
+
+    return e;
+  };
+}
+
+/**
+ * Internal hook called after a relationship has been fully added to the job
+ * state. This hook publishes a count custom metric for the relationship added.
+ */
+function createAfterAddRelationshipInternalHook<
+  TExecutionContext extends ExecutionContext,
+>(
+  logger: IntegrationLogger,
+): AfterAddRelationshipHookFunction<TExecutionContext> {
+  return (_: TExecutionContext, r: Relationship) => {
+    if (r._mapping) {
+      publishMappedRelationshipsCollectedMetric({
+        logger,
+        relationshipType: r._type,
+      });
+    } else {
+      publishRelationshipsCollectedMetric({
+        logger,
+        relationshipType: r._type,
+      });
+    }
+
+    return r;
+  };
 }

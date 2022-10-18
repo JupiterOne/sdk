@@ -5,6 +5,8 @@ import uniq from 'lodash/uniq';
 import { pick } from 'lodash';
 
 import {
+  AfterAddEntityHookFunction,
+  AfterAddRelationshipHookFunction,
   BeforeAddEntityHookFunction,
   BeforeAddRelationshipHookFunction,
   ExecutionContext,
@@ -42,6 +44,8 @@ export async function executeSteps<
   createStepGraphObjectDataUploader,
   beforeAddEntity,
   beforeAddRelationship,
+  afterAddEntity,
+  afterAddRelationship,
   dependencyGraphOrder,
 }: {
   executionContext: TExecutionContext;
@@ -53,6 +57,8 @@ export async function executeSteps<
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
+  afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
+  afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
@@ -84,6 +90,8 @@ export async function executeSteps<
         createStepGraphObjectDataUploader,
         beforeAddEntity,
         beforeAddRelationship,
+        afterAddEntity,
+        afterAddRelationship,
       }),
     );
   }

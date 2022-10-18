@@ -108,7 +108,10 @@ function integrationLoggerEventHandlerCallback(
   return (err, event) => {
     const logger = getErrorLogger();
     logger.error({ err, event });
-    if (logger.onFailure) {
+    // multipleResolves is excluded from `onFailure` as it is
+    // not a strict failure and is at times even expected behavior
+    // in node-fetch, Promise.all, and Promise.race
+    if (logger.onFailure && event !== 'multipleResolves') {
       logger.onFailure({ err });
     }
   };

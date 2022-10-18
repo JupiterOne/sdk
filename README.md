@@ -4,7 +4,7 @@ A collection of packages supporting integrations with JupiterOne.
 
 ## Development Resources
 
-- [Getting Started With Integraiton Development](docs/integrations/development_guide)
+- [Getting Started With Integration Development](docs/integrations/development_guide)
 - [SDK and CLI Reference](docs/integrations/development.md)
 - [Common Step Patterns](docs/integrations/step-patterns.md)
 - [Testing Integrations](docs/integrations/testing.md)

@@ -9,6 +9,31 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.28.0 - 2022-10-18
+
+- Publish the following new custom metrics when entities, relationships, and
+  mapped relationships are added to the `JobState` respectively:
+  - `collected_entities`
+  - `collected_relationships`
+  - `collected_mapped_relationships`
+
+## 8.27.1 - 2022-10-16
+
+- Added log in `uploadDataChunk` to capture successful completion of an upload
+
+## 8.27.0 - 2022-10-16
+
+### Changed
+
+- Allow disabling the collection of the disk usage metric by specifying the
+  `DISABLE_DISK_USAGE_METRIC` environment variable
+
+## 8.26.0 - 2022-10-12
+
+### Changed
+
+- `multipleResolves` events are no longer forwarded to loggers `onFailure`
+  callback as they are not strict failures. Logging of `multipleResolves` at log
 - Updated ESLint to override the `no-misused-promises` rule.
 
 ## 8.25.1 - 2022-09-26
