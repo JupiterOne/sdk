@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.28.0 - 2022-10-18
+
+- Publish the following new custom metrics when entities, relationships, and
+  mapped relationships are added to the `JobState` respectively:
+  - `collected_entities`
+  - `collected_relationships`
+  - `collected_mapped_relationships`
+
 ## 8.27.1 - 2022-10-16
 
 - Added log in `uploadDataChunk` to capture successful completion of an upload

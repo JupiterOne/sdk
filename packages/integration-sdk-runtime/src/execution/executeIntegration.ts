@@ -1,4 +1,7 @@
 import {
+  AfterAddEntityHookFunction,
+  AfterAddRelationshipHookFunction,
+  Entity,
   ExecutionContext,
   ExecutionHistory,
   IntegrationInstance,
@@ -8,6 +11,7 @@ import {
   IntegrationStepResult,
   InvocationConfig,
   PartialDatasets,
+  Relationship,
   StepExecutionContext,
   StepResultStatus,
   StepStartStates,
@@ -25,7 +29,12 @@ import {
   registerIntegrationLoggerEventHandlers,
   unregisterIntegrationLoggerEventHandlers,
 } from '../logger';
-import { timeOperation } from '../metrics';
+import {
+  publishEntitiesCollectedMetric,
+  publishMappedRelationshipsCollectedMetric,
+  publishRelationshipsCollectedMetric,
+  timeOperation,
+} from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
@@ -243,6 +252,8 @@ export async function executeWithContext<
       createStepGraphObjectDataUploader,
       beforeAddEntity: config.beforeAddEntity,
       beforeAddRelationship: config.beforeAddRelationship,
+      afterAddEntity: createAfterAddEntityInternalHook(logger),
+      afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
       dependencyGraphOrder: config.dependencyGraphOrder,
     });
 
@@ -289,4 +300,47 @@ export async function executeWithContext<
       await tryPublishDiskUsageMetric(context);
     }
   }
+}
+
+/**
+ * Internal hook called after an entity has been fully added to the job state.
+ * This hook publishes a count custom metric for the entity added.
+ */
+function createAfterAddEntityInternalHook<
+  TExecutionContext extends ExecutionContext,
+>(logger: IntegrationLogger): AfterAddEntityHookFunction<TExecutionContext> {
+  return (_: TExecutionContext, e: Entity) => {
+    publishEntitiesCollectedMetric({
+      logger,
+      entityType: e._type,
+    });
+
+    return e;
+  };
+}
+
+/**
+ * Internal hook called after a relationship has been fully added to the job
+ * state. This hook publishes a count custom metric for the relationship added.
+ */
+function createAfterAddRelationshipInternalHook<
+  TExecutionContext extends ExecutionContext,
+>(
+  logger: IntegrationLogger,
+): AfterAddRelationshipHookFunction<TExecutionContext> {
+  return (_: TExecutionContext, r: Relationship) => {
+    if (r._mapping) {
+      publishMappedRelationshipsCollectedMetric({
+        logger,
+        relationshipType: r._type,
+      });
+    } else {
+      publishRelationshipsCollectedMetric({
+        logger,
+        relationshipType: r._type,
+      });
+    }
+
+    return r;
+  };
 }

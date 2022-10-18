@@ -369,6 +369,40 @@ describe('#getData/#setData/#deleteData', () => {
   });
 });
 
+describe('#afterAddEntity', () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  test('should call "afterAddEntity" hook after entity has been added', async () => {
+    const entity = createTestEntity();
+    const afterAddEntity = jest.fn().mockReturnValueOnce(entity);
+
+    const jobState = createTestStepJobState({ afterAddEntity });
+    await jobState.addEntity(entity);
+
+    expect(afterAddEntity).toHaveBeenCalledTimes(1);
+    expect(afterAddEntity).toHaveBeenCalledWith(entity);
+  });
+});
+
+describe('#afterAddRelationship', () => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  test('should call "afterAddRelationship" hook after relationship has been added', async () => {
+    const relationship = createTestRelationship();
+    const afterAddRelationship = jest.fn().mockReturnValueOnce(relationship);
+
+    const jobState = createTestStepJobState({ afterAddRelationship });
+    await jobState.addRelationship(relationship);
+
+    expect(afterAddRelationship).toHaveBeenCalledTimes(1);
+    expect(afterAddRelationship).toHaveBeenCalledWith(relationship);
+  });
+});
+
 describe('#TypeTracker', () => {
   describe('#getEncounteredTypesForStep', () => {
     test('should allow getting encountered graph object types by step', () => {

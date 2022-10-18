@@ -162,10 +162,26 @@ export interface CreateStepJobStateParams {
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
   uploader?: StepGraphObjectDataUploader;
+  /**
+   * Hook called before an entity is added to the job state. This function can
+   * be used to mutate the entity.
+   */
   beforeAddEntity?: (entity: Entity) => Entity;
+  /**
+   * Hook called before a relationship is added to the job state. This function
+   * can be used to mutate the relationship.
+   */
   beforeAddRelationship?: (
     relationship: Relationship,
   ) => Promise<Relationship> | Relationship;
+  /**
+   * Hook called after an entity has been fully added to the job state
+   */
+  afterAddEntity?: (entity: Entity) => Entity;
+  /**
+   * Hook called after a relationship has been fully added to the job state
+   */
+  afterAddRelationship?: (relationship: Relationship) => Relationship;
 }
 
 export function createStepJobState({
@@ -176,6 +192,8 @@ export function createStepJobState({
   dataStore,
   beforeAddEntity,
   beforeAddRelationship,
+  afterAddEntity,
+  afterAddRelationship,
   uploader,
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
@@ -202,6 +220,11 @@ export function createStepJobState({
         relationships: [],
       }),
     );
+
+    if (afterAddEntity) {
+      entities.forEach((e) => afterAddEntity(e));
+    }
+
     return entities;
   };
 
@@ -237,7 +260,7 @@ export function createStepJobState({
       relationships.forEach(registerRelationshipInTrackers);
     }
 
-    return graphObjectStore.addRelationships(
+    await graphObjectStore.addRelationships(
       stepId,
       relationships,
       async (relationships) =>
@@ -246,6 +269,10 @@ export function createStepJobState({
           relationships,
         }),
     );
+
+    if (afterAddRelationship) {
+      relationships.forEach((r) => afterAddRelationship(r));
+    }
   };
 
   return {
