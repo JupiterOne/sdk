@@ -25,8 +25,8 @@ test('publishes integration events added to the queue in the order they were enq
 
   const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
 
-  await queue.enqueue(eventA);
-  await queue.enqueue(eventB);
+  queue.enqueue(eventA);
+  queue.enqueue(eventB);
 
   await queue.onIdle();
 
@@ -65,7 +65,7 @@ test('publishes no integration events when there is no integrationJobId', async 
 
   const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
 
-  await queue.enqueue({
+  queue.enqueue({
     name: 'a',
     description: 'Event A',
     level: PublishEventLevel.Info,
@@ -98,7 +98,7 @@ test('logs an error if publish fails', async () => {
 
   const logErrorSpy = jest.spyOn(logger, 'error');
 
-  await queue.enqueue(event);
+  queue.enqueue(event);
 
   await queue.onIdle();
 
