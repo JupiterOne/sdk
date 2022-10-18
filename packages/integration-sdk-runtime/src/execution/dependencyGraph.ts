@@ -2,6 +2,8 @@ import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
 
 import {
+  AfterAddEntityHookFunction,
+  AfterAddRelationshipHookFunction,
   BeforeAddEntityHookFunction,
   BeforeAddRelationshipHookFunction,
   DisabledStepReason,
@@ -87,6 +89,8 @@ export function executeStepDependencyGraph<
   createStepGraphObjectDataUploader,
   beforeAddEntity,
   beforeAddRelationship,
+  afterAddEntity,
+  afterAddRelationship,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -97,6 +101,8 @@ export function executeStepDependencyGraph<
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
+  afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
+  afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -309,6 +315,8 @@ export function executeStepDependencyGraph<
         stepId,
         beforeAddEntity,
         beforeAddRelationship,
+        afterAddEntity,
+        afterAddRelationship,
         uploader,
       });
 
@@ -446,6 +454,8 @@ function buildStepContext<
   uploader,
   beforeAddEntity,
   beforeAddRelationship,
+  afterAddEntity,
+  afterAddRelationship,
 }: {
   stepId: string;
   context: TExecutionContext;
@@ -456,6 +466,8 @@ function buildStepContext<
   uploader?: StepGraphObjectDataUploader;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
+  afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
+  afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
 }): TStepExecutionContext {
   // Purposely assigned to `undefined` instead of a noop function even though
   // this code is a bit messier. The jobState code is fairly hot and checking
@@ -474,6 +486,20 @@ function buildStepContext<
           beforeAddRelationship(context, r)
       : undefined;
 
+  const jobStateAfterAddEntity =
+    typeof afterAddEntity !== 'undefined'
+      ? (entity: Entity): Entity => {
+          return afterAddEntity(context, entity);
+        }
+      : undefined;
+
+  const jobStateAfterAddRelationship =
+    typeof afterAddRelationship !== 'undefined'
+      ? (relationship: Relationship): Relationship => {
+          return afterAddRelationship(context, relationship);
+        }
+      : undefined;
+
   const jobState = createStepJobState({
     stepId,
     duplicateKeyTracker,
@@ -482,6 +508,8 @@ function buildStepContext<
     dataStore,
     beforeAddEntity: jobStateBeforeAddEntity,
     beforeAddRelationship: jobStateBeforeAddRelationship,
+    afterAddEntity: jobStateAfterAddEntity,
+    afterAddRelationship: jobStateAfterAddRelationship,
     uploader,
   });
 

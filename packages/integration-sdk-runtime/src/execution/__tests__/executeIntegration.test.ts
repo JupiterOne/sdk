@@ -6,6 +6,7 @@ import * as zlib from 'zlib';
 
 import {
   createDirectRelationship,
+  createMappedRelationship,
   Entity,
   IntegrationExecutionContext,
   IntegrationInstance,
@@ -14,8 +15,10 @@ import {
   IntegrationInvocationValidationFunction,
   IntegrationLogger,
   IntegrationValidationError,
+  JobState,
   Relationship,
   RelationshipClass,
+  RelationshipDirection,
   StepResultStatus,
 } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
@@ -31,6 +34,7 @@ import {
 } from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import { createInstanceConfiguration } from './utils/createIntegrationConfig';
+import { IntegrationRuntimeMetric } from '../../metrics';
 
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
@@ -889,6 +893,147 @@ describe('executeIntegrationInstance', () => {
       unit: 'Bytes',
       value: expect.any(Number),
     });
+  });
+
+  test('publishes metrics about collected data', async () => {
+    async function executionHandler(jobState: JobState) {
+      const e1 = await jobState.addEntity({
+        _key: 'test',
+        _type: 'test',
+        _class: 'Test',
+      });
+
+      const e2 = await jobState.addEntity({
+        _key: 'test1',
+        _type: 'test1',
+        _class: 'Test',
+      });
+
+      await jobState.addEntities([
+        {
+          _key: 'test2',
+          _type: 'test2',
+          _class: 'Test',
+        },
+        {
+          _key: 'test3',
+          _type: 'test3',
+          _class: 'Test',
+        },
+      ]);
+
+      await jobState.addRelationship(
+        createDirectRelationship({
+          _class: RelationshipClass.HAS,
+          from: e2,
+          to: e1,
+        }),
+      );
+
+      await jobState.addRelationship(
+        createMappedRelationship({
+          _class: RelationshipClass.HAS,
+          _type: 'my_mapping_type',
+          _mapping: {
+            relationshipDirection: RelationshipDirection.REVERSE,
+            targetEntity: {
+              _key: 'b',
+              _type: 'b_entity',
+            },
+            targetFilterKeys: [['something']],
+            sourceEntityKey: 'a',
+          },
+        }),
+      );
+    }
+
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        integrationSteps: [
+          {
+            id: 'my-step',
+            name: 'My awesome step',
+            entities: [],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await executionHandler(jobState);
+            },
+          },
+        ],
+      },
+    });
+
+    const publishMetricSpy = jest.spyOn(config.logger, 'publishMetric');
+    await executeIntegrationInstanceWithConfig(config);
+
+    // The first `jobState.addEntity`
+    expect(publishMetricSpy).toHaveBeenCalledWith(
+      {
+        name: IntegrationRuntimeMetric.COLLECTED_ENTITIES,
+        value: 1,
+        dimensions: {
+          entity_type: 'test',
+        },
+      },
+      {
+        logMetric: false,
+      },
+    );
+
+    // From `jobState.addEntities`
+    expect(publishMetricSpy).toHaveBeenCalledWith(
+      {
+        name: IntegrationRuntimeMetric.COLLECTED_ENTITIES,
+        value: 1,
+        dimensions: {
+          entity_type: 'test2',
+        },
+      },
+      {
+        logMetric: false,
+      },
+    );
+
+    expect(publishMetricSpy).toHaveBeenCalledWith(
+      {
+        name: IntegrationRuntimeMetric.COLLECTED_ENTITIES,
+        value: 1,
+        dimensions: {
+          entity_type: 'test3',
+        },
+      },
+      {
+        logMetric: false,
+      },
+    );
+
+    // From `jobState.addRelationship`
+    expect(publishMetricSpy).toHaveBeenCalledWith(
+      {
+        name: IntegrationRuntimeMetric.COLLECTED_RELATIONSHIPS,
+        value: 1,
+        dimensions: {
+          relationship_type: 'test1_has_test',
+        },
+      },
+      {
+        logMetric: false,
+      },
+    );
+
+    // From `jobState.addRelationship` with a mapped relationship
+    expect(publishMetricSpy).toHaveBeenCalledWith(
+      {
+        name: IntegrationRuntimeMetric.COLLECTED_MAPPED_RELATIONSHIPS,
+        value: 1,
+        dimensions: {
+          relationship_type: 'my_mapping_type',
+        },
+      },
+      {
+        logMetric: false,
+      },
+    );
   });
 
   test('populates partialDatasets type for failed steps', async () => {

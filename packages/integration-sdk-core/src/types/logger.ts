@@ -87,7 +87,19 @@ export interface PublishErrorEventInput extends PublishEventInput {
   name: IntegrationErrorEventName;
 }
 
-type PublishMetricFunction = (metric: Omit<Metric, 'timestamp'>) => void;
+export interface PublishMetricOptions {
+  /**
+   * Whether the metric data should be logged or not.
+   *
+   * Default: `true`
+   */
+  logMetric?: boolean;
+}
+
+type PublishMetricFunction = (
+  metric: Omit<Metric, 'timestamp'>,
+  publishMetricOptions?: PublishMetricOptions,
+) => void;
 
 interface BaseLogger {
   // traditional functions for regular logging

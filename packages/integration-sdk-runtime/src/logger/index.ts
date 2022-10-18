@@ -28,6 +28,7 @@ import {
   PublishInfoEventInput,
   PublishErrorEventInput,
   DisabledStepReason,
+  PublishMetricOptions,
 } from '@jupiterone/integration-sdk-core';
 
 export * from './registerEventHandlers';
@@ -58,15 +59,6 @@ interface CreateIntegrationLoggerInput<
     IntegrationStepExecutionContext<TIntegrationConfig>
   > {
   invocationConfig?: IntegrationInvocationConfig<TIntegrationConfig>;
-}
-
-interface PublishMetricOptions {
-  /**
-   * Whether the metric data should be logged or not.
-   *
-   * Default: `true`
-   */
-  logMetric?: boolean;
 }
 
 export function createLogger<
