@@ -63,7 +63,8 @@ export enum StepResultStatus {
 
 export type Step<T extends StepExecutionContext> = StepMetadata & {
   /**
-   * Function that runs to perform the stpe that
+   * Function that encompasses the entirety of the integration
+   * step's collection, processing, and uploading of data.
    */
   executionHandler: ExecutionHandlerFunction<T>;
 };
