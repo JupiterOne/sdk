@@ -51,6 +51,7 @@ async function executeDocumentAction(
   log.info('\nCollecting metadata types from steps...\n');
   const metadata = await getSortedJupiterOneTypes({
     projectPath,
+    duplicateTypes: true,
   });
 
   if (!metadata.entities.length && !metadata.relationships.length) {

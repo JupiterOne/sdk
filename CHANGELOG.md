@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Added option to allow duplicate types in `getSortedJupiterOneTypes`
+- Changed `j1-integration document` command to allow duplicate types
+
 ## 8.28.0 - 2022-10-18
 
 - Publish the following new custom metrics when entities, relationships, and
