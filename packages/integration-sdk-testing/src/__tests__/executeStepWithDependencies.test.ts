@@ -67,7 +67,7 @@ describe('executeStepWithDependencies', () => {
           instanceConfig: getMockInstanceConfig(),
         }),
       ).rejects.toThrow(
-        'executeStepWithDependencies does not currently support steps with a dependencyGraphId',
+        'stepId: "step-1" has dependencyGraphId: "last" but dependencyStepIds is undefined.',
       );
     });
 

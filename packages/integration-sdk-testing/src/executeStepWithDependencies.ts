@@ -5,22 +5,42 @@ import {
   createMockStepExecutionContext,
   MockIntegrationStepExecutionContext,
 } from './context';
+import { getStepExecutionOrder } from './getStepExecutionOrder';
 
 export async function executeStepWithDependencies(params: StepTestConfig) {
-  const { stepId, invocationConfig, instanceConfig } = params;
+  const { stepId, invocationConfig, instanceConfig, dependencyStepIds } =
+    params;
 
   const stepDependencyGraph = buildStepDependencyGraph(
     invocationConfig.integrationSteps,
   );
 
   const step = stepDependencyGraph.getNodeData(stepId);
-  if (step.dependencyGraphId) {
+
+  if (step.dependencyGraphId && !dependencyStepIds) {
     throw new Error(
-      'executeStepWithDependencies does not currently support steps with a dependencyGraphId',
+      `stepId: "${stepId}" has dependencyGraphId: "${step.dependencyGraphId}" but dependencyStepIds is undefined.`,
     );
   }
 
-  const dependencyStepIds = stepDependencyGraph.dependenciesOf(stepId);
+  // Only separate steps by dependencyGraphId if the step has a dependencyGraphId
+  // and the dependencyGraphOrder is defined
+  const useDependencyGraphOrder =
+    !!step.dependencyGraphId && !!invocationConfig.dependencyGraphOrder;
+
+  // Get the execution order of the dependencyStepIds
+  const dependencySteps = useDependencyGraphOrder
+    ? getStepExecutionOrder({
+        integrationSteps: invocationConfig.integrationSteps,
+        dependencyStepIds: dependencyStepIds!,
+        dependencyGraphOrder: invocationConfig.dependencyGraphOrder!,
+      })
+    : new Set<string>();
+
+  // Add the dependencies of the stepId
+  stepDependencyGraph
+    .dependenciesOf(stepId)
+    .forEach((stepId) => dependencySteps.add(stepId));
 
   const executionConfig = invocationConfig.loadExecutionConfig
     ? invocationConfig.loadExecutionConfig({ config: instanceConfig })
@@ -32,7 +52,7 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
     executionConfig,
   };
 
-  for (const dependencyStepId of dependencyStepIds) {
+  for (const dependencyStepId of dependencySteps) {
     const dependencyStep = stepDependencyGraph.getNodeData(dependencyStepId);
     await dependencyStep.executionHandler(preContext);
   }
