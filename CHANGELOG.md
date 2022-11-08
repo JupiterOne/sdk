@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+- Added config field `username` check and exception. Windows reserves
+  environment variable `USERNAME`.
+- Added new config field value `allowUsername` to support backwards
+  compatibility of `username` See
+  `packages/integration-sdk-runtime/src/execution/__tests__/config.test.ts` for
+  more details
+
 ## 8.28.0 - 2022-10-18
 
 - Publish the following new custom metrics when entities, relationships, and
