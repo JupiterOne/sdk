@@ -39,6 +39,13 @@ The `type` will ensure the values are cast when
 [read from `.env`](#command-j1-integration-collect). It is important to mark
 secrets with `mask: true` to facilitate safe logging.
 
+###### Cross-platform Support
+
+Using `username` as a config field name is not supported. Microsoft Windows
+reserves `USERNAME` environment variable and can not be overridden. Avoid using
+`username` for config field names except for backwards compatability. Use
+`allowUsername: true` to disable the associated exception.
+
 Example:
 
 ```typescript

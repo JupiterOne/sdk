@@ -20,6 +20,12 @@ export function loadConfigFromEnvironmentVariables<
   // pull in environment variables from .env file if available
   dotenvExpand(dotenv.config());
 
+  if (configMap.username && !configMap.username.allowUsername) {
+    throw new Error(
+      'Config field `username` is not supported on all platforms. Please rename or add `allowUsername: true` to the config field.',
+    );
+  }
+
   return Object.entries(configMap)
     .map(([field, config]): [string, string | boolean | undefined] => {
       const environmentVariableName = snakeCase(field).toUpperCase();

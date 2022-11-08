@@ -142,7 +142,8 @@ The `instanceConfigFields` object lets us control how the integration will
 execute. A common use is to provide credentials to authenticate requests. For
 example, DigitalOcean requires a `Personal Access Token` (see below). Other
 common config values include a `Client ID`, `API Key`, or `API URL`. Any outside
-information the integration needs at runtime can be defined here.
+information the integration needs at runtime can be defined here. Avoid using
+`username` as a config field name due to cross-platform issues.
 
 DigitalOcean requires a `Person Access Token`, so I'll edit the fields to show
 that.

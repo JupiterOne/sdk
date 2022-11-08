@@ -81,6 +81,7 @@ export interface IntegrationInstanceConfigField {
   type?: 'string' | 'boolean';
   mask?: boolean;
   optional?: boolean;
+  allowUsername?: boolean;
 }
 
 export type IntegrationInstanceConfigFieldMap<
