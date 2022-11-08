@@ -13,11 +13,13 @@ jest.mock('fs');
 beforeEach(() => {
   process.env.STRING_VARIABLE = 'string';
   process.env.BOOLEAN_VARIABLE = 'true';
+  process.env.USERNAME = 'string';
 });
 
 afterEach(() => {
   delete process.env.STRING_VARIABLE;
   delete process.env.BOOLEAN_VARIABLE;
+  delete process.env.USERNAME;
 
   vol.reset();
 });
@@ -39,6 +41,40 @@ test('loads config fields from environment variables', () => {
   expect(config).toEqual({
     stringVariable: 'string',
     booleanVariable: true,
+  });
+});
+
+test('throws error if username is used as a config field name - windows OS limitation', () => {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<'username', IntegrationInstanceConfigField>
+  > = {
+    username: {
+      type: 'string',
+      allowUsername: undefined,
+    },
+  };
+
+  expect(() =>
+    loadConfigFromEnvironmentVariables(instanceConfigFields),
+  ).toThrowError(
+    'Config field `username` is not supported on all platforms. Please rename or add `allowUsername: true` to the config field.',
+  );
+});
+
+test('allowUsername provides backwards compatability', () => {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<'username', IntegrationInstanceConfigField>
+  > = {
+    username: {
+      type: 'string',
+      allowUsername: true,
+    },
+  };
+
+  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
+
+  expect(config).toEqual({
+    username: 'string',
   });
 });
 
