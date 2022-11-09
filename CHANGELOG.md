@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- Updated `@jupiterone/data-model` version to add `RelationshipClass.PUBLISHES`
+
 ## 8.28.0 - 2022-10-18
 
 - Publish the following new custom metrics when entities, relationships, and
