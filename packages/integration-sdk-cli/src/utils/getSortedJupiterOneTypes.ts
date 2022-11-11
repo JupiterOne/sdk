@@ -85,7 +85,7 @@ function alphabetizeMetadataProperties(
   };
 }
 
-function collectGraphObjectMetadataFromSteps(
+export function collectGraphObjectMetadataFromSteps(
   steps: Step<IntegrationStepExecutionContext<object>>[],
   duplicateTypes?: boolean,
 ): StepGraphObjectMetadataProperties {
