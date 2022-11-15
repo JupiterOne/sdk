@@ -12,17 +12,21 @@ import {
 
 export interface TypesCommandArgs {
   projectPath: string;
+  duplicateTypes?: boolean;
 }
 
 export async function getSortedJupiterOneTypes(
   options: TypesCommandArgs,
 ): Promise<StepGraphObjectMetadataProperties> {
-  const { projectPath } = options;
+  const { projectPath, duplicateTypes } = options;
 
   const config = await loadConfig(path.join(projectPath, 'src'));
 
   return alphabetizeMetadataProperties(
-    collectGraphObjectMetadataFromSteps(config.integrationSteps),
+    collectGraphObjectMetadataFromSteps(
+      config.integrationSteps,
+      duplicateTypes,
+    ),
   );
 }
 
@@ -81,8 +85,9 @@ function alphabetizeMetadataProperties(
   };
 }
 
-function collectGraphObjectMetadataFromSteps(
+export function collectGraphObjectMetadataFromSteps(
   steps: Step<IntegrationStepExecutionContext<object>>[],
+  duplicateTypes?: boolean,
 ): StepGraphObjectMetadataProperties {
   const orderedStepNames = buildStepDependencyGraph(steps).overallOrder();
   const integrationStepMap = integrationStepsToMap(steps);
@@ -103,7 +108,7 @@ function collectGraphObjectMetadataFromSteps(
     >;
 
     for (const e of step.entities) {
-      if (entityTypeSet.has(e._type)) {
+      if (!duplicateTypes && entityTypeSet.has(e._type)) {
         continue;
       }
 
@@ -112,7 +117,7 @@ function collectGraphObjectMetadataFromSteps(
     }
 
     for (const r of step.relationships) {
-      if (relationshipTypeSet.has(r._type)) {
+      if (!duplicateTypes && relationshipTypeSet.has(r._type)) {
         continue;
       }
 
@@ -121,7 +126,7 @@ function collectGraphObjectMetadataFromSteps(
     }
 
     for (const r of step.mappedRelationships || []) {
-      if (mappedRelationshipTypeSet.has(r._type)) {
+      if (!duplicateTypes && mappedRelationshipTypeSet.has(r._type)) {
         continue;
       }
 
