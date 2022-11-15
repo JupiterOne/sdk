@@ -16,3 +16,7 @@ export {
   createPersisterApiStepGraphObjectDataUploader,
 } from './uploader';
 export { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
+export {
+  DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
+  seperateStepsByDependencyGraph,
+} from './utils/seperateStepsByDependencyGraph';
