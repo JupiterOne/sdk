@@ -8,6 +8,7 @@ export interface StepTestConfig<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   stepId: string;
+  dependencyStepIds?: string[];
   invocationConfig: TInvocationConfig;
   instanceConfig: TInstanceConfig;
 }
