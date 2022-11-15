@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.29.1 - 2022-11-15
+
+### Fixed
+
+- Fixed incorrect path of import in `getStepExecutionOrder`
+
 ## 8.29.0 - 2022-11-15
 
 ### Changed

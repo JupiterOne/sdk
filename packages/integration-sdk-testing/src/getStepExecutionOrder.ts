@@ -3,7 +3,7 @@ import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 import {
   DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
   seperateStepsByDependencyGraph,
-} from '@jupiterone/integration-sdk-runtime/src/execution/utils/seperateStepsByDependencyGraph';
+} from '@jupiterone/integration-sdk-runtime/dist/src/execution/utils/seperateStepsByDependencyGraph';
 
 export function getStepExecutionOrder(params: {
   integrationSteps: Step<any>[];
