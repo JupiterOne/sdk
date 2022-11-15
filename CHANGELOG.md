@@ -9,10 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.29.0 - 2022-11-15
+
 ### Changed
 
 - Added option to allow duplicate types in `getSortedJupiterOneTypes`
 - Changed `j1-integration document` command to allow duplicate types
+- Added optional `dependencyStepIds` to `StepTestConfig`
+- Added support for `dependencyGraphId` to `executeStepWithDependencies`
 
 ## 8.28.1 - 2022-11-9
 
