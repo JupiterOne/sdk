@@ -91,9 +91,9 @@ export class IntegrationError extends Error {
   /**
    * For compatibility with [bunyan err serializer](https://github.com/trentm/node-bunyan/blob/master/lib/bunyan.js#L1125).
    */
-  cause() {
+  cause = () => {
     return this._cause;
-  }
+  };
 }
 
 export class IntegrationLocalConfigFieldMissingError extends IntegrationError {

@@ -6,7 +6,7 @@
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "engines": {
-    "node": "14.x"
+    "node": "18.x"
   },
   "files": [
     "config"
@@ -18,7 +18,7 @@
     "@jupiterone/integration-sdk-cli": "^8.29.2",
     "@jupiterone/integration-sdk-testing": "^8.29.2",
     "@types/jest": "^27.1.0",
-    "@types/node": "^14.0.5",
+    "@types/node": "^18",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.24.0",
@@ -29,7 +29,7 @@
     "lint-staged": "^10.2.6",
     "prettier": "^2.0.5",
     "ts-jest": "^27.1.0",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.2.4"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
   }
 }
