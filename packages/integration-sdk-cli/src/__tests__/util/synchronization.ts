@@ -1,4 +1,4 @@
-import { Polly } from '@pollyjs/core';
+import { Polly, Request, Response } from '@pollyjs/core';
 import {
   SynchronizationJob,
   SynchronizationJobStatus,
@@ -8,14 +8,22 @@ interface SetupOptions {
   baseUrl: string;
   polly: Polly;
   job: SynchronizationJob;
+  onSyncJobCreateResponse?: (req: Request<{}>, res: Response) => void;
 }
 
-export function setupSynchronizerApi({ polly, job, baseUrl }: SetupOptions) {
+export function setupSynchronizerApi({
+  polly,
+  job,
+  baseUrl,
+  onSyncJobCreateResponse,
+}: SetupOptions) {
   polly.server
     .post(`${baseUrl}/persister/synchronization/jobs`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
       res.status(200).json({ job });
+
+      if (onSyncJobCreateResponse) onSyncJobCreateResponse(req, res);
     });
 
   polly.server

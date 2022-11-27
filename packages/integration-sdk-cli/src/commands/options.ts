@@ -5,7 +5,7 @@ import {
   JUPITERONE_DEV_API_BASE_URL,
   JUPITERONE_PROD_API_BASE_URL,
 } from '@jupiterone/integration-sdk-runtime';
-import { Command, OptionValues } from 'commander';
+import { Command, Option, OptionValues } from 'commander';
 import path from 'path';
 
 export interface PathOptions {
@@ -138,25 +138,32 @@ export interface ApiClientOptions {
 
 export function addApiClientOptionsToCommand(command: Command): Command {
   return command
-    .option(
-      '--api-base-url <url>',
-      'specify synchronization API base URL',
-      JUPITERONE_PROD_API_BASE_URL,
+    .addOption(
+      new Option(
+        '--api-base-url <url>',
+        'specify synchronization API base URL',
+      ).default(JUPITERONE_PROD_API_BASE_URL),
     )
-    .option(
-      '-d, --development',
-      '"true" to target apps.dev.jupiterone.io (JUPITERONE_DEV environment variable)',
-      !!process.env.JUPITERONE_DEV,
+    .addOption(
+      new Option(
+        '-d, --development',
+        '"true" to target apps.dev.jupiterone.io',
+      ).default(
+        !!process.env.JUPITERONE_DEV,
+        'JUPITERONE_DEV environment variable value',
+      ),
     )
-    .option(
-      '--account <account>',
-      'JupiterOne account ID (JUPITERONE_ACCOUNT environment variable)',
-      process.env.JUPITERONE_ACCOUNT,
+    .addOption(
+      new Option('--account <account>', 'JupiterOne account ID').default(
+        process.env.JUPITERONE_ACCOUNT,
+        'JUPITERONE_ACCOUNT environment variable value',
+      ),
     )
-    .option(
-      '--api-key <key>',
-      'JupiterOne API key (JUPITERONE_API_KEY environment variable)',
-      process.env.JUPITERONE_API_KEY?.replace(/./, '*'),
+    .addOption(
+      new Option('--api-key <key>', 'JupiterOne API key').default(
+        process.env.JUPITERONE_API_KEY,
+        'JUPITERONE_API_KEY environment variable value',
+      ),
     );
 }
 
