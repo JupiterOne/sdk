@@ -1,4 +1,3 @@
-import { mocked } from 'ts-jest/utils';
 import ora from 'ora';
 
 import {
@@ -14,7 +13,7 @@ jest.mock('../bulkDownloadToJson');
 jest.mock('../../log');
 jest.mock('ora');
 
-const mockedBulkDownload = mocked(bulkDownloadToJson, true);
+const mockedBulkDownload = jest.mocked(bulkDownloadToJson);
 const mockedSpinner = ora().start();
 
 const options: ExportAssetsToJsonParams = {

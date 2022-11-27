@@ -14,7 +14,6 @@ import {
   Step,
 } from '@jupiterone/integration-sdk-core';
 import { SyncExpectationResult } from 'expect/build/types';
-import { getMatchers } from 'expect/build/jestMatchersObject';
 import { StepTestConfig } from './config';
 import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 import { filterGraphObjects } from './filterGraphObjects';
@@ -645,11 +644,19 @@ export function toImplementSpec<
       'Spec steps marked as `implemented: false`',
     );
   }
-  return getMatchers().toMatchObject.call(
-    expect,
-    implementedStepsActual,
-    implementedStepsProposed,
-  );
+
+  try {
+    expect(implementedStepsActual).toMatchObject(implementedStepsProposed);
+    return {
+      message: () => '',
+      pass: true,
+    };
+  } catch (err) {
+    return {
+      message: () => err.message,
+      pass: false,
+    };
+  }
 }
 
 export function toMatchStepMetadata(

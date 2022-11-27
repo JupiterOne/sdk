@@ -1,6 +1,6 @@
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from './memory';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import {
   createTestEntity,
   createTestRelationship,

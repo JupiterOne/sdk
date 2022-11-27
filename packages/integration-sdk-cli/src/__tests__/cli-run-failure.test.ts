@@ -5,7 +5,6 @@ jest.doMock('@jupiterone/integration-sdk-runtime', () => ({
   createIntegrationLogger: mockCreateIntegrationLogger,
 }));
 
-import { mocked } from 'ts-jest/utils';
 import { Polly } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import FSPersister from '@pollyjs/persister-fs';
@@ -40,9 +39,9 @@ beforeEach(() => {
 
   polly = createTestPolly('run-cli-failure');
 
-  mocked(mockCreateIntegrationLogger).mockReturnValue(
-    createIntegrationLogger({ name: 'test' }),
-  );
+  jest
+    .mocked(mockCreateIntegrationLogger)
+    .mockReturnValue(createIntegrationLogger({ name: 'test' }));
 
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
     throw new Error(`Process exited with code ${code}`);
@@ -86,7 +85,7 @@ test('does not log errors that have been previously logged', async () => {
 
   jest.spyOn(logger, 'child').mockReturnValue(logger);
 
-  mocked(mockCreateIntegrationLogger).mockReturnValue(logger);
+  jest.mocked(mockCreateIntegrationLogger).mockReturnValue(logger);
 
   await createCli().parseAsync([
     'node',

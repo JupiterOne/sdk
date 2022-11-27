@@ -6,7 +6,7 @@ import {
   CreateStepJobStateParams,
   TypeTrackerStepSummary,
 } from '../jobState';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
 import { Entity } from '@jupiterone/integration-sdk-core';

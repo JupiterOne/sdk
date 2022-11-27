@@ -1,4 +1,3 @@
-import { mocked } from 'ts-jest/utils';
 import Alpha from '@lifeomic/alpha';
 
 import {
@@ -10,7 +9,7 @@ import {
 
 jest.mock('@lifeomic/alpha');
 
-const AlphaMock = mocked(Alpha);
+const AlphaMock = jest.mocked(Alpha);
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {

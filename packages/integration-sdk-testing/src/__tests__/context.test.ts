@@ -21,7 +21,7 @@ import {
   createMockExecutionContext,
   createMockStepExecutionContext,
 } from '../context';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 interface Config {
   myBooleanConfig: boolean;

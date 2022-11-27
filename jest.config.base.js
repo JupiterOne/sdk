@@ -1,6 +1,6 @@
 // This is a shared base config that is used by all packages
 module.exports = {
-  preset: 'ts-jest',
+  // preset: 'ts-jest',
   clearMocks: true,
   restoreMocks: true,
   testMatch: [

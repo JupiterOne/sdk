@@ -1,8 +1,7 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 import axios from 'axios';
-import { mocked } from 'ts-jest/utils';
 import { vol } from 'memfs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import globby from 'globby';
 
 import {
@@ -26,9 +25,9 @@ jest.mock('globby');
 jest.mock('../pause');
 jest.mock('../log');
 
-const mockedCreateApiClient = mocked(runtime.createApiClient, true);
-const mockedAxios = mocked(axios, true);
-const mockedGlobby = mocked(globby, true);
+const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
+const mockedAxios = jest.mocked(axios);
+const mockedGlobby = jest.mocked(globby);
 
 const type1Entities = [
   createEntity({

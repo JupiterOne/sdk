@@ -1,7 +1,6 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
-import { mocked } from 'ts-jest/utils';
 import axios, { AxiosInstance } from 'axios';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 import * as fileSystem from '../../fileSystem';
 import {
@@ -17,9 +16,9 @@ jest.mock('axios');
 jest.mock('@jupiterone/integration-sdk-runtime');
 jest.mock('../../fileSystem');
 
-const mockedRuntime = mocked(runtime, true);
-const mockedAxios = mocked<AxiosInstance>(axios, true);
-const mockedFileSystem = mocked(fileSystem, true);
+const mockedRuntime = jest.mocked(runtime);
+const mockedAxios = jest.mocked<AxiosInstance>(axios);
+const mockedFileSystem = jest.mocked(fileSystem);
 
 const options: BulkDownloadParams = {
   account: TEST_ACCOUNT,

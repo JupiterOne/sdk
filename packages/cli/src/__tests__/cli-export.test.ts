@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { mocked } from 'ts-jest/utils';
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 
 import { createCli } from '..';
@@ -14,8 +13,8 @@ jest.mock('ora');
 jest.mock('fs');
 jest.mock('../log');
 
-const mockedAxios = mocked(axios, true);
-const mockedCreateApiClient = mocked(runtime.createApiClient, true);
+const mockedAxios = jest.mocked(axios);
+const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 
 beforeEach(() => {
   mockedCreateApiClient.mockReturnValue(axios);

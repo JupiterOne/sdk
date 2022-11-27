@@ -1,6 +1,6 @@
 import Logger from 'bunyan';
 import { EventEmitter } from 'events';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 import {
   ExecutionContext,

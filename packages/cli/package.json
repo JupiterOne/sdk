@@ -34,8 +34,7 @@
     "ora": "^4.0.4",
     "p-all": "^3.0.0",
     "rimraf": "^3.0.2",
-    "upath": "^1.2.0",
-    "uuid": "^8.1.0"
+    "upath": "^1.2.0"
   },
   "devDependencies": {
     "@types/json2csv": "^5.0.1",

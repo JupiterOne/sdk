@@ -1,4 +1,4 @@
-import 'jest-extended';
+require('jest-extended');
 
 jest.mock('bunyan', () => {
   const Logger = jest.requireActual('bunyan');

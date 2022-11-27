@@ -1,5 +1,3 @@
-import { mocked } from 'ts-jest/utils';
-
 import { readJsonFromPath } from '@jupiterone/integration-sdk-runtime';
 import {
   createDirectRelationship,
@@ -12,7 +10,7 @@ import { RelationshipClass } from '@jupiterone/data-model';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
 
-const mockedReadJson = mocked(readJsonFromPath);
+const mockedReadJson = jest.mocked(readJsonFromPath);
 
 const integrationPath = '/j1-integration';
 const integrationData: IntegrationData = {

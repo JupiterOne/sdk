@@ -1,6 +1,5 @@
 import globby from 'globby';
 import path from 'path';
-import { mocked } from 'ts-jest/utils';
 
 import {
   getRootStorageDirectory,
@@ -18,9 +17,9 @@ jest.mock('globby');
 jest.mock('@jupiterone/integration-sdk-runtime');
 jest.mock('../../log');
 
-const mockedGlobby = mocked(globby);
-const mockedReadJson = mocked(readJsonFromPath);
-const mockedGetRootStorageDirectory = mocked(getRootStorageDirectory);
+const mockedGlobby = jest.mocked(globby);
+const mockedReadJson = jest.mocked(readJsonFromPath);
+const mockedGetRootStorageDirectory = jest.mocked(getRootStorageDirectory);
 
 const integrationPath = path.resolve(process.cwd(), '.j1-integration');
 const dataPath = path.resolve(integrationPath, 'graph');

@@ -6,7 +6,7 @@ import {
   Relationship,
   RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { executeStepWithDependencies } from '../executeStepWithDependencies';
 import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 
