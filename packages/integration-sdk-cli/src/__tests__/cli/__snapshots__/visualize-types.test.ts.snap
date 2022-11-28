@@ -2,25 +2,25 @@
 
 exports[`visualize integration metadata creates graph based on integration data with entities and relationships 1`] = `
 "<!DOCTYPE html>
-    <html lang=\\"en\\">
+    <html lang="en">
     <head>
-        <meta charset=\\"UTF-8\\">
-        <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1.0\\">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Integration SDK Graph</title>
     </head>
-    <body style=\\"height:100vh;width:100%\\">
-      <div id=\\"integration-graph\\" style=\\"height:100vh;width:100%\\"></div>
-      <script type=\\"text/javascript\\" src=\\"https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js\\"></script>
-      <script type=\\"text/javascript\\">
-        var nodes = new vis.DataSet([{\\"id\\":\\"my_account\\",\\"label\\":\\"Account\\\\nmy_account\\\\nAccount\\"},{\\"id\\":\\"my_account_1\\",\\"label\\":\\"Account 1\\\\nmy_account_1\\\\nAccount\\"},{\\"id\\":\\"my_account_2\\",\\"label\\":\\"Account 2\\\\nmy_account_2\\\\nAccount\\"},{\\"id\\":\\"the_root\\",\\"label\\":\\"The Root\\\\nthe_root\\\\nRoot\\"}]);
-        var edges = new vis.DataSet([{\\"from\\":\\"the_root\\",\\"to\\":\\"my_account\\",\\"label\\":\\"HAS\\"},{\\"from\\":\\"the_root\\",\\"to\\":\\"my_account_1\\",\\"label\\":\\"HAS\\"},{\\"from\\":\\"the_root\\",\\"to\\":\\"my_account_2\\",\\"label\\":\\"HAS\\"}]);
+    <body style="height:100vh;width:100%">
+      <div id="integration-graph" style="height:100vh;width:100%"></div>
+      <script type="text/javascript" src="https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js"></script>
+      <script type="text/javascript">
+        var nodes = new vis.DataSet([{"id":"my_account","label":"Account\\nmy_account\\nAccount"},{"id":"my_account_1","label":"Account 1\\nmy_account_1\\nAccount"},{"id":"my_account_2","label":"Account 2\\nmy_account_2\\nAccount"},{"id":"the_root","label":"The Root\\nthe_root\\nRoot"}]);
+        var edges = new vis.DataSet([{"from":"the_root","to":"my_account","label":"HAS"},{"from":"the_root","to":"my_account_1","label":"HAS"},{"from":"the_root","to":"my_account_2","label":"HAS"}]);
         // create a network
-        var container = document.getElementById(\\"integration-graph\\");
+        var container = document.getElementById("integration-graph");
         var data = {
           nodes: nodes,
           edges: edges
         };
-        var options = {\\"edges\\":{\\"color\\":\\"#6647ff\\",\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"nodes\\":{\\"color\\":{\\"border\\":\\"#6647ff\\",\\"background\\":\\"#3ce3b5\\"}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
+        var options = {"edges":{"color":"#6647ff","arrows":{"to":{"enabled":true}}},"nodes":{"color":{"border":"#6647ff","background":"#3ce3b5"}},"physics":{"barnesHut":{"springLength":300,"centralGravity":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>
@@ -29,25 +29,25 @@ exports[`visualize integration metadata creates graph based on integration data 
 
 exports[`visualize integration metadata creates graph filtered by --type flag 1`] = `
 "<!DOCTYPE html>
-    <html lang=\\"en\\">
+    <html lang="en">
     <head>
-        <meta charset=\\"UTF-8\\">
-        <meta name=\\"viewport\\" content=\\"width=device-width, initial-scale=1.0\\">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Integration SDK Graph</title>
     </head>
-    <body style=\\"height:100vh;width:100%\\">
-      <div id=\\"integration-graph\\" style=\\"height:100vh;width:100%\\"></div>
-      <script type=\\"text/javascript\\" src=\\"https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js\\"></script>
-      <script type=\\"text/javascript\\">
-        var nodes = new vis.DataSet([{\\"id\\":\\"my_account\\",\\"label\\":\\"Account\\\\nmy_account\\\\nAccount\\"},{\\"id\\":\\"the_root\\",\\"label\\":\\"The Root\\\\nthe_root\\\\nRoot\\"}]);
-        var edges = new vis.DataSet([{\\"from\\":\\"the_root\\",\\"to\\":\\"my_account\\",\\"label\\":\\"HAS\\"}]);
+    <body style="height:100vh;width:100%">
+      <div id="integration-graph" style="height:100vh;width:100%"></div>
+      <script type="text/javascript" src="https://unpkg.com/vis-network@7.6.1/standalone/umd/vis-network.min.js"></script>
+      <script type="text/javascript">
+        var nodes = new vis.DataSet([{"id":"my_account","label":"Account\\nmy_account\\nAccount"},{"id":"the_root","label":"The Root\\nthe_root\\nRoot"}]);
+        var edges = new vis.DataSet([{"from":"the_root","to":"my_account","label":"HAS"}]);
         // create a network
-        var container = document.getElementById(\\"integration-graph\\");
+        var container = document.getElementById("integration-graph");
         var data = {
           nodes: nodes,
           edges: edges
         };
-        var options = {\\"edges\\":{\\"color\\":\\"#6647ff\\",\\"arrows\\":{\\"to\\":{\\"enabled\\":true}}},\\"nodes\\":{\\"color\\":{\\"border\\":\\"#6647ff\\",\\"background\\":\\"#3ce3b5\\"}},\\"physics\\":{\\"barnesHut\\":{\\"springLength\\":300,\\"centralGravity\\":0.03}}};
+        var options = {"edges":{"color":"#6647ff","arrows":{"to":{"enabled":true}}},"nodes":{"color":{"border":"#6647ff","background":"#3ce3b5"}},"physics":{"barnesHut":{"springLength":300,"centralGravity":0.03}}};
         var network = new vis.Network(container, data, options);
       </script>
     </body>
