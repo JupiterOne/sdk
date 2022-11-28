@@ -17,19 +17,22 @@
   "dependencies": {
     "@jupiterone/integration-sdk-cli": "^8.29.2",
     "@jupiterone/integration-sdk-testing": "^8.29.2",
-    "@types/jest": "^27.1.0",
+    "@types/jest": "^29.2.3",
     "@types/node": "^18",
-    "@typescript-eslint/eslint-plugin": "^4.22.0",
-    "@typescript-eslint/parser": "^4.22.0",
-    "eslint": "^7.24.0",
-    "eslint-config-prettier": "^8.2.0",
-    "eslint-plugin-jest": "^23.20.0",
+    "@typescript-eslint/eslint-plugin": "^5.44.0",
+    "@typescript-eslint/parser": "^5.44.0",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jest": "^27.1.6",
     "husky": "^4.2.5",
-    "jest": "^27.1.0",
+    "jest": "^29.3.1",
     "lint-staged": "^10.2.6",
     "prettier": "^2.0.5",
-    "ts-jest": "^27.1.0",
+    "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
+  },
+  "resolutions": {
+    "@types/node": "^18"
   }
 }
