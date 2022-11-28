@@ -9,7 +9,6 @@ module.exports = {
     '!**/dist/*',
     '!**/*.bak/*',
   ],
-  collectCoverage: false,
   globals: {
     'ts-jest': {
       isolatedModules: true,
