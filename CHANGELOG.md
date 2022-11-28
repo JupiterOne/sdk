@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.29.3 - 2022-11-28
+
 ### Fixed
 
 - Do not modify the value supplied to `JUPITERONE_API_KEY` when using the
