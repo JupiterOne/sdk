@@ -275,3 +275,25 @@ test('does not publish events for source "api" since there is no integrationJobI
   expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
 });
+
+test('should use JUPITERONE_API_KEY value in Authorization request header', async () => {
+  expect.assertions(1);
+  const job = generateSynchronizationJob();
+
+  setupSynchronizerApi({
+    polly,
+    job,
+    baseUrl: 'https://api.us.jupiterone.io',
+    onSyncJobCreateResponse(req, res) {
+      expect(req.headers['Authorization']).toEqual('Bearer testing-key');
+    },
+  });
+
+  await createCli().parseAsync([
+    'node',
+    'j1-integration',
+    'run',
+    '--integrationInstanceId',
+    'test',
+  ]);
+});

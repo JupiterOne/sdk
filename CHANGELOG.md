@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+### Fixed
+
+- Do not modify the value supplied to `JUPITERONE_API_KEY` when using the
+  integration CLI
+
 ## 8.29.2 - 2022-11-15
 
 ### Fixed
