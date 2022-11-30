@@ -1300,7 +1300,5 @@ describe('executeStepDependencyGraph', () => {
     expect(spyD).toHaveBeenCalledTimes(0);
 
     expect(spyA).toHaveBeenCalledBefore(spyC);
-    expect(spyC).toHaveBeenCalledBefore(spyD);
-    expect(spyE).toHaveBeenCalledBefore(spyD);
   });
 });
