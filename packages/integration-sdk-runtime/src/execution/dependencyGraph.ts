@@ -1,6 +1,6 @@
 import { DepGraph } from 'dependency-graph';
 import PromiseQueue from 'p-queue';
-
+import * as path from 'path';
 import {
   AfterAddEntityHookFunction,
   AfterAddRelationshipHookFunction,
@@ -398,8 +398,9 @@ export function executeStepDependencyGraph<
       context: TStepExecutionContext,
     ) {
       let status = StepResultStatus.FAILURE;
-      const entitiesPath = `${stepCacheFilePath}/entities`;
-      const relationshipsPath = `${stepCacheFilePath}/relationships`;
+
+      const entitiesPath = path.join(stepCacheFilePath, 'entities');
+      const relationshipsPath = path.join(stepCacheFilePath, 'relationships');
 
       const { jobState, logger } = context;
 
