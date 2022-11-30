@@ -129,7 +129,7 @@ export function executeStepDependencyGraph<
   }
 
   /**
-   * Updates the result of a step result with the provided satus
+   * Updates the result of a step result with the provided status
    */
   function updateStepResultStatus(
     stepId: string,
