@@ -32,6 +32,16 @@ fetched. Steps iterate source objects using the data client and converters to
 produce entities and relationships, but the steps are responsible for organizing
 data collection and entity and relationship construction.
 
+## Table of Contents
+
+- [Testing Integrations](#testing-integrations)
+  - [Table of Contents](#table-of-contents)
+  - [Integration Testing](#integration-testing)
+  - [Unit Testing](#unit-testing)
+    - [`createMockExecutionContext`](#createmockexecutioncontext)
+      - [Testing steps using `executeStepWithDependencies`](#testing-steps-using-executestepwithdependencies)
+      - [`setupRecording`](#setuprecording)
+
 ## Integration Testing
 
 Ideal integration testing (ensuring end-to-end success) would:

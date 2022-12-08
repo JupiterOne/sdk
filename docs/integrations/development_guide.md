@@ -8,24 +8,26 @@ in this SDK project.
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-  - [Requirements](#requirements)
-  - [Setup](#setup)
-- [Developing the integration](#developing-the-integration)
-  - [Integration Configuration](#integration-configuration)
-  - [Creating instanceConfigFields](#1-creating-instanceconfigfields)
-  - [Creating validateInvocation](#2-creating-validateinvocation)
-    - [Adding or creating an API Client](#adding-or-creating-an-api-client)
-      - [Basic client setup](#basic-client-setup)
-      - [Adding the first route](#adding-the-first-route)
-  - [Creating your first IntegrationStep](#3-creating-your-first-integrationstep)
-    - [Creating the Account step](#creating-the-account-step)
-      - [id](#id)
-      - [name](#name)
-      - [entities](#entities)
-      - [executionHandler](#executionhandler)
-        - [Converters](#converters)
-  - [Running the integration](#running-the-integration-🚀)
+- [Getting Started with Integration Development](#getting-started-with-integration-development)
+  - [Table of Contents](#table-of-contents)
+  - [Getting Started](#getting-started)
+    - [**Requirements**](#requirements)
+    - [**Setup**](#setup)
+  - [**Developing the integration**](#developing-the-integration)
+    - [**Integration configuration**](#integration-configuration)
+    - [**1. Creating `InstanceConfigFields`**](#1-creating-instanceconfigfields)
+    - [**2. Creating `ValidateInvocation`**](#2-creating-validateinvocation)
+    - [Adding or Creating an API Client](#adding-or-creating-an-api-client)
+    - [Basic Client Setup](#basic-client-setup)
+    - [Adding the first route](#adding-the-first-route)
+    - [**3. Creating your first `IntegrationStep`**](#3-creating-your-first-integrationstep)
+      - [**Creating the `Account` Step**](#creating-the-account-step)
+      - [**id**](#id)
+      - [**name**](#name)
+      - [**entities**](#entities)
+    - [**executionHandler**](#executionhandler)
+      - [**Converters**](#converters)
+  - [Running the integration](#running-the-integration)
 
 ## Getting Started
 
@@ -699,7 +701,7 @@ export async function fetchAccountDetails({
 
 And that's it! We have a working `executionHandler`.
 
-## Running the integration 🚀
+## Running the integration
 
 We've now:
 

@@ -14,6 +14,20 @@ JupiterOne integration. Here, we assign names to each of these patterns in order
 to build a shared, referenceable grammar to use when developing new JupiterOne
 integrations.
 
+## Table of Contents
+
+- [JupiterOne Integration Step Patterns](#jupiterone-integration-step-patterns)
+  - [Table of Contents](#table-of-contents)
+  - [Step Classification](#step-classification)
+  - ["Singleton" step pattern](#singleton-step-pattern)
+  - ["Fetch Entities" step pattern](#fetch-entities-step-pattern)
+  - ["Fetch Relationships" step pattern](#fetch-relationships-step-pattern)
+  - ["Fetch Child Entities" step pattern](#fetch-child-entities-step-pattern)
+  - ["Build Child Relationships" step pattern](#build-child-relationships-step-pattern)
+  - [Conclusion](#conclusion)
+
+## Step Classification
+
 Let's imagine a JupiterOne integration for a device management tool, "Acme".
 This integration ingests the following entities and relationships:
 
