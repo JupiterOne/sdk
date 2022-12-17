@@ -62,9 +62,10 @@ export class DuplicateKeyTracker {
 
 export type TypeTrackerStepSummary = {
   graphObjectTypeSummary: {
-    _type: string;
-    total: number;
-  }[];
+    [key: string]: {
+      total: number;
+    };
+  };
 };
 
 type InternalTypeTrackerSummary = {
@@ -123,16 +124,15 @@ export class TypeTracker {
 
   summarizeStep(stepId: string): TypeTrackerStepSummary {
     const stepSummary: TypeTrackerStepSummary = {
-      graphObjectTypeSummary: [],
+      graphObjectTypeSummary: {},
     };
 
     const existingStepSummary = this.graphObjectTypeSummaryByStep.get(stepId);
 
     for (const [_type, summary] of existingStepSummary?.entries() || []) {
-      stepSummary.graphObjectTypeSummary.push({
-        _type,
+      stepSummary.graphObjectTypeSummary[_type] = {
         ...summary,
-      });
+      };
     }
 
     return stepSummary;
@@ -201,7 +201,16 @@ export function createStepJobState({
       entities = entities.map(beforeAddEntity);
     }
 
-    entities.forEach((e) => {
+    // Existing entity with _key already added and a new one in the current payload
+    // At least two in the same payload
+
+    // fullMatch -> matches all properties and all raw data
+    // rawData match -> matches old and new raw data
+    // properties match -> matches properties
+
+    // JobState [entity1] - Payload [dup1, dup2]
+
+    entities.forEach((e, index) => {
       duplicateKeyTracker.registerKey(e._key, {
         _type: e._type,
         _key: e._key,
