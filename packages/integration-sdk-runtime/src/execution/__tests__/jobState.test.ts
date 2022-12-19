@@ -481,7 +481,7 @@ describe('#TypeTracker', () => {
       const typeTracker = new TypeTracker();
 
       const expected: TypeTrackerStepSummary = {
-        graphObjectTypeSummary: [],
+        graphObjectTypeSummary: {},
       };
 
       expect(typeTracker.summarizeStep('a')).toEqual(expected);
@@ -521,16 +521,14 @@ describe('#TypeTracker', () => {
       });
 
       const expected: TypeTrackerStepSummary = {
-        graphObjectTypeSummary: [
-          {
-            _type: 'my_type_1',
+        graphObjectTypeSummary: {
+          my_type_1: {
             total: 3,
           },
-          {
-            _type: 'my_type_2',
+          my_type_2: {
             total: 1,
           },
-        ],
+        },
       };
 
       expect(typeTracker.summarizeStep('a')).toEqual(expected);
