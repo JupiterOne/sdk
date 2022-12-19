@@ -61,10 +61,8 @@ export class DuplicateKeyTracker {
 }
 
 export type TypeTrackerStepSummary = {
-  graphObjectTypeSummary: {
-    [key: string]: {
-      total: number;
-    };
+  [key: string]: {
+    total: number;
   };
 };
 
@@ -123,14 +121,12 @@ export class TypeTracker {
   }
 
   summarizeStep(stepId: string): TypeTrackerStepSummary {
-    const stepSummary: TypeTrackerStepSummary = {
-      graphObjectTypeSummary: {},
-    };
+    const stepSummary: TypeTrackerStepSummary = {};
 
     const existingStepSummary = this.graphObjectTypeSummaryByStep.get(stepId);
 
     for (const [_type, summary] of existingStepSummary?.entries() || []) {
-      stepSummary.graphObjectTypeSummary[_type] = {
+      stepSummary[_type] = {
         ...summary,
       };
     }

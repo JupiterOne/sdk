@@ -480,9 +480,7 @@ describe('#TypeTracker', () => {
     test('should return empty summary when step does not exist', () => {
       const typeTracker = new TypeTracker();
 
-      const expected: TypeTrackerStepSummary = {
-        graphObjectTypeSummary: {},
-      };
+      const expected: TypeTrackerStepSummary = {};
 
       expect(typeTracker.summarizeStep('a')).toEqual(expected);
     });
@@ -521,13 +519,11 @@ describe('#TypeTracker', () => {
       });
 
       const expected: TypeTrackerStepSummary = {
-        graphObjectTypeSummary: {
-          my_type_1: {
-            total: 3,
-          },
-          my_type_2: {
-            total: 1,
-          },
+        my_type_1: {
+          total: 3,
+        },
+        my_type_2: {
+          total: 1,
         },
       };
 

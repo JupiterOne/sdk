@@ -347,7 +347,7 @@ export function executeStepDependencyGraph<
         logger.info(
           {
             stepId,
-            summary: JSON.stringify(typeTracker.summarizeStep(stepId)),
+            summary: typeTracker.summarizeStep(stepId),
           },
           'Step summary',
         );
@@ -355,7 +355,7 @@ export function executeStepDependencyGraph<
         logger.info(
           {
             stepId,
-            summary: JSON.stringify(typeTracker.summarizeStep(stepId)),
+            summary: typeTracker.summarizeStep(stepId),
           },
           'Failed step summary',
         );
