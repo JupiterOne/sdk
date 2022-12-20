@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.30.0 - 2022-12-20
+
+### Changed
+
+- Step summary refactored to be `summary.$TYPE: { total: number }`. This will
+  enable better logs querying.
+
 ## 8.29.3 - 2022-11-28
 
 ### Fixed
