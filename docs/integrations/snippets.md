@@ -1,8 +1,8 @@
 # Integration Snippets
 
 With the purpose of helping the development of new integrations, we have created
-some code "snippets" that can be used into new or existing integrations. If you
-are using VSCode as source code editor, please follow the next guide to install
+some code "snippets" that can be used in new or existing integrations. If you
+are using VSCode as source code editor, please follow the below guide to install
 and use the available snippets
 https://github.com/JupiterOne/integration-engineering-toolbox/tree/main/integration-code-snippets.
 
