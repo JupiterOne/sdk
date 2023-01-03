@@ -1,15 +1,21 @@
 # Integration Snippets
 
-With the purpose of helping the development of new integrations, we have created some code "snippets" that can be used into new or existing integrations. If you are using VSCode as source code editor, please follow the next guide to install and use the available snippets https://github.com/JupiterOne/integration-engineering-toolbox/tree/main/integration-code-snippets.
+With the purpose of helping the development of new integrations, we have created
+some code "snippets" that can be used into new or existing integrations. If you
+are using VSCode as source code editor, please follow the next guide to install
+and use the available snippets
+https://github.com/JupiterOne/integration-engineering-toolbox/tree/main/integration-code-snippets.
 
-If you are not using VSCode, you can copy and paste the following code snippets for each case described.
+If you are not using VSCode, you can copy and paste the following code snippets
+for each case described.
 
 1. **Integration step**: Snippet used to create a new integration step
+
 ```typescript
 export const userStep: IntegrationStep<IntegrationConfig>[] = [
   {
     /**
-     * Points to a constant in src/step/constants.ts 
+     * Points to a constant in src/step/constants.ts
      */
     id: Steps.USERS,
     /**
@@ -41,12 +47,15 @@ export const userStep: IntegrationStep<IntegrationConfig>[] = [
     /**
      * Function that runs to perform the step
      */
-    executionHandler: fetchUsers, /* Use j1-exec-handler snippet to generate this function and call it here */
-  }
+    executionHandler:
+      fetchUsers /* Use j1-exec-handler snippet to generate this function and call it here */,
+  },
 ];
 ```
 
-2. **Static Execution Handler**:  Snippet used to create an execution handler with static data
+2. **Static Execution Handler**: Snippet used to create an execution handler
+   with static data
+
 ```typescript
 import { createAccountEntity } from './converter';
 
@@ -54,7 +63,7 @@ export const ACCOUNT_ENTITY_KEY = 'entity:account';
 
 // TODO: Modify this comment with an explanation that reflects the purpose of this executionHandler
 /**
- * The executionHandler is where the work for the step happens. 
+ * The executionHandler is where the work for the step happens.
  * The executionHandler is a function that takes in the IntegrationStepExecutionContext
  * as a parameter and performs the necessary work to create entities and relationships.
  */
@@ -69,14 +78,16 @@ export async function fetchAccountDetails({
 }
 ```
 
-3. **Execution Handler**: Snippet used to  create an execution handler that performs an API call to add multiple entities and/or relationships
+3. **Execution Handler**: Snippet used to create an execution handler that
+   performs an API call to add multiple entities and/or relationships
+
 ```typescript
 import { createAPIClient } from '../../client';
 import { createRoleEntity, createUserRoleRelationship } from './converter';
 
 // TODO: Modify this comment with an explanation that reflects the purpose of this executionHandler
 /**
- * The executionHandler is where the work for the step happens. 
+ * The executionHandler is where the work for the step happens.
  * The executionHandler is a function that takes in the IntegrationStepExecutionContext
  * as a parameter and performs the necessary work to create entities and relationships.
  */
@@ -100,6 +111,7 @@ export async function fetchRoles({
 ```
 
 4. **Converter**: Snippet used to create a converter
+
 ```typescript
 import {
   createIntegrationEntity,
@@ -111,9 +123,9 @@ import { Entities } from '../constants';
 
 // TODO: Modify this comment with an explanation that reflects the purpose of this converter
 /**
- *  Different providers will present data in many different ways. 
- *  We want to normalize our data to be more consistent, so we can gather 
- *  useful insights from it. The converter will create the normalized entity 
+ *  Different providers will present data in many different ways.
+ *  We want to normalize our data to be more consistent, so we can gather
+ *  useful insights from it. The converter will create the normalized entity
  *  or relationship from the raw data the provider gives in an API response.
  * @param user
  * @returns Normalized J1 DigitalOcean user
@@ -136,7 +148,8 @@ export function createUserEntity(user: DigitalOceanUser): Entity {
 }
 ```
 
-5. **Step Spec**: Snippet used to  creates the spec of a new step
+5. **Step Spec**: Snippet used to creates the spec of a new step
+
 ```typescript
 export const userSpec: StepSpec<IntegrationConfig>[] = [
   {
@@ -150,17 +163,19 @@ export const userSpec: StepSpec<IntegrationConfig>[] = [
       {
         resourceName: 'User',
         _type: 'datadog_user',
-        _class: ['User']
-      }
+        _class: ['User'],
+      },
     ],
     relationships: [],
     mappedRelationships: [],
     dependsOn: [],
     implemented: true,
-  }
+  },
 ];
 ```
+
 6. **Entity Metadata**: Snippet used to add metadata of an entity
+
 ```typescript
 {
   resourceName: 'User',
@@ -168,7 +183,9 @@ export const userSpec: StepSpec<IntegrationConfig>[] = [
   _class: ['User']
 },
 ```
-7. **Relationship Metadata**: Snippet used to  add metadata of a relationship
+
+7. **Relationship Metadata**: Snippet used to add metadata of a relationship
+
 ```typescript
 {
   sourceType: 'datadog_account',
@@ -177,7 +194,9 @@ export const userSpec: StepSpec<IntegrationConfig>[] = [
   _class: RelationshipClass.HAS,
 },
 ```
+
 8. **Pagination**: Snippet used to add a paginated request
+
 ```typescript
 
 import fetch, { Response as NodeFetchResponse } from 'node-fetch';
@@ -188,7 +207,7 @@ export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 export interface ProviderResponse<T> extends NodeFetchResponse {
   json(): Promise<T>;
 }
-  
+
 const ITEMS_PER_PAGE = 1000;
 
 export class APIClient {
@@ -201,11 +220,11 @@ export class APIClient {
   public async iterateUsers(iteratee: ResourceIteratee<User>): Promise<void> {
     let currentPage = 1,
       totalPages = 0;
-  
+
     do {
       const response = await this.fetchUsers(currentPage, ITEMS_PER_PAGE);
       const result = await response.json();
-  
+
       // Get total pages via response
       totalPages = result.paging.totalPages;
       /* Get total pages via response header
@@ -214,7 +233,7 @@ export class APIClient {
         10,
       );
       */
-  
+
       if (Array.isArray(result.data)) {
         for (const resource of result.data) {
           await iteratee(resource);
@@ -225,26 +244,29 @@ export class APIClient {
           message: `Expected a collection of resources but type was ${typeof result}`,
         });
       }
-  
+
       // Increase currentPage
       currentPage++;
     } while (currentPage <= totalPages);
   }
-  
+
   private async fetchUsers(page: number, pageSize: number) {
     const searchParams = new URLSearchParams({
       page: page.toString(),
       pageSize: ITEMS_PER_PAGE.toString(),
     });
     const endpoint = `/api/v1/users?${searchParams.toString()}`;
-  
+
     return this.request<ProviderResponse>(endpoint, 'get'); // use j1-request-with-retries to generate this method
   }
 
   ...
 }
 ```
-9. **Rate Limiting**: Snippet used to adds logic to handle rate limits in a client
+
+9. **Rate Limiting**: Snippet used to adds logic to handle rate limits in a
+   client
+
 ```typescript
 import fetch, { Response as NodeFetchResponse } from 'node-fetch';
 import { sleep } from '@lifeomic/attempt'
@@ -262,7 +284,7 @@ export interface ProviderResponse<T> extends NodeFetchResponse {
 export class APIClient {
   ...
   private rateLimitStatus: RateLimitStatus;
-  
+
   /**
    * Pulls rate limit headers from response.
    * @param response
@@ -271,11 +293,11 @@ export class APIClient {
   private setRateLimitStatus<T>(response: ProviderResponse<T>) {
     // X-RateLimit-Limit: Request limit per hour
     const limit = response.headers.get('X-RateLimit-Limit');
-    // X-RateLimit-Remaining: The number of requests left for the time window 
+    // X-RateLimit-Remaining: The number of requests left for the time window
     const remaining = response.headers.get('X-RateLimit-Remaining');
-    // X-RateLimit-Reset: The remaining window before the rate limit resets in UTC epoch seconds    
+    // X-RateLimit-Reset: The remaining window before the rate limit resets in UTC epoch seconds
     const reset = response.headers.get('X-RateLimit-Reset');
-  
+
     if (limit && remaining && reset) {
       this.rateLimitStatus = {
         limit: Number(limit),
@@ -283,10 +305,10 @@ export class APIClient {
         reset: Number(reset),
       };
     }
-  
+
     this.logger.info(this.rateLimitStatus, 'Rate limit status.');
   }
-  
+
   /**
    * Determines if approaching the rate limit, sleeps until rate limit has reset.
    * Use this function whenever you want to check the rate limit of your API
@@ -297,7 +319,7 @@ export class APIClient {
       const rateLimitRemainingProportion =
         this.rateLimitStatus.remaining / this.rateLimitStatus.limit;
       const msUntilRateLimitReset = this.rateLimitStatus.reset - Date.now();
-  
+
       if (rateLimitRemainingProportion <= 0.1 && msUntilRateLimitReset > 0) {
         this.logger.info(
           {
@@ -315,7 +337,10 @@ export class APIClient {
   ...
 }
 ```
-10. **Request with retries**: Snippet used to add a new method to perform API requests with retries and/or rate limit checks
+
+10. **Request with retries**: Snippet used to add a new method to perform API
+    requests with retries and/or rate limit checks
+
 ```typescript
 import fetch, { RequestInit, Response as NodeFetchResponse } from 'node-fetch';
 import { retry } from '@lifeomic/attempt';
@@ -354,12 +379,12 @@ export class APIClient {
       if (body) {
         requestOptions.body = JSON.stringify(body);
       }
-  
+
       const response: ProviderResponse<T> = (await fetch(
         this.BASE_URL + endpoint,
         requestOptions,
       )) as ProviderResponse<T>;
-  
+
       if (response.status === 401) {
         throw new IntegrationProviderAuthenticationError({
           endpoint,
@@ -382,26 +407,26 @@ export class APIClient {
         // Set a new rate limit status after each successful request
         // this.setRateLimitStatus(response); // Use j1-rate-limit snippet to generate this function
       }
-  
+
       return response;
     };
-  
+
     return await retry(requestAttempt, {
       // The maximum number of attempts or 0 if there is no limit on number of attempts.
       maxAttempts: 3,
       // The delay between each attempt in milliseconds. You can provide a factor to have the delay grow exponentially.
       delay: 30_000,
-      // A timeout in milliseconds. If timeout is non-zero then a timer is set using setTimeout. 
+      // A timeout in milliseconds. If timeout is non-zero then a timer is set using setTimeout.
       // If the timeout is triggered then future attempts will be aborted.
       timeout: 180_000,
-      // The factor option is used to grow the delay exponentially. 
-      // For example, a value of 2 will cause the delay to double each time 
+      // The factor option is used to grow the delay exponentially.
+      // For example, a value of 2 will cause the delay to double each time
       factor: 2,
       handleError: (error, attemptContext) => {
         if ([401, 403, 404].includes(error.status)) {
           attemptContext.abort();
         }
-  
+
         if (attemptContext.aborted) {
           this.logger.warn(
             { attemptContext, error, endpoint },
