@@ -19,12 +19,7 @@ import {
 
 import { timeOperation } from '../metrics';
 import { GraphObjectStore } from '../storage';
-import {
-  createStepJobState,
-  DuplicateKeyTracker,
-  MemoryDataStore,
-  TypeTracker,
-} from './jobState';
+import { createStepJobState, MemoryDataStore, TypeTracker } from './jobState';
 import {
   CreateStepGraphObjectDataUploaderFunction,
   StepGraphObjectDataUploader,
@@ -33,6 +28,7 @@ import {
   iterateParsedEntityGraphFiles,
   iterateParsedRelationshipGraphFiles,
 } from '../fileSystem';
+import { DuplicateKeyTracker } from './duplicateKeyTracker';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -502,6 +498,7 @@ function buildStepContext<
       : undefined;
 
   const jobState = createStepJobState({
+    logger: context.logger,
     stepId,
     duplicateKeyTracker,
     typeTracker,

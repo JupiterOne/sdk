@@ -37,7 +37,7 @@ import {
 } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
-import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
+import { MemoryDataStore } from './jobState';
 import {
   determinePartialDatasetsFromStepExecutionResults,
   executeSteps,
@@ -48,6 +48,7 @@ import { getMaskedFields } from './utils/getMaskedFields';
 import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
+import { DuplicateKeyTracker } from './duplicateKeyTracker';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];

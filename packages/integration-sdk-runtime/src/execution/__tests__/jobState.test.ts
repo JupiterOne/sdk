@@ -1,11 +1,11 @@
 import {
   createStepJobState,
-  DuplicateKeyTracker,
   TypeTracker,
   MemoryDataStore,
   CreateStepJobStateParams,
   TypeTrackerStepSummary,
 } from '../jobState';
+import { DuplicateKeyTracker } from '../duplicateKeyTracker';
 import { v4 as uuid } from 'uuid';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
@@ -22,6 +22,7 @@ import {
 } from '../uploader';
 import { FlushedGraphObjectData } from '../../storage/types';
 import pMap from 'p-map';
+import { createMockIntegrationLogger } from '../../../test/util/fixtures';
 
 jest.mock('fs');
 
@@ -55,12 +56,14 @@ function createInMemoryStepGraphObjectDataUploaderCollector(
 function getMockCreateStepJobStateParams(
   partial?: Partial<CreateStepJobStateParams>,
 ): CreateStepJobStateParams {
+  const logger = createMockIntegrationLogger();
   return {
     stepId: uuid(),
     graphObjectStore: new FileSystemGraphObjectStore(),
     duplicateKeyTracker: new DuplicateKeyTracker(),
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
+    logger,
     ...partial,
   };
 }

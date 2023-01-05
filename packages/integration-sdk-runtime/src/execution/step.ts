@@ -24,7 +24,8 @@ import {
   buildStepDependencyGraph,
   executeStepDependencyGraph,
 } from './dependencyGraph';
-import { DuplicateKeyTracker, MemoryDataStore } from './jobState';
+import { MemoryDataStore } from './jobState';
+import { DuplicateKeyTracker } from './duplicateKeyTracker';
 import { CreateStepGraphObjectDataUploaderFunction } from './uploader';
 import {
   DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
