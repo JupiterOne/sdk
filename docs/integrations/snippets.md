@@ -2,9 +2,9 @@
 
 With the purpose of helping the development of new integrations, we have created
 some code "snippets" that can be used in new or existing integrations. If you
-are using VSCode as source code editor, please follow the below guide to install
-and use the available snippets
-https://github.com/JupiterOne/integration-engineering-toolbox/tree/main/integration-code-snippets.
+are using VSCode as source code editor, please follow
+[the guide](../../snippets/integrations/README.md) to install and use the
+available snippets
 
 If you are not using VSCode, you can copy and paste the following code snippets
 for each case described.
