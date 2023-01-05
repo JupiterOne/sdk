@@ -28,7 +28,10 @@ import {
   iterateParsedEntityGraphFiles,
   iterateParsedRelationshipGraphFiles,
 } from '../fileSystem';
-import { DuplicateKeyTracker } from './duplicateKeyTracker';
+import {
+  DuplicateEntityReport,
+  DuplicateKeyTracker,
+} from './duplicateKeyTracker';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -497,8 +500,14 @@ function buildStepContext<
         }
       : undefined;
 
+  const onDuplicateEntityKey = (
+    duplicateEntityReport: DuplicateEntityReport,
+  ) => {
+    context.logger.error(duplicateEntityReport, 'Duplicate entity report.');
+  };
+
   const jobState = createStepJobState({
-    logger: context.logger,
+    onDuplicateEntityKey,
     stepId,
     duplicateKeyTracker,
     typeTracker,

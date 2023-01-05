@@ -1,6 +1,5 @@
 import {
   Entity,
-  IntegrationLogger,
   JobState,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
@@ -8,6 +7,7 @@ import {
 import { GraphObjectStore } from '../storage';
 import {
   createDuplicateEntityReport,
+  DuplicateEntityReport,
   DuplicateKeyTracker,
 } from './duplicateKeyTracker';
 import { StepGraphObjectDataUploader } from './uploader';
@@ -108,7 +108,6 @@ export interface CreateStepJobStateParams {
   typeTracker: TypeTracker;
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
-  logger: IntegrationLogger;
   uploader?: StepGraphObjectDataUploader;
   /**
    * Hook called before an entity is added to the job state. This function can
@@ -130,6 +129,12 @@ export interface CreateStepJobStateParams {
    * Hook called after a relationship has been fully added to the job state
    */
   afterAddRelationship?: (relationship: Relationship) => Relationship;
+  /**
+   * Hook called after a duplicate entity has been found.
+   * @param duplicateEntityReport details about the duplicate entity.
+   * @returns void
+   */
+  onDuplicateEntityKey: (duplicateEntityReport: DuplicateEntityReport) => void;
 }
 export function createStepJobState({
   stepId,
@@ -142,7 +147,7 @@ export function createStepJobState({
   afterAddEntity,
   afterAddRelationship,
   uploader,
-  logger,
+  onDuplicateEntityKey,
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     if (beforeAddEntity) {
@@ -162,11 +167,7 @@ export function createStepJobState({
           indexOfDuplicateKey: index,
           graphObjectStore,
         });
-
-        logger.error(
-          duplicateEntityReport,
-          'Detected duplicate key during execution.',
-        );
+        onDuplicateEntityKey(duplicateEntityReport);
         throw err;
       }
 

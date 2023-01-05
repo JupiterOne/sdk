@@ -126,7 +126,7 @@ function isDeepStrictEqual(a: any, b: any): boolean {
   }
 }
 
-type DuplicateEntityReport = {
+export type DuplicateEntityReport = {
   _key: string;
   rawDataMatch: boolean;
   propertiesMatch: boolean;
