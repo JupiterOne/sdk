@@ -70,19 +70,21 @@ export async function createDuplicateEntityReport({
   indexOfDuplicateKey,
   graphObjectStore,
 }: DuplicateKeyReportParams): Promise<DuplicateEntityReport> {
-  const originalEntity = originalInsidePayload(
+  const originalEntityFromPayload = getOriginalEntityFromPayload(
     payload,
     duplicateEntity._key,
     indexOfDuplicateKey,
   );
 
-  if (originalEntity) {
-    return compareEntities(originalEntity, duplicateEntity);
+  if (originalEntityFromPayload) {
+    return compareEntities(originalEntityFromPayload, duplicateEntity);
   } else {
-    const originalEntity = await graphObjectStore.findEntity(
-      duplicateEntity._key,
+    const originalEntityFromGraphObjectStore =
+      await graphObjectStore.findEntity(duplicateEntity._key);
+    return compareEntities(
+      originalEntityFromGraphObjectStore!,
+      duplicateEntity,
     );
-    return compareEntities(originalEntity!, duplicateEntity);
   }
 }
 
@@ -95,20 +97,18 @@ export async function createDuplicateEntityReport({
  * @param duplicateFoundIndex the index of the Entity or Relationship that triggered the DUPLICATE_KEY_ERROR
  * @returns the original entity or relationship if it is inside the payload, otherwise returns undefined
  */
-function originalInsidePayload(
+function getOriginalEntityFromPayload(
   payload: Entity[],
   _key: string,
   duplicateFoundIndex: number,
 ): Entity | undefined {
-  const foundIndex = payload.findIndex((v: Entity) => {
-    return v._key === _key;
+  return payload.find((v, i) => {
+    if (i >= duplicateFoundIndex) {
+      return undefined;
+    } else if (v._key === _key) {
+      return v;
+    }
   });
-
-  if (foundIndex === duplicateFoundIndex) {
-    return undefined;
-  } else {
-    return payload[foundIndex];
-  }
 }
 
 /**
@@ -130,7 +130,6 @@ type DuplicateEntityReport = {
   _key: string;
   rawDataMatch: boolean;
   propertiesMatch: boolean;
-  fullMatch: boolean;
 };
 
 /**
@@ -150,6 +149,5 @@ function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
     _key: a._key,
     rawDataMatch: isDeepStrictEqual(a._rawData, b._rawData),
     propertiesMatch: isDeepStrictEqual(aClone, bClone),
-    fullMatch: isDeepStrictEqual(a, b),
   };
 }

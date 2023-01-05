@@ -156,7 +156,7 @@ export function createStepJobState({
           _key: entity._key,
         });
       } catch (err) {
-        const DuplicateEntityReport = await createDuplicateEntityReport({
+        const duplicateEntityReport = await createDuplicateEntityReport({
           duplicateEntity: entity,
           payload: entities,
           indexOfDuplicateKey: index,
@@ -164,7 +164,7 @@ export function createStepJobState({
         });
 
         logger.error(
-          DuplicateEntityReport,
+          duplicateEntityReport,
           'Detected duplicate key during execution.',
         );
         throw err;

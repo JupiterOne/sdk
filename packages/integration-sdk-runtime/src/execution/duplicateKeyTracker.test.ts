@@ -74,7 +74,6 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      fullMatch: true,
       propertiesMatch: true,
       rawDataMatch: true,
     });
@@ -132,7 +131,6 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      fullMatch: false,
       propertiesMatch: false,
       rawDataMatch: true,
     });
@@ -186,7 +184,6 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      fullMatch: false,
       propertiesMatch: true,
       rawDataMatch: false,
     });
@@ -243,7 +240,6 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      fullMatch: false,
       propertiesMatch: true,
       rawDataMatch: false,
     });
