@@ -25,7 +25,6 @@ import {
 } from '../uploader';
 import { FlushedGraphObjectData } from '../../storage/types';
 import pMap from 'p-map';
-import { createMockIntegrationLogger } from '../../../test/util/fixtures';
 
 jest.mock('fs');
 
