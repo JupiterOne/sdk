@@ -1,11 +1,14 @@
 import {
   createStepJobState,
-  DuplicateKeyTracker,
   TypeTracker,
   MemoryDataStore,
   CreateStepJobStateParams,
   TypeTrackerStepSummary,
 } from '../jobState';
+import {
+  DuplicateEntityReport,
+  DuplicateKeyTracker,
+} from '../duplicateKeyTracker';
 import { v4 as uuid } from 'uuid';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
@@ -55,12 +58,19 @@ function createInMemoryStepGraphObjectDataUploaderCollector(
 function getMockCreateStepJobStateParams(
   partial?: Partial<CreateStepJobStateParams>,
 ): CreateStepJobStateParams {
+  const onDuplicateEntityKey = (
+    DuplicateEntityReport: DuplicateEntityReport,
+  ) => {
+    return;
+  };
+
   return {
     stepId: uuid(),
     graphObjectStore: new FileSystemGraphObjectStore(),
     duplicateKeyTracker: new DuplicateKeyTracker(),
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
+    onDuplicateEntityKey,
     ...partial,
   };
 }
