@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.30.1 - 2023-01-10
+
+### Added
+
+- Added new `DuplicateEntityReport` when an integration errors with a duplicate
+  **\_key**.
+
 ## 8.30.0 - 2022-12-20
 
 ### Changed
