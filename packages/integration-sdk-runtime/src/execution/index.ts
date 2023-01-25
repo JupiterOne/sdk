@@ -5,7 +5,8 @@ export {
 } from './instance';
 export { prepareLocalStepCollection } from './step';
 export { loadConfigFromEnvironmentVariables } from './config';
-export { DuplicateKeyTracker, TypeTracker, MemoryDataStore } from './jobState';
+export { TypeTracker, MemoryDataStore } from './jobState';
+export { DuplicateKeyTracker } from './duplicateKeyTracker';
 export { buildStepDependencyGraph } from './dependencyGraph';
 export {
   StepGraphObjectDataUploader,

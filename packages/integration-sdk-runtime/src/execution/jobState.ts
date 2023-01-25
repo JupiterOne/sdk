@@ -1,70 +1,20 @@
 import {
   Entity,
-  IntegrationDuplicateKeyError,
   JobState,
-  KeyNormalizationFunction,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 
 import { GraphObjectStore } from '../storage';
+import {
+  createDuplicateEntityReport,
+  DuplicateEntityReport,
+  DuplicateKeyTracker,
+} from './duplicateKeyTracker';
 import { StepGraphObjectDataUploader } from './uploader';
-import { BigMap } from './utils/bigMap';
-
-export interface DuplicateKeyTrackerGraphObjectMetadata {
-  _type: string;
-  _key: string;
-}
-
-const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2000000;
-
-/**
- * Contains a map of every graph object key to a specific set of metadata about
- * the graph object used for filtering. For example, we use the `_type` property
- * on graph objects as a method of filtering data down when iterating entities
- * or relationships. We store the `_type` inside the metadata for a fast lookup
- * table.
- */
-export class DuplicateKeyTracker {
-  private readonly graphObjectKeyMap: BigMap<
-    string,
-    DuplicateKeyTrackerGraphObjectMetadata
-  >;
-  private readonly normalizationFunction: KeyNormalizationFunction;
-
-  constructor(normalizationFunction?: KeyNormalizationFunction) {
-    this.normalizationFunction = normalizationFunction || ((_key) => _key);
-
-    this.graphObjectKeyMap = new BigMap<
-      string,
-      DuplicateKeyTrackerGraphObjectMetadata
-    >(DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE);
-  }
-
-  registerKey(_key: string, metadata: DuplicateKeyTrackerGraphObjectMetadata) {
-    const normalizedKey = this.normalizationFunction(_key);
-    if (this.graphObjectKeyMap.has(normalizedKey)) {
-      throw new IntegrationDuplicateKeyError(
-        `Duplicate _key detected (_key=${_key})`,
-      );
-    }
-
-    this.graphObjectKeyMap.set(normalizedKey, metadata);
-  }
-
-  getGraphObjectMetadata(_key: string) {
-    return this.graphObjectKeyMap.get(this.normalizationFunction(_key));
-  }
-
-  hasKey(_key: string) {
-    return this.graphObjectKeyMap.has(this.normalizationFunction(_key));
-  }
-}
-
 export type TypeTrackerStepSummary = {
-  graphObjectTypeSummary: {
-    _type: string;
+  [key: string]: {
     total: number;
-  }[];
+  };
 };
 
 type InternalTypeTrackerSummary = {
@@ -122,17 +72,14 @@ export class TypeTracker {
   }
 
   summarizeStep(stepId: string): TypeTrackerStepSummary {
-    const stepSummary: TypeTrackerStepSummary = {
-      graphObjectTypeSummary: [],
-    };
+    const stepSummary: TypeTrackerStepSummary = {};
 
     const existingStepSummary = this.graphObjectTypeSummaryByStep.get(stepId);
 
     for (const [_type, summary] of existingStepSummary?.entries() || []) {
-      stepSummary.graphObjectTypeSummary.push({
-        _type,
+      stepSummary[_type] = {
         ...summary,
-      });
+      };
     }
 
     return stepSummary;
@@ -182,8 +129,13 @@ export interface CreateStepJobStateParams {
    * Hook called after a relationship has been fully added to the job state
    */
   afterAddRelationship?: (relationship: Relationship) => Relationship;
+  /**
+   * Hook called after a duplicate entity has been found.
+   * @param duplicateEntityReport details about the duplicate entity.
+   * @returns void
+   */
+  onDuplicateEntityKey: (duplicateEntityReport: DuplicateEntityReport) => void;
 }
-
 export function createStepJobState({
   stepId,
   duplicateKeyTracker,
@@ -195,24 +147,36 @@ export function createStepJobState({
   afterAddEntity,
   afterAddRelationship,
   uploader,
+  onDuplicateEntityKey,
 }: CreateStepJobStateParams): JobState {
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     if (beforeAddEntity) {
       entities = entities.map(beforeAddEntity);
     }
 
-    entities.forEach((e) => {
-      duplicateKeyTracker.registerKey(e._key, {
-        _type: e._type,
-        _key: e._key,
-      });
+    for (const [index, entity] of entities.entries()) {
+      try {
+        duplicateKeyTracker.registerKey(entity._key, {
+          _type: entity._type,
+          _key: entity._key,
+        });
+      } catch (err) {
+        const duplicateEntityReport = await createDuplicateEntityReport({
+          duplicateEntity: entity,
+          payload: entities,
+          indexOfDuplicateKey: index,
+          graphObjectStore,
+        });
+        onDuplicateEntityKey(duplicateEntityReport);
+        throw err;
+      }
 
       typeTracker.addStepGraphObjectType({
         stepId,
-        _type: e._type,
+        _type: entity._type,
         count: 1,
       });
-    });
+    }
 
     await graphObjectStore.addEntities(stepId, entities, async (entities) =>
       uploader?.enqueue({

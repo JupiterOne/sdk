@@ -19,12 +19,7 @@ import {
 
 import { timeOperation } from '../metrics';
 import { GraphObjectStore } from '../storage';
-import {
-  createStepJobState,
-  DuplicateKeyTracker,
-  MemoryDataStore,
-  TypeTracker,
-} from './jobState';
+import { createStepJobState, MemoryDataStore, TypeTracker } from './jobState';
 import {
   CreateStepGraphObjectDataUploaderFunction,
   StepGraphObjectDataUploader,
@@ -33,6 +28,10 @@ import {
   iterateParsedEntityGraphFiles,
   iterateParsedRelationshipGraphFiles,
 } from '../fileSystem';
+import {
+  DuplicateEntityReport,
+  DuplicateKeyTracker,
+} from './duplicateKeyTracker';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -347,7 +346,7 @@ export function executeStepDependencyGraph<
         logger.info(
           {
             stepId,
-            summary: JSON.stringify(typeTracker.summarizeStep(stepId)),
+            summary: typeTracker.summarizeStep(stepId),
           },
           'Step summary',
         );
@@ -355,7 +354,7 @@ export function executeStepDependencyGraph<
         logger.info(
           {
             stepId,
-            summary: JSON.stringify(typeTracker.summarizeStep(stepId)),
+            summary: typeTracker.summarizeStep(stepId),
           },
           'Failed step summary',
         );
@@ -501,7 +500,14 @@ function buildStepContext<
         }
       : undefined;
 
+  const onDuplicateEntityKey = (
+    duplicateEntityReport: DuplicateEntityReport,
+  ) => {
+    context.logger.error(duplicateEntityReport, 'Duplicate entity report.');
+  };
+
   const jobState = createStepJobState({
+    onDuplicateEntityKey,
     stepId,
     duplicateKeyTracker,
     typeTracker,

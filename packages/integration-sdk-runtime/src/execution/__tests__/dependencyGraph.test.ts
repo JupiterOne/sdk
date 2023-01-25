@@ -29,7 +29,8 @@ import {
   executeStepDependencyGraph,
 } from '../dependencyGraph';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
-import { DuplicateKeyTracker, MemoryDataStore } from '../jobState';
+import { MemoryDataStore } from '../jobState';
+import { DuplicateKeyTracker } from '../duplicateKeyTracker';
 import { getDefaultStepStartStates } from '../step';
 import {
   CreateStepGraphObjectDataUploaderFunction,
