@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.30.2 - 2023-02-08
+
+### Added
+
+- Added DisabledStepReason.API_VERSION for use when the version of a third party
+  API does not support a given step.
+
 ## 8.30.1 - 2023-01-10
 
 ### Added
