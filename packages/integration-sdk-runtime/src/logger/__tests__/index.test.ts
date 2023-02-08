@@ -313,6 +313,7 @@ describe('step event publishing', () => {
 
     logger.stepStart(step);
     logger.stepSuccess(step);
+    logger.stepSkip(step, DisabledStepReason.API_VERSION);
     logger.stepSkip(step, DisabledStepReason.BETA);
     logger.stepSkip(step, DisabledStepReason.PERMISSION);
     logger.stepSkip(step, DisabledStepReason.CONFIG);
@@ -322,7 +323,7 @@ describe('step event publishing', () => {
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(6);
+    expect(onEmitEvent).toHaveBeenCalledTimes(7);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
       level: PublishEventLevel.Info,
@@ -337,21 +338,27 @@ describe('step event publishing', () => {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". Beta feature, please contact support to enable.',
+        'Skipped step "Mochi". This step is disabled due to a limitation in the third party API version that is being used.  Please review documentation for this integration for further information.',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(4, {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". The required permission was not provided to perform this step.',
+        'Skipped step "Mochi". Beta feature, please contact support to enable.',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(5, {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enabled.',
+        'Skipped step "Mochi". The required permission was not provided to perform this step.',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(6, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enabled.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(7, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
       description: expect.stringMatching(

@@ -16,6 +16,7 @@ export enum DisabledStepReason {
   PERMISSION = 'permission', // Missing permission disabled this step
   BETA = 'beta', // Step is in beta and only enabled on request
   CONFIG = 'config', // Step was disabled via config
+  API_VERSION = 'api_version', // Step is disabled due to lack of support in an API version
 }
 
 export interface StepStartState {
