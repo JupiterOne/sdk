@@ -321,6 +321,10 @@ export class IntegrationLogger
     let description = `Skipped step "${step.name}". `;
 
     switch (reason) {
+      case DisabledStepReason.API_VERSION: {
+        description += `This step is disabled due to a limitation in the third party API version that is being used.  Please review documentation for this integration for further information.`;
+        break;
+      }
       case DisabledStepReason.BETA: {
         description += `Beta feature, please contact support to enable.`;
         break;
