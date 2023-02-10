@@ -38,13 +38,16 @@ const fn = async function () {
     context.fileSystemGraphObjectStoreParams,
   );
 
-  const now = Date.now();
   await fileSystemGraphObjectStore.addEntities(
     context.stepId,
     context.newEntities,
   );
+  const now = Date.now();
+  for (let i = 0; i < 1000; i++) {
+    await fileSystemGraphObjectStore.findEntity(context.newEntities[i]._key);
+  }
   const time = Date.now() - now;
-  console.log(time);
+  console.log(`Took ${time} ms`);
 };
 
 void (async () => {
