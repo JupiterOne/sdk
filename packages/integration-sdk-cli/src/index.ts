@@ -12,6 +12,7 @@ import {
   neo4j,
   visualizeDependencies,
   generateIntegrationGraphSchemaCommand,
+  troubleshootLocalExecution,
 } from './commands';
 
 export function createCli() {
@@ -26,5 +27,6 @@ export function createCli() {
     .addCommand(validateQuestionFile())
     .addCommand(neo4j())
     .addCommand(visualizeDependencies())
-    .addCommand(generateIntegrationGraphSchemaCommand());
+    .addCommand(generateIntegrationGraphSchemaCommand())
+    .addCommand(troubleshootLocalExecution());
 }

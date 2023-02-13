@@ -34,7 +34,8 @@
     "neo4j-driver": "^4.3.3",
     "runtypes": "5.1.0",
     "upath": "^1.2.0",
-    "vis": "^4.21.0-EOL"
+    "vis": "^4.21.0-EOL",
+    "url-exists": "^1.0.3"
   },
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^8.30.1",

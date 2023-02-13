@@ -11,8 +11,8 @@ export function troubleshootLocalExecution() {
       'path to integration project directory',
       process.cwd(),
     )
-    .action((options) => {
+    .action(async (options) => {
       // const integrationDir = path.resolve(options.projectPath);
-      troubleshoot();
+      await troubleshoot(options);
     });
 }
