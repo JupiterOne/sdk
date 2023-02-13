@@ -1,12 +1,15 @@
 import * as log from '../log';
 import * as os from 'os';
-import { executeValidateAuthentication, executeWithLogging, getVersions } from './utils';
+import {
+  executeValidateAuthentication,
+  executeWithLogging,
+  getVersions,
+} from './utils';
 
 // Check items that our integrations aren't already checking or items
 // that would normally be checked or handled by the managed execution
 // in JupiterOne
-export async function troubleshoot (options) {
-
+export async function troubleshoot(options) {
   log.info(`Troubleshooting code found at ${options.projectPath}`);
 
   log.info(`Checking Operating System Information`);
