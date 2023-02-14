@@ -69,6 +69,7 @@ export function endpointCheck(url: string) {
           } else {
             log.info(`Endpoint is unreachable`);
           }
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
         });
       }
     });
