@@ -13,6 +13,13 @@ and this project adheres to
 
 ### Added
 
+- Added `troubleshoot` command to CLI to help diagnose problems with local
+  execution of integrations.
+
+## 8.30.2 - 2023-02-08
+
+### Added
+
 - Added DisabledStepReason.API_VERSION for use when the version of a third party
   API does not support a given step.
 
