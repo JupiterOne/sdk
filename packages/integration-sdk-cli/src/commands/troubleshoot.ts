@@ -1,5 +1,4 @@
 import { createCommand } from 'commander';
-// import path from 'path';
 
 import { troubleshoot } from '../troubleshoot';
 
