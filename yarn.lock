@@ -7736,7 +7736,7 @@ repeat-string@^1.0.0, repeat-string@^1.6.1:
   resolved "https://registry.yarnpkg.com/repeat-string/-/repeat-string-1.6.1.tgz#8dcae470e1c88abc2d600fff4a776286da75e637"
   integrity sha1-jcrkcOHIirwtYA//Sndihtp15jc=
 
-request@^2.88.0, request@^2.88.2:
+request@^2.69.0, request@^2.88.0, request@^2.88.2:
   version "2.88.2"
   resolved "https://registry.yarnpkg.com/request/-/request-2.88.2.tgz#d73c918731cb5a87da047e207234146f664d12b3"
   integrity sha512-MsvtOrfG9ZcrOwAW+Qi+F6HbD0CWXEh9ou77uOb7FM2WPhwT7smM833PzanhJLsgXjN89Ir6V2PczXNnMpwKhw==
@@ -8931,6 +8931,13 @@ urix@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/urix/-/urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72"
   integrity sha1-2pN/emLiH+wf0Y1Js1wpNQZ6bHI=
+
+url-exists@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/url-exists/-/url-exists-1.0.3.tgz#05b2875baf04950e27ef51e9846f1eff04716893"
+  integrity sha512-oN3lNUMLfIR4tI9ByLtfLThGhFeYWCjWw5lfat/2PLZRA6U/v7wzKb0SbCjhZcEHGYHqi05c2JTVmeMzIAxapw==
+  dependencies:
+    request "^2.69.0"
 
 url-parse@^1.5.0, url-parse@^1.5.3:
   version "1.5.10"
