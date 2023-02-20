@@ -73,6 +73,14 @@ describe('assignTags', () => {
     });
   });
 
+  test('tags with "" value have property name added to .tags', () => {
+    assignTags(entity, [{ key: 'Production', value: '' }]);
+    expect(entity).toMatchObject({
+      'tag.Production': '',
+      tags: ['Production'],
+    });
+  });
+
   test('tags with "true" value are assigned as boolean', () => {
     assignTags(entity, [
       { key: 'Production', value: 'true' },
