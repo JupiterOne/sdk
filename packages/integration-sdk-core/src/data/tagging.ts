@@ -115,7 +115,7 @@ function assignTagMap(
   for (const key of Object.keys(tagMap)) {
     const value = tagMap[key];
     if (value != null) {
-      if (TRUE_BOOLEAN_REGEX.test(value)) {
+      if (TRUE_BOOLEAN_REGEX.test(value) || value === '') {
         tags.push(key);
       }
 
