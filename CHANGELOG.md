@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.30.4 - 2023-02-20
+
+- Update `assignTags()` to add keys with `value: ''` to entity `.tags` property
+
 ## 8.30.2 - 2023-02-08
 
 ### Added
