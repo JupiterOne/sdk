@@ -46,7 +46,7 @@ export function shrinkBatchRawData(
 
     // If we don't have any entities to shrink or the optional _rawData array is empty,
     // we have no other options than to throw an error.
-    if (entityWithLargestRawData?._rawData) {
+    if (entityWithLargestRawData?._rawData?.length) {
       // Find largest element of the _rawData array (typically at index 0, but check to be certain)
       const largestRawDataEntry = getLargestRawDataEntry(
         entityWithLargestRawData._rawData,
