@@ -9,20 +9,38 @@ import {
 } from '@jupiterone/integration-sdk-core';
 import Database from 'better-sqlite3';
 import BetterSqlite3 from 'better-sqlite3';
+import { InMemoryGraphObjectStore } from '../memory';
+import { randomUUID } from 'crypto';
+
+export interface SQLiteGraphObjectStoreParams {
+  name?: string;
+  graphObjectBufferThreshold?: number;
+}
 
 export class SQLiteGraphObjectStore implements GraphObjectStore {
   private db: BetterSqlite3.Database;
+  private localGraphObjectStore: InMemoryGraphObjectStore;
+  private readonly graphObjectBufferThreshold: number;
 
-  constructor(name: string) {
-    const db = new Database(name);
+  constructor(params?: SQLiteGraphObjectStoreParams) {
+    this.localGraphObjectStore = new InMemoryGraphObjectStore();
+    this.graphObjectBufferThreshold =
+      params?.graphObjectBufferThreshold || 1000;
+
+    const dbName = params?.name || randomUUID();
+
+    const db = new Database(dbName);
     db.pragma('journal_mode = OFF');
     db.pragma('synchronous = OFF');
-    const stmt = db.prepare(
-      `CREATE TABLE integrationRun (_key text PRIMARY KEY, _type text, entityData text)`,
+    const createEntityTable = db.prepare(
+      `CREATE TABLE entities (_key text PRIMARY KEY, _type text, entityData text)`,
     );
-    const res = stmt.run();
+    const createRelationshipsTable = db.prepare(
+      `CREATE TABLE relationships (_key text PRIMARY KEY, _type text, relationshipData text)`,
+    );
+    createEntityTable.run();
+    createRelationshipsTable.run();
     this.db = db;
-    console.log(res.changes);
   }
 
   async addEntities(
@@ -31,7 +49,7 @@ export class SQLiteGraphObjectStore implements GraphObjectStore {
     onEntitiesFlushed?: ((entities: Entity[]) => Promise<void>) | undefined,
   ): Promise<void> {
     const stmt = this.db.prepare(
-      'INSERT INTO integrationRun (_key, _type,entityData) VALUES (@_key, @_type, @entityData)',
+      'INSERT INTO entities (_key, _type, entityData) VALUES (@_key, @_type, @entityData)',
     );
     const many = this.db.transaction((entities) => {
       for (const entity of entities)
@@ -59,12 +77,36 @@ export class SQLiteGraphObjectStore implements GraphObjectStore {
       | ((relationships: Relationship[]) => Promise<void>)
       | undefined,
   ): Promise<void> {
-    throw new Error('Method not implemented.');
+    const stmt = this.db.prepare(
+      'INSERT INTO entities (_key, _type,entityData) VALUES (@_key, @_type, @entityData)',
+    );
+
+    const many = this.db.transaction((relationships) => {
+      for (const relationship of relationships)
+        stmt.run({
+          _key: relationship._key,
+          _type: relationship._type,
+          entityData: JSON.stringify(relationship),
+        });
+    });
+
+    return new Promise((resolve, reject) => {
+      try {
+        many(newRelationships);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
   }
 
-  findEntity(_key: string | undefined): Promise<Entity | undefined> {
+  async findEntity(_key: string | undefined): Promise<Entity | undefined> {
+    if (!_key) {
+      return;
+    }
+
     const stmt = this.db.prepare(
-      'SELECT entityData FROM integrationRun WHERE _key = ?',
+      'SELECT entityData FROM entities WHERE _key = ?',
     );
     return new Promise((resolve, reject) => {
       try {
@@ -82,7 +124,7 @@ export class SQLiteGraphObjectStore implements GraphObjectStore {
     iteratee: GraphObjectIteratee<T>,
   ): Promise<void> {
     const stmt = this.db.prepare(
-      'SELECT entityData FROM integrationRun WHERE _type = ?',
+      'SELECT entityData FROM entities WHERE _type = ?',
     );
 
     try {
