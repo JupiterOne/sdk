@@ -1,5 +1,5 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 import axios, { AxiosInstance } from 'axios';
 import { v4 as uuid } from 'uuid';
 

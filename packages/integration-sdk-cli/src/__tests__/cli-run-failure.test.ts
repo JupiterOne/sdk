@@ -5,7 +5,7 @@ jest.doMock('@jupiterone/integration-sdk-runtime', () => ({
   createIntegrationLogger: mockCreateIntegrationLogger,
 }));
 
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 import { Polly } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import FSPersister from '@pollyjs/persister-fs';
