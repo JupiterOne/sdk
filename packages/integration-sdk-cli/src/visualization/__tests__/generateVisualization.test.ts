@@ -1,6 +1,6 @@
 import globby from 'globby';
 import path from 'path';
-import { mocked } from 'ts-jest/utils';
+import { mocked } from 'jest-mock';
 
 import {
   getRootStorageDirectory,
