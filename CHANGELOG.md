@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.30.5 - 2023-03-01
+
+- Update `@jupiterone/date-model` to version v0.54.0
+
 ## 8.30.4 - 2023-02-20
 
 - Update `assignTags()` to add keys with `value: ''` to entity `.tags` property
