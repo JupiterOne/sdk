@@ -9,7 +9,6 @@ import {
 } from '@jupiterone/integration-sdk-core';
 import Database from 'better-sqlite3';
 import BetterSqlite3 from 'better-sqlite3';
-import { InMemoryGraphObjectStore } from '../memory';
 import { randomUUID } from 'crypto';
 
 export interface SQLiteGraphObjectStoreParams {
@@ -19,13 +18,14 @@ export interface SQLiteGraphObjectStoreParams {
 
 export class SQLiteGraphObjectStore implements GraphObjectStore {
   private db: BetterSqlite3.Database;
-  private localGraphObjectStore: InMemoryGraphObjectStore;
-  private readonly graphObjectBufferThreshold: number;
+
+  //  private localGraphObjectStore: InMemoryGraphObjectStore;
+  //  private readonly graphObjectBufferThreshold: number;
 
   constructor(params?: SQLiteGraphObjectStoreParams) {
-    this.localGraphObjectStore = new InMemoryGraphObjectStore();
-    this.graphObjectBufferThreshold =
-      params?.graphObjectBufferThreshold || 1000;
+    //    this.localGraphObjectStore = new InMemoryGraphObjectStore();
+    //    this.graphObjectBufferThreshold =
+    //      params?.graphObjectBufferThreshold || 1000;
 
     const dbName = params?.name || randomUUID();
 
