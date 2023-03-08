@@ -10,6 +10,7 @@ import {
 import Database from 'better-sqlite3';
 import BetterSqlite3 from 'better-sqlite3';
 import { randomUUID } from 'crypto';
+import { InMemoryGraphObjectStore } from '../memory';
 
 export interface SQLiteGraphObjectStoreParams {
   name?: string;
@@ -19,13 +20,13 @@ export interface SQLiteGraphObjectStoreParams {
 export class SQLiteGraphObjectStore implements GraphObjectStore {
   private db: BetterSqlite3.Database;
 
-  //  private localGraphObjectStore: InMemoryGraphObjectStore;
-  //  private readonly graphObjectBufferThreshold: number;
+  private localGraphObjectStore: InMemoryGraphObjectStore;
+  private readonly graphObjectBufferThreshold: number;
 
   constructor(params?: SQLiteGraphObjectStoreParams) {
-    //    this.localGraphObjectStore = new InMemoryGraphObjectStore();
-    //    this.graphObjectBufferThreshold =
-    //      params?.graphObjectBufferThreshold || 1000;
+    this.localGraphObjectStore = new InMemoryGraphObjectStore();
+    this.graphObjectBufferThreshold =
+      params?.graphObjectBufferThreshold || 1000;
 
     const dbName = params?.name || randomUUID();
 
@@ -48,26 +49,37 @@ export class SQLiteGraphObjectStore implements GraphObjectStore {
     newEntities: Entity[],
     onEntitiesFlushed?: ((entities: Entity[]) => Promise<void>) | undefined,
   ): Promise<void> {
-    const stmt = this.db.prepare(
-      'INSERT INTO entities (_key, _type, entityData) VALUES (@_key, @_type, @entityData)',
-    );
-    const many = this.db.transaction((entities) => {
-      for (const entity of entities)
-        stmt.run({
-          _key: entity._key,
-          _type: entity._type,
-          entityData: JSON.stringify(entity),
-        });
-    });
+    await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
-    return new Promise((resolve, reject) => {
-      try {
-        many(newEntities);
-        resolve();
-      } catch (err) {
-        reject(err);
-      }
-    });
+    if (
+      this.localGraphObjectStore.getTotalEntityItemCount() >=
+      this.graphObjectBufferThreshold
+    ) {
+      const stmt = this.db.prepare(
+        'INSERT INTO entities (_key, _type, entityData) VALUES (@_key, @_type, @entityData)',
+      );
+      const many = this.db.transaction((entities) => {
+        for (const entity of entities)
+          stmt.run({
+            _key: entity._key,
+            _type: entity._type,
+            entityData: JSON.stringify(entity),
+          });
+      });
+
+      return new Promise((resolve, reject) => {
+        try {
+          many(newEntities);
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+  }
+
+  private async flushEntitiesToDatabase() {
+    this.localGraphObjectStore.flushEntities();
   }
 
   addRelationships(
@@ -158,4 +170,13 @@ export class SQLiteGraphObjectStore implements GraphObjectStore {
         params: GetIndexMetadataForGraphObjectTypeParams,
       ) => GraphObjectIndexMetadata | undefined)
     | undefined;
+
+  private async lockOperation<T>(operation: () => Promise<T>) {
+    await this.semaphore.acquire();
+    try {
+      await operation();
+    } finally {
+      this.semaphore.release();
+    }
+  }
 }
