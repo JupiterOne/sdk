@@ -2,7 +2,6 @@ import {
   Entity,
   JobState,
   Relationship,
-  KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 import {
   DuplicateKeyTracker,
@@ -15,7 +14,6 @@ export interface CreateMockJobStateOptions {
   entities?: Entity[];
   relationships?: Relationship[];
   setData?: { [key: string]: any };
-  normalizeGraphObjectKey?: KeyNormalizationFunction;
 }
 
 /**
@@ -41,22 +39,18 @@ export function createMockJobState({
   entities: inputEntities = [],
   relationships: inputRelationships = [],
   setData: inputData = {},
-  normalizeGraphObjectKey,
 }: CreateMockJobStateOptions = {}): MockJobState {
   let collectedEntities: Entity[] = [];
   let collectedRelationships: Relationship[] = [];
   const collectedData: { [key: string]: any } = {};
 
-  const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
+  const duplicateKeyTracker = new DuplicateKeyTracker();
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
   const mockStepId = `mock-step-${uuid()}`;
 
   inputEntities.forEach((e) => {
-    duplicateKeyTracker.registerKey(e._key, {
-      _type: e._type,
-      _key: e._key,
-    });
+    duplicateKeyTracker.registerKey(e._key);
 
     typeTracker.addStepGraphObjectType({
       stepId: mockStepId,
@@ -66,10 +60,7 @@ export function createMockJobState({
   });
 
   inputRelationships.forEach((r) => {
-    duplicateKeyTracker.registerKey(r._key as string, {
-      _type: r._type,
-      _key: r._key,
-    });
+    duplicateKeyTracker.registerKey(r._key);
 
     typeTracker.addStepGraphObjectType({
       stepId: mockStepId,
@@ -82,10 +73,7 @@ export function createMockJobState({
 
   const addEntities = async (newEntities: Entity[]): Promise<Entity[]> => {
     newEntities.forEach((e) => {
-      duplicateKeyTracker.registerKey(e._key, {
-        _type: e._type,
-        _key: e._key,
-      });
+      duplicateKeyTracker.registerKey(e._key);
 
       typeTracker.addStepGraphObjectType({
         stepId: mockStepId,
@@ -100,10 +88,7 @@ export function createMockJobState({
 
   const addRelationships = async (newRelationships: Relationship[]) => {
     newRelationships.forEach((r) => {
-      duplicateKeyTracker.registerKey(r._key as string, {
-        _type: r._type,
-        _key: r._key,
-      });
+      duplicateKeyTracker.registerKey(r._key);
 
       typeTracker.addStepGraphObjectType({
         stepId: mockStepId,
@@ -173,17 +158,15 @@ export function createMockJobState({
 
     findEntity: async (_key: string | undefined) => {
       if (!_key) return null;
-      const graphObjectMetadata =
-        duplicateKeyTracker.getGraphObjectMetadata(_key);
+      const hasKey = duplicateKeyTracker.hasKey(_key);
 
-      if (!graphObjectMetadata) {
+      if (!hasKey) {
         return null;
       }
 
       return Promise.resolve(
-        [...inputEntities, ...collectedEntities].find(
-          (e) => e._key === graphObjectMetadata._key,
-        ) || null,
+        [...inputEntities, ...collectedEntities].find((e) => e._key === _key) ||
+          null,
       );
     },
 

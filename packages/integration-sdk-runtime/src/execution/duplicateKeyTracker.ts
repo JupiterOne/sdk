@@ -2,15 +2,9 @@ import {
   Entity,
   GraphObjectStore,
   IntegrationDuplicateKeyError,
-  KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 import { deepStrictEqual } from 'assert';
 import { BigMap } from './utils/bigMap';
-
-export interface DuplicateKeyTrackerGraphObjectMetadata {
-  _type: string;
-  _key: string;
-}
 
 const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2000000;
 
@@ -22,38 +16,26 @@ const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2000000;
  * table.
  */
 export class DuplicateKeyTracker {
-  private readonly graphObjectKeyMap: BigMap<
-    string,
-    DuplicateKeyTrackerGraphObjectMetadata
-  >;
-  private readonly normalizationFunction: KeyNormalizationFunction;
+  private readonly graphObjectKeyMap: BigMap<string, boolean>;
 
-  constructor(normalizationFunction?: KeyNormalizationFunction) {
-    this.normalizationFunction = normalizationFunction || ((_key) => _key);
-
-    this.graphObjectKeyMap = new BigMap<
-      string,
-      DuplicateKeyTrackerGraphObjectMetadata
-    >(DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE);
+  constructor() {
+    this.graphObjectKeyMap = new BigMap<string, boolean>(
+      DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE,
+    );
   }
 
-  registerKey(_key: string, metadata: DuplicateKeyTrackerGraphObjectMetadata) {
-    const normalizedKey = this.normalizationFunction(_key);
-    if (this.graphObjectKeyMap.has(normalizedKey)) {
+  registerKey(_key: string) {
+    if (this.graphObjectKeyMap.has(_key)) {
       throw new IntegrationDuplicateKeyError(
         `Duplicate _key detected (_key=${_key})`,
       );
     }
 
-    this.graphObjectKeyMap.set(normalizedKey, metadata);
-  }
-
-  getGraphObjectMetadata(_key: string) {
-    return this.graphObjectKeyMap.get(this.normalizationFunction(_key));
+    this.graphObjectKeyMap.set(_key, true);
   }
 
   hasKey(_key: string) {
-    return this.graphObjectKeyMap.has(this.normalizationFunction(_key));
+    return this.graphObjectKeyMap.has(_key);
   }
 }
 

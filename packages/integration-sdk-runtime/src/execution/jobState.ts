@@ -156,10 +156,7 @@ export function createStepJobState({
 
     for (const [index, entity] of entities.entries()) {
       try {
-        duplicateKeyTracker.registerKey(entity._key, {
-          _type: entity._type,
-          _key: entity._key,
-        });
+        duplicateKeyTracker.registerKey(entity._key);
       } catch (err) {
         const duplicateEntityReport = await createDuplicateEntityReport({
           duplicateEntity: entity,
@@ -193,10 +190,7 @@ export function createStepJobState({
   };
 
   function registerRelationshipInTrackers(r: Relationship) {
-    duplicateKeyTracker.registerKey(r._key, {
-      _type: r._type,
-      _key: r._key,
-    });
+    duplicateKeyTracker.registerKey(r._key);
 
     typeTracker.addStepGraphObjectType({
       stepId,
@@ -267,16 +261,13 @@ export function createStepJobState({
 
     findEntity: async (_key: string | undefined) => {
       if (!_key) return null;
-      const graphObjectMetadata =
-        duplicateKeyTracker.getGraphObjectMetadata(_key);
+      const keyExists = duplicateKeyTracker.hasKey(_key);
 
-      if (!graphObjectMetadata) {
+      if (!keyExists) {
         return null;
       }
 
-      return (
-        (await graphObjectStore.findEntity(graphObjectMetadata._key)) || null
-      );
+      return (await graphObjectStore.findEntity(_key)) || null;
     },
 
     hasKey: (_key: string | undefined) => {
