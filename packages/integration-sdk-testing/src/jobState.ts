@@ -53,10 +53,7 @@ export function createMockJobState({
   const mockStepId = `mock-step-${uuid()}`;
 
   inputEntities.forEach((e) => {
-    duplicateKeyTracker.registerKey(e._key, {
-      _type: e._type,
-      _key: e._key,
-    });
+    duplicateKeyTracker.registerKey(e._key);
 
     typeTracker.addStepGraphObjectType({
       stepId: mockStepId,
@@ -66,10 +63,7 @@ export function createMockJobState({
   });
 
   inputRelationships.forEach((r) => {
-    duplicateKeyTracker.registerKey(r._key as string, {
-      _type: r._type,
-      _key: r._key,
-    });
+    duplicateKeyTracker.registerKey(r._key);
 
     typeTracker.addStepGraphObjectType({
       stepId: mockStepId,
@@ -82,10 +76,7 @@ export function createMockJobState({
 
   const addEntities = async (newEntities: Entity[]): Promise<Entity[]> => {
     newEntities.forEach((e) => {
-      duplicateKeyTracker.registerKey(e._key, {
-        _type: e._type,
-        _key: e._key,
-      });
+      duplicateKeyTracker.registerKey(e._key);
 
       typeTracker.addStepGraphObjectType({
         stepId: mockStepId,
@@ -100,10 +91,7 @@ export function createMockJobState({
 
   const addRelationships = async (newRelationships: Relationship[]) => {
     newRelationships.forEach((r) => {
-      duplicateKeyTracker.registerKey(r._key as string, {
-        _type: r._type,
-        _key: r._key,
-      });
+      duplicateKeyTracker.registerKey(r._key);
 
       typeTracker.addStepGraphObjectType({
         stepId: mockStepId,
@@ -173,16 +161,15 @@ export function createMockJobState({
 
     findEntity: async (_key: string | undefined) => {
       if (!_key) return null;
-      const graphObjectMetadata =
-        duplicateKeyTracker.getGraphObjectMetadata(_key);
+      const unnormalizedKey = duplicateKeyTracker.getGraphObjectMetadata(_key);
 
-      if (!graphObjectMetadata) {
+      if (!unnormalizedKey) {
         return null;
       }
 
       return Promise.resolve(
         [...inputEntities, ...collectedEntities].find(
-          (e) => e._key === graphObjectMetadata._key,
+          (e) => e._key === unnormalizedKey,
         ) || null,
       );
     },
