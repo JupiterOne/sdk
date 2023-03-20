@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.31.0 - 2023-03-20
+
 - Add `collectEntities` and `collectRelationships` functions to
   `InMemoryGraphObjectStore`.
 
