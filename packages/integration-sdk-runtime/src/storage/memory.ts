@@ -231,6 +231,23 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     }
   }
 
+  collectEntities(): Entity[] {
+    const entities: Entity[] = [];
+    for (const [_key, graphObjectData] of this.entityKeyToEntityMap) {
+      entities.push(graphObjectData.entity);
+    }
+    return entities;
+  }
+
+  collectRelationships(): Relationship[] {
+    const relationships: Relationship[] = [];
+    for (const [_key, graphObjectData] of this
+      .relationshipKeyToRelationshipMap) {
+      relationships.push(graphObjectData.relationship);
+    }
+    return relationships;
+  }
+
   collectEntitiesByStep(): Map<string, Entity[]> {
     const entitiesByStepMap = new Map<string, Entity[]>();
 

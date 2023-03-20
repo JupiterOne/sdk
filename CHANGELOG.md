@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+- Add `collectEntities` and `collectRelationships` functions to
+  `InMemoryGraphObjectStore`.
+
 ## 8.30.5 - 2023-03-01
 
 - Update `@jupiterone/date-model` to version v0.54.0
