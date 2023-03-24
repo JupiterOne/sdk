@@ -2,7 +2,7 @@ import path from 'path';
 import { promises as fs } from 'fs';
 
 import { vol } from 'memfs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import times from 'lodash/times';
 
 import { getRootStorageDirectory } from '../../../fileSystem';

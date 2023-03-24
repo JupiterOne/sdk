@@ -20,7 +20,7 @@ import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
 import { AttemptContext, retry } from '@lifeomic/attempt';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';

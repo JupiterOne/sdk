@@ -9,7 +9,7 @@ import {
   DuplicateEntityReport,
   DuplicateKeyTracker,
 } from '../duplicateKeyTracker';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
 import { Entity } from '@jupiterone/integration-sdk-core';

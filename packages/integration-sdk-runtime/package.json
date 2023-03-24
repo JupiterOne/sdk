@@ -11,7 +11,7 @@
     "dist"
   ],
   "engines": {
-    "node": "14.x"
+    "node": ">=14.17.0 <15.x"
   },
   "publishConfig": {
     "access": "public"
@@ -39,12 +39,10 @@
     "lodash": "^4.17.15",
     "p-map": "^4.0.0",
     "p-queue": "^6.3.0",
-    "rimraf": "^3.0.2",
-    "uuid": "^7.0.3"
+    "rimraf": "^3.0.2"
   },
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^8.31.1",
-    "@types/uuid": "^7.0.2",
     "get-port": "^5.1.1",
     "memfs": "^3.2.0",
     "ts-node": "^9.1.0",

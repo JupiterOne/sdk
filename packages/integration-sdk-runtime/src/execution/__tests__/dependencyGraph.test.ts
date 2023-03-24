@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import times from 'lodash/times';
 import { vol } from 'memfs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import waitForExpect from 'wait-for-expect';
 
 import {
