@@ -156,8 +156,8 @@ async function tryPublishDiskUsageMetric<
   if (!(await isRootStorageDirectoryPresent())) {
     return;
   }
-
-  publishDiskUsageMetric(context, await getRootStorageDirectorySize());
+  const size = await getRootStorageDirectorySize();
+  publishDiskUsageMetric(context, size);
 }
 
 /**

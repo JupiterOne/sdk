@@ -6,9 +6,7 @@
  */
 import { promises as fs } from 'fs';
 import path from 'path';
-
 import rimraf from 'rimraf';
-import getFolderSize from 'get-folder-size';
 import * as zlib from 'zlib';
 import { promisify } from 'util';
 import { FlushedGraphObjectData } from './storage/types';
@@ -19,6 +17,22 @@ const brotliCompress = promisify(zlib.brotliCompress);
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
 export const DEFAULT_STORAGE_DIRECTORY_NAME = '.j1-integration';
+
+async function getDirectorySize(dirPath: string): Promise<number> {
+  let size = 0;
+  const files = await fs.readdir(dirPath);
+  for (const file of files) {
+    const filePath = path.join(dirPath, file);
+    const stats = await fs.stat(filePath);
+
+    if (stats.isFile()) {
+      size += stats.size;
+    } else if (stats.isDirectory()) {
+      size += await getDirectorySize(filePath);
+    }
+  }
+  return size;
+}
 
 export function getRootStorageDirectory() {
   return (
@@ -32,11 +46,8 @@ export function getRootStorageAbsolutePath(relativePath: string) {
 }
 
 export function getRootStorageDirectorySize(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    getFolderSize(getRootStorageDirectory(), (err: Error, size: number) =>
-      err ? reject(err) : resolve(size),
-    );
-  });
+  const rootDirPath = getRootStorageDirectory();
+  return getDirectorySize(rootDirPath);
 }
 
 interface WriteDataToPathInput {
