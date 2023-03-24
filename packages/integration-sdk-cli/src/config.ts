@@ -17,13 +17,21 @@ export class IntegrationInvocationConfigLoadError extends IntegrationError {
   }
 }
 
+export interface LoadConfigOptions {
+  disableTypescript?: boolean;
+}
+
 /**
  * Loads integration invocation configuration.
  */
 export async function loadConfig(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
+  opts?: LoadConfigOptions,
 ): Promise<IntegrationInvocationConfig> {
-  if (await isTypescriptPresent(projectSourceDirectory)) {
+  if (
+    opts?.disableTypescript !== true &&
+    (await isTypescriptPresent(projectSourceDirectory))
+  ) {
     log.debug('TypeScript files detected. Registering ts-node.');
     registerTypescript();
   }

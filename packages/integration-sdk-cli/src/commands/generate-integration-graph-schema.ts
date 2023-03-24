@@ -8,7 +8,11 @@ import {
 } from '@jupiterone/integration-sdk-core';
 import { createCommand } from 'commander';
 import path from 'path';
-import { IntegrationInvocationConfigLoadError, loadConfig } from '../config';
+import {
+  IntegrationInvocationConfigLoadError,
+  loadConfig,
+  LoadConfigOptions,
+} from '../config';
 import { promises as fs } from 'fs';
 import * as log from '../log';
 
@@ -27,13 +31,20 @@ export function generateIntegrationGraphSchemaCommand() {
       'path to integration project directory',
       process.cwd(),
     )
+    .option(
+      '--disable-typescript',
+      'disable registering ts-node at the start of execution',
+      false,
+    )
     .action(async (options) => {
-      const { projectPath, outputFile } = options;
+      const { projectPath, outputFile, disableTypescript } = options;
 
       log.info(
         `Generating integration graph schema (projectPath=${projectPath}, outputFile=${outputFile})`,
       );
-      const config = await loadConfigFromTarget(projectPath);
+      const config = await loadConfigFromTarget(projectPath, {
+        disableTypescript,
+      });
 
       const integrationGraphSchema = generateIntegrationGraphSchema(
         config.integrationSteps,
@@ -51,12 +62,12 @@ export function generateIntegrationGraphSchemaCommand() {
     });
 }
 
-function loadConfigFromSrc(projectPath: string) {
-  return loadConfig(path.join(projectPath, 'src'));
+function loadConfigFromSrc(projectPath: string, opts: LoadConfigOptions) {
+  return loadConfig(path.join(projectPath, 'src'), opts);
 }
 
-function loadConfigFromDist(projectPath: string) {
-  return loadConfig(path.join(projectPath, 'dist'));
+function loadConfigFromDist(projectPath: string, opts: LoadConfigOptions) {
+  return loadConfig(path.join(projectPath, 'dist'), opts);
 }
 
 /**
@@ -65,19 +76,22 @@ function loadConfigFromDist(projectPath: string) {
  * traditionally lived to support backwards compatibility and make adoption
  * easier.
  */
-async function loadConfigFromTarget(projectPath: string) {
+async function loadConfigFromTarget(
+  projectPath: string,
+  opts: LoadConfigOptions,
+) {
   let configFromSrcErr: Error | undefined;
   let configFromDistErr: Error | undefined;
 
   try {
-    const configFromSrc = await loadConfigFromSrc(projectPath);
+    const configFromSrc = await loadConfigFromSrc(projectPath, opts);
     return configFromSrc;
   } catch (err) {
     configFromSrcErr = err;
   }
 
   try {
-    const configFromDist = await loadConfigFromDist(projectPath);
+    const configFromDist = await loadConfigFromDist(projectPath, opts);
     return configFromDist;
   } catch (err) {
     configFromDistErr = err;
