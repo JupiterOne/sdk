@@ -1,5 +1,5 @@
 import pMap from 'p-map';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import groupBy from 'lodash/groupBy';
 
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';

@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 
 import { vol } from 'memfs';
 import pMap from 'p-map';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import times from 'lodash/times';
 import sortBy from 'lodash/sortBy';
 import flatten from 'lodash/flatten';

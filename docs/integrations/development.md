@@ -161,7 +161,7 @@ Example:
 
 ```typescript
 import { fromTemporaryCredentials } from '@aws-sdk/credential-providers';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 interface InstanceConfig extends IntegrationInstanceConfig {
   roleArn: string;

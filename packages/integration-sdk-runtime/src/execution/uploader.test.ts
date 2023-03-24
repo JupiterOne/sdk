@@ -10,7 +10,7 @@ import {
   createTestRelationship,
 } from '@jupiterone/integration-sdk-private-test-utils';
 import times from 'lodash/times';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { SynchronizationJobContext } from '../synchronization';
 import { createApiClient, getApiBaseUrl } from '../api';
 import { generateSynchronizationJob } from '../synchronization/__tests__/util/generateSynchronizationJob';

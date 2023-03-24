@@ -18,7 +18,7 @@ import {
   registerMatchers,
   toImplementSpec,
 } from '../jest';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { toMatchStepMetadata } from '..';
 import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 

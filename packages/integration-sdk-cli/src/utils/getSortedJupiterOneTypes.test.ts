@@ -2,197 +2,215 @@ import {
   RelationshipClass,
   RelationshipDirection,
   Step,
+  StepEntityMetadata,
+  StepMappedRelationshipMetadata,
+  StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { collectGraphObjectMetadataFromSteps } from './getSortedJupiterOneTypes';
+import { randomUUID as uuid } from 'crypto';
 
-function createIntegrationStep(
-  stepNumber: number,
-  entityTypes: string[],
-  relationshipTypes: string[],
-  mappedRelationshipTypes?: string[],
-): Step<any> {
+function createIntegrationStep({
+  entities = [],
+  relationships = [],
+  mappedRelationships = [],
+}: {
+  entities?: StepEntityMetadata[];
+  relationships?: StepRelationshipMetadata[];
+  mappedRelationships?: StepMappedRelationshipMetadata[];
+}): Step<any> {
+  const stepId = uuid();
+
   return {
-    id: `step-${stepNumber}`,
-    name: `Step ${stepNumber}`,
-    entities: entityTypes.map((type) => {
-      return {
-        resourceName: `${type} - ${stepNumber}`,
-        _class: [],
-        _type: type,
-      };
-    }),
-    relationships: relationshipTypes.map((type) => {
-      return {
-        sourceType: `${stepNumber}`,
-        targetType: `${stepNumber}`,
-        _type: type,
-        _class: RelationshipClass.HAS,
-      };
-    }),
-    mappedRelationships: mappedRelationshipTypes?.map((type) => {
-      return {
-        sourceType: `${stepNumber}`,
-        targetType: `${stepNumber}`,
-        _type: type,
-        _class: RelationshipClass.HAS,
-        direction: RelationshipDirection.FORWARD,
-      };
-    }),
+    id: `step-${stepId}`,
+    name: `Step ${stepId}`,
+    entities,
+    relationships: relationships,
+    mappedRelationships: mappedRelationships,
     executionHandler: () => undefined,
   };
 }
 
+function createTestStepRelationshipMetadata(
+  partial?: Partial<StepRelationshipMetadata>,
+): StepRelationshipMetadata {
+  return {
+    _class: RelationshipClass.HAS,
+    _type: 'relationship_a_b',
+    sourceType: 'a',
+    targetType: 'b',
+    ...partial,
+  };
+}
+
+function createTestStepMappedRelationshipMetadata(
+  partial?: Partial<StepMappedRelationshipMetadata>,
+): StepMappedRelationshipMetadata {
+  return {
+    ...createTestStepRelationshipMetadata(),
+    direction: RelationshipDirection.FORWARD,
+    ...partial,
+  };
+}
+
 describe('collectGraphObjectMetadataFromSteps', () => {
-  test('should return unique entity types', () => {
-    const metadata = collectGraphObjectMetadataFromSteps([
-      createIntegrationStep(1, ['entity_a'], []),
-      createIntegrationStep(2, ['entity_a'], []),
-    ]);
-    expect(metadata.entities).toEqual([
-      {
-        resourceName: 'entity_a - 1',
-        _class: [],
-        _type: 'entity_a',
-      },
-    ]);
+  describe('entities', () => {
+    test('should de-duplicate entity metadata', () => {
+      const stepEntities: StepEntityMetadata[] = [
+        {
+          resourceName: 'Entity',
+          _class: 'Resource',
+          _type: 'entity_a',
+        },
+      ];
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ entities: stepEntities }),
+        createIntegrationStep({ entities: stepEntities }),
+      ]);
+
+      expect(metadata.entities).toEqual(stepEntities);
+    });
   });
 
-  test('should return all entity types if duplicateTypes is `true`', () => {
-    const metadata = collectGraphObjectMetadataFromSteps(
-      [
-        createIntegrationStep(1, ['entity_a'], []),
-        createIntegrationStep(2, ['entity_a'], []),
-      ],
-      true,
-    );
-    expect(metadata.entities).toEqual([
-      {
-        resourceName: 'entity_a - 1',
-        _class: [],
-        _type: 'entity_a',
-      },
-      {
-        resourceName: 'entity_a - 2',
-        _class: [],
-        _type: 'entity_a',
-      },
-    ]);
+  describe('relationships', () => {
+    test('should de-duplicate relationship metadata', () => {
+      const stepRelationships: StepRelationshipMetadata[] = [
+        createTestStepRelationshipMetadata(),
+      ];
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ relationships: stepRelationships }),
+        createIntegrationStep({ relationships: stepRelationships }),
+      ]);
+
+      expect(metadata.relationships).toEqual(stepRelationships);
+    });
+
+    test('should not de-duplicate relationship metadata with different _class', () => {
+      const r1 = createTestStepRelationshipMetadata();
+      const r2 = createTestStepRelationshipMetadata({
+        _class: RelationshipClass.IS,
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ relationships: [r1] }),
+        createIntegrationStep({ relationships: [r2] }),
+      ]);
+
+      expect(metadata.relationships).toEqual([r1, r2]);
+    });
+
+    test('should not de-duplicate relationship metadata with different _type', () => {
+      const r1 = createTestStepRelationshipMetadata();
+      const r2 = createTestStepRelationshipMetadata({
+        _type: 'relationship_a_b_2',
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ relationships: [r1] }),
+        createIntegrationStep({ relationships: [r2] }),
+      ]);
+
+      expect(metadata.relationships).toEqual([r1, r2]);
+    });
+
+    test('should not de-duplicate relationship metadata with different sourceType', () => {
+      const r1 = createTestStepRelationshipMetadata();
+      const r2 = createTestStepRelationshipMetadata({
+        sourceType: 'a_2',
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ relationships: [r1] }),
+        createIntegrationStep({ relationships: [r2] }),
+      ]);
+
+      expect(metadata.relationships).toEqual([r1, r2]);
+    });
+
+    test('should not de-duplicate relationship metadata with different targetType', () => {
+      const r1 = createTestStepRelationshipMetadata();
+      const r2 = createTestStepRelationshipMetadata({
+        targetType: 'b_2',
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ relationships: [r1] }),
+        createIntegrationStep({ relationships: [r2] }),
+      ]);
+
+      expect(metadata.relationships).toEqual([r1, r2]);
+    });
   });
 
-  test('should return unique relationship types', () => {
-    const metadata = collectGraphObjectMetadataFromSteps([
-      createIntegrationStep(1, [], ['relationship_a']),
-      createIntegrationStep(2, [], ['relationship_a', 'relationship_b']),
-    ]);
-    expect(metadata.relationships).toEqual([
-      {
-        sourceType: '1',
-        targetType: '1',
-        _type: 'relationship_a',
-        _class: RelationshipClass.HAS,
-      },
-      {
-        sourceType: '2',
-        targetType: '2',
-        _type: 'relationship_b',
-        _class: RelationshipClass.HAS,
-      },
-    ]);
-  });
+  describe('mapped relationships', () => {
+    test('should de-duplicate mapped relationship metadata', () => {
+      const stepMappedRelationships: StepMappedRelationshipMetadata[] = [
+        createTestStepMappedRelationshipMetadata(),
+      ];
 
-  test('should return all relationship types if duplicateTypes is `true`', () => {
-    const metadata = collectGraphObjectMetadataFromSteps(
-      [
-        createIntegrationStep(1, [], ['relationship_a']),
-        createIntegrationStep(2, [], ['relationship_a', 'relationship_b']),
-      ],
-      true,
-    );
-    expect(metadata.relationships).toEqual([
-      {
-        sourceType: '1',
-        targetType: '1',
-        _type: 'relationship_a',
-        _class: RelationshipClass.HAS,
-      },
-      {
-        sourceType: '2',
-        targetType: '2',
-        _type: 'relationship_a',
-        _class: RelationshipClass.HAS,
-      },
-      {
-        sourceType: '2',
-        targetType: '2',
-        _type: 'relationship_b',
-        _class: RelationshipClass.HAS,
-      },
-    ]);
-  });
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ mappedRelationships: stepMappedRelationships }),
+        createIntegrationStep({ mappedRelationships: stepMappedRelationships }),
+      ]);
 
-  test('should return unique mapped relationship types', () => {
-    const metadata = collectGraphObjectMetadataFromSteps([
-      createIntegrationStep(1, [], [], ['mapped_relationship_a']),
-      createIntegrationStep(
-        2,
-        [],
-        [],
-        ['mapped_relationship_a', 'mapped_relationship_b'],
-      ),
-    ]);
-    expect(metadata.mappedRelationships).toEqual([
-      {
-        sourceType: '1',
-        targetType: '1',
-        _type: 'mapped_relationship_a',
-        _class: RelationshipClass.HAS,
-        direction: RelationshipDirection.FORWARD,
-      },
-      {
-        sourceType: '2',
-        targetType: '2',
-        _type: 'mapped_relationship_b',
-        _class: RelationshipClass.HAS,
-        direction: RelationshipDirection.FORWARD,
-      },
-    ]);
-  });
+      expect(metadata.mappedRelationships).toEqual(stepMappedRelationships);
+    });
 
-  test('should return all mapped relationship types if duplicateTypes is `true`', () => {
-    const metadata = collectGraphObjectMetadataFromSteps(
-      [
-        createIntegrationStep(1, [], [], ['mapped_relationship_a']),
-        createIntegrationStep(
-          2,
-          [],
-          [],
-          ['mapped_relationship_a', 'mapped_relationship_b'],
-        ),
-      ],
-      true,
-    );
-    expect(metadata.mappedRelationships).toEqual([
-      {
-        sourceType: '1',
-        targetType: '1',
-        _type: 'mapped_relationship_a',
-        _class: RelationshipClass.HAS,
-        direction: RelationshipDirection.FORWARD,
-      },
-      {
-        sourceType: '2',
-        targetType: '2',
-        _type: 'mapped_relationship_a',
-        _class: RelationshipClass.HAS,
-        direction: RelationshipDirection.FORWARD,
-      },
-      {
-        sourceType: '2',
-        targetType: '2',
-        _type: 'mapped_relationship_b',
-        _class: RelationshipClass.HAS,
-        direction: RelationshipDirection.FORWARD,
-      },
-    ]);
+    test('should not de-duplicate mapped relationship metadata with different _class', () => {
+      const r1 = createTestStepMappedRelationshipMetadata();
+      const r2 = createTestStepMappedRelationshipMetadata({
+        _class: RelationshipClass.IS,
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ mappedRelationships: [r1] }),
+        createIntegrationStep({ mappedRelationships: [r2] }),
+      ]);
+
+      expect(metadata.mappedRelationships).toEqual([r1, r2]);
+    });
+
+    test('should not de-duplicate mapped relationship metadata with different _type', () => {
+      const r1 = createTestStepMappedRelationshipMetadata();
+      const r2 = createTestStepMappedRelationshipMetadata({
+        _type: 'relationship_a_b_2',
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ mappedRelationships: [r1] }),
+        createIntegrationStep({ mappedRelationships: [r2] }),
+      ]);
+
+      expect(metadata.mappedRelationships).toEqual([r1, r2]);
+    });
+
+    test('should not de-duplicate relationship metadata with different sourceType', () => {
+      const r1 = createTestStepMappedRelationshipMetadata();
+      const r2 = createTestStepMappedRelationshipMetadata({
+        sourceType: 'a_2',
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ mappedRelationships: [r1] }),
+        createIntegrationStep({ mappedRelationships: [r2] }),
+      ]);
+
+      expect(metadata.mappedRelationships).toEqual([r1, r2]);
+    });
+
+    test('should not de-duplicate relationship metadata with different targetType', () => {
+      const r1 = createTestStepMappedRelationshipMetadata();
+      const r2 = createTestStepMappedRelationshipMetadata({
+        targetType: 'b_2',
+      });
+
+      const metadata = collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({ mappedRelationships: [r1] }),
+        createIntegrationStep({ mappedRelationships: [r2] }),
+      ]);
+
+      expect(metadata.mappedRelationships).toEqual([r1, r2]);
+    });
   });
 });

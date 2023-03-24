@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.31.1 - 2023-03-24
+
+### Fixed
+
+- Update automatic integration documentation generator strategy to avoid
+  creating duplicate records for entities, relationships, and mapped
+  relationships.
+
 ## 8.31.0 - 2023-03-20
 
 - Add `collectEntities` and `collectRelationships` functions to

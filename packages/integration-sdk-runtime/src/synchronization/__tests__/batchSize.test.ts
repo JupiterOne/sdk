@@ -3,7 +3,7 @@ import {
   createTestEntity,
   createTestRelationship,
 } from '@jupiterone/integration-sdk-private-test-utils';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { createApiClient, getApiBaseUrl } from '../../api';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../../test/util/fixtures';
