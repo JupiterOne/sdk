@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.31.1 - 2023-03-24
+
 ### Fixed
 
 - Update automatic integration documentation generator strategy to avoid
