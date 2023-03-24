@@ -8,7 +8,7 @@
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "engines": {
-    "node": "14.x"
+    "node": ">=14.17.0 <15.x"
   },
   "bin": {
     "j1-integration": "./bin/j1-integration"
@@ -48,7 +48,6 @@
     "@types/lodash": "^4.14.158",
     "@types/vis": "^4.21.20",
     "memfs": "^3.2.0",
-    "neo-forgery": "^2.0.0",
-    "uuid": "^8.2.0"
+    "neo-forgery": "^2.0.0"
   }
 }

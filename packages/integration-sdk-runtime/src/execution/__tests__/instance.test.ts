@@ -2,7 +2,7 @@ import {
   createIntegrationInstanceForLocalExecution,
   LOCAL_INTEGRATION_INSTANCE,
 } from '../instance';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 describe('createIntegrationInstanceForLocalExecution', () => {
   beforeEach(() => {

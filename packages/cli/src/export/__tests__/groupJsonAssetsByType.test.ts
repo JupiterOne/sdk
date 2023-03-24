@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 import { groupJsonAssetsByType } from '../groupJsonAssetsByType';
 import { DEFAULT_EXPORT_DIRECTORY } from '../../commands';

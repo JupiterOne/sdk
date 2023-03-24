@@ -5,7 +5,7 @@ import {
   uploadGraphObjectData,
   SynchronizationJobContext,
 } from '../synchronization';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;

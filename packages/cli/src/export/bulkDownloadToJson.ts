@@ -3,7 +3,7 @@ import {
   getApiBaseUrl,
 } from '@jupiterone/integration-sdk-runtime';
 import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 
 import { ensureDirectoryExists, writeFileToPath } from '../fileSystem';

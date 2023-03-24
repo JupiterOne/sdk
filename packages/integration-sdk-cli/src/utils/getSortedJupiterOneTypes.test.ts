@@ -7,7 +7,7 @@ import {
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { collectGraphObjectMetadataFromSteps } from './getSortedJupiterOneTypes';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 function createIntegrationStep({
   entities = [],

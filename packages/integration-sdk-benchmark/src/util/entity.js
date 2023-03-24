@@ -1,5 +1,5 @@
 const { createIntegrationEntity } = require('@jupiterone/integration-sdk-core');
-const { v4: uuid } = require('uuid');
+const { randomUUID: uuid } = require('crypto');
 
 function createMockEntity(_key) {
   return createIntegrationEntity({

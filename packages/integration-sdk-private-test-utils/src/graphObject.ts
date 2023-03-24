@@ -1,6 +1,6 @@
 import { Entity, ExplicitRelationship } from '@jupiterone/integration-sdk-core';
 import { times } from 'lodash';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 export function createTestEntity(partial?: Partial<Entity>): Entity {
   return {

@@ -1,7 +1,7 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 import { mocked } from 'jest-mock';
 import axios, { AxiosInstance } from 'axios';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 import * as fileSystem from '../../fileSystem';
 import {
