@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.0.0 - 2023-03-27
+
+- **BREAKING** - Require Node.js version >=14.17.0 <15.x due to replacement of
+  `uuid` module with `crypto` `randomUUID`
+
 ## 8.31.1 - 2023-03-24
 
 ### Fixed
