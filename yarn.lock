@@ -762,6 +762,93 @@
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
 
+"@jupiterone/integration-sdk-cli@^8.31.1":
+  version "8.31.1"
+  resolved "https://registry.yarnpkg.com/@jupiterone/integration-sdk-cli/-/integration-sdk-cli-8.31.1.tgz#8c0b01c4c49b36afcb69eb6637d5ce61df353dc2"
+  integrity sha512-9cnJqIRmRg+bBraa31LTE3huwfRgPv9anXsF01qO7ASb6zi9pzHQohNzmmbZnZDE+kbHguclYLngwm6Hnqmihw==
+  dependencies:
+    "@jupiterone/integration-sdk-runtime" "^8.31.1"
+    chalk "^4"
+    commander "^9.4.0"
+    fs-extra "^10.1.0"
+    globby "^11.0.0"
+    js-yaml "^4.1.0"
+    json-diff "^0.5.4"
+    lodash "^4.17.19"
+    markdown-table "^2.0.0"
+    neo4j-driver "^4.3.3"
+    runtypes "5.1.0"
+    upath "^1.2.0"
+    url-exists "^1.0.3"
+    vis "^4.21.0-EOL"
+
+"@jupiterone/integration-sdk-core@^8.31.1":
+  version "8.31.1"
+  resolved "https://registry.yarnpkg.com/@jupiterone/integration-sdk-core/-/integration-sdk-core-8.31.1.tgz#dd63ed5bcb9543cb3720cb0dfd656504f9603262"
+  integrity sha512-6zG2jRFiU7dZaJ+uzGFg26lIJMhOudT7kp9oykoL6oGudFMHAU3seK2+24w00braIsnBIlPRJj0f3ykp1AGA1g==
+  dependencies:
+    "@jupiterone/data-model" "^0.54.0"
+    lodash "^4.17.21"
+    uuid "^8.3.2"
+
+"@jupiterone/integration-sdk-dev-tools@^8.11.0":
+  version "8.31.1"
+  resolved "https://registry.yarnpkg.com/@jupiterone/integration-sdk-dev-tools/-/integration-sdk-dev-tools-8.31.1.tgz#5b17d729b7b08ecbec989c8dcd526c27b512909c"
+  integrity sha512-9KaCTwDmjrCqUfHLH9wEzlqHOpeHxyQBneaKrUPLP+w5wG6n25pgtAnnNqO+whht5YDJw0yI7J6ZWmRelEnKhw==
+  dependencies:
+    "@jupiterone/integration-sdk-cli" "^8.31.1"
+    "@jupiterone/integration-sdk-testing" "^8.31.1"
+    "@types/jest" "^27.1.0"
+    "@types/node" "^14.0.5"
+    "@typescript-eslint/eslint-plugin" "^4.22.0"
+    "@typescript-eslint/parser" "^4.22.0"
+    eslint "^7.24.0"
+    eslint-config-prettier "^8.2.0"
+    eslint-plugin-jest "^23.20.0"
+    husky "^4.2.5"
+    jest "^27.1.0"
+    lint-staged "^10.2.6"
+    prettier "^2.0.5"
+    ts-jest "^27.1.0"
+    ts-node "^9.1.1"
+    typescript "^4.2.4"
+
+"@jupiterone/integration-sdk-runtime@^8.31.1":
+  version "8.31.1"
+  resolved "https://registry.yarnpkg.com/@jupiterone/integration-sdk-runtime/-/integration-sdk-runtime-8.31.1.tgz#91c9e6dfea3a549d5cd4c9c7f97ce4a6920929a7"
+  integrity sha512-cFFd0xDbxdn7UEh76xkHrnplrZo2ZjHF+LzZ/WMnNzoI3ACFST/zC7DPy14PbLxbUJDXycRSqUn6UzfNGRiY8w==
+  dependencies:
+    "@jupiterone/integration-sdk-core" "^8.31.1"
+    "@lifeomic/alpha" "^1.4.0"
+    "@lifeomic/attempt" "^3.0.3"
+    async-sema "^3.1.0"
+    axios "^0.21.1"
+    bunyan "^1.8.12"
+    bunyan-format "^0.2.1"
+    dependency-graph "^0.9.0"
+    dotenv "^8.2.0"
+    dotenv-expand "^5.1.0"
+    get-folder-size "^2.0.1"
+    globby "^11.0.0"
+    lodash "^4.17.15"
+    p-map "^4.0.0"
+    p-queue "^6.3.0"
+    rimraf "^3.0.2"
+    uuid "^7.0.3"
+
+"@jupiterone/integration-sdk-testing@^8.31.1":
+  version "8.31.1"
+  resolved "https://registry.yarnpkg.com/@jupiterone/integration-sdk-testing/-/integration-sdk-testing-8.31.1.tgz#4dd9d09093bc6a39e46b8f87f00f9408f75b8849"
+  integrity sha512-7IQVffMMEiCAVcc7zN/6Z0kVehrwui3GyqXanuSGOkfdRr4wIgCAkQp+yCILoJ+LEb2oU8bCsSXEMkH8pFPDBA==
+  dependencies:
+    "@jupiterone/integration-sdk-core" "^8.31.1"
+    "@jupiterone/integration-sdk-runtime" "^8.31.1"
+    "@pollyjs/adapter-node-http" "^6.0.5"
+    "@pollyjs/core" "^6.0.5"
+    "@pollyjs/persister-fs" "^6.0.5"
+    deepmerge "^4.2.2"
+    lodash "^4.17.15"
+
 "@lerna/add@4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@lerna/add/-/add-4.0.0.tgz#c36f57d132502a57b9e7058d1548b7a565ef183f"
@@ -9001,6 +9088,16 @@ uuid@^3.3.2:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
+
+uuid@^7.0.3:
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-7.0.3.tgz#c5c9f2c8cf25dc0a372c4df1441c41f5bd0c680b"
+  integrity sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==
+
+uuid@^8.3.2:
+  version "8.3.2"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
+  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 v8-compile-cache@^2.0.3:
   version "2.3.0"

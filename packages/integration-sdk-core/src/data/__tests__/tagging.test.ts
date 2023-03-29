@@ -74,7 +74,7 @@ describe('assignTags', () => {
   });
 
   test('tags with "" value have property name added to .tags', () => {
-    assignTags(entity, [{ key: 'Production', value: '' }]);
+    assignTags(entity, [{ Key: 'Production', Value: '' }]);
     expect(entity).toMatchObject({
       'tag.Production': '',
       tags: ['Production'],
