@@ -2,7 +2,7 @@ import * as runtime from '@jupiterone/integration-sdk-runtime';
 import axios from 'axios';
 import { mocked } from 'jest-mock';
 import { vol } from 'memfs';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import globby from 'globby';
 
 import {

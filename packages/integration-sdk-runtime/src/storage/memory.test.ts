@@ -1,6 +1,6 @@
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from './memory';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import {
   createTestEntity,
   createTestRelationship,
@@ -143,6 +143,42 @@ describe('#InMemoryGraphObjectStore', () => {
     expect(collected.size).toEqual(2);
     expect(collected.get(step1)).toEqual([r1, r2]);
     expect(collected.get(step2)).toEqual([r3, r4]);
+  });
+
+  test('should allow collecting all entities', async () => {
+    const store = new InMemoryGraphObjectStore();
+
+    const step1 = uuid();
+    const e1 = createTestEntity();
+    const e2 = createTestEntity();
+    await store.addEntities(step1, [e1, e2]);
+
+    const step2 = uuid();
+    const e3 = createTestEntity();
+    const e4 = createTestEntity();
+    await store.addEntities(step2, [e3, e4]);
+
+    const collected = store.collectEntities();
+    expect(collected.length).toEqual(4);
+    expect(collected).toEqual([e1, e2, e3, e4]);
+  });
+
+  test('should allow collecting all relationships', async () => {
+    const store = new InMemoryGraphObjectStore();
+
+    const step1 = uuid();
+    const r1 = createTestRelationship();
+    const r2 = createTestRelationship();
+    await store.addRelationships(step1, [r1, r2]);
+
+    const step2 = uuid();
+    const r3 = createTestRelationship();
+    const r4 = createTestRelationship();
+    await store.addRelationships(step2, [r3, r4]);
+
+    const collected = store.collectRelationships();
+    expect(collected.length).toEqual(4);
+    expect(collected).toEqual([r1, r2, r3, r4]);
   });
 
   test('should get correct total entity and relationship counts', async () => {

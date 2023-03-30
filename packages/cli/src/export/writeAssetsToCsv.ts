@@ -1,6 +1,6 @@
 import path from 'path';
 import jsonexport from 'jsonexport';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 import _ from 'lodash';
 
 import {

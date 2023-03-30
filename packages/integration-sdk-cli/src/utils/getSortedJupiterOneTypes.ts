@@ -12,21 +12,17 @@ import {
 
 export interface TypesCommandArgs {
   projectPath: string;
-  duplicateTypes?: boolean;
 }
 
 export async function getSortedJupiterOneTypes(
   options: TypesCommandArgs,
 ): Promise<StepGraphObjectMetadataProperties> {
-  const { projectPath, duplicateTypes } = options;
+  const { projectPath } = options;
 
   const config = await loadConfig(path.join(projectPath, 'src'));
 
   return alphabetizeMetadataProperties(
-    collectGraphObjectMetadataFromSteps(
-      config.integrationSteps,
-      duplicateTypes,
-    ),
+    collectGraphObjectMetadataFromSteps(config.integrationSteps),
   );
 }
 
@@ -87,7 +83,6 @@ function alphabetizeMetadataProperties(
 
 export function collectGraphObjectMetadataFromSteps(
   steps: Step<IntegrationStepExecutionContext<object>>[],
-  duplicateTypes?: boolean,
 ): StepGraphObjectMetadataProperties {
   const orderedStepNames = buildStepDependencyGraph(steps).overallOrder();
   const integrationStepMap = integrationStepsToMap(steps);
@@ -108,7 +103,7 @@ export function collectGraphObjectMetadataFromSteps(
     >;
 
     for (const e of step.entities) {
-      if (!duplicateTypes && entityTypeSet.has(e._type)) {
+      if (entityTypeSet.has(e._type)) {
         continue;
       }
 
@@ -117,20 +112,24 @@ export function collectGraphObjectMetadataFromSteps(
     }
 
     for (const r of step.relationships) {
-      if (!duplicateTypes && relationshipTypeSet.has(r._type)) {
+      const relationshipSetValue = toRelationshipSetValue(r);
+
+      if (relationshipTypeSet.has(relationshipSetValue)) {
         continue;
       }
 
-      relationshipTypeSet.add(r._type);
+      relationshipTypeSet.add(relationshipSetValue);
       relationships.push(r);
     }
 
     for (const r of step.mappedRelationships || []) {
-      if (!duplicateTypes && mappedRelationshipTypeSet.has(r._type)) {
+      const relationshipSetValue = toMappedRelationshipSetValue(r);
+
+      if (mappedRelationshipTypeSet.has(relationshipSetValue)) {
         continue;
       }
 
-      mappedRelationshipTypeSet.add(r._type);
+      mappedRelationshipTypeSet.add(relationshipSetValue);
       mappedRelationships.push(r);
     }
   }
@@ -140,4 +139,12 @@ export function collectGraphObjectMetadataFromSteps(
     relationships,
     mappedRelationships,
   };
+}
+
+function toRelationshipSetValue(r: StepRelationshipMetadata) {
+  return `${r._class}:${r._type}:${r.sourceType}:${r.targetType}`;
+}
+
+function toMappedRelationshipSetValue(r: StepMappedRelationshipMetadata) {
+  return `${r._class}:${r._type}:${r.sourceType}:${r.targetType}:${r.direction}`;
 }

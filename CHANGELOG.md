@@ -9,6 +9,24 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.0.0 - 2023-03-27
+
+- **BREAKING** - Require Node.js version >=14.17.0 <15.x due to replacement of
+  `uuid` module with `crypto` `randomUUID`
+
+## 8.31.1 - 2023-03-24
+
+### Fixed
+
+- Update automatic integration documentation generator strategy to avoid
+  creating duplicate records for entities, relationships, and mapped
+  relationships.
+
+## 8.31.0 - 2023-03-20
+
+- Add `collectEntities` and `collectRelationships` functions to
+  `InMemoryGraphObjectStore`.
+
 ## 8.30.5 - 2023-03-01
 
 - Update `@jupiterone/date-model` to version v0.54.0

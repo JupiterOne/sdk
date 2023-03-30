@@ -9,7 +9,7 @@ import {
   MemoryDataStore,
   TypeTracker,
 } from '@jupiterone/integration-sdk-runtime';
-import { v4 as uuid } from 'uuid';
+import { randomUUID as uuid } from 'crypto';
 
 export interface CreateMockJobStateOptions {
   entities?: Entity[];

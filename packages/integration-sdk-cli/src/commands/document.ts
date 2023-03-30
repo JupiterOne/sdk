@@ -48,10 +48,8 @@ async function executeDocumentAction(
   const projectPath = path.resolve(options.projectPath);
   const documentationFilePath = path.join(projectPath, outputFile);
 
-  log.info('\nCollecting metadata types from steps...\n');
   const metadata = await getSortedJupiterOneTypes({
     projectPath,
-    duplicateTypes: true,
   });
 
   if (!metadata.entities.length && !metadata.relationships.length) {
@@ -61,27 +59,17 @@ async function executeDocumentAction(
     return;
   }
 
-  log.info(
-    `\nAttempting to load existing documentation file (path=${documentationFilePath})!\n`,
-  );
   const oldDocumentationFile = await getDocumentationFile(
     documentationFilePath,
   );
-  log.info('\nExisting documentation file successfully loaded!\n');
 
   const newGeneratedDocumentationSection =
     generateGraphObjectDocumentationFromStepsMetadata(metadata);
-
-  log.info('\nGenerated integration documentation section:');
-  log.info('---------------------------------------------\n');
-  log.info(newGeneratedDocumentationSection);
 
   const newDocumentationFile = replaceBetweenDocumentMarkers(
     oldDocumentationFile,
     newGeneratedDocumentationSection,
   );
-
-  log.info('Attempting to write new documentation...');
 
   await fs.writeFile(documentationFilePath, newDocumentationFile, {
     encoding: 'utf-8',
