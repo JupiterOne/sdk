@@ -1,6 +1,6 @@
 {
   "npmClient": "yarn",
   "packages": ["packages/integration-sdk-*", "packages/cli"],
-  "version": "independent",
-  "useWorkspace": true
+  "useWorkspaces": true,
+  "version": "8.32.0"
 }
