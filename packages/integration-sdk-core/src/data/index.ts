@@ -5,4 +5,4 @@ export * from './rawData';
 
 export * from './createIntegrationEntity';
 export * from './createIntegrationRelationship';
-export * from './createIntegrationIngestionConfig'
+export * from './createIntegrationIngestionConfig';

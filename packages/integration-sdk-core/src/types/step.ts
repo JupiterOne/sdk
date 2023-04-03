@@ -229,10 +229,10 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
 
   /**
    * An optional ID that, when provided, must correspond to an element
-   * specified in the ingestionConfig in the invocationConfig. 
-   * By providing this ID, this step becomes an element of an 
-   * ingestion source, allowing it to be enabled or disabled  
-   * as part of it. If it is disabled, any steps that depend on it 
+   * specified in the ingestionConfig in the invocationConfig.
+   * By providing this ID, this step becomes an element of an
+   * ingestion source, allowing it to be enabled or disabled
+   * as part of it. If it is disabled, any steps that depend on it
    * will also be disabled.
    *
    */

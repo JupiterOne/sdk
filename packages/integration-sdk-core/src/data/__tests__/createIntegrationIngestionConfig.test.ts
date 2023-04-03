@@ -11,7 +11,7 @@ describe('createIntegrationIngestionConfig', () => {
     FINDING_ALERTS: 'finding-alerts',
     FETCH_REPOS: 'fetch-repos',
   };
-  
+
   const ingestionConfigData: IntegrationIngestionConfigData = {
     [INGESTION_SOURCE_IDS.FINDING_ALERTS]: {
       title: 'Finding Alerts',

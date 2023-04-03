@@ -77,15 +77,15 @@ export interface IntegrationInvocationConfig<
   instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
   /**
    * This configuration element is used to store information about data
-   * ingestion sources that can be enabled or disabled. When this element 
-   * is provided, it is expected that one or more steps will reference 
+   * ingestion sources that can be enabled or disabled. When this element
+   * is provided, it is expected that one or more steps will reference
    * these ids so that if one of these elements is disabled, all steps and
-   * dependencies will also be disabled. 
-   * In essence, the ingestionConfig allows grouping and controlling 
+   * dependencies will also be disabled.
+   * In essence, the ingestionConfig allows grouping and controlling
    * the activation of a list of steps.
-   * 
+   *
    */
-  ingestionConfig?: IntegrationIngestionConfigFieldMap
+  ingestionConfig?: IntegrationIngestionConfigFieldMap;
 }
 
 export interface IntegrationInstanceConfigField {
@@ -98,15 +98,21 @@ export type IntegrationInstanceConfigFieldMap<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = Record<keyof TConfig, IntegrationInstanceConfigField>;
 
-type IntegrationSourceId = string
+type IntegrationSourceId = string;
 
 export interface IntegrationIngestionConfigField {
-  title: string
-  description?: string
-  defaultsToDisabled?: boolean
-  childIngestionSources?: string[]
+  title: string;
+  description?: string;
+  defaultsToDisabled?: boolean;
+  childIngestionSources?: string[];
 }
 
-export type IntegrationIngestionConfigFieldMap = Record<IntegrationSourceId, IntegrationIngestionConfigField>;
+export type IntegrationIngestionConfigFieldMap = Record<
+  IntegrationSourceId,
+  IntegrationIngestionConfigField
+>;
 
-export type IntegrationIngestionConfigData = Omit<IntegrationIngestionConfigFieldMap, 'dependsOn'>
+export type IntegrationIngestionConfigData = Omit<
+  IntegrationIngestionConfigFieldMap,
+  'dependsOn'
+>;
