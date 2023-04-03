@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.33.0 - 2023-04-03
+
+### Changed
+
+- The presence of TypeScript deceleration files will no longer trigger the
+  loading of ts-node to run the project.
+
 ## 8.32.0 - 2023-03-27
 
 - **BREAKING** - Require Node.js version >=14.17.0 <15.x due to replacement of
