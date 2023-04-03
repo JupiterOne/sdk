@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.33.1 - 2023-04-03
+
+### Fixed
+
+- Fixed assigning empty tags not working if tags have `Value` property rather
+  than `value`.
+
 ## 8.33.0 - 2023-04-03
 
 ### Changed
