@@ -1793,5 +1793,3 @@ Options:
   --api-base-url <url>                The base URL used to initiate api calls with your instance of JupiterOne (defaults to `https://api.us.jupiterone.io`)
   -h, --help                          display help for command
 ```
-
-// TODO: Check if we should add something here as well
