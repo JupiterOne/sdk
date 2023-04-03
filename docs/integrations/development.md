@@ -466,9 +466,6 @@ allowing us to do it in the UI or using the `integration-service`.
 ```typescript
 import {
   IntegrationIngestionConfigFieldMap,
-  IntegrationIngestionConfigData,
-  IntegrationStep,
-  createIntegrationIngestionConfig,
 } from '@jupiterone/integration-sdk-core';
 import { INGESTION_SOURCE_IDS } from './constants';
 
@@ -484,7 +481,7 @@ export const integrationSteps: IntegrationStep<IntegrationConfig>[] = [
   },
 ];
 
-const ingestionConfigData: IntegrationIngestionConfigData = {
+const ingestionConfig: IntegrationIngestionConfigFieldMap = {
   [INGESTION_SOURCE_IDS.FINDING_ALERTS]: {
     title: 'Finding Alerts',
     description:
@@ -493,9 +490,6 @@ const ingestionConfigData: IntegrationIngestionConfigData = {
   },
   // ... more sources ...
 };
-
-export const ingestionConfig: IntegrationIngestionConfigFieldMap =
-  createIntegrationIngestionConfig(ingestionConfigData, integrationSteps);
 
 export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
   {

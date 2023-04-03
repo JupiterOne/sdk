@@ -111,8 +111,3 @@ export type IntegrationIngestionConfigFieldMap = Record<
   IntegrationSourceId,
   IntegrationIngestionConfigField
 >;
-
-export type IntegrationIngestionConfigData = Omit<
-  IntegrationIngestionConfigFieldMap,
-  'dependsOn'
->;
