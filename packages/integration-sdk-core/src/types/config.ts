@@ -98,13 +98,12 @@ export type IntegrationInstanceConfigFieldMap<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = Record<keyof TConfig, IntegrationInstanceConfigField>;
 
-type IntegrationSourceId = string;
+export type IntegrationSourceId = string;
 
 export interface IntegrationIngestionConfigField {
   title: string;
   description?: string;
   defaultsToDisabled?: boolean;
-  childIngestionSources?: string[];
 }
 
 export type IntegrationIngestionConfigFieldMap = Record<
