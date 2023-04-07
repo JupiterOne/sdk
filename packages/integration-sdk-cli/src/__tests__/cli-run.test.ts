@@ -80,7 +80,8 @@ test('disables graph object schema validation', async () => {
   expect(process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION).toBeUndefined();
 });
 
-test('step should fail if enableSchemaValidation = true', async () => {
+test('step should warn if enableSchemaValidation = true', async () => {
+  const consoleSpy = jest.spyOn(console, 'warn');
   loadProjectStructure('instanceWithNonValidatingSteps');
   const job = generateSynchronizationJob();
 
@@ -101,26 +102,11 @@ test('step should fail if enableSchemaValidation = true', async () => {
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
 
   expect(log.displayExecutionResults).toHaveBeenCalledTimes(1);
-  expect(log.displayExecutionResults).toHaveBeenCalledWith({
-    integrationStepResults: [
-      {
-        id: 'fetch-users',
-        name: 'Fetch Users',
-        declaredTypes: ['my_user'],
-        partialTypes: [],
-        encounteredTypes: [],
-        status: StepResultStatus.FAILURE,
-      },
-    ],
-    metadata: {
-      partialDatasets: {
-        types: ['my_user'],
-      },
-    },
-  });
+  expect(consoleSpy).toHaveBeenCalled();
 });
 
-test('step should pass if enableSchemaValidation = false', async () => {
+test('step should pass and not warn if enableSchemaValidation = false', async () => {
+  const consoleSpy = jest.spyOn(console, 'warn');
   loadProjectStructure('instanceWithNonValidatingSteps');
   const job = generateSynchronizationJob();
 
@@ -159,6 +145,7 @@ test('step should pass if enableSchemaValidation = false', async () => {
       },
     },
   });
+  expect(consoleSpy).not.toHaveBeenCalled();
 });
 
 test('executes integration and performs upload', async () => {
