@@ -329,7 +329,8 @@ describe('schema validation on', () => {
     delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
   });
 
-  test('throws if an a required property is not set', () => {
+  test('warns if an a required property is not set', () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
     expect(() =>
       createIntegrationEntity({
         entityData: {
@@ -340,7 +341,8 @@ describe('schema validation on', () => {
           },
         },
       }),
-    ).toThrow(/required property 'name'/);
+    ).not.toThrow();
+    expect(consoleSpy).toHaveBeenCalled();
   });
 });
 
@@ -349,7 +351,8 @@ describe('schema validation off', () => {
     delete process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION;
   });
 
-  test('does not throw if class is not in data model', () => {
+  test('does not warn if class is not in data model', () => {
+    const consoleSpy = jest.spyOn(console, 'warn');
     expect(() =>
       createIntegrationEntity({
         entityData: {
@@ -361,5 +364,6 @@ describe('schema validation off', () => {
         },
       }),
     ).not.toThrow();
+    expect(consoleSpy).not.toHaveBeenCalled();
   });
 });

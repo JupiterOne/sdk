@@ -103,7 +103,11 @@ export function createIntegrationEntity(
   validateRawData(generatedEntity);
 
   if (process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION) {
-    validateEntityWithSchema(generatedEntity);
+    try {
+      validateEntityWithSchema(generatedEntity);
+    } catch (err) {
+      console.warn(err);
+    }
   }
 
   return generatedEntity;
