@@ -106,6 +106,7 @@ export function createIntegrationEntity(
     try {
       validateEntityWithSchema(generatedEntity);
     } catch (err) {
+      /* eslint-disable no-console */
       console.warn(err);
     }
   }
