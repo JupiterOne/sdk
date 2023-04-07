@@ -11,44 +11,49 @@ and this project adheres to
 
 ### Added
 
-- Added support for `string[]` environment variables. Example:
+- Added support for `json` environment variables. Example:
 
 `.env` file:
 
 ```
 // .env
-SEVERITIES='HIGH,CRITICAL'
+SEVERITIES=["HIGH", "CRITICAL"]
 ```
 
-Code: 
+Code:
+
 ```ts
 import { Client } from './client';
 import { createVulnEntity } from './converter';
 
-type IntegrationConfig = { apiKey: string, severities: string[] };
+type IntegrationConfig = { apiKey: string; severities: string[] };
 const invocationConfig: IntegrationInvocationConfig = {
-  instanceConfigFields: [{
-    apiKey: { type: 'string', mask: true },
-    severities: { type: 'string[]' },
-  }],
-  integrationSteps: [{
-    id: 'fetch-vulnerabilities',
-    name: 'Fetch Vulnerabilities',
-    entities: [{ resourceName: 'Vuln', _type: 'vuln', _class: 'Finding' }],
-    relationships: [],
-    executionHandler: ({ instance }) => {
-      const { apiKey, severities } = instance.config;
-      const client = new Client({ apiKey });
+  instanceConfigFields: [
+    {
+      apiKey: { type: 'string', mask: true },
+      severities: { type: 'json' },
+    },
+  ],
+  integrationSteps: [
+    {
+      id: 'fetch-vulnerabilities',
+      name: 'Fetch Vulnerabilities',
+      entities: [{ resourceName: 'Vuln', _type: 'vuln', _class: 'Finding' }],
+      relationships: [],
+      executionHandler: ({ instance }) => {
+        const { apiKey, severities } = instance.config;
+        const client = new Client({ apiKey });
 
-      await iterateVulnerabilitiesForSeverity(
-        { severities },
-        async (vuln) => {
-          await jobState.addEntity(createVulnEntity(vuln));
-        }
-      )
-    }
-  }]
-}
+        await iterateVulnerabilitiesForSeverity(
+          { severities },
+          async (vuln) => {
+            await jobState.addEntity(createVulnEntity(vuln));
+          },
+        );
+      },
+    },
+  ],
+};
 ```
 
 ## 8.33.1 - 2023-04-03

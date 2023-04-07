@@ -21,7 +21,7 @@ export function loadConfigFromEnvironmentVariables<
   dotenvExpand(dotenv.config());
 
   return Object.entries(configMap)
-    .map(([field, config]): [string, string | string[] | boolean | undefined] => {
+    .map(([field, config]): [string, string | object | boolean | undefined] => {
       const environmentVariableName = snakeCase(field).toUpperCase();
 
       const environmentVariableValue = process.env[environmentVariableName];
@@ -41,20 +41,23 @@ export function loadConfigFromEnvironmentVariables<
 
       return [field, convertedValue];
     })
-    .reduce((acc: Record<string, string | string[] | boolean>, [field, value]) => {
-      if (value !== undefined) {
-        acc[field] = value;
-      }
-      return acc;
-    }, {}) as TConfig;
+    .reduce(
+      (acc: Record<string, string | object | boolean>, [field, value]) => {
+        if (value !== undefined) {
+          acc[field] = value;
+        }
+        return acc;
+      },
+      {},
+    ) as TConfig;
 }
 
 function convertEnvironmentVariableValueForField(
   field: string,
   fieldConfig: IntegrationInstanceConfigField,
   environmentVariableValue: string,
-): string | string[] | boolean {
-  let convertedValue: string | string[] | boolean;
+): string | object | boolean {
+  let convertedValue: string | object | boolean;
 
   switch (fieldConfig.type) {
     case 'boolean': {
@@ -70,11 +73,8 @@ function convertEnvironmentVariableValueForField(
       }
       break;
     }
-    case 'string[]': {
-      convertedValue = environmentVariableValue
-        ?.split(',')
-        .map((v) => v.trim())
-        .filter((v) => v.length > 0) || []
+    case 'json': {
+      convertedValue = JSON.parse(environmentVariableValue);
       break;
     }
     case 'string':
