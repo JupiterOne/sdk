@@ -13,24 +13,29 @@ jest.mock('fs');
 beforeEach(() => {
   process.env.STRING_VARIABLE = 'string';
   process.env.BOOLEAN_VARIABLE = 'true';
+  process.env.STRING_ARRAY_VARIABLE = ' string1, string2 ';
 });
 
 afterEach(() => {
   delete process.env.STRING_VARIABLE;
   delete process.env.BOOLEAN_VARIABLE;
+  delete process.env.STRING_ARRAY_VARIABLE;
 
   vol.reset();
 });
 
 test('loads config fields from environment variables', () => {
   const instanceConfigFields: IntegrationInstanceConfigFieldMap<
-    Record<'stringVariable' | 'booleanVariable', IntegrationInstanceConfigField>
+    Record<'stringVariable' | 'booleanVariable' | 'stringArrayVariable', IntegrationInstanceConfigField>
   > = {
     stringVariable: {
       type: 'string',
     },
     booleanVariable: {
       type: 'boolean',
+    },
+    stringArrayVariable: {
+      type: 'string[]',
     },
   };
 
@@ -39,6 +44,7 @@ test('loads config fields from environment variables', () => {
   expect(config).toEqual({
     stringVariable: 'string',
     booleanVariable: true,
+    stringArrayVariable: ['string1', 'string2'],
   });
 });
 

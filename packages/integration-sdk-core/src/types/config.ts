@@ -78,7 +78,7 @@ export interface IntegrationInvocationConfig<
 }
 
 export interface IntegrationInstanceConfigField {
-  type?: 'string' | 'boolean';
+  type?: 'string' | 'string[]' | 'boolean';
   mask?: boolean;
   optional?: boolean;
 }
