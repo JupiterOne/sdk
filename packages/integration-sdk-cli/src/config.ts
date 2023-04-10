@@ -61,7 +61,7 @@ async function isTypescriptPresent(
   // Refs:
   // - https://github.com/mrmlnc/fast-glob#pattern-syntax
   // - https://github.com/micromatch/micromatch#backslashes
-  const paths = await globby('**/*.ts', {
+  const paths = await globby(['**/*.ts', '!**/*.d.ts'], {
     cwd: projectSourceDirectory,
   });
   return paths.length > 0;

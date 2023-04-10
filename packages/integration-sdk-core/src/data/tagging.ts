@@ -85,8 +85,8 @@ export function assignTags<T extends object>(
       } else {
         tagMap = (tags as ResourceKeyValueTag[]).reduce(
           (m: ResourceTagMap, t) => {
-            const k = t.Key || t.key;
-            const v = t.Value || t.value;
+            const k = t.Key ?? t.key;
+            const v = t.Value ?? t.value;
             if (k && v != null) {
               m[k] = v;
             }

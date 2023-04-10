@@ -9,7 +9,21 @@ and this project adheres to
 
 ## Unreleased
 
-## 9.0.0 - 2023-03-27
+## 8.33.1 - 2023-04-03
+
+### Fixed
+
+- Fixed assigning empty tags not working if tags have `Value` property rather
+  than `value`.
+
+## 8.33.0 - 2023-04-03
+
+### Changed
+
+- The presence of TypeScript deceleration files will no longer trigger the
+  loading of ts-node to run the project.
+
+## 8.32.0 - 2023-03-27
 
 - **BREAKING** - Require Node.js version >=14.17.0 <15.x due to replacement of
   `uuid` module with `crypto` `randomUUID`
