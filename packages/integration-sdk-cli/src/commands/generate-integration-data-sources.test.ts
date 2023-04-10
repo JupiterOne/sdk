@@ -20,8 +20,8 @@ describe('#generateIntegrationIngestionDataSources', () => {
       defaultsToDisabled: true,
     },
     [INGESTION_SOURCE_IDS.FETCH_REPOS]: {
-      title: 'Fetch Alerts',
-      description: 'This is an ingestion source created fo test purposes',
+      title: 'Fetch repos',
+      description: 'This is an ingestion source created for test purposes',
       defaultsToDisabled: false,
     },
   };
