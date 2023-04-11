@@ -74,7 +74,13 @@ function convertEnvironmentVariableValueForField(
       break;
     }
     case 'json': {
-      convertedValue = JSON.parse(environmentVariableValue);
+      try {
+        convertedValue = JSON.parse(environmentVariableValue);
+      } catch (err) {
+        throw new IntegrationLocalConfigFieldTypeMismatchError(
+          `Local config field ${field} of type ${fieldConfig.type} is not valid JSON (value=${environmentVariableValue}, error=${err})`,
+        );
+      }
       break;
     }
     case 'string':
