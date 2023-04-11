@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.34.0 - 2023-04-11
+
 ### Added
 
 - Added support for `json` environment variables. Example:
