@@ -487,6 +487,7 @@ const ingestionConfig: IntegrationIngestionConfigFieldMap = {
     description:
       'Dependabot vulnerability alert ingestion and Code scanning alerts',
     defaultsToDisabled: true,
+    cannotBeDisabled: false
   },
   // ... more sources ...
 };
