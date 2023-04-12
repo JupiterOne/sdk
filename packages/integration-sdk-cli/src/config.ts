@@ -51,6 +51,48 @@ export function loadInvocationConfig(
   return integrationModule.invocationConfig as IntegrationInvocationConfig;
 }
 
+function loadConfigFromSrc(projectPath: string) {
+  return loadConfig(path.join(projectPath, 'src'));
+}
+
+function loadConfigFromDist(projectPath: string) {
+  return loadConfig(path.join(projectPath, 'dist'));
+}
+
+/**
+ * The way that integration npm packages are distributed has changed over time.
+ * This function handles different cases where the invocation config has
+ * traditionally lived to support backwards compatibility and make adoption
+ * easier.
+ */
+export async function loadConfigFromTarget(projectPath: string) {
+  let configFromSrcErr: Error | undefined;
+  let configFromDistErr: Error | undefined;
+
+  try {
+    const configFromSrc = await loadConfigFromSrc(projectPath);
+    return configFromSrc;
+  } catch (err) {
+    configFromSrcErr = err;
+  }
+
+  try {
+    const configFromDist = await loadConfigFromDist(projectPath);
+    return configFromDist;
+  } catch (err) {
+    configFromDistErr = err;
+  }
+
+  const combinedError = configFromDistErr
+    ? configFromSrcErr + ', ' + configFromDistErr
+    : configFromSrcErr;
+
+  throw new IntegrationInvocationConfigLoadError(
+    'Error loading integration invocation configuration. Ensure "invocationConfig" is exported from src/index or dist/index. Additional details: ' +
+      combinedError,
+  );
+}
+
 async function isTypescriptPresent(
   projectSourceDirectory: string = path.join(process.cwd(), 'src'),
 ) {
