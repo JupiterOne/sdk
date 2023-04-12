@@ -7,8 +7,7 @@ import {
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { createCommand } from 'commander';
-import path from 'path';
-import { IntegrationInvocationConfigLoadError, loadConfig } from '../config';
+import { loadConfigFromTarget } from '../config';
 import { promises as fs } from 'fs';
 import * as log from '../log';
 
@@ -49,48 +48,6 @@ export function generateIntegrationGraphSchemaCommand() {
 
       log.info('Successfully generated integration graph schema');
     });
-}
-
-function loadConfigFromSrc(projectPath: string) {
-  return loadConfig(path.join(projectPath, 'src'));
-}
-
-function loadConfigFromDist(projectPath: string) {
-  return loadConfig(path.join(projectPath, 'dist'));
-}
-
-/**
- * The way that integration npm packages are distributed has changed over time.
- * This function handles different cases where the invocation config has
- * traditionally lived to support backwards compatibility and make adoption
- * easier.
- */
-async function loadConfigFromTarget(projectPath: string) {
-  let configFromSrcErr: Error | undefined;
-  let configFromDistErr: Error | undefined;
-
-  try {
-    const configFromSrc = await loadConfigFromSrc(projectPath);
-    return configFromSrc;
-  } catch (err) {
-    configFromSrcErr = err;
-  }
-
-  try {
-    const configFromDist = await loadConfigFromDist(projectPath);
-    return configFromDist;
-  } catch (err) {
-    configFromDistErr = err;
-  }
-
-  const combinedError = configFromDistErr
-    ? configFromSrcErr + ', ' + configFromDistErr
-    : configFromSrcErr;
-
-  throw new IntegrationInvocationConfigLoadError(
-    'Error loading integration invocation configuration. Ensure "invocationConfig" is exported from src/index or dist/index. Additional details: ' +
-      combinedError,
-  );
 }
 
 type IntegrationGraphSchemaEntityMetadata = {

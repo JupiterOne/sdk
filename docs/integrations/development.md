@@ -21,6 +21,7 @@ that was sent up will be diffed against JupiterOne's understanding of the
       - [`integrationSteps`](#integrationsteps)
       - [`beforeAddEntity(context: IntegrationExecutionContext<IntegrationConfig>, e: Entity): Entity`](#beforeaddentitycontext-integrationexecutioncontextintegrationconfig-e-entity-entity)
       - [`beforeAddRelationship(context: IntegrationExecutionContext<IntegrationConfig>, r: Relationship): Promise<Relationship> | Relationship`](#beforeaddrelationshipcontext-integrationexecutioncontextintegrationconfig-r-relationship-promiserelationship--relationship)
+      - [`ingestionConfig`](#ingestionconfig)
     - [How integrations are executed](#how-integrations-are-executed)
       - [Validation](#validation)
       - [Collection](#collection)
@@ -445,6 +446,57 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
     ): Relationship {
       return relationship;
     },
+  };
+```
+
+#### `ingestionConfig`
+
+`ingestionConfig` is an optional config object that can be provided. This is
+used to store information about data ingestion sources that can be enabled or
+disabled. When this element is provided, it is expected that one or more steps
+will reference these ids so that if one of these elements is disabled, all steps
+and dependencies will also be disabled.
+
+In essence, the ingestionConfig allows grouping and controlling the activation
+of a list of steps. Unlike `getStepStartStates`, where you have to add an entry
+for each step and go to the code to change the state of the step,
+`ingestionConfig` allows us to enable or disable a set of steps, as well as
+allowing us to do it in the UI or using the `integration-service`.
+
+```typescript
+import {
+  IntegrationIngestionConfigFieldMap,
+} from '@jupiterone/integration-sdk-core';
+import { INGESTION_SOURCE_IDS } from './constants';
+
+export const integrationSteps: IntegrationStep<IntegrationConfig>[] = [
+  {
+    id: 'fetch-vulnerability-alerts',
+    name: 'Fetch Vulnerability Alerts',
+    entities: [ /* Step Entities */ ],
+    relationships: [ /* Step Relationships */  ],
+    dependsOn: [ /* Step Dependencies */ ],
+    ingestionSourceId: INGESTION_SOURCE_IDS.FINDING_ALERTS,
+    executionHandler: /* Step Execution Handler */,
+  },
+];
+
+const ingestionConfig: IntegrationIngestionConfigFieldMap = {
+  [INGESTION_SOURCE_IDS.FINDING_ALERTS]: {
+    title: 'Finding Alerts',
+    description:
+      'Dependabot vulnerability alert ingestion and Code scanning alerts',
+    defaultsToDisabled: true,
+    cannotBeDisabled: false
+  },
+  // ... more sources ...
+};
+
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
+  {
+    instanceConfigFields: {},
+    integrationSteps,
+    ingestionConfig,
   };
 ```
 
