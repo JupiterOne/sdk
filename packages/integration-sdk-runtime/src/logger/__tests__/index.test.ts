@@ -356,7 +356,7 @@ describe('step event publishing', () => {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enabled.',
+        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enable.',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(7, {
       name: 'step_failure',
