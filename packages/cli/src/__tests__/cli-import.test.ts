@@ -237,6 +237,9 @@ test('should exclude relationships when specified', async () => {
 });
 
 test('should throw error when missing api key', async () => {
+  // if a developer has these set it could interfere with the test
+  delete process.env.JUPITERONE_ACCOUNT;
+  delete process.env.JUPITERONE_API_KEY;
   await expect(
     createCli().parseAsync(['node', 'j1', 'import', `--scope=${uuid()}`]),
   ).rejects.toThrow(
@@ -245,6 +248,10 @@ test('should throw error when missing api key', async () => {
 });
 
 test('should throw error when missing account', async () => {
+  // if a developer has these set it could interfere with the test
+  delete process.env.JUPITERONE_ACCOUNT;
+  delete process.env.JUPITERONE_API_KEY;
+
   await expect(
     createCli().parseAsync([
       'node',

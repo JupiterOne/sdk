@@ -9,6 +9,55 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.34.0 - 2023-04-11
+
+### Added
+
+- Added support for `json` environment variables. Example:
+
+`.env` file:
+
+```
+// .env
+SEVERITIES=["HIGH", "CRITICAL"]
+```
+
+Code:
+
+```ts
+import { Client } from './client';
+import { createVulnEntity } from './converter';
+
+type IntegrationConfig = { apiKey: string; severities: string[] };
+const invocationConfig: IntegrationInvocationConfig = {
+  instanceConfigFields: [
+    {
+      apiKey: { type: 'string', mask: true },
+      severities: { type: 'json' },
+    },
+  ],
+  integrationSteps: [
+    {
+      id: 'fetch-vulnerabilities',
+      name: 'Fetch Vulnerabilities',
+      entities: [{ resourceName: 'Vuln', _type: 'vuln', _class: 'Finding' }],
+      relationships: [],
+      executionHandler: ({ instance }) => {
+        const { apiKey, severities } = instance.config;
+        const client = new Client({ apiKey });
+
+        await iterateVulnerabilitiesForSeverity(
+          { severities },
+          async (vuln) => {
+            await jobState.addEntity(createVulnEntity(vuln));
+          },
+        );
+      },
+    },
+  ],
+};
+```
+
 ## 8.33.1 - 2023-04-03
 
 ### Fixed

@@ -94,6 +94,10 @@ describe('validateSyncOptions', () => {
 
 describe('addApiClientOptionsToCommand', () => {
   test('default values', () => {
+    // if a developer has these set it could interfere with the test
+    delete process.env.JUPITERONE_ACCOUNT;
+    delete process.env.JUPITERONE_API_KEY;
+
     expect(
       addApiClientOptionsToCommand(createCommand())
         .parse(['node', 'command'])
@@ -102,6 +106,10 @@ describe('addApiClientOptionsToCommand', () => {
   });
 
   test('--development with default --api-base-url', () => {
+    // if a developer has these set it could interfere with the test
+    delete process.env.JUPITERONE_ACCOUNT;
+    delete process.env.JUPITERONE_API_KEY;
+
     expect(
       addApiClientOptionsToCommand(createCommand())
         .parse(['node', 'command', '--development'])

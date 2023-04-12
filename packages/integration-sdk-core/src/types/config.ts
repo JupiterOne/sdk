@@ -89,7 +89,7 @@ export interface IntegrationInvocationConfig<
 }
 
 export interface IntegrationInstanceConfigField {
-  type?: 'string' | 'boolean';
+  type?: 'string' | 'json' | 'boolean';
   mask?: boolean;
   optional?: boolean;
 }
