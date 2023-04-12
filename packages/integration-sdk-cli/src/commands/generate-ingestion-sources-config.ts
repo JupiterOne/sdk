@@ -11,14 +11,14 @@ import { promises as fs } from 'fs';
 import * as log from '../log';
 
 /* eslint-disable no-console */
-export function generateIntegrationDataSourcesCommand() {
-  return createCommand('generate-integration-data-sources')
+export function generateIngestionSourcesConfigCommand() {
+  return createCommand('generate-ingestion-sources-config')
     .description(
-      'generate integration data sources from ingestion config and steps data',
+      'generate ingestion sources config from ingestion config and steps data',
     )
     .option(
       '-o, --output-file <path>',
-      'project relative path to generated integration data sources file',
+      'project relative path to generated ingestion sources config file',
     )
     .option(
       '-p, --project-path <directory>',
@@ -29,26 +29,30 @@ export function generateIntegrationDataSourcesCommand() {
       const { projectPath, outputFile } = options;
 
       log.info(
-        `Generating integration data sources (projectPath=${projectPath}, outputFile=${outputFile})`,
+        `Generating ingestion sources config (projectPath=${projectPath}, outputFile=${outputFile})`,
       );
       const config = await loadConfigFromTarget(projectPath);
       if (!config.ingestionConfig) {
         log.info(
-          'Skipping the generation of integration data sources file as there is no ingestionConfig present.',
+          'Skipping the generation of ingestion sources config file as there is no ingestionConfig present.',
         );
       } else {
-        const ingestionDataSources = generateIntegrationIngestionDataSources(
+        const ingestionSourcesConfig = generateIngestionSourcesConfig(
           config.ingestionConfig,
           config.integrationSteps,
         );
         if (outputFile) {
-          await fs.writeFile(outputFile, JSON.stringify(ingestionDataSources), {
-            encoding: 'utf-8',
-          });
+          await fs.writeFile(
+            outputFile,
+            JSON.stringify(ingestionSourcesConfig),
+            {
+              encoding: 'utf-8',
+            },
+          );
         } else {
-          console.log(JSON.stringify(ingestionDataSources, null, 2));
+          console.log(JSON.stringify(ingestionSourcesConfig, null, 2));
         }
-        log.info('Successfully generated integration data sources file');
+        log.info('Successfully generated ingestion sources config file');
       }
     });
 }
@@ -70,7 +74,7 @@ export type EnhancedIntegrationIngestionConfigFieldMap = Record<
  * @param {Step<TStepExecutionContext>[]} integrationSteps total list of integration steps
  * @return {*}  {IntegrationIngestionConfigFieldMap} ingestionData with childIngestionSources
  */
-export function generateIntegrationIngestionDataSources<
+export function generateIngestionSourcesConfig<
   TStepExecutionContext extends StepExecutionContext,
 >(
   ingestionConfig: IntegrationIngestionConfigFieldMap,
@@ -83,6 +87,10 @@ export function generateIntegrationIngestionDataSources<
       const matchedIntegrationStepIds = integrationSteps
         .filter((step) => step.ingestionSourceId === key)
         .map(({ id }) => id);
+      if (!matchedIntegrationStepIds.length) {
+        // Skip iteration if there are no steps pointing to the current ingestionSourceId
+        return;
+      }
       // Get the stepIds that have any dependencies on the matched step ids
       const childIngestionSources = integrationSteps
         .filter((step) =>

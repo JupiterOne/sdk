@@ -104,6 +104,7 @@ export interface IntegrationIngestionConfigField {
   title: string;
   description?: string;
   defaultsToDisabled?: boolean;
+  cannotBeDisabled?: boolean;
 }
 
 export type IntegrationIngestionConfigFieldMap = Record<

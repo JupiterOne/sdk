@@ -3,9 +3,9 @@ import {
   IntegrationStep,
   IntegrationInstanceConfig,
 } from '@jupiterone/integration-sdk-core';
-import { generateIntegrationIngestionDataSources } from './generate-integration-data-sources';
+import { generateIngestionSourcesConfig } from './generate-ingestion-sources-config';
 
-describe('#generateIntegrationIngestionDataSources', () => {
+describe('#generateIngestionSourcesConfig', () => {
   const INGESTION_SOURCE_IDS = {
     FINDING_ALERTS: 'finding-alerts',
     FETCH_REPOS: 'fetch-repos',
@@ -44,19 +44,22 @@ describe('#generateIntegrationIngestionDataSources', () => {
         executionHandler: jest.fn(),
       },
     ];
-    const ingestionDataSources = generateIntegrationIngestionDataSources(
+    const ingestionSourcesConfig = generateIngestionSourcesConfig(
       ingestionConfig,
       integrationSteps,
     );
-    // Original object doesn't change
     expect(
-      ingestionDataSources[INGESTION_SOURCE_IDS.FINDING_ALERTS],
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]);
     // childIngestionSources is empty because there are no steps that depends on fetch-vulnerability-alerts
     expect(
-      ingestionDataSources[INGESTION_SOURCE_IDS.FINDING_ALERTS]
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]
         .childIngestionSources,
     ).toBeEmpty();
+    // ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS] is undefined because there are no steps using that ingestionSourceId
+    expect(
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS],
+    ).toBeUndefined();
   });
 
   it('should return the ingestionConfig with childIngestionSources', () => {
@@ -120,22 +123,22 @@ describe('#generateIntegrationIngestionDataSources', () => {
         executionHandler: jest.fn(),
       },
     ];
-    const ingestionDataSources = generateIntegrationIngestionDataSources(
+    const ingestionSourcesConfig = generateIngestionSourcesConfig(
       ingestionConfig,
       integrationSteps,
     );
     // Original object doesn't change
     expect(
-      ingestionDataSources[INGESTION_SOURCE_IDS.FETCH_REPOS],
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]);
     // New property added
     expect(
-      ingestionDataSources[INGESTION_SOURCE_IDS.FETCH_REPOS]
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]
         .childIngestionSources,
     ).toEqual(['fetch-vulnerability-alerts', 'fetch-issues']);
     // For FINDING_ALERTS the ingestionConfig keep exactly the same
     expect(
-      ingestionDataSources[INGESTION_SOURCE_IDS.FINDING_ALERTS],
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]);
   });
 
@@ -171,12 +174,12 @@ describe('#generateIntegrationIngestionDataSources', () => {
         executionHandler: jest.fn(),
       },
     ];
-    const ingestionDataSources = generateIntegrationIngestionDataSources(
+    const ingestionSourcesConfig = generateIngestionSourcesConfig(
       ingestionConfig,
       integrationSteps,
     );
     expect(
-      ingestionDataSources[INGESTION_SOURCE_IDS.TEST_SOURCE],
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.TEST_SOURCE],
     ).toBeUndefined();
   });
 });
