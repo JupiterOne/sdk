@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.35.0 - 2023-04-12
+
+### Added
+
+- Add a new field `ingestionConfig` to the `invocationConfig` in
+  `@jupiterone/integration-sdk-core`. This is used to store information about
+  data ingestion sources that can be enabled or disabled.
+- Add new command `generate-ingestion-sources-config` in
+  `@jupiterone/integration-sdk cli`. This is used to create e new file
+  `ingestionSourcesConfig.json` and store it in a s3 bucket.
+
 ## 8.34.0 - 2023-04-11
 
 ### Added
