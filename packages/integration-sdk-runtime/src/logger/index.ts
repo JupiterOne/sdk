@@ -334,7 +334,7 @@ export class IntegrationLogger
         break;
       }
       case DisabledStepReason.CONFIG: {
-        description += `This step is disabled via configuration. Please contact support to enabled.`;
+        description += `This step is disabled via configuration. Please contact support to enable.`;
       }
     }
 
