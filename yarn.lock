@@ -766,10 +766,8 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@jupiterone/data-model@^0.54.0":
+"@jupiterone/data-model@file:../data-model":
   version "0.54.0"
-  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.54.0.tgz#904b2629e2606b9fe334fa480472caa8c242bd20"
-  integrity sha512-cBFJT/q/UH40yOQsqAr1O75v64rnwC3bywDO81wWK+B0YbP+RCotzz/VFqgwNAhVb/QMCFuXhJk/ewaz704CoQ==
   dependencies:
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
@@ -1866,7 +1864,17 @@ ajv@^6.10.0, ajv@^6.12.3, ajv@^6.12.4:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-ajv@^8.0.0, ajv@^8.0.1:
+ajv@^8.0.0:
+  version "8.12.0"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.12.0.tgz#d1a0527323e22f53562c567c00991577dfbe19d1"
+  integrity sha512-sRu1kpcO9yLtYxBKvqfTeh9KzZEwO3STyX1HT+4CaDzC6HpTGYhIhPIzj9XuKU7KYDwnaeh5hcOwjy1QuJzBPA==
+  dependencies:
+    fast-deep-equal "^3.1.1"
+    json-schema-traverse "^1.0.0"
+    require-from-string "^2.0.2"
+    uri-js "^4.2.2"
+
+ajv@^8.0.1:
   version "8.10.0"
   resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.10.0.tgz#e573f719bd3af069017e3b66538ab968d040e54d"
   integrity sha512-bzqAEZOjkrUMl2afH8dknrq5KEk2SrwdBROR+vH1EKVQTqaUbJVPdc/gEdggTMM0Se+s+Ja4ju4TlNcStKl2Hw==

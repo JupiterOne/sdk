@@ -247,7 +247,7 @@ function schemaPropertyNames(schema: IntegrationEntitySchema): string[] {
     }
   }
   if (schema.$ref) {
-    const refSchema = getSchema(schema.$ref.slice(1));
+    const refSchema = getSchema(schema.$ref.replace('.json', ''));
     if (refSchema) {
       names.push(...schemaPropertyNames(refSchema));
     } else {
