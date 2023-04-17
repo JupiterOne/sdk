@@ -39,6 +39,11 @@ export type PublishEventInput = {
 };
 
 export enum IntegrationInfoEventName {
+  /**
+   * General info that does not require any action.
+   * Check with team before adding this to an integration.
+   */
+  Info = 'info',
   Stats = 'stats',
   Results = 'results',
 }
@@ -48,6 +53,14 @@ export interface PublishInfoEventInput extends PublishEventInput {
 }
 
 export enum IntegrationWarnEventName {
+  /**
+   * Indicates that some data was not successfully ingested.
+   */
+  IncompleteData = 'warn_incomplete_data',
+  /**
+   * During an integration job, permissions prevent an action from occurring.
+   * Indicates that a partial dataset is being ingested.
+   */
   MissingPermission = 'warn_missing_permission',
   /**
    * Some J1 integrations are configured to only ingest up to a set number
@@ -55,6 +68,9 @@ export enum IntegrationWarnEventName {
    * We would like to indicate to the end-user when this limit is encountered
    */
   IngestionLimitEncountered = 'warn_ingestion_limit_encountered',
+  /**
+   * @Deprecated Replaced with IncompleteData.
+   */
   MissingEntity = 'warn_missing_entity',
 }
 
@@ -64,10 +80,17 @@ export interface PublishWarnEventInput extends PublishEventInput {
 
 /**
  * NOTE: using event names which include the substring 'error' will
- * cause the integration to be marked with 'status: FAILED'
+ * cause the integration to be marked with `errorsOccurred: true` and essentially
+ * marking the job as failed.
  */
 export enum IntegrationErrorEventName {
+  /**
+   * A missing permission that will cause a job failure.
+   * Use warn_missing_permission if attempting to notify user
+   * of a potential non-fatal misconfiguration.
+   */
   MissingPermission = 'error_missing_permission',
+
   /**
    * Some J1 integrations are configured to only ingest up to a set number
    * of entities in a given integration job.
@@ -75,6 +98,7 @@ export enum IntegrationErrorEventName {
    * We would like to indicate to the end-user when this limit is encountered, and then fail the execution on completion.
    */
   IngestionLimitEncountered = 'error_ingestion_limit_encountered',
+
   /**
    * In some rare cases, the mapped properties of an entity can be so large that they trigger upload errors due to payload size.
    * This points to a possible poison pill in the api the integration is consuming. We would like to indicate to the end-user when this
@@ -145,12 +169,6 @@ export interface IntegrationLoggerFunctions {
   validationFailure: ValidationLogFunction;
 
   publishMetric: PublishMetricFunction;
-
-  /**
-   * @deprecated
-   * Please defer to using `publishInfoEvent`, `publishWarnEvent`, and `publishErrorEvent`
-   */
-  publishEvent: (options: PublishEventInput) => void;
 
   /**
    * Publish a job log event at level 'info'
