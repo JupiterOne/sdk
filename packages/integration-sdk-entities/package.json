@@ -22,7 +22,8 @@
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist",
     "copy-schemas": "node tools/copy-schemas/index.js ../../node_modules/@jupiterone/data-model/dist/schemas",
-    "generate-ts-classes": "yarn run copy-schemas && rm -rf src && mkdir src && json2ts -i 'tools/copy-schemas/_schemas/*.json' -o src  --cwd=tools/copy-schemas/_schemas --declareExternallyReferenced=false && ts-dedupe --duplicatesFile=src/Base.ts"
+    "create-barrel": "node tools/create-barrel/index.js src",
+    "generate-ts-classes": "yarn run copy-schemas && rm -rf src && mkdir src && json2ts -i 'tools/copy-schemas/_schemas/*.json' -o src  --cwd=tools/copy-schemas/_schemas --declareExternallyReferenced=false && ts-dedupe --duplicatesFile=src/Base.ts && yarn run create-barrel"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.54.0",

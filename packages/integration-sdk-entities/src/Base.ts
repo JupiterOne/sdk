@@ -148,7 +148,7 @@ export interface GraphObject {
    * This interface was referenced by `GraphObject`'s JSON-Schema definition
    * via the `patternProperty` "^tag\.".
    */
-  [k: string]: string | number | boolean;
+  [k: string]: string | number | boolean | [string, ...string[]];
   /**
    * An identifier unique within the scope containing the object. For example, for a Bitbucket repo, this will be the GUID of the repo as assigned by Bitbucket. For an IAM Role, this will be the ARN of the role.
    */

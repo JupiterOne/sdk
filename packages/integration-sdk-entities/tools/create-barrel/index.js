@@ -8,32 +8,36 @@ void (async function () {
     );
     return;
   }
-  const schemaPath = process.argv[2];
+  const typesPath = process.argv[2];
 
-  const schemas = await readAllSchemas(schemaPath);
-  for (const schema of schemas) {
-    await fs.writeFile(
-      __dirname + '/_schemas/' + schema.$id.replace('#', '') + '.json',
-      JSON.stringify(schema),
-    );
+  const types = await getNonEmptyFiles(typesPath);
+  let indexFile = '';
+  for (const type of types) {
+    if (type === 'index.ts') {
+      continue;
+    }
+    indexFile +=
+      "export * from './" +
+      type.replace('.d.ts', '').replace('.ts', '') +
+      "'\n";
   }
+
+  await fs.writeFile(typesPath + '/index.ts', indexFile);
 })();
 
-async function readAllSchemas(dir) {
+async function getNonEmptyFiles(dir) {
   const files = await fs.readdir(dir);
-  let schemas = [];
+  let fileNames = [];
   for (const file of files) {
     const filePath = path.join(dir, file);
-    const schemaBlob = await fs.readFile(filePath);
-    const schemaString = schemaBlob.toString();
-    try {
-      JSON.parse(schemaString);
-    } catch (err) {
-      console.log(filePath, schemaString);
+    const typeBlob = await fs.readFile(filePath);
+    const typeString = typeBlob.toString();
+    const empty = `/* eslint-disable */
+`;
+    if (typeString !== empty) {
+      fileNames.push(file);
     }
-
-    schemas.push(parsedSchema);
   }
 
-  return schemas;
+  return fileNames;
 }
