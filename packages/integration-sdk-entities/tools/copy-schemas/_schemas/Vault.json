@@ -1,1 +1,0 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Vault","description":"A collection of secrets such as a key ring","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{"name":{"description":"Name of the vault","type":"string"}},"required":["name"]}]}

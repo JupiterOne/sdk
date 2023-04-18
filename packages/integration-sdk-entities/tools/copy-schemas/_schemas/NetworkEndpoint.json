@@ -1,1 +1,0 @@
-{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#NetworkEndpoint","description":"A network endpoint for connecting to or accessing network resources. For example, NFS mount targets or VPN endpoints.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{"ipAddress":{"description":"The endpoint IP address","type":"string","format":"ip"}},"required":[]}]}
