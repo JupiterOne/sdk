@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Root","description":"The root node in the graph. There should be only one Root node per organization account.","type":"object","allOf":[{"$ref":"GraphObject.json"},{"properties":{"displayName":{"description":"Display name","type":"string"}}}],"required":["displayName"]}

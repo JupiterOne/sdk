@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Program","description":"A program. For example, a bug bounty/vuln disclosure program.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{"type":{"description":"The type of program.","type":"string"},"overview":{"description":"Program overview.","type":"string"}},"required":[]}]}

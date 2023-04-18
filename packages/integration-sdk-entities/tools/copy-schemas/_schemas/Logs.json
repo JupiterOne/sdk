@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Logs","description":"A specific repository or destination containing application, network, or system logs.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{"type":{"description":"The type of logs","type":"string","examples":["network","system","application","access","other"]}},"required":[]}]}

@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Backup","description":"A specific repository or data store containing backup data.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{"encrypted":{"description":"Indicates whether the backup data is encrypted.","type":"boolean"}},"required":[]}]}

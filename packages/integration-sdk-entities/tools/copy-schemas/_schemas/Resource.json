@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Resource","description":"A generic assignable resource. A resource is typically non-functional by itself unless used by or attached to a host or workload.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{},"required":[]}]}

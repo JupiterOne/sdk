@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Training","description":"A training module, such as a security awareness training or secure development training.","type":"object","allOf":[{"$ref":"RecordEntity.json"},{"properties":{},"required":[],"excludes":[]}]}

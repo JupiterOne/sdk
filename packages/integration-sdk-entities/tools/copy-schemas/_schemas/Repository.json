@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Repository","description":"A repository that contains resources. For example, a Docker container registry repository hosting Docker container images.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{"public":{"description":"Indicates if this is a public repo.","type":"boolean"}},"required":[]}]}

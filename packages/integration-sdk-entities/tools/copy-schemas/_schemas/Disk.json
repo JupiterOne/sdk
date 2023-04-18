@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Disk","description":"A disk storage device such as an AWS EBS volume","type":"object","allOf":[{"$ref":"DataStore.json"}]}

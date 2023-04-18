@@ -1,0 +1,1 @@
+{"$schema":"http://json-schema.org/draft-07/schema#","$id":"#Group","description":"A defined, generic group of Entities. This could represent a group of Resources, Users, Workloads, DataRepositories, etc.","type":"object","allOf":[{"$ref":"Entity.json"},{"properties":{},"required":[]}]}
