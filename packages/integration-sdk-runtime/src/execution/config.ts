@@ -21,7 +21,7 @@ export function loadConfigFromEnvironmentVariables<
   dotenvExpand(dotenv.config());
 
   return Object.entries(configMap)
-    .map(([field, config]): [string, string | boolean | undefined] => {
+    .map(([field, config]): [string, string | object | boolean | undefined] => {
       const environmentVariableName = snakeCase(field).toUpperCase();
 
       const environmentVariableValue = process.env[environmentVariableName];
@@ -41,20 +41,23 @@ export function loadConfigFromEnvironmentVariables<
 
       return [field, convertedValue];
     })
-    .reduce((acc: Record<string, string | boolean>, [field, value]) => {
-      if (value !== undefined) {
-        acc[field] = value;
-      }
-      return acc;
-    }, {}) as TConfig;
+    .reduce(
+      (acc: Record<string, string | object | boolean>, [field, value]) => {
+        if (value !== undefined) {
+          acc[field] = value;
+        }
+        return acc;
+      },
+      {},
+    ) as TConfig;
 }
 
 function convertEnvironmentVariableValueForField(
   field: string,
   fieldConfig: IntegrationInstanceConfigField,
   environmentVariableValue: string,
-): string | boolean {
-  let convertedValue: string | boolean;
+): string | object | boolean {
+  let convertedValue: string | object | boolean;
 
   switch (fieldConfig.type) {
     case 'boolean': {
@@ -66,6 +69,16 @@ function convertEnvironmentVariableValueForField(
       } else {
         throw new IntegrationLocalConfigFieldTypeMismatchError(
           `Expected boolean value for field "${field}" but received "${environmentVariableValue}".`,
+        );
+      }
+      break;
+    }
+    case 'json': {
+      try {
+        convertedValue = JSON.parse(environmentVariableValue);
+      } catch (err) {
+        throw new IntegrationLocalConfigFieldTypeMismatchError(
+          `Local config field ${field} of type ${fieldConfig.type} is not valid JSON (value=${environmentVariableValue}, error=${err})`,
         );
       }
       break;
