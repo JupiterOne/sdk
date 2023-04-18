@@ -3,6 +3,7 @@ const path = require('path');
 
 void (async function () {
   if (process.argv.length < 2) {
+    // eslint-disable-next-line no-console
     console.error(
       `Not enough arguments supplied.\nUsage: node generate-resolved-schemas.js <schema directory> <output path>`,
     );

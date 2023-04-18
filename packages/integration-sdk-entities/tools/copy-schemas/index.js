@@ -3,6 +3,7 @@ const path = require('path');
 
 void (async function () {
   if (process.argv.length < 2) {
+    // eslint-disable-next-line no-console
     console.error(
       `Not enough arguments supplied.\nUsage: node generate-resolved-schemas.js <schema directory> <output path>`,
     );
@@ -41,6 +42,7 @@ async function readAllSchemas(dir) {
     try {
       JSON.parse(schemaString);
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.log(filePath, schemaString);
     }
     const parsedSchema = mutateRefsToBeJsonFiles(schemaString);
