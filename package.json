@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --cache .",
-    "test": "jest && yarn --cwd ./packages/integration-sdk-runtime test:event-handlers && yarn format:check",
+    "test": "jest && yarn format:check",
     "test:ci": "yarn lint && yarn build --force && yarn test",
     "clean": "yarn lerna clean --yes && yarn clean:build && rm -r node_modules",
     "clean:build": "yarn lerna exec \"rm -rf ./dist tsconfig.tsbuildinfo\"",

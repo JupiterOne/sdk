@@ -1,25 +1,8 @@
 import { IntegrationLogger } from '.';
 
-type EventType = 'multipleResolves' | 'uncaughtException';
+type EventType = 'uncaughtException';
 
 type LifecycleErrorCallback = (err: Error, event: EventType) => void;
-
-// conforms to type MultipleResolveListener, see node_modules/@types/node/globals.d.ts
-type MultipleResolveListener = (
-  type: 'resolve' | 'reject',
-  promise: Promise<any>,
-  value: any,
-) => void;
-
-function createMultipleResolveListener(
-  callback: LifecycleErrorCallback,
-): MultipleResolveListener {
-  return (type, promise, value) => {
-    if (type === 'reject') {
-      callback(value, 'multipleResolves');
-    }
-  };
-}
 
 // conforms to type UncaughtExceptionListener, see node_modules/@types/node/globals.d.ts
 type UncaughtExceptionListener = (error: Error) => void;
@@ -33,7 +16,6 @@ function createUncaughtExceptionListener(
 }
 
 interface RegisteredEventListeners {
-  multipleResolveListener: MultipleResolveListener;
   uncaughtExceptionListener: UncaughtExceptionListener;
 }
 
@@ -51,12 +33,9 @@ interface RegisteredEventListeners {
 export function registerEventHandlers(
   callback: LifecycleErrorCallback,
 ): RegisteredEventListeners {
-  const multipleResolveListener = createMultipleResolveListener(callback);
-  process.on('multipleResolves', multipleResolveListener);
   const uncaughtExceptionListener = createUncaughtExceptionListener(callback);
   process.on('uncaughtException', uncaughtExceptionListener);
   return {
-    multipleResolveListener,
     uncaughtExceptionListener,
   };
 }
@@ -65,11 +44,9 @@ export function registerEventHandlers(
  * Call this function before exiting the node process when using `registerEventHandlers`
  */
 export function unregisterEventHandlers({
-  multipleResolveListener,
   uncaughtExceptionListener,
 }: RegisteredEventListeners) {
   process.nextTick(() => {
-    process.removeListener('multipleResolves', multipleResolveListener);
     process.removeListener('uncaughtException', uncaughtExceptionListener);
   });
 }
@@ -85,10 +62,8 @@ function integrationLoggerEventHandlerCallback(
   return (err, event) => {
     const logger = getErrorLogger();
     logger.error({ err, event });
-    // multipleResolves is excluded from `onFailure` as it is
-    // not a strict failure and is at times even expected behavior
-    // in node-fetch, Promise.all, and Promise.race
-    if (logger.onFailure && event !== 'multipleResolves') {
+
+    if (logger.onFailure) {
       logger.onFailure({ err });
     }
   };
