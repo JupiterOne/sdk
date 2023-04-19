@@ -11,17 +11,18 @@ jobs:
         os: [ubuntu-latest, windows-latest]
 
     steps:
+      - name: Check out code repository source code
+        uses: actions/checkout@v2
+
       - id: setup-node
         name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Check out code repository source code
-        uses: actions/checkout@v2
+          cache: yarn
 
       - name: Install dependencies
-        run: yarn
+        run: yarn --frozen-lockfile
 
       - name: Run tests
         run: yarn test:ci
@@ -39,15 +40,16 @@ jobs:
       fail-fast: false
 
     steps:
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 18.x
-
       - name: Check out repo
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 18.x
+          cache: yarn
 
       # Fetch tags and describe the commit before the merge commit
       # to see if it's a version publish
@@ -68,5 +70,5 @@ jobs:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
-          yarn
+          yarn --frozen-lock-file
           yarn lerna publish from-package --no-verify-access --yes
