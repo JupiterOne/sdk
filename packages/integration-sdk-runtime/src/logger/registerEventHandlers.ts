@@ -1,9 +1,6 @@
 import { IntegrationLogger } from '.';
 
-type EventType =
-  | 'multipleResolves'
-  | 'unhandledRejection'
-  | 'uncaughtException';
+type EventType = 'multipleResolves' | 'uncaughtException';
 
 type LifecycleErrorCallback = (err: Error, event: EventType) => void;
 
@@ -24,20 +21,6 @@ function createMultipleResolveListener(
   };
 }
 
-// conforms to type UnhandledRejectionListener, see node_modules/@types/node/globals.d.ts
-type UnhandledRejectionListener = (
-  reason: {} | null | undefined,
-  promise: Promise<any>,
-) => void;
-
-function createUnhandledRejectionListener(
-  callback: LifecycleErrorCallback,
-): UnhandledRejectionListener {
-  return (reason, promise) => {
-    callback(reason as Error, 'unhandledRejection');
-  };
-}
-
 // conforms to type UncaughtExceptionListener, see node_modules/@types/node/globals.d.ts
 type UncaughtExceptionListener = (error: Error) => void;
 
@@ -51,7 +34,6 @@ function createUncaughtExceptionListener(
 
 interface RegisteredEventListeners {
   multipleResolveListener: MultipleResolveListener;
-  unhandledRejectionListener: UnhandledRejectionListener;
   uncaughtExceptionListener: UncaughtExceptionListener;
 }
 
@@ -71,13 +53,10 @@ export function registerEventHandlers(
 ): RegisteredEventListeners {
   const multipleResolveListener = createMultipleResolveListener(callback);
   process.on('multipleResolves', multipleResolveListener);
-  const unhandledRejectionListener = createUnhandledRejectionListener(callback);
-  process.on('unhandledRejection', unhandledRejectionListener);
   const uncaughtExceptionListener = createUncaughtExceptionListener(callback);
   process.on('uncaughtException', uncaughtExceptionListener);
   return {
     multipleResolveListener,
-    unhandledRejectionListener,
     uncaughtExceptionListener,
   };
 }
@@ -87,12 +66,10 @@ export function registerEventHandlers(
  */
 export function unregisterEventHandlers({
   multipleResolveListener,
-  unhandledRejectionListener,
   uncaughtExceptionListener,
 }: RegisteredEventListeners) {
   process.nextTick(() => {
     process.removeListener('multipleResolves', multipleResolveListener);
-    process.removeListener('unhandledRejection', unhandledRejectionListener);
     process.removeListener('uncaughtException', uncaughtExceptionListener);
   });
 }
