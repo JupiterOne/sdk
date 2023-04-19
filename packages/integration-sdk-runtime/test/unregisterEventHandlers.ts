@@ -10,12 +10,15 @@ import {
 } from './util/fixtures';
 import { expect } from './util/expect';
 
-function throwsUnhandledRejection() {
-  async function throwsException() {
-    await Promise.resolve();
-    throw new Error();
-  }
-  void throwsException();
+function createMockExecutionHandler(unhandledRejectionError: Error) {
+  return () => {
+    async function throwsException() {
+      await Promise.resolve();
+      throw unhandledRejectionError;
+    }
+
+    void throwsException();
+  };
 }
 
 /**
@@ -26,15 +29,33 @@ function throwsUnhandledRejection() {
  */
 export async function executeIntegrationInstanceWithUnregisteredEventHandlers() {
   let wasLoggerErrorCalled = false;
+
+  const unhandledRejectionError = new Error(
+    'expected unhandled rejection error',
+  );
+
   const logger = createMockIntegrationLogger({
     error: () => {
       wasLoggerErrorCalled = true;
     },
   });
+
   const registeredEventHandlers = registerIntegrationLoggerEventHandlers(
     () => logger,
   );
+
   unregisterIntegrationLoggerEventHandlers(registeredEventHandlers);
+
+  let unhandledRejectionErrorFromProcessEvent: Error | undefined;
+
+  // After Node 15, the behavior of unhandled rejections changed. When no
+  // listener is attached, the entire process will exit on an unhandled promise
+  // rejection.
+  //
+  // Register this to prevent the Node.js process from exiting.
+  process.on('unhandledRejection', (err: Error) => {
+    unhandledRejectionErrorFromProcessEvent = err;
+  });
 
   await executeIntegrationInstance(
     logger,
@@ -46,11 +67,13 @@ export async function executeIntegrationInstanceWithUnregisteredEventHandlers() 
           name: '',
           entities: [],
           relationships: [],
-          executionHandler: throwsUnhandledRejection,
+          executionHandler: createMockExecutionHandler(unhandledRejectionError),
         },
       ],
     },
     LOCAL_EXECUTION_HISTORY,
   );
+
   expect(wasLoggerErrorCalled).toBe(false);
+  expect(unhandledRejectionErrorFromProcessEvent).toBe(unhandledRejectionError);
 }

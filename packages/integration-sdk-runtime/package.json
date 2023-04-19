@@ -11,7 +11,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=14.17.0 <15.x"
+    "node": ">=16.0.0 <17.x"
   },
   "publishConfig": {
     "access": "public"

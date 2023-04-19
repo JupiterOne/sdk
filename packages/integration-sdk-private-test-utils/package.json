@@ -9,7 +9,7 @@
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "engines": {
-    "node": ">=14.17.0 <15.x"
+    "node": ">=16.0.0 <17.x"
   },
   "scripts": {
     "build:dist": "tsc -p tsconfig.json --declaration"
