@@ -8,7 +8,7 @@
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "engines": {
-    "node": ">=16.0.0 <17.x"
+    "node": ">=18.0.0 <19.x"
   },
   "bin": {
     "j1-integration": "./bin/j1-integration"
