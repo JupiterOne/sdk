@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-http-client",
-  "version": "8.35.0",
+  "version": "9.0.0-beta.1",
   "description": "The HTTP client for use in JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -11,14 +11,13 @@
     "dist"
   ],
   "engines": {
-    "node": ">=14.17.0 <15.x"
+    "node": ">=18.0.0 <19.x"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "test": "jest",
-    "test:event-handlers": "ts-node ./test/index.ts",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"
@@ -27,8 +26,8 @@
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-dev-tools": "^8.35.0",
-    "@jupiterone/integration-sdk-private-test-utils": "^8.35.0",
+    "@jupiterone/integration-sdk-dev-tools": "^9.0.0-beta.1",
+    "@jupiterone/integration-sdk-private-test-utils": "^9.0.0-beta.1",
     "fetch-mock-jest": "^1.5.1"
   },
   "bugs": {

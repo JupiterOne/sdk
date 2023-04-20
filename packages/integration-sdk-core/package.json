@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-core",
-  "version": "8.35.0",
+  "version": "9.0.0-beta.1",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -11,7 +11,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=14.17.0 <15.x"
+    "node": ">=18.0.0 <19.x"
   },
   "publishConfig": {
     "access": "public"

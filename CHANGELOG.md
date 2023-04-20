@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+### Changed
+
+- **BREAKING** - Bump version of Node.js to v18 and require version
+  > =18.16.0 <19.x.
+- Remove the following Node.js event listeners due to Node.js core deprecation:
+  - `unhandledRejection`
+  - `multipleResolves`
+
 ## 8.35.0 - 2023-04-12
 
 ### Added
