@@ -2,7 +2,9 @@ const fs = require('fs/promises');
 const path = require('path');
 /**
  * Creates an index.ts (barrel) file from the generated TS classes that allows for cleaner exports.
- *
+ * The barrel file will look like:
+ * export * from './Entity';
+ * export * from ...
  **/
 void (async function () {
   if (process.argv.length < 2) {
