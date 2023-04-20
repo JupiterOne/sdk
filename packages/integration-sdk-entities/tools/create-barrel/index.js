@@ -1,6 +1,9 @@
 const fs = require('fs/promises');
 const path = require('path');
-
+/**
+ * Creates an index.ts (barrel) file from the generated TS classes that allows for cleaner exports.
+ *
+ **/
 void (async function () {
   if (process.argv.length < 2) {
     // eslint-disable-next-line no-console

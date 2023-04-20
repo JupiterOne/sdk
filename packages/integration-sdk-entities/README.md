@@ -1,7 +1,8 @@
 # @jupiterone/integration-sdk-entities
 
-This package contains all entities generated from J1's data model to be used
-throughout J1 systems.
+This package contains all typescript types generated from J1's data model to be used
+throughout J1 systems.  These should not be considered the source of truth for the entity definitions, instead reference
+the `data-model` to find the source of truth.
 
 # Generating the types
 
