@@ -87,8 +87,9 @@ export function assignTags<T extends object>(
             const split = tagArray[i].split(':');
             tagMap[split[0].trim()] = split[1].trim();
           }
+        } else {
+          taggedEntity.tags = tags as string[];
         }
-        taggedEntity.tags = tags as string[];
       } else {
         tagMap = (tags as ResourceKeyValueTag[]).reduce(
           (m: ResourceTagMap, t) => {
