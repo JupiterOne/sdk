@@ -83,8 +83,8 @@ export function assignTags<T extends object>(
       if (typeof tags[0] === 'string') {
         const tagArray = tags as string[];
         if (tagArray.every((tag) => tag.includes(':'))) {
-          for (var i = 0; i < tagArray.length; i++) {
-            var split = tagArray[i].split(':');
+          for (let i = 0; i < tagArray.length; i++) {
+            const split = tagArray[i].split(':');
             tagMap[split[0].trim()] = split[1].trim();
           }
         }
