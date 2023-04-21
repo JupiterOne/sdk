@@ -224,4 +224,14 @@ describe('assignTags', () => {
       'tag.empty': ' ',
     });
   });
+
+  test('tags string list with key:value', () => {
+    assignTags(entity, ['a:b', 'c:d']);
+    expect(entity).toMatchObject({ 'tag.a': 'b', 'tag.c': 'd' });
+  });
+
+  test('tags string list with key:value and string', () => {
+    assignTags(entity, ['a:b', 'c:d', 'e']);
+    expect(entity).toMatchObject({ tags: ['a:b', 'c:d', 'e'] });
+  });
 });
