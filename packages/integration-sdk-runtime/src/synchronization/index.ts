@@ -180,6 +180,8 @@ export async function initiateSynchronization(
     job,
     logger: logger.child({
       ...jobConfiguration,
+      integrationJobId:
+        jobConfiguration.integrationJobId ?? job.integrationJobId,
       synchronizationJobId: job.id,
     }),
     uploadBatchSize,
