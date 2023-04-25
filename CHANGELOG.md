@@ -16,6 +16,10 @@ and this project adheres to
 - Remove the following Node.js event listeners due to Node.js core deprecation:
   - `unhandledRejection`
   - `multipleResolves`
+- BREAKING: `executeWithContext(context: TExecutionContext, ...)` now requires
+  that `TExecutionContext.instance` is provided.
+- Added `disabledSources` field to the `IntegrationInstance` type from the
+  `@jupiterone/integration-sdk-core` package.
 
 ## 8.35.0 - 2023-04-12
 

@@ -31,7 +31,7 @@ export type IntegrationExecutionConfig = object;
  * property
  */
 export type IntegrationLoadExecutionConfigContext<
-  TConfig extends IntegrationInstanceConfig,
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 > = ExecutionContext & {
   instance: IntegrationInstance<TConfig>;
 };

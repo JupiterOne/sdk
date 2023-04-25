@@ -7,6 +7,7 @@ import {
   IntegrationInstance,
   IntegrationInstanceConfig,
   IntegrationInvocationConfig,
+  IntegrationLoadExecutionConfigContext,
   IntegrationLogger,
   IntegrationStepResult,
   InvocationConfig,
@@ -49,6 +50,7 @@ import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 import { DuplicateKeyTracker } from './duplicateKeyTracker';
+import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -165,7 +167,7 @@ async function tryPublishDiskUsageMetric<
  * using context that was provided.
  */
 export async function executeWithContext<
-  TExecutionContext extends ExecutionContext,
+  TExecutionContext extends IntegrationLoadExecutionConfigContext,
   TStepExecutionContext extends StepExecutionContext,
 >(
   context: TExecutionContext,
@@ -226,11 +228,19 @@ export async function executeWithContext<
       throw err;
     }
 
-    const stepStartStates: StepStartStates =
+    const configStepStartStates: StepStartStates =
       (await config.getStepStartStates?.(context)) ??
       getDefaultStepStartStates(config.integrationSteps);
 
-    validateStepStartStates(config.integrationSteps, stepStartStates);
+    validateStepStartStates(config.integrationSteps, configStepStartStates);
+
+    const stepStartStates = getIngestionSourceStepStartStates({
+      integrationSteps: config.integrationSteps,
+      configStepStartStates,
+      disabledSources: context.instance.disabledSources?.map(
+        (source) => source.ingestionSourceId,
+      ),
+    });
 
     if (shouldPublishDiskUsageMetric) {
       diskUsagePublishInterval = createDiskUsagePublishInterval();
