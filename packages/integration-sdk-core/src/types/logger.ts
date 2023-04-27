@@ -171,6 +171,12 @@ export interface IntegrationLoggerFunctions {
   publishMetric: PublishMetricFunction;
 
   /**
+   * @deprecated
+   * Please defer to using `publishInfoEvent`, `publishWarnEvent`, and `publishErrorEvent`
+   */
+  publishEvent: (options: PublishEventInput) => void;
+
+  /**
    * Publish a job log event at level 'info'
    */
   publishInfoEvent: (event: PublishInfoEventInput) => void;
