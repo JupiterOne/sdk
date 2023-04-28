@@ -276,7 +276,7 @@ export async function uploadGraphObjectData(
       Array.isArray(graphObjectData.entities) &&
       graphObjectData.entities.length != 0
     ) {
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           entities: graphObjectData.entities.length,
         },
@@ -290,7 +290,7 @@ export async function uploadGraphObjectData(
         entityBatchSize,
       );
 
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           entities: graphObjectData.entities.length,
         },
@@ -302,7 +302,7 @@ export async function uploadGraphObjectData(
       Array.isArray(graphObjectData.relationships) &&
       graphObjectData.relationships.length != 0
     ) {
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           relationships: graphObjectData.relationships.length,
         },
@@ -316,7 +316,7 @@ export async function uploadGraphObjectData(
         relationshipsBatchSize,
       );
 
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           relationships: graphObjectData.relationships.length,
         },
@@ -465,7 +465,7 @@ export async function uploadDataChunk<
     async (ctx) => {
       // TODO [INT-3707]: on first try, shrink raw data of every entity
       // to the point where each entity is < 1MB
-      logger.info(
+      logger.debug(
         {
           uploadCorrelationId,
           uploadType: type,
@@ -489,7 +489,7 @@ export async function uploadDataChunk<
         },
       );
 
-      logger.info(
+      logger.debug(
         {
           uploadCorrelationId,
           uploadType: type,
