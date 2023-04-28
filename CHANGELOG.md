@@ -9,6 +9,19 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.37.0 - 2023-04-28
+
+## Changed
+
+- Reduced log level of graph object uploads from info to debug
+
+## 8.36.0 - 2023-04-21
+
+### Changed
+
+- Set the integrationJobId to the syncJob's integrationJobId if a job id was not
+  passed in in the jobConfiguration.
+
 ## 8.35.0 - 2023-04-12
 
 ### Added
