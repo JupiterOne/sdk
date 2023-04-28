@@ -9,13 +9,29 @@ and this project adheres to
 
 ## Unreleased
 
-### Changed
+### 9.0.0
 
-- **BREAKING** - Bump version of Node.js to v18 and require version
-  > =18.16.0 <19.x.
+## Changed
+
+- **BREAKING** - Bump version of Node.js to v18 and require version > =18.16.0
+  <19.x.
+
 - Remove the following Node.js event listeners due to Node.js core deprecation:
   - `unhandledRejection`
   - `multipleResolves`
+
+## 8.37.0 - 2023-04-28
+
+## Changed
+
+- Reduced log level of graph object uploads from info to debug
+
+## 8.36.0 - 2023-04-21
+
+### Changed
+
+- Set the integrationJobId to the syncJob's integrationJobId if a job id was not
+  passed in in the jobConfiguration.
 
 ## 8.35.0 - 2023-04-12
 
