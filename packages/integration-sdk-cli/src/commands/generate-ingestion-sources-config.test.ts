@@ -26,7 +26,7 @@ describe('#generateIngestionSourcesConfig', () => {
     },
   };
 
-  it('should return the ingestionConfig with empty childIngestionSources', () => {
+  it('should return the ingestionConfig with steps using the ingestion source id in the childIngestionSources.', () => {
     const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
       {
         id: 'fetch-vulnerability-alerts',
@@ -55,7 +55,7 @@ describe('#generateIngestionSourcesConfig', () => {
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]
         .childIngestionSources,
-    ).toBeEmpty();
+    ).toEqual(['fetch-vulnerability-alerts']);
     // ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS] is undefined because there are no steps using that ingestionSourceId
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS],
@@ -131,15 +131,27 @@ describe('#generateIngestionSourcesConfig', () => {
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]);
-    // New property added
+    // New property added with the right child ingestion sources
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]
         .childIngestionSources,
-    ).toEqual(['fetch-vulnerability-alerts', 'fetch-issues']);
-    // For FINDING_ALERTS the ingestionConfig keep exactly the same
+    ).toEqual(
+      expect.arrayContaining([
+        'fetch-repos',
+        'fetch-vulnerability-alerts',
+        'fetch-issues',
+      ]),
+    );
+    // For FINDING_ALERTS:
+    // Original object doesn't change
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]);
+    // New property added with only 'fetch-vulnerability-alerts' added as child ingestion source
+    expect(
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]
+        .childIngestionSources,
+    ).toEqual(['fetch-vulnerability-alerts']);
   });
 
   it('should not add the source if it does not exist in the ingestionConfig', () => {
