@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+- `executeWithContext(context: TExecutionContext, ...)` now accepts a
+  `context.instance` property
+
 ## 8.38.0 - 2023-04-28
 
 ## Added
