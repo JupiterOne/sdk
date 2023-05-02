@@ -66,15 +66,6 @@ export interface InvocationConfig<
    * the same dependency graph.
    */
   dependencyGraphOrder?: string[];
-}
-
-export interface IntegrationInvocationConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> extends InvocationConfig<
-    IntegrationExecutionContext<TConfig>,
-    IntegrationStepExecutionContext<TConfig>
-  > {
-  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
   /**
    * This configuration element is used to store information about data
    * ingestion sources that can be enabled or disabled. When this element
@@ -86,6 +77,15 @@ export interface IntegrationInvocationConfig<
    *
    */
   ingestionConfig?: IntegrationIngestionConfigFieldMap;
+}
+
+export interface IntegrationInvocationConfig<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+> extends InvocationConfig<
+    IntegrationExecutionContext<TConfig>,
+    IntegrationStepExecutionContext<TConfig>
+  > {
+  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
 }
 
 export interface IntegrationInstanceConfigField {
