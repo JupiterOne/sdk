@@ -16,6 +16,12 @@ and this project adheres to
 - **BREAKING** - Bump version of Node.js to v18 and require version > =18.16.0
   <19.x.
 
+- **BREAKING** - Remove asynchronous `jobState.hasKey()`
+
+  The `hasKey` function has no asynchronous implementation, and awaiting
+  `jobState.hasKey` can unexpectedly cause duplicate key errors in some specific
+  edge cases (see https://github.com/JupiterOne/sdk/pull/694/files).
+
 - Remove the following Node.js event listeners due to Node.js core deprecation:
   - `unhandledRejection`
   - `multipleResolves`
