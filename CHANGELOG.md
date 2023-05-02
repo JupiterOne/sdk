@@ -9,13 +9,41 @@ and this project adheres to
 
 ## Unreleased
 
-### Changed
+### 9.0.0
 
-- **BREAKING** - Bump version of Node.js to v18 and require version
-  > =18.16.0 <19.x.
+## Changed
+
+- **BREAKING** - Bump version of Node.js to v18 and require version >=18.16.0
+  <19.x.
+
+- **BREAKING** - Remove asynchronous `jobState.hasKey()`
+
+  The `hasKey` function has no asynchronous implementation, and awaiting
+  `jobState.hasKey` can unexpectedly cause duplicate key errors in some specific
+  edge cases (see https://github.com/JupiterOne/sdk/pull/694/files).
+
 - Remove the following Node.js event listeners due to Node.js core deprecation:
   - `unhandledRejection`
   - `multipleResolves`
+
+## 8.38.0 - 2023-04-28
+
+## Added
+
+- Add steps using the ingestion source id to `childIngestionSources`
+
+## 8.37.0 - 2023-04-28
+
+## Changed
+
+- Reduced log level of graph object uploads from info to debug
+
+## 8.36.0 - 2023-04-21
+
+### Changed
+
+- Set the integrationJobId to the syncJob's integrationJobId if a job id was not
+  passed in in the jobConfiguration.
 
 ## 8.35.0 - 2023-04-12
 
