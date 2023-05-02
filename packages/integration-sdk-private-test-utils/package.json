@@ -1,7 +1,7 @@
 {
   "name": "@jupiterone/integration-sdk-private-test-utils",
   "private": true,
-  "version": "8.37.0",
+  "version": "8.38.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,7 @@
     "build:dist": "tsc -p tsconfig.json --declaration"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^8.37.0",
+    "@jupiterone/integration-sdk-core": "^8.38.0",
     "lodash": "^4.17.15"
   },
   "devDependencies": {
