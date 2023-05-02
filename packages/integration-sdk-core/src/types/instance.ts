@@ -51,7 +51,7 @@ export interface IntegrationInstance<
    */
   disabledSources?: {
     ingestionSourceId: string;
-    disabledOn: number;
-    disabledBy: string;
+    disabledOn?: number;
+    disabledBy?: string;
   }[];
 }
