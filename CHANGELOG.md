@@ -13,7 +13,7 @@ and this project adheres to
 
 ## Changed
 
-- **BREAKING** - Bump version of Node.js to v18 and require version > =18.16.0
+- **BREAKING** - Bump version of Node.js to v18 and require version >=18.16.0
   <19.x.
 
 - **BREAKING** - Remove asynchronous `jobState.hasKey()`
