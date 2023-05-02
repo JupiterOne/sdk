@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-benchmark",
-  "version": "9.0.0-beta.1",
+  "version": "9.0.0",
   "private": true,
   "description": "SDK benchmarking scripts",
   "main": "./src/index.js",
@@ -15,8 +15,8 @@
     "benchmark": "for file in ./src/benchmarks/*; do yarn prebenchmark && node $file; done"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^9.0.0-beta.1",
-    "@jupiterone/integration-sdk-runtime": "^9.0.0-beta.1",
+    "@jupiterone/integration-sdk-core": "^9.0.0",
+    "@jupiterone/integration-sdk-runtime": "^9.0.0",
     "benchmark": "^2.1.4"
   }
 }
