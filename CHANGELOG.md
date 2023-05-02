@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+- Added `disabledSources` field to the `IntegrationInstance` type from the
+  `@jupiterone/integration-sdk-core` package.
+
 ## 8.38.0 - 2023-04-28
 
 ## Added
