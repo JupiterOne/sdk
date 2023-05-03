@@ -9,8 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.2.0 - 2023-05-03
+
+### Added
+
 - `executeWithContext(context: TExecutionContext, ...)` now accepts a
   `context.instance` property
+- modify step start states using ingestionSourcesConfig / disabledSources.
 
 ## 9.1.0 - 2023-05-03
 
