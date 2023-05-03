@@ -42,7 +42,7 @@ describe('getIngestionSourceStepStartStates', () => {
     'step-3': { disabled: false },
   };
 
-  it('keeps a disabled step as disabled with the same reason', () => {
+  it("prioritizes the step state from the instance's getStepStartStates", () => {
     const result = getIngestionSourceStepStartStates({
       integrationSteps: mockIntegrationSteps,
       configStepStartStates: mockConfigStepStartStates,
