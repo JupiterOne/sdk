@@ -12,6 +12,13 @@ and this project adheres to
 - `executeWithContext(context: TExecutionContext, ...)` now accepts a
   `context.instance` property
 
+## 9.1.0 - 2023-05-03
+
+### Added
+
+- Added `disabledSources` field to the `IntegrationInstance` type from the
+  `@jupiterone/integration-sdk-core` package.
+
 ### 9.0.0
 
 ## Changed

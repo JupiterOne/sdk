@@ -45,4 +45,13 @@ export interface IntegrationInstance<
    * messages.
    */
   config: TConfig;
+
+  /**
+   * A list of ingestion sources that are disabled for the integration instance.
+   */
+  disabledSources?: {
+    ingestionSourceId: string;
+    disabledOn?: number;
+    disabledBy?: string;
+  }[];
 }
