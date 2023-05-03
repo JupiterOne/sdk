@@ -36,6 +36,12 @@ export type IntegrationLoadExecutionConfigContext<
   instance: IntegrationInstance<TConfig>;
 };
 
+export type IntegrationInstanceExecutionContext<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+> = ExecutionContext & {
+  instance?: IntegrationInstance<TConfig>;
+};
+
 /**
  * @param TConfig the integration specific type of the `instance.config`
  * property
