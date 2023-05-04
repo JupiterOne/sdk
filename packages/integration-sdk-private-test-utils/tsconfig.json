@@ -4,6 +4,6 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "exclude": ["__fixtures__", "dist"],
+  "exclude": ["__fixtures__", "**/dist/**/*"],
   "references": [{ "path": "../integration-sdk-core" }]
 }

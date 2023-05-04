@@ -1,4 +1,5 @@
 {
+  "exludes": ["jest.config.base.js"],
   "compilerOptions": {
     "composite": true,
     "target": "ES2021",

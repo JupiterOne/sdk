@@ -5,8 +5,9 @@
   },
   "exclude": [
     "**/test/*",
-    "./jest.setup.ts",
-    "**/dist/*",
+    "jest.setup.ts",
+    "jest.config.js",
+    "**/dist/**/*",
     "**/*.test.ts",
     "**/__tests__/**/*.ts",
     "**/__mocks__/**/*.ts"

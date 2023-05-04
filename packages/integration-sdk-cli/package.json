@@ -18,20 +18,26 @@
   },
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
-    "build:dist": "tsc -p tsconfig.dist.json --declaration",
-    "prepack": "yarn build:dist"
+    "build:dist": "tsc -p tsconfig.dist.json --declaration && yarn copy-files",
+    "prepack": "yarn build:dist",
+    "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate",
+    "plop": "plop --plopfile dist/src/generator/newIntegration.js"
   },
   "dependencies": {
     "@jupiterone/integration-sdk-runtime": "^9.5.0",
+    "@jupiterone/data-model": "^0.54.0",
+    "@jupiterone/integration-sdk-core": "^9.4.1",
     "chalk": "^4",
     "commander": "^9.4.0",
     "fs-extra": "^10.1.0",
     "globby": "^11.0.0",
+    "inquirer-checkbox-plus-prompt": "^1.4.2",
     "js-yaml": "^4.1.0",
     "json-diff": "^0.5.4",
     "lodash": "^4.17.19",
     "markdown-table": "^2.0.0",
     "neo4j-driver": "^4.3.3",
+    "plop": "^3.1.2",
     "runtypes": "5.1.0",
     "upath": "^1.2.0",
     "url-exists": "^1.0.3",
