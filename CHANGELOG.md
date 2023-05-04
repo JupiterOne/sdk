@@ -9,8 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.39.0 - 2023-05-04
+
+### Changed
+
+- Added `disabledSources` field to the `IntegrationInstance` type from the
+  `@jupiterone/integration-sdk-core` package.
 - `executeWithContext(context: TExecutionContext, ...)` now accepts a
   `context.instance` property
+- modify step start states using ingestionSourcesConfig / disabledSources.
 
 ## 8.38.0 - 2023-04-28
 
