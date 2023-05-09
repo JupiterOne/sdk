@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.3.0 - 2023-05-09
+
+### Changed
+
+- optimized memory usage in `DuplicateKeyTracker`
+
 ## 9.2.0 - 2023-05-03
 
 ### Added
@@ -24,9 +30,9 @@ and this project adheres to
 - Added `disabledSources` field to the `IntegrationInstance` type from the
   `@jupiterone/integration-sdk-core` package.
 
-### 9.0.0
+## 9.0.0
 
-## Changed
+### Changed
 
 - **BREAKING** - Bump version of Node.js to v18 and require version >=18.16.0
   <19.x.
@@ -43,13 +49,13 @@ and this project adheres to
 
 ## 8.38.0 - 2023-04-28
 
-## Added
+### Added
 
 - Add steps using the ingestion source id to `childIngestionSources`
 
 ## 8.37.0 - 2023-04-28
 
-## Changed
+### Changed
 
 - Reduced log level of graph object uploads from info to debug
 
