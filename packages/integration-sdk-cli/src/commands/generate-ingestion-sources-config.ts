@@ -92,18 +92,13 @@ export function generateIngestionSourcesConfig<
         return;
       }
       // Get the stepIds that have any dependencies on the matched step ids
-      const dependentSteps = integrationSteps
+      const childIngestionSources = integrationSteps
         .filter((step) =>
           step.dependsOn?.some((value) =>
             matchedIntegrationStepIds.includes(value),
           ),
         )
         .map(({ id }) => id);
-
-      const childIngestionSources = Array.from(
-        new Set([...dependentSteps, ...matchedIntegrationStepIds]),
-      );
-
       // Generate ingestionConfig with the childIngestionSources
       newIngestionConfig[key] = {
         ...ingestionConfig[key],
