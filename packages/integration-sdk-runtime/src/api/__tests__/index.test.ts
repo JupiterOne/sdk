@@ -1,5 +1,5 @@
 import { mocked } from 'jest-mock';
-import Alpha from '@lifeomic/alpha';
+import { Alpha } from '@lifeomic/alpha';
 
 import {
   getApiBaseUrl,

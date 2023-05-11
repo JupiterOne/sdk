@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.4.0 - 2023-05-11
+
+### Updated
+
+- Updated `@lifeomic/alpha` dependency to `v5.1.1`.
+
 ## 9.3.1 - 2023-05-10
 
 ### Changed
