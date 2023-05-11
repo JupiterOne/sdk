@@ -38,7 +38,9 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       account: uuid(),
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest.spyOn(apiClient, 'post') as any;
+
+    postSpy.mockResolvedValue({});
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
@@ -73,7 +75,9 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       account: uuid(),
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest.spyOn(apiClient, 'post') as any;
+
+    postSpy.mockResolvedValue({});
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
@@ -107,7 +111,8 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       account: uuid(),
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest.spyOn(apiClient, 'post') as any;
+    postSpy.mockResolvedValue({});
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
@@ -131,13 +136,15 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       expect(call[1].relationships.length).toBeLessThanOrEqual(5);
     }
   });
+
   test('should fall back to defaults when no batchSize given', async () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest.spyOn(apiClient, 'post') as any;
+    postSpy.mockResolvedValue({});
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {

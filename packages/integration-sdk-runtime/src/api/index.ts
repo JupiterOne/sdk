@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import Alpha from '@lifeomic/alpha';
+import { Alpha, AlphaOptions } from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -49,11 +49,13 @@ export function createApiClient({
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  return new Alpha({
+  const opts: AlphaOptions = {
     baseURL: apiBaseUrl,
     headers,
     retry: retryOptions ?? {},
-  }) as ApiClient;
+  };
+
+  return new Alpha(opts) as ApiClient;
 }
 
 interface GetApiBaseUrlInput {
