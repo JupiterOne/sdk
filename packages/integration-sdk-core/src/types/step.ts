@@ -15,7 +15,8 @@ export enum DisabledStepReason {
   NONE = 'none', // No reason was provided
   PERMISSION = 'permission', // Missing permission disabled this step
   BETA = 'beta', // Step is in beta and only enabled on request
-  CONFIG = 'config', // Step was disabled via config
+  CONFIG = 'config', // Step was disabled via config that is controlled by J1
+  USER_CONFIG = 'user_config', // Step was disabled via config that is controlled by the user
   API_VERSION = 'api_version', // Step is disabled due to lack of support in an API version
 }
 
