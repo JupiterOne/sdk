@@ -35,7 +35,9 @@ export function getIngestionSourceStepStartStates<
       : false;
     ingestionSourceStepStates[step.id] = {
       disabled: isSourceDisabled,
-      ...(isSourceDisabled && { disabledReason: DisabledStepReason.CONFIG }),
+      ...(isSourceDisabled && {
+        disabledReason: DisabledStepReason.USER_CONFIG,
+      }),
       ...('stepCachePath' in configStepStartStates[step.id] && {
         stepCachePath: configStepStartStates[step.id].stepCachePath,
       }),

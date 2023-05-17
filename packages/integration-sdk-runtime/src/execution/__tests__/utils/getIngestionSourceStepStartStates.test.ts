@@ -61,7 +61,7 @@ describe('getIngestionSourceStepStartStates', () => {
 
     expect(result['step-2']).toEqual({
       disabled: true,
-      disabledReason: DisabledStepReason.CONFIG,
+      disabledReason: DisabledStepReason.USER_CONFIG,
     });
   });
 
