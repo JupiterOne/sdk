@@ -317,6 +317,7 @@ describe('step event publishing', () => {
     logger.stepSkip(step, DisabledStepReason.BETA);
     logger.stepSkip(step, DisabledStepReason.PERMISSION);
     logger.stepSkip(step, DisabledStepReason.CONFIG);
+    logger.stepSkip(step, DisabledStepReason.USER_CONFIG);
     logger.stepSkip(step, DisabledStepReason.NONE);
 
     // just use some error that contains a code
@@ -356,9 +357,15 @@ describe('step event publishing', () => {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enable.',
+        'Skipped step "Mochi". Step was disabled via configuration. Please contact support to enable.',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(7, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". Step was disabled via configuration. Update instance config to enable.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(8, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
       description: expect.stringMatching(
