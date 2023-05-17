@@ -324,7 +324,7 @@ describe('step event publishing', () => {
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(7);
+    expect(onEmitEvent).toHaveBeenCalledTimes(8);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
       level: PublishEventLevel.Info,
