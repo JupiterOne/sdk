@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 8.41.0 - 2023-05-22
+
+### Changed
+
+- Remove steps using the ingestion source id to `childIngestionSources`
+
 ## 8.39.0 - 2023-05-04
 
 ### Changed
