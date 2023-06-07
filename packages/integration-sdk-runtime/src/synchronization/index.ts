@@ -476,7 +476,7 @@ export async function uploadDataChunk<
       );
 
       await apiClient.post(
-        `/persister/synchronization/jobs/${jobId}/${type}`,
+        `/persister/synchronization/jobs/${jobId}/${type as string}`,
         {
           [type]: batch,
         },

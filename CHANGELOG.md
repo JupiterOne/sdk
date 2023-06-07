@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.4.1 - 2023-06-07
+
+### Updated
+
+- fix dependencies to be node 18 compatible
+
 ## 9.4.0 - 2023-05-11
 
 ### Updated
