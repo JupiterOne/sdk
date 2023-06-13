@@ -707,7 +707,7 @@ export function toMatchStepMetadata(
   } = filterGraphObjects(results.collectedRelationships, isMappedRelationship);
 
   let restDirectRelationships = collectedDirectRelationships;
-  const alreadyValidatedTypes = [];
+  const alreadyValidatedTypes: string[] = [];
   for (const relationshipMetadata of step.relationships) {
     if (alreadyValidatedTypes.includes(relationshipMetadata._type)) continue;
     alreadyValidatedTypes.push(relationshipMetadata._type);
