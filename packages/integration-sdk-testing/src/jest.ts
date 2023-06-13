@@ -709,7 +709,7 @@ export function toMatchStepMetadata(
   let restDirectRelationships = collectedDirectRelationships;
   const alreadyValidatedTypes = [];
   for (const relationshipMetadata of step.relationships) {
-    if (alreadyValidatedTypes.includes(relationshipMetadata._type) continue;
+    if (alreadyValidatedTypes.includes(relationshipMetadata._type)) continue;
     alreadyValidatedTypes.push(relationshipMetadata._type);
     const { targets, rest } = filterGraphObjects(
       restDirectRelationships,
