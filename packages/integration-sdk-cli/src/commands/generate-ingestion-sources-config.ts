@@ -4,6 +4,7 @@ import {
   IntegrationSourceId,
   Step,
   StepExecutionContext,
+  StepMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { createCommand } from 'commander';
 import { loadConfigFromTarget } from '../config';
@@ -59,7 +60,7 @@ export function generateIngestionSourcesConfigCommand() {
 
 export type EnhancedIntegrationIngestionConfigFieldMap = Record<
   IntegrationSourceId,
-  IntegrationIngestionConfigField & { childIngestionSources?: string[] }
+  IntegrationIngestionConfigField & { childIngestionSources?: StepMetadata[] }
 >;
 
 /**
@@ -91,18 +92,19 @@ export function generateIngestionSourcesConfig<
         // Skip iteration if there are no steps pointing to the current ingestionSourceId
         return;
       }
-      // Get the stepIds that have any dependencies on the matched step ids
-      const childIngestionSources = integrationSteps
-        .filter((step) =>
-          step.dependsOn?.some((value) =>
-            matchedIntegrationStepIds.includes(value),
-          ),
-        )
-        .map(({ id }) => id);
+      // Get the dependent steps for the given matchedIntegrationStepIds
+      const childIngestionSources = integrationSteps.filter((step) =>
+        step.dependsOn?.some((value) =>
+          matchedIntegrationStepIds.includes(value),
+        ),
+      );
       // Generate ingestionConfig with the childIngestionSources
       newIngestionConfig[key] = {
         ...ingestionConfig[key],
-        childIngestionSources,
+        // Drop execution handler from returned object
+        childIngestionSources: childIngestionSources.map(
+          ({ executionHandler, ...keepAttrs }) => keepAttrs,
+        ),
       };
     } else {
       log.warn(`The key ${key} does not exist in the ingestionConfig`);
