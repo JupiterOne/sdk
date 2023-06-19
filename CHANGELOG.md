@@ -13,7 +13,8 @@ and this project adheres to
 
 ### Updated
 
-- modify `generateIngestionSourcesConfigCommand` to include child steps metadata in the `childIngestionSources` property
+- modify `generateIngestionSourcesConfigCommand` to include child steps metadata
+  in the `childIngestionSources` property
 
 ## 9.4.1 - 2023-06-07
 
