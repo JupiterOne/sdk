@@ -63,6 +63,33 @@ describe('#generateIngestionSourcesConfig', () => {
   });
 
   it('should return the ingestionConfig with childIngestionSources', () => {
+    const stepFetchVulnerabilityAlerts = {
+      id: 'fetch-vulnerability-alerts',
+      name: 'Fetch Vulnerability Alerts',
+      entities: [
+        {
+          resourceName: 'GitHub Vulnerability Alerts',
+          _type: 'github_finding',
+          _class: ['Finding'],
+        },
+      ],
+      relationships: [],
+      dependsOn: ['fetch-repos'],
+      ingestionSourceId: INGESTION_SOURCE_IDS.FINDING_ALERTS,
+    };
+    const stepFetchIssues = {
+      id: 'fetch-issues',
+      name: 'Fetch Issues',
+      entities: [
+        {
+          resourceName: 'GitHub Issue',
+          _type: 'github_issue',
+          _class: ['Issue'],
+        },
+      ],
+      relationships: [],
+      dependsOn: ['fetch-repos', 'fetch-users', 'fetch-collaborators'],
+    };
     const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
       {
         id: 'fetch-repos',
@@ -80,32 +107,11 @@ describe('#generateIngestionSourcesConfig', () => {
         executionHandler: jest.fn(),
       },
       {
-        id: 'fetch-vulnerability-alerts',
-        name: 'Fetch Vulnerability Alerts',
-        entities: [
-          {
-            resourceName: 'GitHub Vulnerability Alerts',
-            _type: 'github_finding',
-            _class: ['Finding'],
-          },
-        ],
-        relationships: [],
-        dependsOn: ['fetch-repos'],
-        ingestionSourceId: INGESTION_SOURCE_IDS.FINDING_ALERTS,
+        ...stepFetchVulnerabilityAlerts,
         executionHandler: jest.fn(),
       },
       {
-        id: 'fetch-issues',
-        name: 'Fetch Issues',
-        entities: [
-          {
-            resourceName: 'GitHub Issue',
-            _type: 'github_issue',
-            _class: ['Issue'],
-          },
-        ],
-        relationships: [],
-        dependsOn: ['fetch-repos', 'fetch-users', 'fetch-collaborators'],
+        ...stepFetchIssues,
         executionHandler: jest.fn(),
       },
       {
@@ -135,7 +141,9 @@ describe('#generateIngestionSourcesConfig', () => {
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]
         .childIngestionSources,
-    ).toEqual(['fetch-vulnerability-alerts', 'fetch-issues']);
+    ).toEqual(
+      expect.arrayContaining([stepFetchVulnerabilityAlerts, stepFetchIssues]),
+    );
     // For FINDING_ALERTS the ingestionConfig keep exactly the same
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS],
