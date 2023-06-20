@@ -9,6 +9,13 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.5.0 - 2023-06-19
+
+### Updated
+
+- modify `generateIngestionSourcesConfigCommand` to include child steps metadata
+  in the `childIngestionSources` property
+
 ## 9.4.1 - 2023-06-07
 
 ### Updated
