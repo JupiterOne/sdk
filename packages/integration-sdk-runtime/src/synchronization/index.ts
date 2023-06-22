@@ -9,7 +9,7 @@ import {
   Relationship,
   SynchronizationJob,
 } from '@jupiterone/integration-sdk-core';
-import {chunkArray as chunkBySize} from '@shelf/array-chunk-by-size';
+import { chunkArray as chunkBySize } from '@shelf/array-chunk-by-size';
 import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
@@ -28,7 +28,7 @@ import { shrinkBatchRawData } from './shrinkBatchRawData';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
-export const BYTES_IN_MB = 1048576
+export const BYTES_IN_MB = 1048576;
 export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 6;
 
@@ -74,7 +74,7 @@ export interface SynchronizeInput {
   uploadRelationshipBatchSize?: number | undefined;
 
   // if true, we will create batches up to batchPayloadSizeInMB
-  batchOnPayloadSize?: boolean; 
+  batchOnPayloadSize?: boolean;
   batchPayloadSizeInMB?: number; // must be at least 5
 
   skipFinalize?: boolean;
@@ -160,9 +160,15 @@ export interface SynchronizationJobContext {
 export async function initiateSynchronization(
   input: SynchronizeInput,
 ): Promise<SynchronizationJobContext> {
-  const { logger, apiClient, uploadBatchSize, uploadRelationshipBatchSize, batchOnPayloadSize, batchPayloadSizeInMB } =
-    input;
-  
+  const {
+    logger,
+    apiClient,
+    uploadBatchSize,
+    uploadRelationshipBatchSize,
+    batchOnPayloadSize,
+    batchPayloadSizeInMB,
+  } = input;
+
   const jobConfiguration = buildJobConfiguration(input);
 
   logger.info('Initiating synchronization job...');
@@ -193,7 +199,7 @@ export async function initiateSynchronization(
     uploadBatchSize,
     uploadRelationshipBatchSize,
     batchOnPayloadSize,
-    batchPayloadSizeInMB
+    batchPayloadSizeInMB,
   };
 }
 
@@ -275,7 +281,7 @@ export async function uploadGraphObjectData(
   uploadBatchSize?: number,
   uploadRelationshipsBatchSize?: number,
   batchOnPayloadSize: boolean = false,
-  batchPayloadSizeInMB?: number
+  batchPayloadSizeInMB?: number,
 ) {
   // todo: possibly make new function for uploading entity/relationship together
   // todo: should we use diff function at this point for the actual uploading when batching on size (possibly)
@@ -301,7 +307,7 @@ export async function uploadGraphObjectData(
         graphObjectData.entities,
         entityBatchSize,
         batchOnPayloadSize,
-        batchPayloadSizeInMB
+        batchPayloadSizeInMB,
       );
 
       synchronizationJobContext.logger.debug(
@@ -329,7 +335,7 @@ export async function uploadGraphObjectData(
         graphObjectData.relationships,
         relationshipsBatchSize,
         batchOnPayloadSize,
-        batchPayloadSizeInMB
+        batchPayloadSizeInMB,
       );
 
       synchronizationJobContext.logger.debug(
@@ -357,7 +363,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
       context.uploadBatchSize,
       context.uploadRelationshipBatchSize,
       context.batchOnPayloadSize,
-      context.batchPayloadSizeInMB
+      context.batchPayloadSizeInMB,
     );
   }
 
@@ -476,8 +482,15 @@ function handleUploadDataChunkError({
 
 export async function uploadDataChunk<
   T extends UploadDataLookup,
-  K extends keyof T, // todo: use compressed 
->({ logger, apiClient, jobId, type, batch, compressed = false }: UploadDataChunkParams<T, K>) {
+  K extends keyof T, // todo: use compressed
+>({
+  logger,
+  apiClient,
+  jobId,
+  type,
+  batch,
+  compressed = false,
+}: UploadDataChunkParams<T, K>) {
   const uploadCorrelationId = uuid();
 
   await retry(
@@ -496,12 +509,12 @@ export async function uploadDataChunk<
       );
 
       const headers = {
-            // NOTE: Other headers that were applied when the client was created,
-            // are still maintained
-            [RequestHeaders.CorrelationId]: uploadCorrelationId,
+        // NOTE: Other headers that were applied when the client was created,
+        // are still maintained
+        [RequestHeaders.CorrelationId]: uploadCorrelationId,
       };
-      if(compressed) {
-        headers['Content-Encoding'] = 'gzip'
+      if (compressed) {
+        headers['Content-Encoding'] = 'gzip';
       }
 
       await apiClient.post(
@@ -560,13 +573,16 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   batchPayloadSizeInMB?: number,
 ) {
   let batches;
-  if(batchOnPayloadSize && batchPayloadSizeInMB){
+  if (batchOnPayloadSize && batchPayloadSizeInMB) {
     try {
-      batches = chunkBySize({input:data,bytesSize: batchPayloadSizeInMB * BYTES_IN_MB},)
+      batches = chunkBySize({
+        input: data,
+        bytesSize: batchPayloadSizeInMB * BYTES_IN_MB,
+      });
     } catch (error) {
       batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
     }
-  } else{
+  } else {
     batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
   }
   await pMap(
@@ -579,7 +595,7 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
           jobId: job.id,
           type,
           batch,
-          compressed: batchOnPayloadSize
+          compressed: batchOnPayloadSize,
         });
       }
     },

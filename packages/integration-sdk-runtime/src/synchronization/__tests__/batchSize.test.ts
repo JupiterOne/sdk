@@ -191,7 +191,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
         apiClient,
         job,
       };
-      const mbNumber:number =  0.001 * i
+      const mbNumber: number = 0.001 * i;
       await uploadGraphObjectData(
         synchronizationJobContext,
         flushedObjectData,
@@ -209,12 +209,12 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       for (const call of entityCalls) {
         expect(
           Buffer.byteLength(JSON.stringify(call[1].entities)),
-        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber + 100);//100 bytes of error margin
+        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber + 100); //100 bytes of error margin
       }
       for (const call of relationshipsCalls) {
         expect(
           Buffer.byteLength(JSON.stringify(call[1].relationships)),
-        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber + 100);//100 bytes of error margin
+        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber + 100); //100 bytes of error margin
       }
     }
   });
