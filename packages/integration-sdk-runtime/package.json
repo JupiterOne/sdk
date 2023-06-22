@@ -26,6 +26,7 @@
     "@jupiterone/integration-sdk-core": "^9.4.1",
     "@lifeomic/alpha": "^5.1.1",
     "@lifeomic/attempt": "^3.0.3",
+    "@shelf/array-chunk-by-size": "^3.0.0",
     "async-sema": "^3.1.0",
     "axios": "^0.27.0",
     "bunyan": "^1.8.12",

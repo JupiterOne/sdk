@@ -8,7 +8,11 @@ import { createApiClient, getApiBaseUrl } from '../../api';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../../test/util/fixtures';
 import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
-import { SynchronizationJobContext, uploadGraphObjectData } from '..';
+import {
+  BYTES_IN_MB,
+  SynchronizationJobContext,
+  uploadGraphObjectData,
+} from '..';
 
 function createFlushedGraphObjectData(
   numEntity: number,
@@ -167,6 +171,51 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
 
     for (const call of relationshipsCalls) {
       expect(call[1].relationships.length).toBe(20);
+    }
+  });
+
+  test('should use batchSizeInMB if provided', async () => {
+    const apiClient = createApiClient({
+      apiBaseUrl: getApiBaseUrl(),
+      account: uuid(),
+    });
+
+    for (let i = 1; i < 100; i++) {
+      const postSpy = jest.spyOn(apiClient, 'post') as any;
+
+      postSpy.mockResolvedValue({});
+
+      const job = generateSynchronizationJob();
+      const synchronizationJobContext: SynchronizationJobContext = {
+        logger: createMockIntegrationLogger(),
+        apiClient,
+        job,
+      };
+      const mbNumber:number =  0.001 * i
+      await uploadGraphObjectData(
+        synchronizationJobContext,
+        flushedObjectData,
+        5,
+        10,
+        true,
+        mbNumber,
+      );
+
+      const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
+      const relationshipsCalls = postSpy.mock.calls.filter(
+        (c) => c[1].relationships,
+      );
+
+      for (const call of entityCalls) {
+        expect(
+          Buffer.byteLength(JSON.stringify(call[1].entities)),
+        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber + 100);//100 bytes of error margin
+      }
+      for (const call of relationshipsCalls) {
+        expect(
+          Buffer.byteLength(JSON.stringify(call[1].relationships)),
+        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber + 100);//100 bytes of error margin
+      }
     }
   });
 });

@@ -9,7 +9,7 @@ import {
   Relationship,
   SynchronizationJob,
 } from '@jupiterone/integration-sdk-core';
-
+import {chunkArray as chunkBySize} from '@shelf/array-chunk-by-size';
 import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
@@ -28,7 +28,7 @@ import { shrinkBatchRawData } from './shrinkBatchRawData';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
-
+export const BYTES_IN_MB = 1048576
 export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
 const UPLOAD_CONCURRENCY = 6;
 
@@ -559,7 +559,16 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   batchOnPayloadSize?: boolean,
   batchPayloadSizeInMB?: number,
 ) {
-  const batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  let batches;
+  if(batchOnPayloadSize && batchPayloadSizeInMB){
+    try {
+      batches = chunkBySize({input:data,bytesSize: batchPayloadSizeInMB * BYTES_IN_MB},)
+    } catch (error) {
+      batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+    }
+  } else{
+    batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  }
   await pMap(
     batches,
     async (batch: T[K][]) => {

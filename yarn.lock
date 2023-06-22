@@ -2210,6 +2210,13 @@
     qs "^6.10.1"
     url-parse "^1.5.3"
 
+"@shelf/array-chunk-by-size@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@shelf/array-chunk-by-size/-/array-chunk-by-size-3.0.0.tgz#03a8e0fb34d84e49a4dd70275724b4a3e6eb820e"
+  integrity sha512-bGqaUks+Iqc7STOkPk7z4CV7PGkEfVlcr/F2hsxi5/KsTMfgHjBRqHVt6j2ucOVIFs6OdYPXk8cPnhYtzZoalw==
+  dependencies:
+    json-stringify-safe "5.0.1"
+
 "@sigstore/protobuf-specs@^0.1.0":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@sigstore/protobuf-specs/-/protobuf-specs-0.1.0.tgz#957cb64ea2f5ce527cc9cf02a096baeb0d2b99b4"
@@ -6694,7 +6701,7 @@ json-stringify-nice@^1.1.4:
   resolved "https://registry.yarnpkg.com/json-stringify-nice/-/json-stringify-nice-1.1.4.tgz#2c937962b80181d3f317dd39aa323e14f5a60a67"
   integrity sha512-5Z5RFW63yxReJ7vANgW6eZFGWaQvnPE3WNmZoOJrSkGju2etKA2L5rrOa1sm877TVTFt57A80BH1bArcmlLfPw==
 
-json-stringify-safe@^5.0.1, json-stringify-safe@~5.0.1:
+json-stringify-safe@5.0.1, json-stringify-safe@^5.0.1, json-stringify-safe@~5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
   integrity sha1-Epai1Y/UXxmg9s4B1lcB4sc1tus=
