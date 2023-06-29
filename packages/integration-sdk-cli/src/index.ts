@@ -14,6 +14,7 @@ import {
   generateIntegrationGraphSchemaCommand,
   generateIngestionSourcesConfigCommand,
   troubleshootLocalExecution,
+  generate,
 } from './commands';
 
 export function createCli() {
@@ -30,5 +31,6 @@ export function createCli() {
     .addCommand(visualizeDependencies())
     .addCommand(generateIntegrationGraphSchemaCommand())
     .addCommand(generateIngestionSourcesConfigCommand())
-    .addCommand(troubleshootLocalExecution());
+    .addCommand(troubleshootLocalExecution())
+    .addCommand(generate());
 }

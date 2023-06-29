@@ -5,7 +5,8 @@
   },
   "include": ["src"],
   "exclude": [
-    "**/dist/*",
+    "jest.config.js",
+    "**/dist/**/*",
     "**/*.test.ts",
     "**/__tests__/**/*.ts",
     "**/__mocks__/**/*.ts"

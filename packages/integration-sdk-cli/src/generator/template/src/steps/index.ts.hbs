@@ -1,0 +1,7 @@
+{{#each steps}}
+import { {{camelCase name}}Steps } from './{{kebabCase name}}'
+{{/each}}
+
+const integrationSteps = [{{#each steps}}...{{camelCase name}}Steps{{#unless @last}},{{/unless}}{{/each}}];
+
+export { integrationSteps };
