@@ -9,6 +9,17 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.6.0 - 2023-06-30
+
+Introduces a new feature to `j1-integration` that allows generating a new
+integration using a series of inputs.
+
+Example:
+
+```
+j1-integration generate
+```
+
 ## 9.5.0 - 2023-06-19
 
 ### Updated
