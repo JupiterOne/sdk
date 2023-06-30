@@ -9,9 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
-## 9.6.1 - 2023-06-30
+## 9.6.2 - 2023-06-30
 
-Adds logging when an integration fails to initialize or finalize a 
+Adds logging when an integration fails to initialize or finalize a
 synchronization job
 
 ## 9.6.0 - 2023-06-30
