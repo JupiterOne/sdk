@@ -169,6 +169,10 @@ export async function initiateSynchronization(
     );
     job = response.data.job;
   } catch (err) {
+    logger.warn({ 
+      err,
+      'err.$response': (err as any)?.$response,
+    }, 'Error occurred while initiating synchronization job');
     throw synchronizationApiError(
       err,
       'Error occurred while initiating synchronization job',
@@ -239,6 +243,10 @@ export async function finalizeSynchronization({
     );
     finalizedJob = response.data.job;
   } catch (err) {
+    logger.warn({ 
+      err,
+      'err.$response': (err as any)?.$response,
+    }, 'Error occurred while finalizing synchronization job');
     throw synchronizationApiError(
       err,
       'Error occurred while finalizing synchronization job.',
