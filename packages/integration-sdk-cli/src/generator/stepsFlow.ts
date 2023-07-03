@@ -29,7 +29,8 @@ async function stepsFlow(inquirer, entities, relationships): Promise<Step[]> {
     steps.push(step);
   });
 
-  if (steps.length < 1) return steps;
+  // At least 2 steps are required for step dependencies to be considered.
+  if (steps.length < 2) return steps;
 
   const useStepDependenciesFlow = await confirmPrompt(
     inquirer,
