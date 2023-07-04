@@ -10,10 +10,15 @@ interface ChildLogFunction {
   (options: object): IntegrationLogger;
 }
 
+export interface StepLogAdditionalContext {
+  parentStep?: StepMetadata;
+}
+
 type StepLogFunction = (step: StepMetadata) => void;
 type StepLogFunctionWithReason = (
   step: StepMetadata,
   reason: DisabledStepReason,
+  additionalContext?: StepLogAdditionalContext,
 ) => void;
 type StepLogFunctionWithError = (step: StepMetadata, err: Error) => void;
 type SynchronizationLogFunction = (job: SynchronizationJob) => void;

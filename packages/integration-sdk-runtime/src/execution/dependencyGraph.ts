@@ -273,6 +273,7 @@ export function executeStepDependencyGraph<
           } else {
             // Step is disabled
             if (!skippedStepTracker.has(stepId)) {
+              console.log('log parentStep ', stepId);
               executionContext.logger
                 .child({ stepId })
                 .stepSkip(
@@ -281,6 +282,24 @@ export function executeStepDependencyGraph<
                     DisabledStepReason.NONE,
                 );
               skippedStepTracker.add(stepId);
+              // Log child steps disabled
+              const stepDependencies = inputGraph.dependantsOf(stepId);
+              for (const childStepId of stepDependencies) {
+                if (!skippedStepTracker.has(childStepId)) {
+                  const childStep = inputGraph.getNodeData(childStepId);
+                  console.log('log childStep ', childStepId);
+                  console.log(
+                    'log executionContext.logger ',
+                    executionContext.logger,
+                  );
+                  executionContext.logger.stepSkip(
+                    childStep,
+                    DisabledStepReason.PARENT_DISABLED,
+                    { parentStep: step },
+                  );
+                  skippedStepTracker.add(childStepId);
+                }
+              }
             }
           }
         }

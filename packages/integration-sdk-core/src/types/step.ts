@@ -18,6 +18,7 @@ export enum DisabledStepReason {
   CONFIG = 'config', // Step was disabled via config that is controlled by J1
   USER_CONFIG = 'user_config', // Step was disabled via config that is controlled by the user
   API_VERSION = 'api_version', // Step is disabled due to lack of support in an API version
+  PARENT_DISABLED = 'parent_disabled', // Step is disabled because its parent is also disabled
 }
 
 export interface StepStartState {
