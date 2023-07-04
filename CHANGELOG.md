@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.7.0 - 2023-07-04
+
+Add log for skipped steps for each disabled child step.
+
 ## 9.6.2 - 2023-06-30
 
 Adds logging when an integration fails to initialize or finalize a
