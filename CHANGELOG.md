@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.7.0 - 2023-07-05
+
 ### Added
 
 - Introduce `afterExecution` integration execution hook. See
