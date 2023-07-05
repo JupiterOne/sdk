@@ -46,11 +46,20 @@ export type LoadExecutionConfigFunction<
   TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = (options: { config: TInstanceConfig }) => TExecutionConfig;
 
+export type AfterExecutionFunction<TExecutionContext extends ExecutionContext> =
+  (context: TExecutionContext) => Promise<void>;
+
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
 > {
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
+  /**
+   * Called after an integration execution has completed. You may this this hook
+   * for performing operations such as closing out open clients in an
+   * integration.
+   */
+  afterExecution?: AfterExecutionFunction<TExecutionContext>;
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;

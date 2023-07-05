@@ -22,6 +22,7 @@ that was sent up will be diffed against JupiterOne's understanding of the
       - [`beforeAddEntity(context: IntegrationExecutionContext<IntegrationConfig>, e: Entity): Entity`](#beforeaddentitycontext-integrationexecutioncontextintegrationconfig-e-entity-entity)
       - [`beforeAddRelationship(context: IntegrationExecutionContext<IntegrationConfig>, r: Relationship): Promise<Relationship> | Relationship`](#beforeaddrelationshipcontext-integrationexecutioncontextintegrationconfig-r-relationship-promiserelationship--relationship)
       - [`ingestionConfig`](#ingestionconfig)
+      - [`afterExecution(context: IntegrationExecutionContext<IntegrationConfig>): Promise<void>`](#afterexecutioncontext-integrationexecutioncontextintegrationconfig-promisevoid)
     - [How integrations are executed](#how-integrations-are-executed)
       - [Validation](#validation)
       - [Collection](#collection)
@@ -497,6 +498,29 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
     instanceConfigFields: {},
     integrationSteps,
     ingestionConfig,
+  };
+```
+
+#### `afterExecution(context: IntegrationExecutionContext<IntegrationConfig>): Promise<void>`
+
+`afterExecution` is an optional hook function that can be provided. The function
+is called after an integration has executed, regardless of whether the execution
+was successful or not. An example of when you may decide to use this function is
+when you need to close out a globally configured client in an integration.
+
+Example:
+
+```typescript
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
+import { IntegrationConfig } from './types';
+
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
+  {
+    instanceConfigFields: {},
+    integrationSteps: [],
+    async afterExecution(context) {
+      context.logger.info('Integration execution completed...');
+    },
   };
 ```
 
