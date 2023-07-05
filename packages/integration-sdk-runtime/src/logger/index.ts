@@ -347,6 +347,10 @@ export class IntegrationLogger
         break;
       }
       case DisabledStepReason.PARENT_DISABLED: {
+        if (!additionalContext?.parentStep?.name) {
+          this.validationFailure(new Error('Parent step not provided'));
+          return;
+        }
         description += `Step was disabled because parent step "${additionalContext?.parentStep?.name}" was disabled. In order to enable this step, please check logs for more information about the parent step.`;
         break;
       }
