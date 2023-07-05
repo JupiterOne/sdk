@@ -9,12 +9,22 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+- Introduce `afterExecution` integration execution hook. See
+  [development documentation](./docs/integrations/development.md) for more
+  information.
+
 ## 9.6.2 - 2023-06-30
+
+### Updated
 
 Adds logging when an integration fails to initialize or finalize a
 synchronization job
 
 ## 9.6.0 - 2023-06-30
+
+### Added
 
 Introduces a new feature to `j1-integration` that allows generating a new
 integration using a series of inputs.
