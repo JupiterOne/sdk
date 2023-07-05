@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-entities",
-  "version": "9.6.2",
+  "version": "9.7.0",
   "description": "Generated types for the JupiterOne data-model",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
