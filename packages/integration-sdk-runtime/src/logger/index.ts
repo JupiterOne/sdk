@@ -29,6 +29,7 @@ import {
   PublishErrorEventInput,
   DisabledStepReason,
   PublishMetricOptions,
+  StepLogAdditionalContext,
 } from '@jupiterone/integration-sdk-core';
 
 export * from './registerEventHandlers';
@@ -312,7 +313,11 @@ export class IntegrationLogger
     this.publishEvent({ name, description });
   }
 
-  stepSkip(step: StepMetadata, reason: DisabledStepReason) {
+  stepSkip(
+    step: StepMetadata,
+    reason: DisabledStepReason,
+    additionalContext?: StepLogAdditionalContext,
+  ) {
     if (!reason || reason === DisabledStepReason.NONE) {
       return;
     }
@@ -339,6 +344,16 @@ export class IntegrationLogger
       }
       case DisabledStepReason.USER_CONFIG: {
         description += `Step was disabled via configuration. Update instance config to enable.`;
+        break;
+      }
+      case DisabledStepReason.PARENT_DISABLED: {
+        const parentStepName = additionalContext?.parentStep?.name;
+        if (!parentStepName) {
+          this.warn(`Parent step not provided for child step ${step.name}`);
+        }
+        description += parentStepName
+          ? `Step was disabled because parent step "${parentStepName}" was disabled. In order to enable this step, please check logs for more information about the parent step.`
+          : 'Step was disabled because parent step was disabled. In order to enable this step, please check logs for more information about the parent step.';
         break;
       }
     }

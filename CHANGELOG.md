@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.8.0 - 2023-07-04
+
+### Added
+
+- Add log for skipped steps for each disabled child step.
+
 ## 9.7.0 - 2023-07-05
 
 ### Added
