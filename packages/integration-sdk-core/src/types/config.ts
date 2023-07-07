@@ -1,6 +1,9 @@
 import { IntegrationInstanceConfig } from './instance';
 import { GetStepStartStatesFunction, Step } from './step';
-import { InvocationValidationFunction } from './validation';
+import {
+  CredentialValidationFunction,
+  InvocationValidationFunction,
+} from './validation';
 import {
   ExecutionContext,
   IntegrationExecutionContext,
@@ -54,6 +57,7 @@ export interface InvocationConfig<
   TStepExecutionContext extends StepExecutionContext,
 > {
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
+  validateCredentials: CredentialValidationFunction;
   /**
    * Called after an integration execution has completed. You may this this hook
    * for performing operations such as closing out open clients in an

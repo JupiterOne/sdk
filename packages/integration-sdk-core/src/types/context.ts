@@ -18,6 +18,11 @@ export interface ExecutionContext {
   executionHistory: ExecutionHistory;
 }
 
+export interface CredentialValidationContext {
+  logger: IntegrationLogger;
+  config: IntegrationInstanceConfig;
+}
+
 /**
  * A configuration object constructed by an integration just before the
  * integration is executed. This is distinct from the
