@@ -20,7 +20,7 @@ export interface ExecutionContext {
 
 export interface CredentialValidationContext {
   logger: IntegrationLogger;
-  config: IntegrationInstanceConfig;
+  config: Record<string, any>;
 }
 
 /**
