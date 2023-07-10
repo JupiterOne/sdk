@@ -451,6 +451,7 @@ function handleUploadDataChunkError({
       systemErrorResponseData,
       attemptsRemaining: attemptContext.attemptsRemaining,
       uploadCorrelationId,
+      'err.$response': (err as any)?.$response,
     },
     'Handling upload error...',
   );
