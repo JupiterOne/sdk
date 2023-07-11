@@ -29,13 +29,14 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
   }
   let bestIndex = binarySearch(data, sizeInBytes);
   if (bestIndex <= 0) {
-    handleBinarySearchError(data, sizeInBytes, logger);
-    bestIndex = 1;
+    //If the first entity is too big
+    handleBinarySearchError(data, sizeInBytes, logger); // we remove rawdata
+    bestIndex = 1; //and send it to the persister alone. TODO: find a way to avoid sending this entities as a single call. It shouldn't be an issue since this only happens if there is a signle entity above sizeInBytes
   }
   chunkedData.push(data.slice(0, bestIndex));
   if (bestIndex !== data.length)
     chunkedData = chunkedData.concat(
-      chunk(data.slice(bestIndex), sizeInBytes, logger),
+      chunk(data.slice(bestIndex), sizeInBytes, logger), //chunk the rest of the data
     );
   return chunkedData;
 }
@@ -54,7 +55,7 @@ function binarySearch<T extends UploadDataLookup, K extends keyof T>(
     if (size <= targetSize) {
       bestIndex = mid;
       if (size >= targetSize * BATCH_THRESHOLD) {
-        return mid;
+        return mid; //if its **close enough** to the target size
       }
     }
     if (targetSize < size) right = mid - 1;
@@ -83,6 +84,7 @@ function handleBinarySearchError<T extends UploadDataLookup, K extends keyof T>(
     throw Error();
   }
 }
+
 export function getSizeOfObject<T extends UploadDataLookup, K extends keyof T>(
   object: T[K][],
 ): number {
@@ -90,7 +92,7 @@ export function getSizeOfObject<T extends UploadDataLookup, K extends keyof T>(
     return JSON.stringify(object).length;
   } catch (error) {
     if (error instanceof RangeError) {
-      //If object is too large to size we fallback to the max batchSize
+      //If object is too large to size, stringify runs out of memory. We fallback to the max batchSize.
       return MAX_BATCH_SIZE;
     }
     throw error;
