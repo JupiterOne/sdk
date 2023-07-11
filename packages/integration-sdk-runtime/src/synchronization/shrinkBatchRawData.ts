@@ -14,7 +14,7 @@ import { IntegrationLogger } from '../logger';
 // however, we do have to consider the size of whatever aws sdk wraps
 // our payload in. In practice we have seen batches as small as 5800000
 // fail. To be completely safe, we are using 5500000 bytes as default
-const MAX_BATCH_SIZE = 5500000;
+export const MAX_BATCH_SIZE = 5500000;
 
 // TODO [INT-3707]: uncomment and use when implementing method
 // to shrink single entity's rawData until that entity is < 1MB

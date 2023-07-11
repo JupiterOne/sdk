@@ -25,11 +25,13 @@ import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
+import { chunkBySize, getSizeOfObject } from './batchBySize';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
 export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
+export const BYTES_IN_MB = 1048576;
 const UPLOAD_CONCURRENCY = 6;
 
 export enum RequestHeaders {
@@ -280,6 +282,7 @@ export async function uploadGraphObjectData(
   graphObjectData: FlushedGraphObjectData,
   uploadBatchSize?: number,
   uploadRelationshipsBatchSize?: number,
+  mbToChunk?: number,
 ) {
   const entityBatchSize = uploadBatchSize;
   const relationshipsBatchSize =
@@ -302,6 +305,7 @@ export async function uploadGraphObjectData(
         'entities',
         graphObjectData.entities,
         entityBatchSize,
+        mbToChunk,
       );
 
       synchronizationJobContext.logger.debug(
@@ -328,6 +332,7 @@ export async function uploadGraphObjectData(
         'relationships',
         graphObjectData.relationships,
         relationshipsBatchSize,
+        mbToChunk,
       );
 
       synchronizationJobContext.logger.debug(
@@ -545,8 +550,19 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   type: K,
   data: T[K][],
   uploadBatchSize?: number,
+  batchSizeInMB?: number,
 ) {
-  const batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  let batches: T[K][][];
+  try {
+    if (batchSizeInMB) {
+      batches = chunkBySize(data, batchSizeInMB * BYTES_IN_MB, logger);
+      logger.info(batches.map((b)=>{b.length,getSizeOfObject(b)}),'Sending Batches')
+    } else {
+      batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+    }
+  } catch (error) {
+    batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  }
   await pMap(
     batches,
     async (batch: T[K][]) => {
