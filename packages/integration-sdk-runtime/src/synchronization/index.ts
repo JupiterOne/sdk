@@ -556,7 +556,12 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   try {
     if (batchSizeInMB) {
       batches = chunkBySize(data, batchSizeInMB * BYTES_IN_MB, logger);
-      logger.info(batches.map((b)=>{b.length,getSizeOfObject(b)}),'Sending Batches')
+      logger.info(
+        batches.map((b) => {
+          b.length, getSizeOfObject(b);
+        }),
+        'Sending Batches',
+      );
     } else {
       batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
     }
