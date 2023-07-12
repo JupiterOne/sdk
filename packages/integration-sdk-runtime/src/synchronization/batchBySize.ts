@@ -23,7 +23,7 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
   sizeInBytes: number,
   logger: IntegrationLogger,
 ): T[K][][] {
-  let chunkedData: T[K][][] = [];
+  const chunkedData: T[K][][] = [];
   if (getSizeOfObject(data) < sizeInBytes) {
     return [data]; //Just one chunk of all data
   }
@@ -35,8 +35,8 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
   }
   chunkedData.push(data.slice(0, bestIndex));
   if (bestIndex !== data.length)
-    chunkedData = chunkedData.concat(
-      chunk(data.slice(bestIndex), sizeInBytes, logger), //chunk the rest of the data
+    chunkedData.push(
+      ...chunk(data.slice(bestIndex), sizeInBytes, logger), //chunk the rest of the data
     );
   return chunkedData;
 }
@@ -48,18 +48,32 @@ function binarySearch<T extends UploadDataLookup, K extends keyof T>(
 ): number {
   let left: number = 0;
   let right: number = data.length - 1;
-  let bestIndex = -1;
+  let bestIndex: number = -1;
+  const thSize = targetSize * BATCH_THRESHOLD;
+  let mid: number = Math.floor((left + right) / 2);
+  let size = getSizeOfObject(data.slice(0, mid));
   while (left <= right) {
-    const mid: number = Math.floor((left + right) / 2);
-    const size = getSizeOfObject(data.slice(0, right));
     if (size <= targetSize) {
       bestIndex = mid;
-      if (size >= targetSize * BATCH_THRESHOLD) {
+      if (size >= thSize) {
         return mid; //if its **close enough** to the target size
       }
     }
-    if (targetSize < size) right = mid - 1;
-    else left = mid + 1;
+    if (targetSize < size) {
+      right = mid - 1;
+      if (left <= right) {
+        const newMid = Math.floor((left + right) / 2);
+        size = size - getSizeOfObject(data.slice(newMid, mid));
+        mid = newMid;
+      }
+    } else {
+      left = mid + 1;
+      if (left <= right) {
+        const newMid = Math.floor((left + right) / 2);
+        size = size + getSizeOfObject(data.slice(mid, newMid));
+        mid = newMid;
+      }
+    }
   }
   return bestIndex;
 }
