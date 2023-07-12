@@ -143,7 +143,7 @@ export function createPersisterApiStepGraphObjectDataUploader({
   uploadConcurrency,
   uploadBatchSize,
   uploadRelationshipsBatchSize,
-  uploadChunkInMb
+  uploadChunkInMb,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
   return createQueuedStepGraphObjectDataUploader({
     stepId,
@@ -161,7 +161,7 @@ export function createPersisterApiStepGraphObjectDataUploader({
           graphObjectData,
           uploadBatchSize,
           uploadRelationshipsBatchSize,
-          uploadChunkInMb
+          uploadChunkInMb,
         );
       } catch (err) {
         context.logger.error(

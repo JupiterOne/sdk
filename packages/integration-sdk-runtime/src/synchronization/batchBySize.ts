@@ -95,7 +95,9 @@ function handleBinarySearchError<T extends UploadDataLookup, K extends keyof T>(
       bigBatch[0].key,
       'Entity/Relationship is too big to ingest. This usually happens when item has a lot of long attributes.',
     );
-    throw new Error('Entity/Relationship is too big to ingest. This usually happens when item has a lot of long attributes.',);
+    throw new Error(
+      'Entity/Relationship is too big to ingest. This usually happens when item has a lot of long attributes.',
+    );
   }
 }
 
