@@ -14,7 +14,7 @@ export function chunkBySize<T extends UploadDataLookup, K extends keyof T>(
 ): T[K][][] {
   if (sizeInBytes > MAX_BATCH_SIZE) {
     logger.error({}, 'batch size is too big');
-    throw Error();
+    throw new Error('batch size is too big');
   }
   return chunk(data, sizeInBytes, logger);
 }
@@ -95,7 +95,7 @@ function handleBinarySearchError<T extends UploadDataLookup, K extends keyof T>(
       bigBatch[0].key,
       'Entity/Relationship is too big to ingest. This usually happens when item has a lot of long attributes.',
     );
-    throw Error();
+    throw new Error('Entity/Relationship is too big to ingest. This usually happens when item has a lot of long attributes.',);
   }
 }
 
