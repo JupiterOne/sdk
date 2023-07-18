@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^9.9.0",
+    "@jupiterone/platform-sdk-observability": "3.4.0",
     "@lifeomic/alpha": "^5.1.1",
     "@lifeomic/attempt": "^3.0.3",
     "async-sema": "^3.1.0",

@@ -1,3 +1,4 @@
+import '@jupiterone/platform-sdk-observability/src/telemetry'; // Needs to happen first for auto instrumentation purposes
 export * from './executeIntegration';
 export {
   LOCAL_INTEGRATION_INSTANCE,

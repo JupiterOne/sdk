@@ -40,6 +40,16 @@ const brotliDecompress = promisify(zlib.brotliDecompress);
 
 jest.mock('fs');
 
+jest.mock('@jupiterone/platform-sdk-observability/src/telemetry', () => {
+  const original = jest.requireActual(
+    '@jupiterone/platform-sdk-observability/src/telemetry',
+  );
+  return {
+    ...original,
+    shutdown: jest.fn(), // Shutdown has a forcd 30 second timer, lets mock it out so our tests don't take forever
+  };
+});
+
 function sleep(ms: number) {
   return new Promise<void>((resolve) => {
     setTimeout(() => resolve(), ms);

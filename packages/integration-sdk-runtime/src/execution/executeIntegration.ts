@@ -50,6 +50,11 @@ import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 import { DuplicateKeyTracker } from './duplicateKeyTracker';
 import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
+import {
+  shutdown,
+  withObservabilityFunction,
+  addSpanAttributes,
+} from '@jupiterone/platform-sdk-observability/src/telemetry';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -75,6 +80,7 @@ const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
  * Starts execution of an integration instance generated from local environment
  * variables.
  */
+
 export async function executeIntegrationLocally(
   config: IntegrationInvocationConfig,
   executionHistory: ExecutionHistory,
@@ -98,6 +104,8 @@ export async function executeIntegrationLocally(
       enableSchemaValidation: options?.enableSchemaValidation ?? true,
     },
   );
+  await shutdown();
+
   unregisterIntegrationLoggerEventHandlers(registeredEventListeners);
   return result;
 }
@@ -105,7 +113,12 @@ export async function executeIntegrationLocally(
 /**
  * Starts execution of an integration instance.
  */
-export async function executeIntegrationInstance<
+export const executeIntegrationInstance = withObservabilityFunction({
+  spanName: 'integration-sdk-runtime.executeIntegrationInstance',
+  run: fnExecuteIntegrationInstance,
+});
+
+async function fnExecuteIntegrationInstance<
   TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   logger: IntegrationLogger,
@@ -114,6 +127,12 @@ export async function executeIntegrationInstance<
   executionHistory: ExecutionHistory,
   options: ExecuteIntegrationOptions = {},
 ): Promise<ExecuteIntegrationResult> {
+  addSpanAttributes({
+    j1AccountId: instance.accountId,
+    integrationDefinitionId: instance.integrationDefinitionId,
+    integrationInstsanceId: instance.id,
+  });
+
   if (options.enableSchemaValidation === true) {
     process.env.ENABLE_GRAPH_OBJECT_SCHEMA_VALIDATION = 'true';
   }

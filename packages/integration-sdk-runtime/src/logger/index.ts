@@ -214,10 +214,10 @@ export class IntegrationLogger
   }
 
   debug(...params: any[]) {
-    return this._logger.debug(...params);
+    return this._logger.debug([...params]);
   }
   info(...params: any[]) {
-    return this._logger.info(...params);
+    return this._logger.info([...params]);
   }
 
   warn(...params: any[]) {
@@ -233,11 +233,11 @@ export class IntegrationLogger
       },
     );
 
-    return this._logger.warn(...params);
+    return this._logger.warn([...params]);
   }
 
   fatal(...params: any[]) {
-    return this._logger.fatal(...params);
+    return this._logger.fatal([...params]);
   }
 
   trace(...params: any[]) {
@@ -275,7 +275,7 @@ export class IntegrationLogger
       },
     );
 
-    this._logger.error(...params);
+    this._logger.error([...params]);
   }
 
   child(options: object = {}, simple?: boolean) {

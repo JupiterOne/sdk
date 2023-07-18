@@ -32,6 +32,10 @@ import {
   DuplicateEntityReport,
   DuplicateKeyTracker,
 } from './duplicateKeyTracker';
+import {
+  getActiveSpan,
+  withObservabilityFunction,
+} from '@jupiterone/platform-sdk-observability/src/telemetry';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -75,6 +79,7 @@ export function buildStepDependencyGraph<
  * created more leaf nodes and executes them. This continues
  * until there are no more nodes to execute.
  */
+
 export function executeStepDependencyGraph<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
@@ -267,7 +272,10 @@ export function executeStepDependencyGraph<
                   stepId,
                   cached: hasCachePath(stepId).toString(),
                 },
-                operation: () => executeStep(step),
+                operation: withObservabilityFunction({
+                  spanName: `executeStep.${step.id}`,
+                  run: () => executeStep(step),
+                }),
               }).catch(handleUnexpectedError),
             );
           } else {
@@ -308,6 +316,11 @@ export function executeStepDependencyGraph<
      */
     async function executeStep(step: Step<TStepExecutionContext>) {
       const { id: stepId } = step;
+
+      getActiveSpan()?.setAttributes({
+        stepId: step.id,
+        stepName: step.name,
+      });
 
       let uploader: StepGraphObjectDataUploader | undefined;
 
@@ -364,6 +377,7 @@ export function executeStepDependencyGraph<
           'Step summary',
         );
       } catch (err) {
+        getActiveSpan()?.recordException(err);
         logger.info(
           {
             stepId,
