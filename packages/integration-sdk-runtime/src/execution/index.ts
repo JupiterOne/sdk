@@ -16,8 +16,15 @@ export {
   CreatePersisterApiStepGraphObjectDataUploaderParams,
   createPersisterApiStepGraphObjectDataUploader,
 } from './uploader';
+
+///////////
+// UTILS //
+///////////
 export { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 export {
   DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
   seperateStepsByDependencyGraph,
 } from './utils/seperateStepsByDependencyGraph';
+
+export { trimStringValues } from './utils/trimStringValues';
+export { getMaskedFields } from './utils/getMaskedFields';
