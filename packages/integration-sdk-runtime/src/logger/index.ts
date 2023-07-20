@@ -510,7 +510,6 @@ export function createErrorEventDescription(
 
   const nameValuePairs: NameValuePair[] = [
     ['errorCode', errorCode],
-    ['errorId', errorId],
     ['reason', errorReason],
   ];
 
