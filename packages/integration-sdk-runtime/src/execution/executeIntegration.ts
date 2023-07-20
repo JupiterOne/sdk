@@ -284,18 +284,13 @@ export async function executeWithContext<
         data: summary,
       });
 
-      context.logger.info(
-        { collectionResult: summary },
-        'Integration data collection has completed.',
-      );
-
       processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
         if (
           step.status === StepResultStatus.SUCCESS &&
           undeclaredTypes.length
         ) {
           context.logger.error(
-            { undeclaredTypes },
+            { undeclaredTypes, stepId: step.id },
             `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
               ` all known entity and relationship types are declared.`,
           );
