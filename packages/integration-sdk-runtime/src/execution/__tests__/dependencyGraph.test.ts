@@ -817,7 +817,7 @@ describe('executeStepDependencyGraph', () => {
       { err: error, errorId: expect.any(String), code: 'ABC-123' },
       expect.stringMatching(
         new RegExp(
-          `Step "a" failed to complete due to error. \\(errorCode="ABC-123", errorId="(.*)"\\)$`,
+          `Step "a" failed to complete due to error. \\(errorCode="ABC-123", reason="oopsie"\\)$`,
         ),
       ),
     );

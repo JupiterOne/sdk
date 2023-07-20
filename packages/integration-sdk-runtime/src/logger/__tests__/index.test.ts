@@ -370,7 +370,7 @@ describe('step event publishing', () => {
       level: PublishEventLevel.Error,
       description: expect.stringMatching(
         new RegExp(
-          `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", errorId="(.*)"\\)$`,
+          `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", reason="ripperoni"\\)$`,
         ),
       ),
     });
@@ -427,7 +427,7 @@ describe('provider auth error details', () => {
           new RegExp(
             '^Step "Mochi" failed to complete due to error.' +
               PROVIDER_AUTH_ERROR_HELP +
-              ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
+              ` \\(errorCode="${error.code}", reason="${expectedReason}"\\)$`,
           ),
         ),
       });
@@ -443,7 +443,7 @@ describe('provider auth error details', () => {
           new RegExp(
             '^Error occurred while validating integration configuration.' +
               PROVIDER_AUTH_ERROR_HELP +
-              ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
+              ` \\(errorCode="${error.code}", reason="${expectedReason}"\\)$`,
           ),
         ),
       });
@@ -494,7 +494,7 @@ describe('validation failure logging', () => {
 
     const error = new Error('WAT?');
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", errorId="(.*)", reason="Unexpected error .*?"\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", reason="Unexpected error .*?"\\)$`,
     );
 
     logger.validationFailure(error);
@@ -526,7 +526,7 @@ describe('validation failure logging', () => {
 
     const error = new IntegrationValidationError('Bad Mochi');
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", errorId="(.*)", reason="Bad Mochi"\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", reason="Bad Mochi"\\)$`,
     );
 
     logger.validationFailure(error);
@@ -559,7 +559,7 @@ describe('createErrorEventDescription', () => {
       'testing',
     );
     expect(description).toEqual(
-      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", errorId="${errorId}", reason="${UNEXPECTED_ERROR_REASON}")`,
+      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", reason="${UNEXPECTED_ERROR_REASON}")`,
     );
   });
 
@@ -571,7 +571,7 @@ describe('createErrorEventDescription', () => {
       'testing',
     );
     expect(description).toEqual(
-      `testing (errorCode="${error.code}", errorId="${errorId}", reason="soba")`,
+      `testing (errorCode="${error.code}", reason="soba")`,
     );
   });
 });
