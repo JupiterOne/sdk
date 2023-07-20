@@ -554,10 +554,7 @@ describe('createErrorEventDescription', () => {
   test('supplies default reason if an error without a code is provided', () => {
     const error = new Error('soba');
 
-    const { description, errorId } = createErrorEventDescription(
-      error,
-      'testing',
-    );
+    const { description } = createErrorEventDescription(error, 'testing');
     expect(description).toEqual(
       `testing (errorCode="${UNEXPECTED_ERROR_CODE}", reason="${UNEXPECTED_ERROR_REASON}")`,
     );
@@ -566,10 +563,7 @@ describe('createErrorEventDescription', () => {
   test('displays code and message from error if error is an integration error', () => {
     const error = new IntegrationValidationError('soba');
 
-    const { description, errorId } = createErrorEventDescription(
-      error,
-      'testing',
-    );
+    const { description } = createErrorEventDescription(error, 'testing');
     expect(description).toEqual(
       `testing (errorCode="${error.code}", reason="soba")`,
     );
