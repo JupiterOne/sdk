@@ -146,7 +146,7 @@ export interface StepGraphObjectMetadata {
   partial?: boolean;
 
   /**
-   * Contains metadadata that can be leveraged inside of the graph object store
+   * Contains metadata that can be leveraged inside of the graph object store
    */
   indexMetadata?: GraphObjectIndexMetadata;
 }
