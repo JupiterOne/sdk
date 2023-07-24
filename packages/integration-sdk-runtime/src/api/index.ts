@@ -1,5 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { Alpha, AlphaOptions } from '@lifeomic/alpha';
+import { isLambdaUrl } from '@lifeomic/alpha/src/utils/url';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -8,6 +9,7 @@ import {
   IntegrationAccountRequiredError,
   IntegrationApiKeyRequiredError,
 } from './error';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
 
 export type ApiClient = AxiosInstance;
 
@@ -54,6 +56,10 @@ export function createApiClient({
     headers,
     retry: retryOptions ?? {},
   };
+
+  if (isLambdaUrl(apiBaseUrl)) {
+    opts.signAwsV4 = { credentials: defaultProvider({ maxRetries: 3 }) };
+  }
 
   return new Alpha(opts) as ApiClient;
 }
