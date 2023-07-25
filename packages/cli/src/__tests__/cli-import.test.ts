@@ -1,6 +1,5 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 import axios from 'axios';
-import { mocked } from 'jest-mock';
 import { vol } from 'memfs';
 import { randomUUID as uuid } from 'crypto';
 import globby from 'globby';
@@ -20,15 +19,25 @@ import { createCli } from '..';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
 jest.mock('axios');
-jest.mock('ora');
 jest.mock('fs');
 jest.mock('globby');
 jest.mock('../pause');
 jest.mock('../log');
 
-const mockedCreateApiClient = mocked(runtime.createApiClient, true);
-const mockedAxios = mocked(axios, true);
-const mockedGlobby = mocked(globby, true);
+jest.mock('ora', () => {
+  return () => {
+    return {
+      start: jest.fn().mockReturnThis(),
+      stop: jest.fn(),
+      fail: jest.fn(),
+      succeed: jest.fn(),
+    };
+  };
+});
+
+const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
+const mockedAxios = jest.mocked(axios);
+const mockedGlobby = jest.mocked(globby);
 
 const type1Entities = [
   createEntity({

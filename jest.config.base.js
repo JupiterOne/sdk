@@ -1,6 +1,5 @@
 // This is a shared base config that is used by all packages
 module.exports = {
-  preset: 'ts-jest',
   clearMocks: true,
   restoreMocks: true,
   testMatch: [
@@ -9,7 +8,6 @@ module.exports = {
     '!**/dist/*',
     '!**/*.bak/*',
   ],
-  collectCoverage: false,
   globals: {
     'ts-jest': {
       isolatedModules: true,
