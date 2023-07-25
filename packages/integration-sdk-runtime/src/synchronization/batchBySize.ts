@@ -31,7 +31,7 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
   if (bestIndex <= 0) {
     //If the first entity is too big
     handleBinarySearchError(data, sizeInBytes, logger); // we remove rawdata
-    bestIndex = 1; //and send it to the persister alone. TODO: find a way to avoid sending this entities as a single call. It shouldn't be an issue since this only happens if there is a signle entity above sizeInBytes
+    bestIndex = 1; //and send it to the persister alone. TODO: find a way to avoid sending this entities as a single call. It shouldn't be an issue since this only happens if there is a single entity above sizeInBytes
   }
   chunkedData.push(data.slice(0, bestIndex));
   if (bestIndex !== data.length)
@@ -42,6 +42,7 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
 }
 //If the batch doesnt fit, we try with half, and then half of half ... until it fits.
 //We repeat until we reach the Threshold or until the while condition.
+//We are binary-searching for the best spot to chunk
 function binarySearch<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
   targetSize: number,
