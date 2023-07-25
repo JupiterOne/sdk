@@ -1,5 +1,5 @@
 import { IntegrationInstanceConfig } from './instance';
-import { GetStepStartStatesFunction, Step } from './step';
+import { GetStepStartStatesFunction, Step, StepWrapperFunction } from './step';
 import { InvocationValidationFunction } from './validation';
 import {
   ExecutionContext,
@@ -86,6 +86,7 @@ export interface InvocationConfig<
    *
    */
   ingestionConfig?: IntegrationIngestionConfigFieldMap;
+  stepWrapper?: StepWrapperFunction<TStepExecutionContext>;
 }
 
 export interface IntegrationInvocationConfig<

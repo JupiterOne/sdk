@@ -15,6 +15,7 @@ import {
   StepExecutionContext,
   StepResultStatus,
   StepStartStates,
+  StepWrapperFunction,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -60,7 +61,6 @@ export function buildStepDependencyGraph<
 
   return dependencyGraph;
 }
-
 /**
  * This function takes a step dependency graph and executes
  * the steps in order based on the values of their `dependsOn`.
@@ -75,6 +75,7 @@ export function buildStepDependencyGraph<
  * created more leaf nodes and executes them. This continues
  * until there are no more nodes to execute.
  */
+
 export function executeStepDependencyGraph<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
@@ -90,6 +91,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship,
   afterAddEntity,
   afterAddRelationship,
+  stepWrapper,
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -102,6 +104,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
+  stepWrapper?: StepWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -267,7 +270,10 @@ export function executeStepDependencyGraph<
                   stepId,
                   cached: hasCachePath(stepId).toString(),
                 },
-                operation: () => executeStep(step),
+                operation: () =>
+                  stepWrapper
+                    ? stepWrapper(step, async () => executeStep(step))
+                    : executeStep(step),
               }).catch(handleUnexpectedError),
             );
           } else {
