@@ -94,20 +94,13 @@ export function collect() {
         step: Step<IntegrationStepExecutionContext>,
         stepFunction: () => Promise<void>,
       ) => {
-        log.info(`[STEPWRAPPER] [${step.id}] wrapping step`);
         const res = await withObservabilityFunction({
           spanName: `step.${step.id}`,
           run: async () => {
-            log.info(`[STEPWRAPPER] [${step.id}] starting trace`);
-            const res = await stepFunction().catch((err) =>
-              log.error(`[STEPWRAPPER] [${step.id}] failed step: ${err}`),
-            );
-            log.info(`[STEPWRAPPER] [${step.id}] stopping trace`);
-
+            const res = await stepFunction();
             return res;
           },
         })();
-        log.info(`[STEPWRAPPER] [${step.id}] ending step`);
         return res;
       };
       config.stepWrapper = wrapper;

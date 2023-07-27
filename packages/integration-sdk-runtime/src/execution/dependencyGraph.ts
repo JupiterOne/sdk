@@ -356,13 +356,9 @@ export function executeStepDependencyGraph<
         }
 
         if (status !== StepResultStatus.CACHED) {
-          await step.executionHandler(context);
           if (wrapper) {
             await wrapper(step, async () => step.executionHandler(context));
           } else {
-            context.logger.info(
-              `[STEPWRAPPER] [${step.id}] wrapper does not exist`,
-            );
             await step.executionHandler(context);
           }
 
