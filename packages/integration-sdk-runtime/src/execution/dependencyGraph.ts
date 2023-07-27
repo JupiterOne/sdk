@@ -33,6 +33,7 @@ import {
   DuplicateEntityReport,
   DuplicateKeyTracker,
 } from './duplicateKeyTracker';
+import { log } from 'console';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -247,6 +248,10 @@ export function executeStepDependencyGraph<
         return;
       }
 
+      log(
+        `[SPANWRAPPER] exists: ${stepWrapper === undefined ? 'false' : true}`,
+      );
+
       workingGraph.overallOrder(true).forEach((stepId) => {
         const step = workingGraph.getNodeData(stepId);
 
@@ -270,10 +275,7 @@ export function executeStepDependencyGraph<
                   stepId,
                   cached: hasCachePath(stepId).toString(),
                 },
-                operation: () =>
-                  stepWrapper
-                    ? stepWrapper(step, async () => executeStep(step))
-                    : executeStep(step),
+                operation: () => executeStep(step, stepWrapper),
               }).catch(handleUnexpectedError),
             );
           } else {
@@ -312,7 +314,10 @@ export function executeStepDependencyGraph<
      * Errors from an execution handler are caught and used to
      * determine a status code for the step's result.
      */
-    async function executeStep(step: Step<TStepExecutionContext>) {
+    async function executeStep(
+      step: Step<TStepExecutionContext>,
+      wrapper?: StepWrapperFunction<TStepExecutionContext>,
+    ) {
       const { id: stepId } = step;
 
       let uploader: StepGraphObjectDataUploader | undefined;
@@ -352,6 +357,14 @@ export function executeStepDependencyGraph<
 
         if (status !== StepResultStatus.CACHED) {
           await step.executionHandler(context);
+          if (wrapper) {
+            await wrapper(step, async () => executeStep(step));
+          } else {
+            context.logger.info(
+              `[STEPWRAPPER] [${step.id}] wrapper does not exist`,
+            );
+            await step.executionHandler(context);
+          }
 
           if (stepHasDependencyFailure(stepId)) {
             status = StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
@@ -449,7 +462,6 @@ export function executeStepDependencyGraph<
 
       return status;
     }
-
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 

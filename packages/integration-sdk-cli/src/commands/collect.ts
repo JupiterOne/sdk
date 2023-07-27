@@ -12,6 +12,15 @@ import {
 import { loadConfig } from '../config';
 import * as log from '../log';
 import { addPathOptionsToCommand, configureRuntimeFilesystem } from './options';
+import {
+  shutdown,
+  withObservabilityFunction,
+} from '@jupiterone/platform-sdk-observability/src/telemetry';
+import {
+  IntegrationStepExecutionContext,
+  Step,
+  StepWrapperFunction,
+} from '@jupiterone/integration-sdk-core';
 
 // coercion function to collect multiple values for a flag
 const collector = (value: string, arr: string[]) => {
@@ -78,20 +87,51 @@ export function collect() {
       });
 
       const enableSchemaValidation = !options.disableSchemaValidation;
-      const results = await executeIntegrationLocally(
-        config,
-        {
-          current: {
-            startedOn: Date.now(),
+
+      const wrapper: StepWrapperFunction<
+        IntegrationStepExecutionContext
+      > = async (
+        step: Step<IntegrationStepExecutionContext>,
+        stepFunction: () => Promise<void>,
+      ) => {
+        log.info(`[STEPWRAPPER] [${step.id}] wrapping step`);
+        const res = await withObservabilityFunction({
+          spanName: `step.${step.id}`,
+          run: async () => {
+            log.info(`[STEPWRAPPER] [${step.id}] starting trace`);
+            const res = await stepFunction().catch((err) =>
+              log.error(`[STEPWRAPPER] [${step.id}] failed step: ${err}`),
+            );
+            log.info(`[STEPWRAPPER] [${step.id}] stopping trace`);
+
+            return res;
           },
+        })();
+        log.info(`[STEPWRAPPER] [${step.id}] ending step`);
+        return res;
+      };
+      config.stepWrapper = wrapper;
+
+      const results = await withObservabilityFunction({
+        spanName: 'executeIntegrationLocally',
+        run: async () => {
+          return await executeIntegrationLocally(
+            config,
+            {
+              current: {
+                startedOn: Date.now(),
+              },
+            },
+            {
+              enableSchemaValidation,
+              graphObjectStore,
+            },
+          );
         },
-        {
-          enableSchemaValidation,
-          graphObjectStore,
-        },
-      );
+      })();
 
       log.displayExecutionResults(results);
+      await shutdown();
     });
 }
 

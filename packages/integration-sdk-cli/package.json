@@ -27,6 +27,7 @@
     "@jupiterone/data-model": "^0.54.0",
     "@jupiterone/integration-sdk-core": "^9.9.2",
     "@jupiterone/integration-sdk-runtime": "^9.9.2",
+    "@jupiterone/platform-sdk-observability": "3.5.0",
     "chalk": "^4",
     "commander": "^9.4.0",
     "fs-extra": "^10.1.0",
