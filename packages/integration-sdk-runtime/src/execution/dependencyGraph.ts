@@ -33,7 +33,6 @@ import {
   DuplicateEntityReport,
   DuplicateKeyTracker,
 } from './duplicateKeyTracker';
-import { log } from 'console';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
