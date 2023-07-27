@@ -358,6 +358,7 @@ export function executeStepDependencyGraph<
 
         logger.info(
           {
+            status,
             stepId,
             summary: typeTracker.summarizeStep(stepId),
           },
