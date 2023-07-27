@@ -248,10 +248,6 @@ export function executeStepDependencyGraph<
         return;
       }
 
-      log(
-        `[SPANWRAPPER] exists: ${stepWrapper === undefined ? 'false' : true}`,
-      );
-
       workingGraph.overallOrder(true).forEach((stepId) => {
         const step = workingGraph.getNodeData(stepId);
 
@@ -357,7 +353,10 @@ export function executeStepDependencyGraph<
 
         if (status !== StepResultStatus.CACHED) {
           if (wrapper) {
-            await wrapper(step, async () => step.executionHandler(context));
+            await wrapper(
+              step,
+              async () => await step.executionHandler(context),
+            );
           } else {
             await step.executionHandler(context);
           }
