@@ -12,15 +12,6 @@ import {
 import { loadConfig } from '../config';
 import * as log from '../log';
 import { addPathOptionsToCommand, configureRuntimeFilesystem } from './options';
-import {
-  shutdown,
-  withObservabilityFunction,
-} from '@jupiterone/platform-sdk-observability/src/telemetry';
-import {
-  IntegrationStepExecutionContext,
-  Step,
-  StepWrapperFunction,
-} from '@jupiterone/integration-sdk-core';
 
 // coercion function to collect multiple values for a flag
 const collector = (value: string, arr: string[]) => {
@@ -88,43 +79,20 @@ export function collect() {
 
       const enableSchemaValidation = !options.disableSchemaValidation;
 
-      const wrapper: StepWrapperFunction<
-        IntegrationStepExecutionContext
-      > = async (
-        step: Step<IntegrationStepExecutionContext>,
-        stepFunction: () => Promise<void>,
-      ) => {
-        const res = await withObservabilityFunction({
-          spanName: `step.${step.id}`,
-          run: async () => {
-            const res = await stepFunction();
-            return res;
+      const results = await executeIntegrationLocally(
+        config,
+        {
+          current: {
+            startedOn: Date.now(),
           },
-        })();
-        return res;
-      };
-      config.stepWrapper = wrapper;
-
-      const results = await withObservabilityFunction({
-        spanName: 'executeIntegrationLocally',
-        run: async () => {
-          return await executeIntegrationLocally(
-            config,
-            {
-              current: {
-                startedOn: Date.now(),
-              },
-            },
-            {
-              enableSchemaValidation,
-              graphObjectStore,
-            },
-          );
         },
-      })();
+        {
+          enableSchemaValidation,
+          graphObjectStore,
+        },
+      );
 
       log.displayExecutionResults(results);
-      await shutdown();
     });
 }
 

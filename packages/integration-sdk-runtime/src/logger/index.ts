@@ -358,9 +358,8 @@ export class IntegrationLogger
       }
     }
 
-    this.debug(description, name);
-    // this.info(description);
-    // this.publishEvent({ name, description });
+    this.info(description);
+    this.publishEvent({ name, description });
   }
 
   stepFailure(step: StepMetadata, err: Error) {
