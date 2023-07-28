@@ -15,7 +15,7 @@ import {
   StepExecutionContext,
   StepResultStatus,
   StepStartStates,
-  StepWrapperFunction,
+  StepExecutionHandlerWrapperFunction,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -103,7 +103,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
-  stepWrapper?: StepWrapperFunction<TStepExecutionContext>;
+  stepWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky

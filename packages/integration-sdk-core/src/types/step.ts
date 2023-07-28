@@ -241,7 +241,7 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
   ingestionSourceId?: string;
 };
 
-export type StepWrapperFunction<
+export type StepExecutionHandlerWrapperFunction<
   TStepExecutionContext extends StepExecutionContext,
 > = (
   context: {

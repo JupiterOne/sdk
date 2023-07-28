@@ -17,7 +17,7 @@ import {
   StepExecutionContext,
   StepResultStatus,
   StepStartStates,
-  StepWrapperFunction,
+  StepExecutionHandlerWrapperFunction,
 } from '@jupiterone/integration-sdk-core';
 
 import { GraphObjectStore } from '../storage';
@@ -63,7 +63,7 @@ export async function executeSteps<
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
-  stepWrapper?: StepWrapperFunction<TStepExecutionContext>;
+  stepWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
   let allStepResults: IntegrationStepResult[] = [];
