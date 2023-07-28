@@ -75,7 +75,6 @@ export function buildStepDependencyGraph<
  * created more leaf nodes and executes them. This continues
  * until there are no more nodes to execute.
  */
-
 export function executeStepDependencyGraph<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
@@ -91,7 +90,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship,
   afterAddEntity,
   afterAddRelationship,
-  stepWrapper,
+  stepWrapper = (_, executionhandler) => executionhandler(),
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -270,7 +269,7 @@ export function executeStepDependencyGraph<
                   stepId,
                   cached: hasCachePath(stepId).toString(),
                 },
-                operation: () => executeStep(step, stepWrapper),
+                operation: () => executeStep(step),
               }).catch(handleUnexpectedError),
             );
           } else {
@@ -309,10 +308,7 @@ export function executeStepDependencyGraph<
      * Errors from an execution handler are caught and used to
      * determine a status code for the step's result.
      */
-    async function executeStep(
-      step: Step<TStepExecutionContext>,
-      wrapper?: StepWrapperFunction<TStepExecutionContext>,
-    ) {
+    async function executeStep(step: Step<TStepExecutionContext>) {
       const { id: stepId } = step;
 
       let uploader: StepGraphObjectDataUploader | undefined;
@@ -351,8 +347,8 @@ export function executeStepDependencyGraph<
         }
 
         if (status !== StepResultStatus.CACHED) {
-          if (wrapper) {
-            await wrapper(
+          if (stepWrapper) {
+            await stepWrapper(
               step,
               async () => await step.executionHandler(context),
             );
