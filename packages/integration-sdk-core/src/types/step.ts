@@ -244,6 +244,8 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
 export type StepWrapperFunction<
   TStepExecutionContext extends StepExecutionContext,
 > = (
-  step: Step<TStepExecutionContext>,
+  context: {
+    step: Step<TStepExecutionContext>;
+  },
   stepFunction: () => Promise<void>,
 ) => Promise<void>;

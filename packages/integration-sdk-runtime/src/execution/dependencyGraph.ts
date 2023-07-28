@@ -349,7 +349,9 @@ export function executeStepDependencyGraph<
         if (status !== StepResultStatus.CACHED) {
           if (stepWrapper) {
             await stepWrapper(
-              step,
+              {
+                step,
+              },
               async () => await step.executionHandler(context),
             );
           } else {
