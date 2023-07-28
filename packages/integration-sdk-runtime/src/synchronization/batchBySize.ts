@@ -12,10 +12,6 @@ export function chunkBySize<T extends UploadDataLookup, K extends keyof T>(
   sizeInBytes: number,
   logger: IntegrationLogger,
 ): T[K][][] {
-  if (sizeInBytes > MAX_BATCH_SIZE) {
-    logger.error({}, 'batch size is too big');
-    throw new Error('batch size is too big');
-  }
   return chunk(data, sizeInBytes, logger);
 }
 export function chunk<T extends UploadDataLookup, K extends keyof T>(
@@ -27,10 +23,10 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
   if (getSizeOfObject(data) < sizeInBytes) {
     return [data]; //Just one chunk of all data
   }
-  let bestIndex = binarySearch(data, sizeInBytes);
+  let bestIndex = linearSearch(data, sizeInBytes);
   if (bestIndex <= 0) {
     //If the first entity is too big
-    handleBinarySearchError(data, sizeInBytes, logger); // we remove rawdata
+    handleSearchError(data, sizeInBytes, logger); // we remove rawdata
     bestIndex = 1; //and send it to the persister alone. TODO: find a way to avoid sending this entities as a single call. It shouldn't be an issue since this only happens if there is a single entity above sizeInBytes
   }
   chunkedData.push(data.slice(0, bestIndex));
@@ -40,45 +36,21 @@ export function chunk<T extends UploadDataLookup, K extends keyof T>(
     );
   return chunkedData;
 }
-//If the batch doesnt fit, we try with half, and then half of half ... until it fits.
-//We repeat until we reach the Threshold or until the while condition.
-//We are binary-searching for the best spot to chunk
-function binarySearch<T extends UploadDataLookup, K extends keyof T>(
+//We are linearly searching for the best index
+function linearSearch<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
   targetSize: number,
 ): number {
-  let left: number = 0;
-  let right: number = data.length - 1;
-  let bestIndex: number = -1;
-  const thSize = targetSize * BATCH_THRESHOLD;
-  let mid: number = Math.floor((left + right) / 2);
-  let size = getSizeOfObject(data.slice(0, mid));
-  while (left <= right) {
-    if (size <= targetSize) {
-      bestIndex = mid;
-      if (size >= thSize) {
-        return mid; //if its **close enough** to the target size
-      }
-    }
-    if (targetSize < size) {
-      right = mid - 1;
-      if (left <= right) {
-        const newMid = Math.floor((left + right) / 2);
-        size = size - getSizeOfObject(data.slice(newMid, mid));
-        mid = newMid;
-      }
-    } else {
-      left = mid + 1;
-      if (left <= right) {
-        const newMid = Math.floor((left + right) / 2);
-        size = size + getSizeOfObject(data.slice(mid, newMid));
-        mid = newMid;
-      }
-    }
+  let size = 0;
+  let index = 0;
+  const acceptedTargetSize = BATCH_THRESHOLD * targetSize;
+  while (size < acceptedTargetSize && index < data.length) {
+    size += getSizeOfObject([data[index]]);
+    index++;
   }
-  return bestIndex;
+  return index - 1;
 }
-function handleBinarySearchError<T extends UploadDataLookup, K extends keyof T>(
+function handleSearchError<T extends UploadDataLookup, K extends keyof T>(
   data: T[K][],
   sizeInBytes: number,
   logger: IntegrationLogger,
@@ -106,7 +78,7 @@ export function getSizeOfObject<T extends UploadDataLookup, K extends keyof T>(
   object: T[K][],
 ): number {
   try {
-    return JSON.stringify(object).length;
+    return Buffer.byteLength(JSON.stringify(object), 'utf8');
   } catch (error) {
     if (error instanceof RangeError) {
       //If object is too large to size, stringify runs out of memory. We fallback to the max batchSize.

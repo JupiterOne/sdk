@@ -282,7 +282,7 @@ export async function uploadGraphObjectData(
   graphObjectData: FlushedGraphObjectData,
   uploadBatchSize?: number,
   uploadRelationshipsBatchSize?: number,
-  mbToChunk?: number,
+  uploadBatchSizeInMb?: number,
 ) {
   const entityBatchSize = uploadBatchSize;
   const relationshipsBatchSize =
@@ -305,7 +305,7 @@ export async function uploadGraphObjectData(
         'entities',
         graphObjectData.entities,
         entityBatchSize,
-        mbToChunk,
+        uploadBatchSizeInMb,
       );
 
       synchronizationJobContext.logger.debug(
@@ -332,7 +332,7 @@ export async function uploadGraphObjectData(
         'relationships',
         graphObjectData.relationships,
         relationshipsBatchSize,
-        mbToChunk,
+        uploadBatchSizeInMb,
       );
 
       synchronizationJobContext.logger.debug(
@@ -569,6 +569,7 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
       batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
     }
   } catch (error) {
+    logger.warn({ error }, 'Batching by size failed');
     batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
   }
   await pMap(

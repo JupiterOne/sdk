@@ -4,8 +4,10 @@ import { FlushedGraphObjectData } from '../storage/types';
 import {
   uploadGraphObjectData,
   SynchronizationJobContext,
+  BYTES_IN_MB,
 } from '../synchronization';
 import { randomUUID as uuid } from 'crypto';
+import { MAX_BATCH_SIZE } from '../synchronization/shrinkBatchRawData';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;
@@ -145,6 +147,9 @@ export function createPersisterApiStepGraphObjectDataUploader({
   uploadRelationshipsBatchSize,
   uploadChunkInMb,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
+  if (uploadChunkInMb && uploadChunkInMb * BYTES_IN_MB > MAX_BATCH_SIZE) {
+    uploadChunkInMb = MAX_BATCH_SIZE;
+  }
   return createQueuedStepGraphObjectDataUploader({
     stepId,
     uploadConcurrency,
