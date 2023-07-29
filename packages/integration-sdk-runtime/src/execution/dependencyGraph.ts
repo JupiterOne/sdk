@@ -90,7 +90,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship,
   afterAddEntity,
   afterAddRelationship,
-  stepWrapper = (_, executionhandler) => executionhandler(),
+  executionHandlerWrapper = (_, executionhandler) => executionhandler(),
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -103,7 +103,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
-  stepWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
+  executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -347,8 +347,8 @@ export function executeStepDependencyGraph<
         }
 
         if (status !== StepResultStatus.CACHED) {
-          if (stepWrapper) {
-            await stepWrapper(
+          if (executionHandlerWrapper) {
+            await executionHandlerWrapper(
               {
                 step,
               },

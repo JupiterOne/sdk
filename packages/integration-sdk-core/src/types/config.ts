@@ -90,7 +90,14 @@ export interface InvocationConfig<
    *
    */
   ingestionConfig?: IntegrationIngestionConfigFieldMap;
-  stepWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
+  /**
+   * Wraps the executionHandler for each step in an operation to allow for adding
+   * context before and after the executionHandler completes. Can be used for adding
+   * logic like tracing or logging.
+   *
+   * If not provided, this defaults to a noop wrapper.
+   */
+  executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }
 
 export interface IntegrationInvocationConfig<

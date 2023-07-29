@@ -49,7 +49,7 @@ export async function executeSteps<
   afterAddEntity,
   afterAddRelationship,
   dependencyGraphOrder,
-  stepWrapper,
+  executionHandlerWrapper,
 }: {
   executionContext: TExecutionContext;
   integrationSteps: Step<TStepExecutionContext>[];
@@ -63,7 +63,7 @@ export async function executeSteps<
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
-  stepWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
+  executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
   let allStepResults: IntegrationStepResult[] = [];
@@ -96,7 +96,7 @@ export async function executeSteps<
         beforeAddRelationship,
         afterAddEntity,
         afterAddRelationship,
-        stepWrapper,
+        executionHandlerWrapper,
       }),
     );
   }
