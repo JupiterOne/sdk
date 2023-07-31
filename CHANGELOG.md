@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.10.0 - 2023-07-31
+
+- Introduce `executionHandlerWrapper` execution wrapper. See
+  [development documentation](./docs/integrations/development.md) for more
+  information.
+
 ## 9.9.1 - 2023-07-24
 
 ### Changed
