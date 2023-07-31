@@ -4,7 +4,7 @@ import {
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import { UploadDataLookup } from '.';
-import { MAX_BATCH_SIZE } from './shrinkBatchRawData';
+import { MAX_BATCH_SIZE_IN_BYTES } from './shrinkBatchRawData';
 const BATCH_THRESHOLD = 0.9; //will stop chunking if chunk size is between BATCH_THRESHOLD*sizeInBytes and sizeInBytes
 
 export function chunkBySize<T extends UploadDataLookup, K extends keyof T>(
@@ -78,7 +78,7 @@ export function getSizeOfObject<T extends UploadDataLookup, K extends keyof T>(
   } catch (error) {
     if (error instanceof RangeError) {
       //If object is too large to size, stringify runs out of memory. We fallback to the max batchSize.
-      return MAX_BATCH_SIZE + 1;
+      return MAX_BATCH_SIZE_IN_BYTES + 1;
     }
     throw error;
   }
