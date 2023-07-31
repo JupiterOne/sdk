@@ -95,7 +95,7 @@ export interface InvocationConfig<
    * context before and after the executionHandler completes. Can be used for adding
    * logic like tracing or logging.
    *
-   * If not provided, this defaults to a noop wrapper.
+   * If not provided, the handler will run normally.
    */
   executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }
