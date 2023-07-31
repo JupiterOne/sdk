@@ -23,6 +23,7 @@ that was sent up will be diffed against JupiterOne's understanding of the
       - [`beforeAddRelationship(context: IntegrationExecutionContext<IntegrationConfig>, r: Relationship): Promise<Relationship> | Relationship`](#beforeaddrelationshipcontext-integrationexecutioncontextintegrationconfig-r-relationship-promiserelationship--relationship)
       - [`ingestionConfig`](#ingestionconfig)
       - [`afterExecution(context: IntegrationExecutionContext<IntegrationConfig>): Promise<void>`](#afterexecutioncontext-integrationexecutioncontextintegrationconfig-promisevoid)
+      - [`executionHandlerWrapper(context: {step: Step<IntegrationStepExecutionContext>}, stepFunction: () => Promise<void>): Promise<void>`](#executionhandlerwrappercontext-step-stepintegrationstepexecutioncontext-stepfunction---promisevoid-promisevoid)
     - [How integrations are executed](#how-integrations-are-executed)
       - [Validation](#validation)
       - [Collection](#collection)
@@ -81,6 +82,7 @@ that was sent up will be diffed against JupiterOne's understanding of the
       - [Command `j1-integration document`](#command-j1-integration-document)
       - [Command `j1-integration validate-question-file`](#command-j1-integration-validate-question-file)
       - [Command `j1-integration generate-integration-graph-schema`](#command-j1-integration-generate-integration-graph-schema)
+      - [Command `j1-integration troubleshoot`](#command-j1-integration-troubleshoot)
       - [Future commands and utilities](#future-commands-and-utilities)
         - [More commands and options](#more-commands-and-options)
           - [Command `j1-integration plan`](#command-j1-integration-plan)
@@ -522,6 +524,38 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
       context.logger.info('Integration execution completed...');
     },
   };
+```
+
+#### `executionHandlerWrapper(context: {step: Step<IntegrationStepExecutionContext>}, stepFunction: () => Promise<void>): Promise<void>`
+
+`executionHandlerWrapper` is an optional hook function that can be provided. The
+function runs everytime `step.executionHandler()` is called, and wraps the
+execution handler call and response. This allows a user to update run steps
+immediately before and after the executionHandler. An example of when you would
+use this, is to add tracing to your execution handler.
+
+Example:
+
+```typescript
+import {
+  IntegrationStepExecutionContext,
+  Step,
+  StepExecutionHandlerWrapperFunction,
+} from '@jupiterone/integration-sdk-core';
+
+export const executionHandlerWrapper: StepExecutionHandlerWrapperFunction<
+  IntegrationStepExecutionContext
+> = async (
+  context: {
+    step: Step<IntegrationStepExecutionContext>;
+  },
+  stepFunction: () => Promise<void>,
+) => {
+  console.log(`Starting execution handler for step ${context.step.id}`);
+  const resp = await stepFunction();
+  console.log(`Ending execution handler for step ${context.step.id}`);
+  return resp;
+};
 ```
 
 ### How integrations are executed

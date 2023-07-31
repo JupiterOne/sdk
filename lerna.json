@@ -5,5 +5,5 @@
     "packages/cli"
   ],
   "useWorkspaces": true,
-  "version": "9.9.3"
+  "version": "9.10.0"
 }
