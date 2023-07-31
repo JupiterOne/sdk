@@ -1,11 +1,20 @@
 import {
   Entity,
   IntegrationLogger,
+  IntegrationWarnEventName,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import { UploadDataLookup } from '.';
 import { MAX_BATCH_SIZE_IN_BYTES } from './shrinkBatchRawData';
 
+/**
+Converts an array of graphObjects into an array of groups of this objects.
+@param graphObjects  Entities or relationships to group.
+
+@param maximumBatchSizeInBytes The maximum size of the group of objects.
+
+@param logger 
+ */
 export function batchGraphObjectsBySizeInBytes<
   T extends UploadDataLookup,
   K extends keyof T,
@@ -42,6 +51,11 @@ export function batchGraphObjectsBySizeInBytes<
           },
           'Graph object is larger than batch size in bytes; cannot upload graph object.',
         );
+        logger.publishWarnEvent({
+          name: IntegrationWarnEventName.IngestionLimitEncountered,
+          description:
+            'Graph object is larger than batch size in bytes; cannot upload graph object. Will skip graph object.',
+        });
         continue;
       } else {
         logger.info(
