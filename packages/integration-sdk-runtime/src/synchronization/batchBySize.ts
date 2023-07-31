@@ -60,6 +60,7 @@ export function getSizeOfObject(
   } catch (error) {
     if (error instanceof RangeError) {
       //If object is too large to size, stringify runs out of memory. We fallback to the max batchSize.
+      //This is highly unlikely since it should only happen after ~500MB.
       return MAX_BATCH_SIZE_IN_BYTES + 1;
     }
     throw error;
