@@ -78,6 +78,7 @@ export function collect() {
       });
 
       const enableSchemaValidation = !options.disableSchemaValidation;
+
       const results = await executeIntegrationLocally(
         config,
         {

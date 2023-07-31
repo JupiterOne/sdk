@@ -266,6 +266,7 @@ export async function executeWithContext<
         afterAddEntity: createAfterAddEntityInternalHook(logger),
         afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
         dependencyGraphOrder: config.dependencyGraphOrder,
+        executionHandlerWrapper: config.executionHandlerWrapper,
       });
 
       const partialDatasets = determinePartialDatasetsFromStepExecutionResults(

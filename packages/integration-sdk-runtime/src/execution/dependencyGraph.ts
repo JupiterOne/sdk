@@ -15,6 +15,7 @@ import {
   StepExecutionContext,
   StepResultStatus,
   StepStartStates,
+  StepExecutionHandlerWrapperFunction,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -60,7 +61,6 @@ export function buildStepDependencyGraph<
 
   return dependencyGraph;
 }
-
 /**
  * This function takes a step dependency graph and executes
  * the steps in order based on the values of their `dependsOn`.
@@ -90,6 +90,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship,
   afterAddEntity,
   afterAddRelationship,
+  executionHandlerWrapper = (_, executionhandler) => executionhandler(),
 }: {
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
@@ -102,6 +103,7 @@ export function executeStepDependencyGraph<
   beforeAddRelationship?: BeforeAddRelationshipHookFunction<TExecutionContext>;
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
+  executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   // create a clone of the dependencyGraph because mutating
   // the input graph is icky
@@ -345,7 +347,16 @@ export function executeStepDependencyGraph<
         }
 
         if (status !== StepResultStatus.CACHED) {
-          await step.executionHandler(context);
+          if (executionHandlerWrapper) {
+            await executionHandlerWrapper(
+              {
+                step,
+              },
+              async () => await step.executionHandler(context),
+            );
+          } else {
+            await step.executionHandler(context);
+          }
 
           if (stepHasDependencyFailure(stepId)) {
             status = StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE;
@@ -444,7 +455,6 @@ export function executeStepDependencyGraph<
 
       return status;
     }
-
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 

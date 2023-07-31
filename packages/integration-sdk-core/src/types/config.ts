@@ -1,5 +1,9 @@
 import { IntegrationInstanceConfig } from './instance';
-import { GetStepStartStatesFunction, Step } from './step';
+import {
+  GetStepStartStatesFunction,
+  Step,
+  StepExecutionHandlerWrapperFunction,
+} from './step';
 import { InvocationValidationFunction } from './validation';
 import {
   ExecutionContext,
@@ -86,6 +90,14 @@ export interface InvocationConfig<
    *
    */
   ingestionConfig?: IntegrationIngestionConfigFieldMap;
+  /**
+   * Wraps the executionHandler for each step in an operation to allow for adding
+   * context before and after the executionHandler completes. Can be used for adding
+   * logic like tracing or logging.
+   *
+   * If not provided, the handler will run normally.
+   */
+  executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }
 
 export interface IntegrationInvocationConfig<

@@ -240,3 +240,12 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    */
   ingestionSourceId?: string;
 };
+
+export type StepExecutionHandlerWrapperFunction<
+  TStepExecutionContext extends StepExecutionContext,
+> = (
+  context: {
+    step: Step<TStepExecutionContext>;
+  },
+  stepFunction: () => Promise<void>,
+) => Promise<void>;
