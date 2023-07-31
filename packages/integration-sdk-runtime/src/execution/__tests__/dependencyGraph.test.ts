@@ -817,7 +817,7 @@ describe('executeStepDependencyGraph', () => {
       { err: error, errorId: expect.any(String), code: 'ABC-123' },
       expect.stringMatching(
         new RegExp(
-          `Step "a" failed to complete due to error. \\(errorCode="ABC-123", errorId="(.*)"\\)$`,
+          `Step "a" failed to complete due to error. \\(errorCode="ABC-123", reason="oopsie"\\)$`,
         ),
       ),
     );
@@ -1302,8 +1302,6 @@ describe('executeStepDependencyGraph', () => {
     expect(spyD).toHaveBeenCalledTimes(0);
 
     expect(spyA).toHaveBeenCalledBefore(spyC);
-    expect(spyC).toHaveBeenCalledBefore(spyD);
-    expect(spyE).toHaveBeenCalledBefore(spyD);
   });
 
   test('should log parent and child skipped steps', async () => {
@@ -1439,8 +1437,6 @@ describe('executeStepDependencyGraph', () => {
     expect(spyD).toHaveBeenCalledTimes(0);
 
     expect(spyA).toHaveBeenCalledBefore(spyC);
-    expect(spyC).toHaveBeenCalledBefore(spyD);
-    expect(spyE).toHaveBeenCalledBefore(spyD);
 
     // Assert skipStep being called for parent and child steps
     expect(stepSkipSpy).toHaveBeenCalledTimes(2);

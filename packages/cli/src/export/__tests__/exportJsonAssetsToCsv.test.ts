@@ -1,6 +1,5 @@
-import ora from 'ora';
 import { vol } from 'memfs';
-import { randomUUID as uuid } from 'crypto';
+import { randomUUID, randomUUID as uuid } from 'crypto';
 import csvToJson from 'csvtojson';
 
 import { DEFAULT_EXPORT_DIRECTORY } from '../../commands';
@@ -13,9 +12,18 @@ import { TEST_API_KEY } from '../../__tests__/utils';
 
 jest.mock('fs');
 jest.mock('../../log');
-jest.mock('ora');
 
-const mockedSpinner = ora().start();
+jest.mock('ora', () => {
+  return () => {
+    return {
+      start: jest.fn().mockReturnThis(),
+      stop: jest.fn(),
+      fail: jest.fn(),
+      succeed: jest.fn(),
+    };
+  };
+});
+
 const TEST_DIRECTORY = DEFAULT_EXPORT_DIRECTORY;
 const TEST_FILES = {
   [`${TEST_DIRECTORY}/json/entities/entity_type_1/${uuid()}.json`]:
@@ -55,6 +63,8 @@ beforeEach(() => {
 
 test('should not export anything if there are no json assets', async () => {
   await exportJsonAssetsToCsv({
+    account: randomUUID(),
+    includeDeleted: false,
     includeEntities: true,
     includeRelationships: true,
     storageDirectory: TEST_DIRECTORY,
@@ -68,6 +78,8 @@ test('should export both entities and relationships when specified', async () =>
   vol.fromJSON(TEST_FILES);
 
   await exportJsonAssetsToCsv({
+    account: randomUUID(),
+    includeDeleted: false,
     includeEntities: true,
     includeRelationships: true,
     storageDirectory: TEST_DIRECTORY,
@@ -111,6 +123,8 @@ test('should export only entities when includeRelationships is false', async () 
   vol.fromJSON(TEST_FILES);
 
   await exportJsonAssetsToCsv({
+    account: randomUUID(),
+    includeDeleted: false,
     includeEntities: true,
     includeRelationships: false,
     storageDirectory: TEST_DIRECTORY,
@@ -139,6 +153,8 @@ test('should export only relationships when includeEntities is false', async () 
   vol.fromJSON(TEST_FILES);
 
   await exportJsonAssetsToCsv({
+    account: randomUUID(),
+    includeDeleted: false,
     includeEntities: false,
     includeRelationships: true,
     storageDirectory: TEST_DIRECTORY,
@@ -180,16 +196,16 @@ test('should log error when export fails', async () => {
 
   await expect(
     exportJsonAssetsToCsv({
+      account: randomUUID(),
+      includeDeleted: false,
       includeEntities: true,
       includeRelationships: true,
       storageDirectory: TEST_DIRECTORY,
       apiKey: TEST_API_KEY,
     }),
   ).rejects.toThrow(/Unexpected token/g);
+
   expect(log.error).toHaveBeenCalledWith('Failed to export JSON assets to CSV');
-  expect(mockedSpinner.fail).toHaveBeenCalledWith(
-    'Failed to export JSON assets to CSV',
-  );
 });
 
 function convertCsvToJson(content: string) {

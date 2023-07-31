@@ -9,6 +9,14 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.9.1 - 2023-07-24
+
+### Changed
+
+- Pass an instantiated credential provider to `@lifeomic/alpha` client so that
+  credentials stop getting re-loaded when hitting the synchronization API from a
+  private endpoint
+
 ## 9.8.0 - 2023-07-04
 
 ### Added
