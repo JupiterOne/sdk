@@ -25,7 +25,7 @@ import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
-import { chunkBySize, getSizeOfObject } from './batchBySize';
+import { batchGraphObjectsBySizeInBytes } from './batchBySize';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -555,16 +555,7 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   let batches: T[K][][];
   try {
     if (batchSizeInBytes) {
-      batches = chunkBySize(data, batchSizeInBytes, logger);
-      logger.debug(
-        {
-          batches: batches.map((b) => ({
-            length: b.length,
-            sizeInBytes: getSizeOfObject(b),
-          })),
-        },
-        'Sending Batches',
-      );
+      batches = batchGraphObjectsBySizeInBytes(data, batchSizeInBytes, logger);
     } else {
       batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
     }
