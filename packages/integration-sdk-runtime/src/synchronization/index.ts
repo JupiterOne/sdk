@@ -31,7 +31,7 @@ export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
 export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
-export const BYTES_IN_MB = 1048576;
+
 const UPLOAD_CONCURRENCY = 6;
 
 export enum RequestHeaders {
@@ -282,7 +282,7 @@ export async function uploadGraphObjectData(
   graphObjectData: FlushedGraphObjectData,
   uploadBatchSize?: number,
   uploadRelationshipsBatchSize?: number,
-  uploadBatchSizeInMb?: number,
+  uploadBatchSizeInBytes?: number,
 ) {
   const entityBatchSize = uploadBatchSize;
   const relationshipsBatchSize =
@@ -305,7 +305,7 @@ export async function uploadGraphObjectData(
         'entities',
         graphObjectData.entities,
         entityBatchSize,
-        uploadBatchSizeInMb,
+        uploadBatchSizeInBytes,
       );
 
       synchronizationJobContext.logger.debug(
@@ -332,7 +332,7 @@ export async function uploadGraphObjectData(
         'relationships',
         graphObjectData.relationships,
         relationshipsBatchSize,
-        uploadBatchSizeInMb,
+        uploadBatchSizeInBytes,
       );
 
       synchronizationJobContext.logger.debug(
@@ -550,12 +550,12 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   type: K,
   data: T[K][],
   uploadBatchSize?: number,
-  batchSizeInMB?: number,
+  batchSizeInBytes?: number,
 ) {
   let batches: T[K][][];
   try {
-    if (batchSizeInMB) {
-      batches = chunkBySize(data, batchSizeInMB * BYTES_IN_MB, logger);
+    if (batchSizeInBytes) {
+      batches = chunkBySize(data, batchSizeInBytes, logger);
       logger.debug(
         {
           batches: batches.map((b) => ({

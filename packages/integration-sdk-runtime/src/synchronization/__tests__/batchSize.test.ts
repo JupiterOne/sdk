@@ -13,11 +13,10 @@ import {
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import {
-  BYTES_IN_MB,
   SynchronizationJobContext,
   uploadGraphObjectData,
 } from '..';
-
+export const BYTES_IN_MB = 1048576;
 function createFlushedGraphObjectData(
   numEntity: number,
   numRelationship: number,
@@ -195,13 +194,13 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
         apiClient,
         job,
       };
-      const mbNumber: number = 0.001 * i;
+      const bytesToBatch: number = 0.001 * i * BYTES_IN_MB;
       await uploadGraphObjectData(
         synchronizationJobContext,
         flushedObjectData,
         250,
         250,
-        mbNumber,
+        bytesToBatch,
       );
 
       const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
@@ -211,12 +210,12 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       for (const call of entityCalls) {
         expect(
           Buffer.byteLength(JSON.stringify(call[1].entities)),
-        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber);
+        ).toBeLessThanOrEqual( bytesToBatch);
       }
       for (const call of relationshipsCalls) {
         expect(
           Buffer.byteLength(JSON.stringify(call[1].relationships)),
-        ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber);
+        ).toBeLessThanOrEqual(bytesToBatch);
       }
     }
   });
@@ -237,13 +236,13 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       apiClient,
       job,
     };
-    const mbNumber: number = 5;
+    const bytesToBatch: number = 5 * BYTES_IN_MB;
     await uploadGraphObjectData(
       synchronizationJobContext,
       bigObjectData,
       250,
       250,
-      mbNumber,
+      bytesToBatch,
     );
 
     const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
@@ -260,7 +259,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       );
       expect(
         Buffer.byteLength(JSON.stringify(call[1].entities)),
-      ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber);
+      ).toBeLessThanOrEqual(bytesToBatch);
     }
     for (const call of relationshipsCalls) {
       relationshipSentToSync = relationshipSentToSync.concat(
@@ -268,7 +267,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       );
       expect(
         Buffer.byteLength(JSON.stringify(call[1].relationships)),
-      ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber);
+      ).toBeLessThanOrEqual( bytesToBatch);
     }
     //Check that all elements that we wanted to sync were called
     expect(bigObjectData.entities.map((item) => item._key).sort()).toEqual(
@@ -304,13 +303,13 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       apiClient,
       job,
     };
-    const mbNumber: number = 5;
+    const bytesToBatch: number = 5 * BYTES_IN_MB;
     await uploadGraphObjectData(
       synchronizationJobContext,
       bigObjectData,
       250,
       250,
-      mbNumber,
+      bytesToBatch,
     );
 
     const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
@@ -325,12 +324,12 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       );
       expect(
         Buffer.byteLength(JSON.stringify(call[1].entities)),
-      ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber);
+      ).toBeLessThanOrEqual(bytesToBatch);
     }
     for (const call of relationshipsCalls) {
       expect(
         Buffer.byteLength(JSON.stringify(call[1].relationships)),
-      ).toBeLessThanOrEqual(BYTES_IN_MB * mbNumber);
+      ).toBeLessThanOrEqual( bytesToBatch);
     }
     expect(bigObjectData.entities.map((item) => item._key).sort()).toEqual(
       sentToSync.sort(),
