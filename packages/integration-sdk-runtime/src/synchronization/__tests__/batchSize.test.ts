@@ -12,10 +12,7 @@ import {
   EntityRawData,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
-import {
-  SynchronizationJobContext,
-  uploadGraphObjectData,
-} from '..';
+import { SynchronizationJobContext, uploadGraphObjectData } from '..';
 export const BYTES_IN_MB = 1048576;
 function createFlushedGraphObjectData(
   numEntity: number,
@@ -210,7 +207,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       for (const call of entityCalls) {
         expect(
           Buffer.byteLength(JSON.stringify(call[1].entities)),
-        ).toBeLessThanOrEqual( bytesToBatch);
+        ).toBeLessThanOrEqual(bytesToBatch);
       }
       for (const call of relationshipsCalls) {
         expect(
@@ -267,7 +264,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       );
       expect(
         Buffer.byteLength(JSON.stringify(call[1].relationships)),
-      ).toBeLessThanOrEqual( bytesToBatch);
+      ).toBeLessThanOrEqual(bytesToBatch);
     }
     //Check that all elements that we wanted to sync were called
     expect(bigObjectData.entities.map((item) => item._key).sort()).toEqual(
@@ -329,7 +326,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     for (const call of relationshipsCalls) {
       expect(
         Buffer.byteLength(JSON.stringify(call[1].relationships)),
-      ).toBeLessThanOrEqual( bytesToBatch);
+      ).toBeLessThanOrEqual(bytesToBatch);
     }
     expect(bigObjectData.entities.map((item) => item._key).sort()).toEqual(
       sentToSync.sort(),

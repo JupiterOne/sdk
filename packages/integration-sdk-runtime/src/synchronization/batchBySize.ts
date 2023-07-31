@@ -14,9 +14,10 @@ export function chunkBySize<T extends UploadDataLookup, K extends keyof T>(
 ): T[K][][] {
   const chunkedData: T[K][][] = [];
   let bestIndex = linearSearch(data, sizeInBytes);
-  if(bestIndex > 0 && bestIndex + 1 == data.length){//Are we at the end of the array?
-    chunkedData.push(data)
-    return chunkedData
+  if (bestIndex > 0 && bestIndex + 1 == data.length) {
+    //Are we at the end of the array?
+    chunkedData.push(data);
+    return chunkedData;
   }
   if (bestIndex <= 0) {
     //If the first entity is too big
