@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/cli",
-  "version": "9.10.0",
+  "version": "9.11.0",
   "description": "The JupiterOne cli",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,8 +24,8 @@
     "test": "jest"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^9.10.0",
-    "@jupiterone/integration-sdk-runtime": "^9.10.0",
+    "@jupiterone/integration-sdk-core": "^9.11.0",
+    "@jupiterone/integration-sdk-runtime": "^9.11.0",
     "@lifeomic/attempt": "^3.0.3",
     "commander": "^5.0.0",
     "globby": "^11.0.1",
