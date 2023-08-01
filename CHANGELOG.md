@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 9.11.0 - 2023-08-01
+
+- Introduce batchingBySize option.
+
 ## 9.10.0 - 2023-07-31
 
 - Introduce `executionHandlerWrapper` execution wrapper. See
