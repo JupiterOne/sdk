@@ -5,22 +5,21 @@ import {
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import { UploadDataLookup } from '.';
-import { MAX_BATCH_SIZE_IN_BYTES } from './shrinkBatchRawData';
 
 /**
-Converts an array of graphObjects into an array of groups of this objects.
-@param graphObjects  Entities or relationships to group.
-
-@param maximumBatchSizeInBytes The maximum size of the group of objects.
-
-@param logger 
+ * Converts an array of graphObjects into an array of groups of this objects.
+ * @param graphObjects  Entities or relationships to group.
+ *
+ * @param uploadBatchSizeInBytes The maximum size of the group of objects.
+ *
+ * @param logger
  */
 export function batchGraphObjectsBySizeInBytes<
   T extends UploadDataLookup,
   K extends keyof T,
 >(
   graphObjects: T[K][],
-  maximumBatchSizeInBytes: number,
+  uploadBatchSizeInBytes: number,
   logger: IntegrationLogger,
 ): T[K][][] {
   const batches: T[K][][] = [];
@@ -30,22 +29,36 @@ export function batchGraphObjectsBySizeInBytes<
   for (const graphObject of graphObjects) {
     const typedGraphObject = graphObject as Entity | Relationship;
 
-    let graphObjectSizeInBytes = getSizeOfObject(graphObject);
+    let graphObjectSizeInBytes = 0;
+    try {
+      graphObjectSizeInBytes = getSizeOfObject(graphObject);
+    } catch (err) {
+      logger.warn(
+        { err, _key: typedGraphObject._key },
+        'Failed to calculate size of object in bytes',
+      );
+      logger.publishWarnEvent({
+        name: IntegrationWarnEventName.IngestionLimitEncountered,
+        description:
+          'Graph object is larger than what can me measured. Will skip graphObject',
+      });
+      continue;
+    }
 
-    if (graphObjectSizeInBytes > maximumBatchSizeInBytes) {
+    if (graphObjectSizeInBytes > uploadBatchSizeInBytes) {
       const rawDataSizeInBytes = typedGraphObject._rawData
         ? getSizeOfObject(typedGraphObject._rawData)
         : 0;
 
       if (
         graphObjectSizeInBytes - rawDataSizeInBytes >
-        maximumBatchSizeInBytes
+        uploadBatchSizeInBytes
       ) {
         logger.warn(
           {
             _key: typedGraphObject._key,
             _type: typedGraphObject.type,
-            maximumBatchSizeInBytes,
+            uploadBatchSizeInBytes,
             graphObjectSizeInBytes,
             rawDataSizeInBytes,
           },
@@ -62,7 +75,7 @@ export function batchGraphObjectsBySizeInBytes<
           {
             _key: typedGraphObject._key,
             _type: typedGraphObject.type,
-            maximumBatchSizeInBytes,
+            uploadBatchSizeInBytes,
             graphObjectSizeInBytes,
             rawDataSizeInBytes,
           },
@@ -73,7 +86,7 @@ export function batchGraphObjectsBySizeInBytes<
       }
     }
 
-    if (graphObjectSizeInBytes + currentBatchSize >= maximumBatchSizeInBytes) {
+    if (graphObjectSizeInBytes + currentBatchSize >= uploadBatchSizeInBytes) {
       batches.push(currentBatch);
       currentBatch = [];
       currentBatchSize = 0;
@@ -89,14 +102,5 @@ export function batchGraphObjectsBySizeInBytes<
 }
 
 export function getSizeOfObject(object: any): number {
-  try {
-    return Buffer.byteLength(JSON.stringify(object), 'utf8');
-  } catch (error) {
-    if (error instanceof RangeError) {
-      //If object is too large to size, stringify runs out of memory. We fallback to the max batchSize.
-      //This is highly unlikely since it should only happen after ~500MB.
-      return MAX_BATCH_SIZE_IN_BYTES + 1;
-    }
-    throw error;
-  }
+  return Buffer.byteLength(JSON.stringify(object), 'utf8');
 }

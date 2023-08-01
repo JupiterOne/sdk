@@ -550,12 +550,16 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   type: K,
   data: T[K][],
   uploadBatchSize?: number,
-  batchSizeInBytes?: number,
+  uploadBatchSizeInBytes?: number,
 ) {
   let batches: T[K][][];
   try {
-    if (batchSizeInBytes) {
-      batches = batchGraphObjectsBySizeInBytes(data, batchSizeInBytes, logger);
+    if (uploadBatchSizeInBytes) {
+      batches = batchGraphObjectsBySizeInBytes(
+        data,
+        uploadBatchSizeInBytes,
+        logger,
+      );
     } else {
       batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
     }
