@@ -25,11 +25,13 @@ import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
+import { batchGraphObjectsBySizeInBytes } from './batchBySize';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
 export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
+
 const UPLOAD_CONCURRENCY = 6;
 
 export enum RequestHeaders {
@@ -280,6 +282,7 @@ export async function uploadGraphObjectData(
   graphObjectData: FlushedGraphObjectData,
   uploadBatchSize?: number,
   uploadRelationshipsBatchSize?: number,
+  uploadBatchSizeInBytes?: number,
 ) {
   const entityBatchSize = uploadBatchSize;
   const relationshipsBatchSize =
@@ -302,6 +305,7 @@ export async function uploadGraphObjectData(
         'entities',
         graphObjectData.entities,
         entityBatchSize,
+        uploadBatchSizeInBytes,
       );
 
       synchronizationJobContext.logger.debug(
@@ -328,6 +332,7 @@ export async function uploadGraphObjectData(
         'relationships',
         graphObjectData.relationships,
         relationshipsBatchSize,
+        uploadBatchSizeInBytes,
       );
 
       synchronizationJobContext.logger.debug(
@@ -545,8 +550,23 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   type: K,
   data: T[K][],
   uploadBatchSize?: number,
+  uploadBatchSizeInBytes?: number,
 ) {
-  const batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  let batches: T[K][][];
+  try {
+    if (uploadBatchSizeInBytes) {
+      batches = batchGraphObjectsBySizeInBytes(
+        data,
+        uploadBatchSizeInBytes,
+        logger,
+      );
+    } else {
+      batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+    }
+  } catch (error) {
+    logger.warn({ error }, 'Batching by size failed');
+    batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  }
   await pMap(
     batches,
     async (batch: T[K][]) => {
