@@ -9,7 +9,7 @@ and this project adheres to
 
 ## Unreleased
 
-## 9.11.0 - 2023-08-01
+## 9.11.1 - 2023-08-01
 
 - Introduce batchingBySize option.
 
