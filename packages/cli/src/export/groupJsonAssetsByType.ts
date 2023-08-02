@@ -18,8 +18,11 @@ export async function groupJsonAssetsByType({
     path.basename(path.dirname(p)),
   );
 
-  return Object.keys(assetJsonFilesByType).reduce((acc, key) => {
-    acc[key] = assetJsonFilesByType[key];
-    return acc;
-  }, {} as { [key: string]: string[] });
+  return Object.keys(assetJsonFilesByType).reduce(
+    (acc, key) => {
+      acc[key] = assetJsonFilesByType[key];
+      return acc;
+    },
+    {} as { [key: string]: string[] },
+  );
 }

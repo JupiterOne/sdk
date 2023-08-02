@@ -9,7 +9,8 @@ import { createIntegrationLogger } from '../../..';
 import { InstanceConfigurationData } from '../executeIntegration.test';
 
 export function createInstanceConfiguration<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   options?: Partial<InstanceConfigurationData<TIntegrationConfig>>,
 ): InstanceConfigurationData<TIntegrationConfig> {

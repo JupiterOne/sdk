@@ -1436,13 +1436,13 @@ of the support.jupiterone.io site.
 Old:
 
 ```ts
-getData: <T>(key: string) => Promise<T>;
+getData: <T,>(key: string) => Promise<T>;
 ```
 
 New:
 
 ```ts
-getData: <T>(key: string) => Promise<T | undefined>;
+getData: <T,>(key: string) => Promise<T | undefined>;
 ```
 
 ## 5.8.0 - 2021-02-26

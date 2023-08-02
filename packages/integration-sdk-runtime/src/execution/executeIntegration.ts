@@ -106,7 +106,8 @@ export async function executeIntegrationLocally(
  * Starts execution of an integration instance.
  */
 export async function executeIntegrationInstance<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   logger: IntegrationLogger,
   instance: IntegrationInstance<TIntegrationConfig>,
