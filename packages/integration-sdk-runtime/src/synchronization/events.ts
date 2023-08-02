@@ -22,7 +22,7 @@ export const createEventPublishingQueue = (
 
   return {
     enqueue(event: IntegrationEvent) {
-      return queue.add(async () => {
+      void queue.add(async () => {
         try {
           await apiClient.post(
             `/persister/synchronization/jobs/${job.id}/events`,
@@ -46,7 +46,7 @@ export const createEventPublishingQueue = (
         }
       });
     },
-    onIdle: () => queue.onIdle(),
+    onIdle: async () => queue.onIdle(),
   };
 };
 
@@ -55,11 +55,11 @@ export const createEventPublishingQueue = (
  */
 function createNoopEventPublishingQueue(): EventPublishingQueue {
   return {
-    enqueue: async (_event) => {
+    enqueue(_event) {
       // noop
     },
-    onIdle: async () => {
-      // noop
+    async onIdle() {
+      return Promise.resolve();
     },
   };
 }

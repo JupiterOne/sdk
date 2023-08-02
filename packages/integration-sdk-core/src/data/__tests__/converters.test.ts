@@ -199,7 +199,7 @@ describe('#parseTimePropertyValue', () => {
       1601942400000,
     );
     expect(parseTimePropertyValue(1601942400.99999, 'sec')).toBe(1601942400999);
-    expect(parseTimePropertyValue(1601942400.0083234234, 'sec')).toBe(
+    expect(parseTimePropertyValue(1601942400.0083234, 'sec')).toBe(
       1601942400008,
     );
     // Milliseconds
