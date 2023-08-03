@@ -47,7 +47,8 @@ export type AfterAddRelationshipHookFunction<
 
 export type LoadExecutionConfigFunction<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+  TExecutionConfig extends
+    IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = (options: { config: TInstanceConfig }) => TExecutionConfig;
 
 export type AfterExecutionFunction<TExecutionContext extends ExecutionContext> =

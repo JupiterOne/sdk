@@ -175,11 +175,14 @@ export function createStepJobState({
       });
     }
 
-    await graphObjectStore.addEntities(stepId, entities, async (entities) =>
-      uploader?.enqueue({
-        entities,
-        relationships: [],
-      }),
+    await graphObjectStore.addEntities(
+      stepId,
+      entities,
+      async (entities) =>
+        uploader?.enqueue({
+          entities,
+          relationships: [],
+        }),
     );
 
     if (afterAddEntity) {
