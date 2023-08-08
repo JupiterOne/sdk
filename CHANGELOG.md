@@ -9,6 +9,15 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.0.0 - 2023-08-03
+
+- Bump TypeScript, ESLint, and Prettier to next major versions. Integration
+  projects may encounter breaking changes when they adopt these new versions.
+  For example, Prettier changed some default formatting. To fix the Prettier
+  formatting, you may run the following command:
+
+  `yarn:format` or `prettier --write \"**/*.{ts,js,json,css,md,yml}\"`
+
 ## 9.11.1 - 2023-08-01
 
 - Introduce batchingBySize option.
