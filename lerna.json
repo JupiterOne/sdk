@@ -4,6 +4,5 @@
     "packages/integration-sdk-*",
     "packages/cli"
   ],
-  "useWorkspaces": true,
   "version": "9.11.1"
 }
