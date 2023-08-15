@@ -194,7 +194,7 @@ export class IntegrationLogger
   }
 
   /**
-   * Answers `true` when the err has been reported to the logger instance
+   * Answers `true` when the error has been reported to the logger instance
    * through these functions:
    *
    * * warn(err, ...)
@@ -366,11 +366,17 @@ export class IntegrationLogger
 
   stepFailure(step: StepMetadata, err: Error) {
     const eventName = 'step_failure';
-    const { errorId, description } = createErrorEventDescription(
+    const { errorId, errorCode, description } = createErrorEventDescription(
       err,
       `Step "${step.name}" failed to complete due to error.`,
     );
-    this.handleFailure({ eventName, errorId, err, description });
+    this.handleFailure({
+      eventName,
+      errorId,
+      eventCode: errorCode,
+      err,
+      description,
+    });
   }
 
   synchronizationUploadStart(job: SynchronizationJob) {
@@ -399,20 +405,27 @@ export class IntegrationLogger
 
   validationFailure(err: Error) {
     const eventName = 'validation_failure';
-    const { errorId, description } = createErrorEventDescription(
+    const { errorId, errorCode, description } = createErrorEventDescription(
       err,
       `Error occurred while validating integration configuration.`,
     );
-    this.handleFailure({ eventName, errorId, err, description });
+    this.handleFailure({
+      eventName,
+      errorId,
+      eventCode: errorCode,
+      err,
+      description,
+    });
   }
 
   private handleFailure(options: {
     eventName: 'validation_failure' | 'step_failure';
     errorId: string;
+    eventCode: string;
     err: Error;
     description: string;
   }) {
-    const { eventName, errorId, err, description } = options;
+    const { eventName, errorId, eventCode, err, description } = options;
 
     // If there is a `code` property on the `Error`, we should include this
     // in our log. This is helpful for when we receive an HTTP response error
@@ -429,6 +442,7 @@ export class IntegrationLogger
     this.publishEvent({
       name: eventName,
       description,
+      eventCode,
       level: PublishEventLevel.Error,
     });
   }
@@ -529,6 +543,7 @@ export function createErrorEventDescription(
 
   return {
     errorId,
+    errorCode,
     description: `${message} (${errorDetails})`,
   };
 }
