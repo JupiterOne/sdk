@@ -64,7 +64,7 @@ interface GraphObjectIndexMetadataMap {
  * TODO: Write this comment to explain why the thing is the way it is
  */
 function integrationStepsToGraphObjectIndexMetadataMap(
-  integrationSteps: IntegrationStep[]
+  integrationSteps: IntegrationStep[],
 ): Map<string, GraphObjectIndexMetadataMap> {
   const stepIdToGraphObjectIndexMetadataMap = new Map<
     string,
@@ -81,7 +81,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
       if (entityMetadata.indexMetadata) {
         metadataMap.entities.set(
           entityMetadata._type,
-          entityMetadata.indexMetadata
+          entityMetadata.indexMetadata,
         );
       }
     }
@@ -90,7 +90,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
       if (relationshipMetadata.indexMetadata) {
         metadataMap.relationships.set(
           relationshipMetadata._type,
-          relationshipMetadata.indexMetadata
+          relationshipMetadata.indexMetadata,
         );
       }
     }
@@ -149,7 +149,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async addEntities(
     stepId: string,
     newEntities: Entity[],
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
     await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
@@ -164,7 +164,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async addRelationships(
     stepId: string,
     newRelationships: Relationship[],
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
     await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
@@ -192,7 +192,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     if (!entityLocationOnDisk) return;
 
     const filePath = getRootStorageAbsolutePath(
-      entityLocationOnDisk.graphDataPath
+      entityLocationOnDisk.graphDataPath,
     );
     const { entities } = await readGraphObjectFile<FlushedEntityData>({
       filePath,
@@ -202,7 +202,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<T>
+    iteratee: GraphObjectIteratee<T>,
   ) {
     await this.localGraphObjectStore.iterateEntities(filter, iteratee);
 
@@ -214,7 +214,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<T>
+    iteratee: GraphObjectIteratee<T>,
   ) {
     await this.localGraphObjectStore.iterateRelationships(filter, iteratee);
 
@@ -226,7 +226,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async flush(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
     await Promise.all([
       this.flushEntitiesToDisk(onEntitiesFlushed),
@@ -235,7 +235,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   }
 
   async flushEntitiesToDisk(
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
     await this.lockOperation(() =>
       pMap(
@@ -276,7 +276,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
                     });
                   }
                 }
-              })
+              }),
             );
           }
 
@@ -285,13 +285,13 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           if (onEntitiesFlushed) {
             await onEntitiesFlushed(entities);
           }
-        }
-      )
+        },
+      ),
     );
   }
 
   async flushRelationshipsToDisk(
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
     await this.lockOperation(() =>
       pMap(
@@ -320,7 +320,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
                   data,
                   pretty: this.prettifyFiles,
                 });
-              })
+              }),
             );
           }
 
@@ -329,8 +329,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           if (onRelationshipsFlushed) {
             await onRelationshipsFlushed(relationships);
           }
-        }
-      )
+        },
+      ),
     );
   }
 

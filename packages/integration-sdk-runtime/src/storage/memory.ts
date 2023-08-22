@@ -86,7 +86,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
       } else {
         this.entityTypeToKeysMap.set(
           entity._type,
-          new Map<string, boolean>([[entity._key, true]])
+          new Map<string, boolean>([[entity._key, true]]),
         );
       }
     }
@@ -98,7 +98,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
   addRelationships(
     stepId: string,
-    newRelationships: Relationship[]
+    newRelationships: Relationship[],
   ): Promise<void> {
     for (const relationship of newRelationships) {
       this.relationshipKeyToRelationshipMap.set(relationship._key, {
@@ -107,7 +107,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
       });
 
       const relationshipTypeKeysMap = this.relationshipTypeToKeysMap.get(
-        relationship._type
+        relationship._type,
       );
 
       if (relationshipTypeKeysMap) {
@@ -115,7 +115,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
       } else {
         this.relationshipTypeToKeysMap.set(
           relationship._type,
-          new Map<string, boolean>([[relationship._key, true]])
+          new Map<string, boolean>([[relationship._key, true]]),
         );
       }
     }
@@ -145,7 +145,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<T>
+    iteratee: GraphObjectIteratee<T>,
   ): Promise<void> {
     const entityTypeKeysMap = this.entityTypeToKeysMap.get(filter._type);
 
@@ -160,7 +160,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
         // NOTE: This should never happen. Our data structures should stay in
         // sync.
         throw new IntegrationMissingKeyError(
-          `Failed to find entity (_type=${filter._type}, _key=${_key})`
+          `Failed to find entity (_type=${filter._type}, _key=${_key})`,
         );
       }
 
@@ -170,10 +170,10 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<T>
+    iteratee: GraphObjectIteratee<T>,
   ): Promise<void> {
     const relationshipTypeKeysMap = this.relationshipTypeToKeysMap.get(
-      filter._type
+      filter._type,
     );
 
     if (!relationshipTypeKeysMap) {
@@ -187,7 +187,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
         // NOTE: This should never happen. Our data structures should stay in
         // sync.
         throw new IntegrationMissingKeyError(
-          `Failed to find relationship (_type=${filter._type}, _key=${_key})`
+          `Failed to find relationship (_type=${filter._type}, _key=${_key})`,
         );
       }
 
@@ -202,7 +202,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
    * two steps could be running in parallel and one of the steps may clear out
    * the maps while the other is still relying on it.
    */
-  flushEntities(entities: Entity[],stepId:string) {
+  flushEntities(entities: Entity[], stepId: string) {
     for (const entity of entities) {
       this.entityKeyToEntityMap.delete(entity._key);
       const entityTypeKeysMap = this.entityTypeToKeysMap.get(entity._type);
@@ -211,7 +211,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
         // NOTE: This should never happen. It's an indicator that there is a
         // bug in keeping our two maps in syc.
         throw new Error(
-          `Could not delete entity from type keys map (_key=${entity._key}, _type=${entity._type})`
+          `Could not delete entity from type keys map (_key=${entity._key}, _type=${entity._type})`,
         );
       }
 
@@ -227,18 +227,18 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
    * two steps could be running in parallel and one of the steps may clear out
    * the maps while the other is still relying on it.
    */
-  flushRelationships(relationships: Relationship[],stepId:string) {
+  flushRelationships(relationships: Relationship[], stepId: string) {
     for (const relationship of relationships) {
       this.relationshipKeyToRelationshipMap.delete(relationship._key);
       const relationshipTypeKeysMap = this.relationshipTypeToKeysMap.get(
-        relationship._type
+        relationship._type,
       );
 
       if (!relationshipTypeKeysMap) {
         // NOTE: This should never happen. It's an indicator that there is a
         // bug in keeping our two maps in syc.
         throw new Error(
-          `Could not delete relationship from type keys map (_key=${relationship._key}, _type=${relationship._type})`
+          `Could not delete relationship from type keys map (_key=${relationship._key}, _type=${relationship._type})`,
         );
       }
 
@@ -310,14 +310,14 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   getTotalEntitySizeInBytes(): number {
     return Object.values(this.entitySizeInBytes).reduce(
       (partialSum, stepBytes) => partialSum + stepBytes,
-      0
+      0,
     );
   }
 
   getTotalRelationshipSizeInBytes(): number {
     return Object.values(this.relationshipSizeInBytes).reduce(
       (partialSum, stepBytes) => partialSum + stepBytes,
-      0
+      0,
     );
   }
 }

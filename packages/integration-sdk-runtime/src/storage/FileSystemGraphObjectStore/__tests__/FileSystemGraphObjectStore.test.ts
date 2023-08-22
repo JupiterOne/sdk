@@ -34,7 +34,7 @@ import { getSizeOfObject } from '../../../synchronization/batchBySize';
 jest.mock('fs');
 
 async function getStorageDirectoryDataForStep(
-  stepId: string
+  stepId: string,
 ): Promise<FlushedGraphObjectData> {
   const accumulatedWrittenStepData: FlushedGraphObjectData = {
     entities: [],
@@ -46,14 +46,14 @@ async function getStorageDirectoryDataForStep(
       getRootStorageDirectory(),
       'graph',
       stepId,
-      collectionType
+      collectionType,
     );
 
     let storageDirectoryPathDataFiles: string[];
 
     try {
       storageDirectoryPathDataFiles = await fs.readdir(
-        collectionStorageDirPath
+        collectionStorageDirPath,
       );
     } catch (err) {
       if (err.code === 'ENOENT') {
@@ -65,7 +65,10 @@ async function getStorageDirectoryDataForStep(
 
     for (const fileName of storageDirectoryPathDataFiles) {
       const writtenStepData = JSON.parse(
-        await fs.readFile(path.join(collectionStorageDirPath, fileName), 'utf8')
+        await fs.readFile(
+          path.join(collectionStorageDirPath, fileName),
+          'utf8',
+        ),
       );
 
       if (writtenStepData.entities) {
@@ -76,7 +79,7 @@ async function getStorageDirectoryDataForStep(
       if (writtenStepData.relationships) {
         accumulatedWrittenStepData.relationships =
           accumulatedWrittenStepData.relationships.concat(
-            writtenStepData.relationships
+            writtenStepData.relationships,
           );
       }
     }
@@ -102,7 +105,7 @@ describe('flushEntitiesToDisk', () => {
       getRootStorageDirectory(),
       'graph',
       storageDirectoryPath,
-      'entities'
+      'entities',
     );
 
     const storageDirectoryPathDataFiles = await fs.readdir(entitiesDirectory);
@@ -110,7 +113,7 @@ describe('flushEntitiesToDisk', () => {
 
     const writtenStepData = await fs.readFile(
       path.join(entitiesDirectory, storageDirectoryPathDataFiles[0]),
-      'utf8'
+      'utf8',
     );
     expect(JSON.parse(writtenStepData)).toEqual({ entities });
 
@@ -119,7 +122,7 @@ describe('flushEntitiesToDisk', () => {
       'index',
       'entities',
       entityType,
-      storageDirectoryPathDataFiles[0]
+      storageDirectoryPathDataFiles[0],
     );
 
     const stats = await fs.lstat(expectedIndexFilePath);
@@ -139,7 +142,7 @@ describe('flushEntitiesToDisk', () => {
 
     const entityType = uuid();
     const entities = times(numOfGraphObjects, () =>
-      createTestEntity({ _type: entityType })
+      createTestEntity({ _type: entityType }),
     );
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferSizeInBytes: getSizeOfObject(entities),
@@ -151,13 +154,13 @@ describe('flushEntitiesToDisk', () => {
       getRootStorageDirectory(),
       'graph',
       storageDirectoryPath,
-      'entities'
+      'entities',
     );
 
     const storageDirectoryPathDataFiles = await fs.readdir(entitiesDirectory);
 
     const numOfExpectedFiles = Math.ceil(
-      numOfGraphObjects / DEFAULT_GRAPH_OBJECT_FILE_SIZE
+      numOfGraphObjects / DEFAULT_GRAPH_OBJECT_FILE_SIZE,
     );
 
     expect(storageDirectoryPathDataFiles).toHaveLength(numOfExpectedFiles);
@@ -166,7 +169,7 @@ describe('flushEntitiesToDisk', () => {
       const entityDataFilePath = path.join(entitiesDirectory, file);
       const writtenData = await fs.readFile(entityDataFilePath, 'utf-8');
       expect(JSON.parse(writtenData).entities.length).toBeLessThanOrEqual(
-        DEFAULT_GRAPH_OBJECT_FILE_SIZE
+        DEFAULT_GRAPH_OBJECT_FILE_SIZE,
       );
     }
   });
@@ -177,7 +180,7 @@ describe('flushRelationshipsToDisk', () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
     const relationshipType = uuid();
     const relationships = times(25, () =>
-      createTestRelationship({ _type: relationshipType })
+      createTestRelationship({ _type: relationshipType }),
     );
     await store.addRelationships(storageDirectoryPath, relationships);
 
@@ -187,17 +190,17 @@ describe('flushRelationshipsToDisk', () => {
       getRootStorageDirectory(),
       'graph',
       storageDirectoryPath,
-      'relationships'
+      'relationships',
     );
 
     const storageDirectoryPathDataFiles = await fs.readdir(
-      relationshipsDirectory
+      relationshipsDirectory,
     );
     expect(storageDirectoryPathDataFiles).toHaveLength(1);
 
     const writtenData = await fs.readFile(
       `${relationshipsDirectory}/${storageDirectoryPathDataFiles[0]}`,
-      'utf8'
+      'utf8',
     );
     expect(JSON.parse(writtenData)).toEqual({ relationships });
 
@@ -206,7 +209,7 @@ describe('flushRelationshipsToDisk', () => {
       'index',
       'relationships',
       relationshipType,
-      storageDirectoryPathDataFiles[0]
+      storageDirectoryPathDataFiles[0],
     );
 
     const stats = await fs.lstat(expectedIndexFilePath);
@@ -225,7 +228,7 @@ describe('flushRelationshipsToDisk', () => {
 
     const relationshipType = uuid();
     const relationships = times(numOfGraphObjects, () =>
-      createTestRelationship({ _type: relationshipType })
+      createTestRelationship({ _type: relationshipType }),
     );
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferSizeInBytes: getSizeOfObject(relationships),
@@ -237,15 +240,15 @@ describe('flushRelationshipsToDisk', () => {
       getRootStorageDirectory(),
       'graph',
       storageDirectoryPath,
-      'relationships'
+      'relationships',
     );
 
     const storageDirectoryPathDataFiles = await fs.readdir(
-      relationshipsDirectory
+      relationshipsDirectory,
     );
 
     const numOfExpectedFiles = Math.ceil(
-      numOfGraphObjects / DEFAULT_GRAPH_OBJECT_FILE_SIZE
+      numOfGraphObjects / DEFAULT_GRAPH_OBJECT_FILE_SIZE,
     );
 
     expect(storageDirectoryPathDataFiles).toHaveLength(numOfExpectedFiles);
@@ -254,7 +257,7 @@ describe('flushRelationshipsToDisk', () => {
       const relationshipDataFilePath = path.join(relationshipsDirectory, file);
       const writtenData = await fs.readFile(relationshipDataFilePath, 'utf-8');
       expect(JSON.parse(writtenData).relationships.length).toBeLessThanOrEqual(
-        DEFAULT_GRAPH_OBJECT_FILE_SIZE
+        DEFAULT_GRAPH_OBJECT_FILE_SIZE,
       );
     }
   });
@@ -281,7 +284,7 @@ describe('flush', () => {
 describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
     const entities = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
-      createTestEntity()
+      createTestEntity(),
     );
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferSizeInBytes: getSizeOfObject(entities) + 1,
@@ -330,12 +333,11 @@ describe('addEntities', () => {
 
 describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
-
     const relationships = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
-      createTestRelationship()
+      createTestRelationship(),
     );
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: getSizeOfObject(relationships) +1
+      graphObjectBufferSizeInBytes: getSizeOfObject(relationships) + 1,
     });
     const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
     await store.addRelationships(storageDirectoryPath, relationships);
@@ -400,7 +402,7 @@ describe('findEntity', () => {
 
     const localGraphObjectStoreFindEntitySpy = jest.spyOn(
       (store as any).localGraphObjectStore,
-      'findEntity'
+      'findEntity',
     );
 
     const _type = uuid();
@@ -418,7 +420,7 @@ describe('findEntity', () => {
 
     expect(localGraphObjectStoreFindEntitySpy).toHaveBeenCalledTimes(1);
     expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
-      Promise.resolve(matchingEntity)
+      Promise.resolve(matchingEntity),
     );
   });
 
@@ -427,11 +429,11 @@ describe('findEntity', () => {
 
     const localGraphObjectStoreFindEntitySpy = jest.spyOn(
       (store as any).localGraphObjectStore,
-      'findEntity'
+      'findEntity',
     );
     const entityOnDiskLocationMapGetSpy = jest.spyOn(
       (store as any).entityOnDiskLocationMap,
-      'get'
+      'get',
     );
 
     const _type = uuid();
@@ -448,7 +450,7 @@ describe('findEntity', () => {
 
     await expect(store.findEntity(_key)).resolves.toEqual(matchingEntity);
     expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
-      Promise.resolve(undefined)
+      Promise.resolve(undefined),
     );
     expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith({
       graphDataPath: expect.any(String),
@@ -485,11 +487,11 @@ describe('findEntity', () => {
 
     const localGraphObjectStoreFindEntitySpy = jest.spyOn(
       (store as any).localGraphObjectStore,
-      'findEntity'
+      'findEntity',
     );
     const entityOnDiskLocationMapGetSpy = jest.spyOn(
       (store as any).entityOnDiskLocationMap,
-      'get'
+      'get',
     );
 
     const nonMatchingEntities = times(25, () => createTestEntity({ _type }));
@@ -500,7 +502,7 @@ describe('findEntity', () => {
 
     await expect(store.findEntity(_key)).resolves.toBeUndefined();
     expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
-      Promise.resolve(undefined)
+      Promise.resolve(undefined),
     );
     expect(entityOnDiskLocationMapGetSpy).toHaveLastReturnedWith(undefined);
   });
@@ -513,10 +515,10 @@ describe('iterateEntities', () => {
     const matchingType = uuid();
 
     const nonMatchingEntities = times(25, () =>
-      createTestEntity({ _type: uuid() })
+      createTestEntity({ _type: uuid() }),
     );
     const matchingEntities = times(25, () =>
-      createTestEntity({ _type: matchingType })
+      createTestEntity({ _type: matchingType }),
     );
 
     await store.addEntities(storageDirectoryPath, [
@@ -533,7 +535,7 @@ describe('iterateEntities', () => {
     const collectEntity = (e: Entity) => {
       if (collectedEntities.has(e._key)) {
         throw new Error(
-          `duplicate entity _key found in iterateEntities (_key=${e._key})`
+          `duplicate entity _key found in iterateEntities (_key=${e._key})`,
         );
       }
       collectedEntities.set(e._key, e);
@@ -554,7 +556,7 @@ describe('iterateEntities', () => {
     type TestEntity = Entity & { randomField: string };
 
     const entities = times(25, () =>
-      createTestEntity({ _type: entityType, randomField: 'field' })
+      createTestEntity({ _type: entityType, randomField: 'field' }),
     );
 
     await store.addEntities(storageDirectoryPath, entities);
@@ -566,7 +568,7 @@ describe('iterateEntities', () => {
 
     await store.iterateEntities<TestEntity>(
       { _type: entityType },
-      collectEntity
+      collectEntity,
     );
 
     expect(collectedEntities).toEqual(
@@ -574,7 +576,7 @@ describe('iterateEntities', () => {
         expect.objectContaining({
           randomField: 'field',
         }),
-      ])
+      ]),
     );
   });
 });
@@ -586,10 +588,10 @@ describe('iterateRelationships', () => {
     const matchingType = uuid();
 
     const nonMatchingRelationships = times(25, () =>
-      createTestRelationship({ _type: uuid() })
+      createTestRelationship({ _type: uuid() }),
     );
     const matchingRelationships = times(25, () =>
-      createTestRelationship({ _type: matchingType })
+      createTestRelationship({ _type: matchingType }),
     );
 
     await store.addRelationships(storageDirectoryPath, [
@@ -607,7 +609,7 @@ describe('iterateRelationships', () => {
     const collectRelationship = (r: Relationship) => {
       if (collectedRelationships.has(r._key)) {
         throw new Error(
-          `duplicate relationship_key found in iterateRelationships (_key=${r._key})`
+          `duplicate relationship_key found in iterateRelationships (_key=${r._key})`,
         );
       }
       collectedRelationships.set(r._key, r);
@@ -615,7 +617,7 @@ describe('iterateRelationships', () => {
 
     await store.iterateRelationships(
       { _type: matchingType },
-      collectRelationship
+      collectRelationship,
     );
     expect(Array.from(collectedRelationships.values())).toEqual([
       bufferedRelationship,
@@ -631,7 +633,7 @@ describe('iterateRelationships', () => {
     type TestRelationship = Relationship & { randomField: string };
 
     const relationships = times(25, () =>
-      createTestRelationship({ _type: relationshipType, randomField: 'field' })
+      createTestRelationship({ _type: relationshipType, randomField: 'field' }),
     );
 
     await store.addRelationships(storageDirectoryPath, relationships);
@@ -643,7 +645,7 @@ describe('iterateRelationships', () => {
 
     await store.iterateRelationships<TestRelationship>(
       { _type: relationshipType },
-      collectRelationship
+      collectRelationship,
     );
 
     expect(collectedRelationships).toEqual(
@@ -651,7 +653,7 @@ describe('iterateRelationships', () => {
         expect.objectContaining({
           randomField: 'field',
         }),
-      ])
+      ]),
     );
   });
 });
@@ -684,7 +686,7 @@ describe('flush callbacks', () => {
         addEntitiesFlushCalledTimes++;
         flushedEntitiesCollected = flushedEntitiesCollected.concat(entities);
         return Promise.resolve();
-      }
+      },
     );
 
     expect(addEntitiesFlushCalledTimes).toEqual(1);
@@ -712,7 +714,7 @@ describe('flush callbacks', () => {
         flushedRelationshipsCollected =
           flushedRelationshipsCollected.concat(relationships);
         return Promise.resolve();
-      }
+      },
     );
 
     await store.addRelationships(
@@ -724,7 +726,7 @@ describe('flush callbacks', () => {
         flushedRelationshipsCollected =
           flushedRelationshipsCollected.concat(relationships);
         return Promise.resolve();
-      }
+      },
     );
 
     expect(addRelationshipsFlushCalledTimes).toEqual(1);
@@ -847,13 +849,13 @@ describe('flush callbacks', () => {
     expect(flushedEntitiesCollected).toEqual(entities);
 
     const allWrittenStepData = await getStorageDirectoryDataForStep(
-      integrationStepId
+      integrationStepId,
     );
     expect(allWrittenStepData.entities.length).toEqual(3);
     expect(allWrittenStepData.relationships.length).toEqual(0);
 
     expect(sortBy(allWrittenStepData.entities, '_key')).toEqual(
-      sortBy([entities[0], entities[1], entities[3]], '_key')
+      sortBy([entities[0], entities[1], entities[3]], '_key'),
     );
   });
 
@@ -940,7 +942,7 @@ describe('flush callbacks', () => {
     await store.addRelationships(
       integrationStepId,
       relationships,
-      onRelationshipsFlushed
+      onRelationshipsFlushed,
     );
 
     expect(addRelationshipsFlushedCalledTimes).toEqual(0);
@@ -954,13 +956,13 @@ describe('flush callbacks', () => {
     expect(flushedRelationshipsCollected).toEqual(relationships);
 
     const allWrittenStepData = await getStorageDirectoryDataForStep(
-      integrationStepId
+      integrationStepId,
     );
     expect(allWrittenStepData.relationships.length).toEqual(3);
     expect(allWrittenStepData.entities.length).toEqual(0);
 
     expect(sortBy(allWrittenStepData.relationships, '_key')).toEqual(
-      sortBy([relationships[0], relationships[1], relationships[3]], '_key')
+      sortBy([relationships[0], relationships[1], relationships[3]], '_key'),
     );
   });
 
@@ -984,7 +986,7 @@ describe('flush callbacks', () => {
     await store.addRelationships(
       storageDirectoryPath,
       relationships,
-      onRelationshipsFlushed
+      onRelationshipsFlushed,
     );
 
     expect(addRelationshipsFlushedCalledTimes).toEqual(0);
@@ -1026,7 +1028,7 @@ describe('flush callbacks', () => {
     await store.addRelationships(
       storageDirectoryPath,
       relationships,
-      onRelationshipsFlushed
+      onRelationshipsFlushed,
     );
     await store.addEntities(storageDirectoryPath, entities, onEntitiesFlushed);
     await store.flush(onEntitiesFlushed, onRelationshipsFlushed);
