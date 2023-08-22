@@ -18,31 +18,26 @@ import {
   iterateRelationshipTypeIndex,
   readGraphObjectFile,
 } from './indices';
-import { InMemoryGraphObjectStore } from '../memory';
 import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
 import { chunk } from 'lodash';
+import { InMemoryGraphObjectStore } from '../memory';
 
-export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
+export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 
+export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 25_000_000;
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
 export interface FileSystemGraphObjectStoreParams {
   integrationSteps?: IntegrationStep[];
-
   /**
-   * The maximum number of graph objects that this store can buffer in memory
-   * before writing to disk. Machines with more memory should consider bumping
-   * this value up.
-   *
-   * Default: 500
+   * The maximum size in bytes of entities/relationships stored in memory at one time.
    */
-  graphObjectBufferThreshold?: number;
-
+  graphObjectBufferSizeInBytes?: number;
   /**
    * The maximum number of entities/relationships stored in each file.
    */
@@ -69,7 +64,7 @@ interface GraphObjectIndexMetadataMap {
  * TODO: Write this comment to explain why the thing is the way it is
  */
 function integrationStepsToGraphObjectIndexMetadataMap(
-  integrationSteps: IntegrationStep[],
+  integrationSteps: IntegrationStep[]
 ): Map<string, GraphObjectIndexMetadataMap> {
   const stepIdToGraphObjectIndexMetadataMap = new Map<
     string,
@@ -86,7 +81,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
       if (entityMetadata.indexMetadata) {
         metadataMap.entities.set(
           entityMetadata._type,
-          entityMetadata.indexMetadata,
+          entityMetadata.indexMetadata
         );
       }
     }
@@ -95,7 +90,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
       if (relationshipMetadata.indexMetadata) {
         metadataMap.relationships.set(
           relationshipMetadata._type,
-          relationshipMetadata.indexMetadata,
+          relationshipMetadata.indexMetadata
         );
       }
     }
@@ -124,8 +119,8 @@ const ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE = 2000000;
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
-  private readonly graphObjectBufferThreshold: number;
   private readonly graphObjectFileSize: number;
+  private readonly graphObjectBufferSizeInBytes: number;
   private readonly prettifyFiles: boolean;
   private readonly stepIdToGraphObjectIndexMetadataMap: Map<
     string,
@@ -138,12 +133,11 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
-    this.graphObjectBufferThreshold =
-      params?.graphObjectBufferThreshold ||
-      DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
     this.graphObjectFileSize =
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
-
+    this.graphObjectBufferSizeInBytes =
+      params?.graphObjectBufferSizeInBytes ||
+      DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES;
     this.prettifyFiles = params?.prettifyFiles || false;
 
     if (params?.integrationSteps) {
@@ -155,13 +149,13 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async addEntities(
     stepId: string,
     newEntities: Entity[],
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>
   ) {
     await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
     if (
-      this.localGraphObjectStore.getTotalEntityItemCount() >=
-      this.graphObjectBufferThreshold
+      this.localGraphObjectStore.getTotalEntitySizeInBytes() >=
+      this.graphObjectBufferSizeInBytes
     ) {
       await this.flushEntitiesToDisk(onEntitiesFlushed);
     }
@@ -170,13 +164,13 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async addRelationships(
     stepId: string,
     newRelationships: Relationship[],
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>
   ) {
     await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
     if (
-      this.localGraphObjectStore.getTotalRelationshipItemCount() >=
-      this.graphObjectBufferThreshold
+      this.localGraphObjectStore.getTotalRelationshipSizeInBytes() >=
+      this.graphObjectBufferSizeInBytes
     ) {
       await this.flushRelationshipsToDisk(onRelationshipsFlushed);
     }
@@ -198,7 +192,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     if (!entityLocationOnDisk) return;
 
     const filePath = getRootStorageAbsolutePath(
-      entityLocationOnDisk.graphDataPath,
+      entityLocationOnDisk.graphDataPath
     );
     const { entities } = await readGraphObjectFile<FlushedEntityData>({
       filePath,
@@ -208,7 +202,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<T>,
+    iteratee: GraphObjectIteratee<T>
   ) {
     await this.localGraphObjectStore.iterateEntities(filter, iteratee);
 
@@ -220,7 +214,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
-    iteratee: GraphObjectIteratee<T>,
+    iteratee: GraphObjectIteratee<T>
   ) {
     await this.localGraphObjectStore.iterateRelationships(filter, iteratee);
 
@@ -232,7 +226,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   async flush(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>
   ) {
     await Promise.all([
       this.flushEntitiesToDisk(onEntitiesFlushed),
@@ -241,7 +235,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   }
 
   async flushEntitiesToDisk(
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>
   ) {
     await this.lockOperation(() =>
       pMap(
@@ -282,22 +276,22 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
                     });
                   }
                 }
-              }),
+              })
             );
           }
 
-          this.localGraphObjectStore.flushEntities(entities);
+          this.localGraphObjectStore.flushEntities(entities, stepId);
 
           if (onEntitiesFlushed) {
             await onEntitiesFlushed(entities);
           }
-        },
-      ),
+        }
+      )
     );
   }
 
   async flushRelationshipsToDisk(
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>
   ) {
     await this.lockOperation(() =>
       pMap(
@@ -326,17 +320,17 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
                   data,
                   pretty: this.prettifyFiles,
                 });
-              }),
+              })
             );
           }
 
-          this.localGraphObjectStore.flushRelationships(relationships);
+          this.localGraphObjectStore.flushRelationships(relationships, stepId);
 
           if (onRelationshipsFlushed) {
             await onRelationshipsFlushed(relationships);
           }
-        },
-      ),
+        }
+      )
     );
   }
 
