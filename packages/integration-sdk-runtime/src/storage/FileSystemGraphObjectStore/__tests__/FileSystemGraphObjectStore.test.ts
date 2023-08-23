@@ -9,7 +9,6 @@ import { getRootStorageDirectory } from '../../../fileSystem';
 
 import {
   FileSystemGraphObjectStore,
-  DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD,
   FileSystemGraphObjectStoreParams,
   DEFAULT_GRAPH_OBJECT_FILE_SIZE,
 } from '../FileSystemGraphObjectStore';
@@ -283,9 +282,7 @@ describe('flush', () => {
 
 describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
-    const entities = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
-      createTestEntity(),
-    );
+    const entities = times(250, () => createTestEntity());
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferSizeInBytes: getSizeOfObject(entities) + 1,
     });
@@ -333,9 +330,7 @@ describe('addEntities', () => {
 
 describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
-    const relationships = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
-      createTestRelationship(),
-    );
+    const relationships = times(250, () => createTestRelationship());
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferSizeInBytes: getSizeOfObject(relationships) + 1,
     });

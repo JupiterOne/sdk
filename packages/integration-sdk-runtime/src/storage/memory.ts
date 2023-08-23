@@ -217,7 +217,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
       entityTypeKeysMap.delete(entity._key);
     }
-    this.entitySizeInBytes[stepId] = 0;
+    delete this.entitySizeInBytes[stepId];
   }
 
   /**
@@ -244,7 +244,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
       relationshipTypeKeysMap.delete(relationship._key);
     }
-    this.relationshipSizeInBytes[stepId] = 0;
+    delete this.relationshipSizeInBytes[stepId];
   }
 
   collectEntities(): Entity[] {

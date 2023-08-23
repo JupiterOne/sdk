@@ -21,13 +21,13 @@ import {
 import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
-import { chunk } from 'lodash';
+import { chunk, min } from 'lodash';
 import { InMemoryGraphObjectStore } from '../memory';
 
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
-export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 
-export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 25_000_000;
+export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 5_000_000;
+export const MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 1_000_000_000;
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
@@ -39,6 +39,16 @@ export interface FileSystemGraphObjectStoreParams {
    * default: 25_000_000
    */
   graphObjectBufferSizeInBytes?: number;
+  /**
+   * The maximum number of graph objects that this store can buffer in memory
+   * before writing to disk. Machines with more memory should consider bumping
+   * this value up.
+   *
+   * Default: 500
+   * The maximum size in bytes of entities/relationships stored in memory at one time.
+   * @deprecated this argument is no longer used. Please use `graphObjectBufferSizeInBytes` instead.
+   */
+  graphObjectBufferThreshold?: number;
   /**
    * The maximum number of entities/relationships stored in each file.
    */
@@ -136,9 +146,12 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
     this.graphObjectFileSize =
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
-    this.graphObjectBufferSizeInBytes =
+
+    this.graphObjectBufferSizeInBytes = min([
       params?.graphObjectBufferSizeInBytes ||
-      DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES;
+        DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
+      MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
+    ])!;
     this.prettifyFiles = params?.prettifyFiles || false;
 
     if (params?.integrationSteps) {
