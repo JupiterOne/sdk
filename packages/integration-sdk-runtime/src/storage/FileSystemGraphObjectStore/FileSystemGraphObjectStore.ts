@@ -131,7 +131,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
   private readonly graphObjectFileSize: number;
-  private readonly graphObjectBufferSizeInBytes: number;
+  private readonly graphObjectBufferThresholdInBytes: number;
   private readonly prettifyFiles: boolean;
   private readonly stepIdToGraphObjectIndexMetadataMap: Map<
     string,
@@ -147,7 +147,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.graphObjectFileSize =
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
 
-    this.graphObjectBufferSizeInBytes = min([
+    this.graphObjectBufferThresholdInBytes = min([
       params?.graphObjectBufferThresholdInBytes ||
         DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
       MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
@@ -169,7 +169,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
     if (
       this.localGraphObjectStore.getTotalEntitySizeInBytes() >=
-      this.graphObjectBufferSizeInBytes
+      this.graphObjectBufferThresholdInBytes
     ) {
       await this.flushEntitiesToDisk(onEntitiesFlushed);
     }
@@ -184,7 +184,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
     if (
       this.localGraphObjectStore.getTotalRelationshipSizeInBytes() >=
-      this.graphObjectBufferSizeInBytes
+      this.graphObjectBufferThresholdInBytes
     ) {
       await this.flushRelationshipsToDisk(onRelationshipsFlushed);
     }
