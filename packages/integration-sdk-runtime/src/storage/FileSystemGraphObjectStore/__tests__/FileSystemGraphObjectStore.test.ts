@@ -144,7 +144,7 @@ describe('flushEntitiesToDisk', () => {
       createTestEntity({ _type: entityType }),
     );
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: getSizeOfObject(entities),
+      graphObjectBufferThresholdInBytes: getSizeOfObject(entities),
     });
     await store.addEntities(storageDirectoryPath, entities);
     await store.flushEntitiesToDisk();
@@ -230,7 +230,7 @@ describe('flushRelationshipsToDisk', () => {
       createTestRelationship({ _type: relationshipType }),
     );
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: getSizeOfObject(relationships),
+      graphObjectBufferThresholdInBytes: getSizeOfObject(relationships),
     });
     await store.addRelationships(storageDirectoryPath, relationships);
     await store.flushEntitiesToDisk();
@@ -284,7 +284,7 @@ describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
     const entities = times(250, () => createTestEntity());
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: getSizeOfObject(entities) + 1,
+      graphObjectBufferThresholdInBytes: getSizeOfObject(entities) + 1,
     });
     const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
     await store.addEntities(storageDirectoryPath, entities);
@@ -332,7 +332,7 @@ describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
     const relationships = times(250, () => createTestRelationship());
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: getSizeOfObject(relationships) + 1,
+      graphObjectBufferThresholdInBytes: getSizeOfObject(relationships) + 1,
     });
     const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
     await store.addRelationships(storageDirectoryPath, relationships);
@@ -656,7 +656,7 @@ describe('iterateRelationships', () => {
 describe('flush callbacks', () => {
   test('#addEntity should call flush callback when buffer threshold reached', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: 400,
+      graphObjectBufferThresholdInBytes: 400,
     });
 
     let flushedEntitiesCollected: Entity[] = [];
@@ -690,7 +690,7 @@ describe('flush callbacks', () => {
 
   test('#addRelationships should call flush callback when buffer threshold reached', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: 400,
+      graphObjectBufferThresholdInBytes: 400,
     });
 
     let flushedRelationshipsCollected: Relationship[] = [];
@@ -730,7 +730,7 @@ describe('flush callbacks', () => {
 
   test('#flushEntitiesToDisk should call flush callback when flushEntitiesToDisk called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: 2000,
+      graphObjectBufferThresholdInBytes: 2000,
     });
 
     let flushedEntitiesCollected: Entity[] = [];
@@ -963,7 +963,7 @@ describe('flush callbacks', () => {
 
   test('#flushRelationshipsToDisk should call flush callback when flushRelationshipsToDisk called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: 3000,
+      graphObjectBufferThresholdInBytes: 3000,
     });
 
     let flushedRelationshipsCollected: Relationship[] = [];
@@ -995,7 +995,7 @@ describe('flush callbacks', () => {
 
   test('#flush should call both entity and relationship flush callbacks when flush called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferSizeInBytes: 3000,
+      graphObjectBufferThresholdInBytes: 3000,
     });
 
     let flushedRelationshipsCollected: Relationship[] = [];

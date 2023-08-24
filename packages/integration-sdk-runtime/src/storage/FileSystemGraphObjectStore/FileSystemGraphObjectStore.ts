@@ -27,6 +27,7 @@ import { InMemoryGraphObjectStore } from '../memory';
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 5_000_000;
+// no more than 10^9 bytes
 export const MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 1_000_000_000;
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
@@ -38,15 +39,14 @@ export interface FileSystemGraphObjectStoreParams {
    * The maximum size in bytes of entities/relationships stored in memory at one time.
    * default: 25_000_000
    */
-  graphObjectBufferSizeInBytes?: number;
+  graphObjectBufferThresholdInBytes?: number;
   /**
    * The maximum number of graph objects that this store can buffer in memory
    * before writing to disk. Machines with more memory should consider bumping
    * this value up.
    *
    * Default: 500
-   * The maximum size in bytes of entities/relationships stored in memory at one time.
-   * @deprecated this argument is no longer used. Please use `graphObjectBufferSizeInBytes` instead.
+   * @deprecated this argument is no longer used. Please use `graphObjectBufferThresholdInBytes` instead.
    */
   graphObjectBufferThreshold?: number;
   /**
@@ -148,7 +148,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
 
     this.graphObjectBufferSizeInBytes = min([
-      params?.graphObjectBufferSizeInBytes ||
+      params?.graphObjectBufferThresholdInBytes ||
         DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
       MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
     ])!;
