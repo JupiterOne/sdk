@@ -201,6 +201,8 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
    * steps have no interdependence. If we cleared it out, it's possible that
    * two steps could be running in parallel and one of the steps may clear out
    * the maps while the other is still relying on it.
+   * @remarks This should only be used to remove *ALL* the entities from a single step from the store
+   * @see {@link https://github.com/JupiterOne/sdk/pull/944#discussion_r1303284408}
    */
   flushEntities(entities: Entity[], stepId: string) {
     for (const entity of entities) {
@@ -226,6 +228,8 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
    * steps have no interdependence. If we cleared it out, it's possible that
    * two steps could be running in parallel and one of the steps may clear out
    * the maps while the other is still relying on it.
+   * @remarks This should only be used to remove *ALL* the relationships from a single step from the store
+   * @see {@link https://github.com/JupiterOne/sdk/pull/944#discussion_r1303284408}
    */
   flushRelationships(relationships: Relationship[], stepId: string) {
     for (const relationship of relationships) {
