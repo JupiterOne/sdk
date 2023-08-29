@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.1.0 - 2023-08-28
+
+- 'InMemoryGraphObjectStore' no longer stores a set amount of entities or
+  relationships, rather it works by measuring size in bytes of graph objects by
+  default.
+
 ## 10.0.0 - 2023-08-03
 
 - Bump TypeScript, ESLint, and Prettier to next major versions. Integration
