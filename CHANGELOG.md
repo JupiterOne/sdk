@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.2.0 - 2023-09-01
+
+- Allow user-defined `Lambda` class to be passed to Alpha in `createApiClient`
+
 ## 10.1.0 - 2023-08-28
 
 - 'InMemoryGraphObjectStore' no longer stores a set amount of entities or
