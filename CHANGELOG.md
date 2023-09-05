@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+- Add `--noPretty` option to cli to disable pretty printing of logs locally
+
 ## 10.2.0 - 2023-09-01
 
 - Allow user to override `AlphaOptions` in `createApiClient`
