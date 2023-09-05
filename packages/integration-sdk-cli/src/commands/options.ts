@@ -8,6 +8,10 @@ import {
 import { Command, Option, OptionValues } from 'commander';
 import path from 'path';
 
+export function addLoggingOptions(command: Command) {
+  return command.option('--noPretty', 'disable pretty logging', false);
+}
+
 export interface PathOptions {
   projectPath: string;
 }
