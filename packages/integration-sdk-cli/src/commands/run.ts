@@ -20,6 +20,7 @@ import { loadConfig } from '../config';
 import * as log from '../log';
 import {
   addApiClientOptionsToCommand,
+  addLoggingOptions,
   addPathOptionsToCommand,
   addSyncOptionsToCommand,
   configureRuntimeFilesystem,
@@ -37,6 +38,7 @@ export function run(): Command {
   addPathOptionsToCommand(command);
   addApiClientOptionsToCommand(command);
   addSyncOptionsToCommand(command);
+  addLoggingOptions(command);
 
   return command
     .description('collect and sync to upload entities and relationships')
@@ -56,7 +58,7 @@ export function run(): Command {
 
       let logger = createIntegrationLogger({
         name: 'local',
-        pretty: true,
+        pretty: !options.noPretty,
       });
 
       const synchronizationContext = await initiateSynchronization({
@@ -81,7 +83,7 @@ export function run(): Command {
       );
 
       const graphObjectStore = new FileSystemGraphObjectStore({
-        prettifyFiles: true,
+        prettifyFiles: !options.noPretty,
         integrationSteps: invocationConfig.integrationSteps,
       });
 

@@ -9,6 +9,7 @@ import {
 import * as log from '../log';
 import {
   addApiClientOptionsToCommand,
+  addLoggingOptions,
   addPathOptionsToCommand,
   addSyncOptionsToCommand,
   configureRuntimeFilesystem,
@@ -24,6 +25,7 @@ export function sync(): Command {
   addPathOptionsToCommand(command);
   addApiClientOptionsToCommand(command);
   addSyncOptionsToCommand(command);
+  addLoggingOptions(command);
 
   return command
     .description(
@@ -42,7 +44,7 @@ export function sync(): Command {
 
       const logger = createIntegrationLogger({
         name: 'local',
-        pretty: true,
+        pretty: !options.noPretty,
       });
 
       const syncOptions = getSyncOptions(actionCommand.opts());

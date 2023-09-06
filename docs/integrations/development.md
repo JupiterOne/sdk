@@ -1459,6 +1459,10 @@ ex: `j1-integration collect --step step-fetch-users --cache-path ./my-cache`
 
 Disables schema validation.
 
+###### Option `--noPretty`
+
+Disables pretty printing of logs and collected data.
+
 #### Command `j1-integration sync`
 
 Validates data collected by the `collect` command and uploads it to JupiterOne.
@@ -1557,6 +1561,10 @@ Cannot be used with the `--development` flag.
 
 ex:
 `yarn j1-integration sync --integrationInstanceId <integration instance id> --api-base-url <api base url>`
+
+###### Option `--noPretty`
+
+Disables pretty printing of logs.
 
 #### Command `j1-integration run`
 

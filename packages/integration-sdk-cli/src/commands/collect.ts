@@ -11,7 +11,11 @@ import {
 
 import { loadConfig } from '../config';
 import * as log from '../log';
-import { addPathOptionsToCommand, configureRuntimeFilesystem } from './options';
+import {
+  addLoggingOptions,
+  addPathOptionsToCommand,
+  configureRuntimeFilesystem,
+} from './options';
 
 // coercion function to collect multiple values for a flag
 const collector = (value: string, arr: string[]) => {
@@ -22,6 +26,7 @@ const collector = (value: string, arr: string[]) => {
 export function collect() {
   const command = createCommand('collect');
   addPathOptionsToCommand(command);
+  addLoggingOptions(command);
 
   return command
     .description('collect data and store entities and relationships to disk')
@@ -73,7 +78,7 @@ export function collect() {
       log.info('\nConfiguration loaded! Running integration...\n');
 
       const graphObjectStore = new FileSystemGraphObjectStore({
-        prettifyFiles: true,
+        prettifyFiles: !options.noPretty,
         integrationSteps: config.integrationSteps,
       });
 
@@ -89,6 +94,7 @@ export function collect() {
         {
           enableSchemaValidation,
           graphObjectStore,
+          pretty: !options.noPretty,
         },
       );
 
