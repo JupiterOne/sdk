@@ -37,7 +37,7 @@ export interface FileSystemGraphObjectStoreParams {
   integrationSteps?: IntegrationStep[];
   /**
    * The maximum size in bytes of entities/relationships stored in memory at one time.
-   * default: 25_000_000
+   * default: 5_000_000
    */
   graphObjectBufferThresholdInBytes?: number;
   /**

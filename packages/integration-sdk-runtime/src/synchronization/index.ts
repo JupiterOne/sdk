@@ -1,5 +1,4 @@
 import path from 'path';
-import chunk from 'lodash/chunk';
 import pMap from 'p-map';
 
 import {
@@ -31,6 +30,8 @@ export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
 export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
+
+export const DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES = 5_000_000;
 
 const UPLOAD_CONCURRENCY = 6;
 
@@ -552,21 +553,12 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   uploadBatchSize?: number,
   uploadBatchSizeInBytes?: number,
 ) {
-  let batches: T[K][][];
-  try {
-    if (uploadBatchSizeInBytes) {
-      batches = batchGraphObjectsBySizeInBytes(
-        data,
-        uploadBatchSizeInBytes,
-        logger,
-      );
-    } else {
-      batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
-    }
-  } catch (error) {
-    logger.warn({ error }, 'Batching by size failed');
-    batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
-  }
+  const batches: T[K][][] = batchGraphObjectsBySizeInBytes(
+    data,
+    uploadBatchSizeInBytes || DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
+    logger,
+  );
+
   await pMap(
     batches,
     async (batch: T[K][]) => {
