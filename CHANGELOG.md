@@ -9,6 +9,8 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.3.0 - 2023-09-07
+
 - Update `jest.js` config to remove deprecated option.
 - Add `--noPretty` option to cli to disable pretty printing of logs locally.
 
