@@ -9,6 +9,9 @@ and this project adheres to
 
 ## Unreleased
 
+- Use the same logger for all logs created via the `j1-integration run` command
+  to improve formatting consistency
+
 ## 10.3.0 - 2023-09-07
 
 - Update `jest.js` config to remove deprecated option.
