@@ -1,4 +1,5 @@
 import Logger from 'bunyan';
+import { inspect } from 'util';
 import { EventEmitter } from 'events';
 import { randomUUID as uuid } from 'crypto';
 
@@ -79,7 +80,17 @@ export function createLogger<
     name,
     level: (process.env.LOG_LEVEL || 'info') as Logger.LogLevel,
     serializers: {
-      err: Logger.stdSerializers.err,
+      err: function (err) {
+        if (!err || !err.stack) return err;
+        var obj = {
+          message: err.message,
+          name: err.name,
+          stack: inspect(err, false, 10),
+          code: err.code,
+          signal: err.signal,
+        };
+        return obj;
+      },
     },
   };
 
