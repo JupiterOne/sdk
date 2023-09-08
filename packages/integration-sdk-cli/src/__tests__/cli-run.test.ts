@@ -113,7 +113,6 @@ test('executes integration and skips finalization with skip-finalize', async () 
       `https://api.us.jupiterone.io/persister/synchronization/jobs/${job.id}/finalize`,
     )
     .intercept((req, res) => {
-      console.error('called finalize');
       calledFinalize = true;
     });
 
