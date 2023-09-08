@@ -261,11 +261,6 @@ export async function finalizeSynchronization({
     );
   }
 
-  logger.info(
-    { synchronizationJob: finalizedJob },
-    'Synchronization finalization result.',
-  );
-
   return finalizedJob;
 }
 

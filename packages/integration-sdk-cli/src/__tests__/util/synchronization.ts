@@ -97,8 +97,14 @@ export function generateSynchronizationJob(
     id: 'test',
     source: options?.source || 'integration-managed',
     scope: options?.scope,
-    integrationJobId: options?.integrationJobId || 'test-job-id',
-    integrationInstanceId: options?.integrationInstanceId || 'test-instance-id',
+    integrationJobId:
+      options?.source === 'api'
+        ? undefined
+        : options?.integrationJobId || 'test-job-id',
+    integrationInstanceId:
+      options?.source === 'api'
+        ? undefined
+        : options?.integrationInstanceId || 'test-instance-id',
     status: SynchronizationJobStatus.AWAITING_UPLOADS,
     startTimestamp: Date.now(),
     numEntitiesUploaded: 0,
