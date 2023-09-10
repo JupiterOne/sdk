@@ -33,7 +33,11 @@ const BINARY_SEMAPHORE_CONCURRENCY = 1;
 
 export interface FileSystemGraphObjectStoreParams {
   integrationSteps?: IntegrationStep[];
-
+  /**
+   * The maximum size in bytes of entities/relationships stored in memory at one time.
+   * default: 25_000_000
+   */
+  graphObjectBufferThresholdInBytes?: number;
   /**
    * The maximum number of graph objects that this store can buffer in memory
    * before writing to disk. Machines with more memory should consider bumping
