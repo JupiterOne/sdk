@@ -227,7 +227,7 @@ describe('upload callbacks', () => {
       createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThresholdInBytes: 400,
+        graphObjectBufferThreshold: 2,
       }),
       uploader: uploadCollector.uploader,
     });
@@ -253,7 +253,7 @@ describe('upload callbacks', () => {
       createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThresholdInBytes: 600,
+        graphObjectBufferThreshold: 2,
       }),
       uploader: uploadCollector.uploader,
     });
@@ -278,7 +278,9 @@ describe('upload callbacks', () => {
     const uploadCollector =
       createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
-      graphObjectStore: new FileSystemGraphObjectStore(),
+      graphObjectStore: new FileSystemGraphObjectStore({
+        graphObjectBufferThreshold: 5,
+      }),
       uploader: uploadCollector.uploader,
     });
 
@@ -320,7 +322,7 @@ describe('upload callbacks', () => {
 
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThresholdInBytes: 400,
+        graphObjectBufferThreshold: 2,
       }),
       uploader,
     });

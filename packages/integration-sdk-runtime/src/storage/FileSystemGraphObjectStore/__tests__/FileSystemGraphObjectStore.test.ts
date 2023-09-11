@@ -9,6 +9,7 @@ import { getRootStorageDirectory } from '../../../fileSystem';
 
 import {
   FileSystemGraphObjectStore,
+  DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD,
   FileSystemGraphObjectStoreParams,
   DEFAULT_GRAPH_OBJECT_FILE_SIZE,
 } from '../FileSystemGraphObjectStore';
@@ -28,7 +29,6 @@ import {
 import { RelationshipClass } from '@jupiterone/data-model';
 import { FlushedGraphObjectData } from '../../types';
 import sortBy from 'lodash/sortBy';
-import { getSizeOfObject } from '../../../synchronization/batchBySize';
 
 jest.mock('fs');
 
@@ -139,13 +139,14 @@ describe('flushEntitiesToDisk', () => {
   test('should write files of size <= graphObjectFileSize', async () => {
     const numOfGraphObjects = 1000;
 
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 1000,
+    });
     const entityType = uuid();
     const entities = times(numOfGraphObjects, () =>
       createTestEntity({ _type: entityType }),
     );
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: getSizeOfObject(entities),
-    });
+
     await store.addEntities(storageDirectoryPath, entities);
     await store.flushEntitiesToDisk();
 
@@ -224,14 +225,14 @@ describe('flushRelationshipsToDisk', () => {
 
   test('should write files of size <= graphObjectFileSize', async () => {
     const numOfGraphObjects = 1000;
-
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
+      graphObjectBufferThreshold: 1000,
+    });
     const relationshipType = uuid();
     const relationships = times(numOfGraphObjects, () =>
       createTestRelationship({ _type: relationshipType }),
     );
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: getSizeOfObject(relationships),
-    });
+
     await store.addRelationships(storageDirectoryPath, relationships);
     await store.flushEntitiesToDisk();
 
@@ -282,10 +283,11 @@ describe('flush', () => {
 
 describe('addEntities', () => {
   test('should automatically flush entities to disk after hitting a certain threshold', async () => {
-    const entities = times(250, () => createTestEntity());
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: getSizeOfObject(entities) + 1,
-    });
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+    const entities = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
+      createTestEntity(),
+    );
+
     const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
     await store.addEntities(storageDirectoryPath, entities);
 
@@ -330,10 +332,11 @@ describe('addEntities', () => {
 
 describe('addRelationships', () => {
   test('should automatically flush relationships to disk after hitting a certain threshold', async () => {
-    const relationships = times(250, () => createTestRelationship());
-    const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: getSizeOfObject(relationships) + 1,
-    });
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+    const relationships = times(DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD - 1, () =>
+      createTestRelationship(),
+    );
+
     const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
     await store.addRelationships(storageDirectoryPath, relationships);
 
@@ -656,7 +659,7 @@ describe('iterateRelationships', () => {
 describe('flush callbacks', () => {
   test('#addEntity should call flush callback when buffer threshold reached', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: 400,
+      graphObjectBufferThreshold: 2,
     });
 
     let flushedEntitiesCollected: Entity[] = [];
@@ -690,7 +693,7 @@ describe('flush callbacks', () => {
 
   test('#addRelationships should call flush callback when buffer threshold reached', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: 400,
+      graphObjectBufferThreshold: 2,
     });
 
     let flushedRelationshipsCollected: Relationship[] = [];
@@ -730,7 +733,7 @@ describe('flush callbacks', () => {
 
   test('#flushEntitiesToDisk should call flush callback when flushEntitiesToDisk called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: 2000,
+      graphObjectBufferThreshold: 10,
     });
 
     let flushedEntitiesCollected: Entity[] = [];
@@ -963,7 +966,7 @@ describe('flush callbacks', () => {
 
   test('#flushRelationshipsToDisk should call flush callback when flushRelationshipsToDisk called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: 3000,
+      graphObjectBufferThreshold: 10,
     });
 
     let flushedRelationshipsCollected: Relationship[] = [];
@@ -995,7 +998,7 @@ describe('flush callbacks', () => {
 
   test('#flush should call both entity and relationship flush callbacks when flush called', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
-      graphObjectBufferThresholdInBytes: 3000,
+      graphObjectBufferThreshold: 10,
     });
 
     let flushedRelationshipsCollected: Relationship[] = [];
