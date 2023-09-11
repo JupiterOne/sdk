@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.4.0 - 2023-09-11
+
+- Revert change in 10.1.0 due to system health issues
+
 ## 10.3.0 - 2023-09-07
 
 - Update `jest.js` config to remove deprecated option.
