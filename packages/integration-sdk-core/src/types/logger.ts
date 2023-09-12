@@ -167,7 +167,6 @@ export interface IntegrationLoggerFunctions {
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
   stepSkip: StepLogFunctionWithReason;
-  collectionComplete: () => void;
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
 
