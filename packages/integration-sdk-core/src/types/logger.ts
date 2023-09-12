@@ -90,6 +90,13 @@ export interface PublishWarnEventInput extends PublishEventInput {
  */
 export enum IntegrationErrorEventName {
   /**
+   * An unexpected error event to generally handle errors.
+   * Use unexpected_error for issue that cannot
+   * be addressed by the user and are not clearly known.
+   */
+  UnexpectedError = 'error_unexpected_error',
+
+  /**
    * A missing permission that will cause a job failure.
    * Use warn_missing_permission if attempting to notify user
    * of a potential non-fatal misconfiguration.
@@ -160,6 +167,7 @@ export interface IntegrationLoggerFunctions {
   stepSuccess: StepLogFunction;
   stepFailure: StepLogFunctionWithError;
   stepSkip: StepLogFunctionWithReason;
+  collectionComplete: () => void;
   synchronizationUploadStart: SynchronizationLogFunction;
   synchronizationUploadEnd: SynchronizationLogFunction;
 
