@@ -25,7 +25,7 @@ import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
-import { batchGraphObjectsBySizeInBytes } from './batchBySize';
+import { batchGraphObjectsBySizeInBytes, getSizeOfObject } from './batchBySize';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -494,7 +494,7 @@ export async function uploadDataChunk<
         },
         'Uploading data...',
       );
-
+      const startTime = Date.now();
       await apiClient.post(
         `/persister/synchronization/jobs/${jobId}/${type as string}`,
         {
@@ -508,7 +508,18 @@ export async function uploadDataChunk<
           },
         },
       );
-
+      if (Date.now() - startTime >= 10_000) {
+        logger.info(
+          {
+            uploadCorrelationId,
+            uploadType: type,
+            attemptNum: ctx.attemptNum,
+            batchSize: batch.length,
+            batchSizeInBytes: getSizeOfObject(batch),
+          },
+          'Finished uploading big batch',
+        );
+      }
       logger.debug(
         {
           uploadCorrelationId,
