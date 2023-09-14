@@ -9,6 +9,10 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.5.2 - 2023-09-14
+
+- Improvements to integration graph generator
+
 ## 10.5.0 - 2023-09-12
 
 - Add `error_unexpected_error` to IntegrationErrorEventName
