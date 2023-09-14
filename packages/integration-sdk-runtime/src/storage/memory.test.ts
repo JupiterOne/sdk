@@ -201,9 +201,9 @@ describe('#InMemoryGraphObjectStore', () => {
 
     const e1 = createTestEntity();
     const e2 = createTestEntity();
-    const stepId = uuid();
-    await store.addEntities(stepId, [e1, e2]);
-    store.flushEntities([e1], stepId);
+
+    await store.addEntities(uuid(), [e1, e2]);
+    store.flushEntities([e1]);
 
     expect(await store.findEntity(e1._key)).toEqual(undefined);
     expect(await store.findEntity(e2._key)).toEqual(e2);
@@ -215,9 +215,9 @@ describe('#InMemoryGraphObjectStore', () => {
 
     const r1 = createTestRelationship();
     const r2 = createTestRelationship();
-    const stepId = uuid();
-    await store.addRelationships(stepId, [r1, r2]);
-    store.flushRelationships([r1], stepId);
+
+    await store.addRelationships(uuid(), [r1, r2]);
+    store.flushRelationships([r1]);
 
     expect(await collectRelationshipsByType(store, r1._type)).toEqual([]);
     expect(await collectRelationshipsByType(store, r2._type)).toEqual([r2]);

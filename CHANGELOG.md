@@ -11,6 +11,15 @@ and this project adheres to
 
 - Use the same logger for all logs created via the `j1-integration run` command
   to improve formatting consistency
+- Update internal `err` log serializer
+
+## 10.5.0 - 2023-09-12
+
+- Add `error_unexpected_error` to IntegrationErrorEventName
+
+## 10.4.0 - 2023-09-11
+
+- Revert change in 10.1.0 due to system health issues
 
 ## 10.3.0 - 2023-09-07
 
