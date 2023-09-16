@@ -247,8 +247,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async flushEntitiesToDisk(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
-    await this.lockOperation(() =>
-      pMap(
+    const entities = await this.lockOperation(() => {
+      return pMap(
         this.localGraphObjectStore.collectEntitiesByStep(),
         async ([stepId, entities]) => {
           const indexable = entities.filter((e) => {
@@ -291,20 +291,21 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           }
 
           this.localGraphObjectStore.flushEntities(entities);
-
-          if (onEntitiesFlushed) {
-            await onEntitiesFlushed(entities);
-          }
+          return entities;
         },
-      ),
-    );
+      );
+    });
+
+    if (onEntitiesFlushed) {
+      await Promise.all(entities.map(onEntitiesFlushed));
+    }
   }
 
   async flushRelationshipsToDisk(
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
-    await this.lockOperation(() =>
-      pMap(
+    const relationships = await this.lockOperation(() => {
+      return pMap(
         this.localGraphObjectStore.collectRelationshipsByStep(),
         async ([stepId, relationships]) => {
           const indexable = relationships.filter((r) => {
@@ -335,13 +336,14 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           }
 
           this.localGraphObjectStore.flushRelationships(relationships);
-
-          if (onRelationshipsFlushed) {
-            await onRelationshipsFlushed(relationships);
-          }
+          return relationships;
         },
-      ),
-    );
+      );
+    });
+
+    if (onRelationshipsFlushed) {
+      await Promise.all(relationships.map(onRelationshipsFlushed));
+    }
   }
 
   getIndexMetadataForGraphObjectType({
@@ -383,7 +385,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   private async lockOperation<T>(operation: () => Promise<T>) {
     await this.semaphore.acquire();
     try {
-      await operation();
+      return await operation();
     } finally {
       this.semaphore.release();
     }
