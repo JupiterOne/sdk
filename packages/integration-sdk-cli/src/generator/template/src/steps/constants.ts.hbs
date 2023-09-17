@@ -4,14 +4,13 @@ import {
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 
-export const Steps: Record<{{#unless steps}}string{{/unless}}{{#each steps}}'{{constantCase name}}'{{#unless @last}}|{{/unless}}{{/each}}, string> = {
+export const Steps = {
   {{#each steps}}
   {{constantCase name}}: '{{kebabCase name}}',
   {{/each}}
-};
+} satisfies Record<string, string>;
 
-export const Entities: Record<{{#unless entities}}string{{/unless}}{{#each entities}}'{{constantCase resourceName}}'{{#unless @last}}|{{/unless}}{{/each}}
-, StepEntityMetadata > = {
+export const Entities = {
   {{#each entities}}
   {{constantCase resourceName}}: {
     resourceName: '{{resourceName}}',
@@ -19,10 +18,9 @@ export const Entities: Record<{{#unless entities}}string{{/unless}}{{#each entit
     _class: [{{#each _class}}'{{this}}'{{#unless @last}},{{/unless}}{{/each}}],
   },
   {{/each}}
-};
+} satisfies Record<string, StepEntityMetadata>;
 
-export const Relationships: Record<{{#unless relationships}}string{{/unless}}{{#each relationships}}'{{constantCase (generateRelationshipName this)}}'{{#unless @last}}|{{/unless}}{{/each}},
-StepRelationshipMetadata> = {
+export const Relationships = {
   {{#each relationships}}
   {{constantCase (generateRelationshipName this)}}: {
     sourceType: Entities.{{ constantCase from.resourceName }}._type,
@@ -31,4 +29,4 @@ StepRelationshipMetadata> = {
     _class: RelationshipClass.{{_class}},
   },
   {{/each}}
-};
+} satisfies Record<string, StepRelationshipMetadata>;
