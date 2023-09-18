@@ -9,6 +9,12 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.5.3 - 2023-09-18
+
+- Use the same logger for all logs created via the `j1-integration run` command
+  to improve formatting consistency
+- Update internal `err` log serializer
+
 ## 10.5.2 - 2023-09-14
 
 - Improvements to integration graph generator

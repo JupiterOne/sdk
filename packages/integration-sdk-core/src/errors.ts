@@ -65,6 +65,7 @@ export interface IntegrationErrorOptions {
 export class IntegrationError extends Error {
   /**
    * Optional cause associated with the error.
+   * @deprecated - Do not use _cause, use the native `cause` property instead.
    */
   readonly _cause?: Error;
 
@@ -79,20 +80,13 @@ export class IntegrationError extends Error {
   readonly fatal: boolean | undefined;
 
   constructor(options: IntegrationErrorOptions) {
-    super(options.message);
+    super(options.message, { cause: options.cause });
     this.code = options.code;
     this.fatal = options.fatal;
     this._cause = options.cause;
     if (options.cause?.stack) {
       this.stack += '\nCaused By: ' + options.cause.stack;
     }
-  }
-
-  /**
-   * For compatibility with [bunyan err serializer](https://github.com/trentm/node-bunyan/blob/master/lib/bunyan.js#L1125).
-   */
-  cause() {
-    return this._cause;
   }
 }
 

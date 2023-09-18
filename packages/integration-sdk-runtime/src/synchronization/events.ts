@@ -16,7 +16,9 @@ export const createEventPublishingQueue = (
   { apiClient, logger, job }: SynchronizationJobContext,
   config?: AxiosRequestConfig,
 ): EventPublishingQueue => {
-  if (!job.integrationJobId) return createNoopEventPublishingQueue();
+  if (!job.integrationJobId) {
+    return createNoopEventPublishingQueue();
+  }
 
   const queue = new PromiseQueue({ concurrency: 1 });
 
