@@ -41,7 +41,7 @@ jobs:
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ steps.get-vars.outputs.aws-oidc-role }}
+          role-to-assume: $\{{ steps.get-vars.outputs.aws-oidc-role }}
           role-session-name: pr-role-session
           aws-region: us-east-1
 
@@ -53,8 +53,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.PACKAGE_TOKEN }}
+          username: $\{{ github.actor }}
+          password: $\{{ secrets.PACKAGE_TOKEN }}
 
       - name: Pull security-scan
         run: |
@@ -66,9 +66,9 @@ jobs:
           --user root \
           -v /var/run/docker.sock:/var/run/docker.sock \
           -v `pwd`:`pwd` \
-          -e AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }} \
-          -e AWS_SESSION_TOKEN=${{ env.AWS_SESSION_TOKEN }} \
+          -e AWS_ACCESS_KEY_ID=$\{{ env.AWS_ACCESS_KEY_ID }} \
+          -e AWS_SECRET_ACCESS_KEY=$\{{ env.AWS_SECRET_ACCESS_KEY }} \
+          -e AWS_SESSION_TOKEN=$\{{ env.AWS_SESSION_TOKEN }} \
           -e GITHUB_REPOSITORY=$GITHUB_REPOSITORY \
           -e GITHUB_REF_NAME=$GITHUB_REF_NAME \
           -e GITHUB_RUN_NUMBER=$GITHUB_RUN_NUMBER \
@@ -84,7 +84,7 @@ jobs:
       - name: Run transponder
         run: |
           docker run --rm -v `pwd`:`pwd` -w `pwd` \
-          -e J1_API_KEY=${{ secrets.J1_API_KEY_TRANSPONDER }} \
-          -e J1_API_DOMAIN=${{ secrets.J1_API_DOMAIN_TRANSPONDER }} \
-          -e J1_ACCOUNT_ID=${{ secrets.J1_ACCOUNT_ID_TRANSPONDER }} \
+          -e J1_API_KEY=$\{{ secrets.J1_API_KEY_TRANSPONDER }} \
+          -e J1_API_DOMAIN=$\{{ secrets.J1_API_DOMAIN_TRANSPONDER }} \
+          -e J1_ACCOUNT_ID=$\{{ secrets.J1_ACCOUNT_ID_TRANSPONDER }} \
           $TRANSPONDER_DOCKER_IMAGE

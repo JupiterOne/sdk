@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-cli",
-  "version": "10.1.0",
+  "version": "10.5.3",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -25,8 +25,8 @@
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.54.0",
-    "@jupiterone/integration-sdk-core": "^10.1.0",
-    "@jupiterone/integration-sdk-runtime": "^10.1.0",
+    "@jupiterone/integration-sdk-core": "^10.5.3",
+    "@jupiterone/integration-sdk-runtime": "^10.5.3",
     "chalk": "^4",
     "commander": "^9.4.0",
     "fs-extra": "^10.1.0",
@@ -44,7 +44,7 @@
     "vis": "^4.21.0-EOL"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^10.1.0",
+    "@jupiterone/integration-sdk-private-test-utils": "^10.5.3",
     "@pollyjs/adapter-node-http": "^6.0.5",
     "@pollyjs/core": "^6.0.5",
     "@pollyjs/persister-fs": "^6.0.5",

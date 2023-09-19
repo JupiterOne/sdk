@@ -2,11 +2,9 @@ import { Polly } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
 import FSPersister from '@pollyjs/persister-fs';
 import { loadProjectStructure } from '@jupiterone/integration-sdk-private-test-utils';
-import { SynchronizationJobStatus } from '@jupiterone/integration-sdk-core';
 import { generateSynchronizationJob } from './util/synchronization';
 import { createCli } from '../index';
 import { setupSynchronizerApi } from './util/synchronization';
-import * as log from '../log';
 import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
@@ -37,6 +35,14 @@ test('aborts synchronization job if an error occurs', async () => {
 
   setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
 
+  let calledAbort = false;
+  polly.server
+    .post(
+      `https://api.us.jupiterone.io/persister/synchronization/jobs/${job.id}/abort`,
+    )
+    .intercept((req, res) => {
+      calledAbort = true;
+    });
   await createCli().parseAsync([
     'node',
     'j1-integration',
@@ -44,10 +50,5 @@ test('aborts synchronization job if an error occurs', async () => {
     '--integrationInstanceId',
     'test',
   ]);
-
-  expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
-  expect(log.displaySynchronizationResults).toHaveBeenCalledWith({
-    ...job,
-    status: SynchronizationJobStatus.ABORTED,
-  });
+  expect(calledAbort).toBe(true);
 });

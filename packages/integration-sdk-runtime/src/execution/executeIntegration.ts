@@ -62,6 +62,7 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  pretty?: boolean;
 }
 
 export interface ExecuteWithContextOptions {
@@ -83,7 +84,7 @@ export async function executeIntegrationLocally(
   const logger = createIntegrationLogger({
     name: 'Local',
     invocationConfig: config,
-    pretty: true,
+    pretty: options?.pretty,
   });
   const registeredEventListeners = registerIntegrationLoggerEventHandlers(
     () => logger,

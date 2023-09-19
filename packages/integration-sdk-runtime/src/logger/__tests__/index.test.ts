@@ -146,7 +146,7 @@ describe('createIntegrationLogger', () => {
       name: 'integration-logger',
       level: 'info',
       serializers: {
-        err: Logger.stdSerializers.err,
+        err: expect.any(Function),
       },
     });
   });
@@ -163,7 +163,7 @@ describe('createIntegrationLogger', () => {
       name: 'integration-logger',
       level: 'info',
       serializers: {
-        err: Logger.stdSerializers.err,
+        err: expect.any(Function),
       },
       streams: [{ stream: expect.any(Writable) }],
     });

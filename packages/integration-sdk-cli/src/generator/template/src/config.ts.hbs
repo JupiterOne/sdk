@@ -2,20 +2,19 @@ import {
   IntegrationExecutionContext,
   {{#if configFields}}IntegrationValidationError,{{/if}}
   IntegrationInstanceConfigFieldMap,
-  IntegrationInstanceConfig,
 } from '@jupiterone/integration-sdk-core';
 import { createAPIClient } from './client';
 
-export const instanceConfigFields: IntegrationInstanceConfigFieldMap = {
+export const instanceConfigFields = {
   {{#each configFields}}
   {{camelCase field}}: {
     type: '{{type}}',
     mask: {{mask}}
   },
   {{/each}}
-};
+} satisfies IntegrationInstanceConfigFieldMap;
 
-export interface IntegrationConfig extends IntegrationInstanceConfig {
+export interface IntegrationConfig {
   {{#each configFields}}
   {{camelCase field}}: {{ type }};
   {{/each}}

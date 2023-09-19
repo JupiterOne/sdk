@@ -9,6 +9,39 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.5.3 - 2023-09-18
+
+- Use the same logger for all logs created via the `j1-integration run` command
+  to improve formatting consistency
+- Update internal `err` log serializer
+
+## 10.5.2 - 2023-09-14
+
+- Improvements to integration graph generator
+
+## 10.5.0 - 2023-09-12
+
+- Add `error_unexpected_error` to IntegrationErrorEventName
+
+## 10.4.0 - 2023-09-11
+
+- Revert change in 10.1.0 due to system health issues
+
+## 10.3.0 - 2023-09-07
+
+- Update `jest.js` config to remove deprecated option.
+- Add `--noPretty` option to cli to disable pretty printing of logs locally.
+
+## 10.2.0 - 2023-09-01
+
+- Allow user to override `AlphaOptions` in `createApiClient`
+
+## 10.1.0 - 2023-08-28
+
+- 'InMemoryGraphObjectStore' no longer stores a set amount of entities or
+  relationships, rather it works by measuring size in bytes of graph objects by
+  default.
+
 ## 10.0.0 - 2023-08-03
 
 - Bump TypeScript, ESLint, and Prettier to next major versions. Integration

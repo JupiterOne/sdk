@@ -9,10 +9,13 @@ module.exports = {
     '!**/*.bak/*',
   ],
   collectCoverage: false,
-  globals: {
-    'ts-jest': {
-      isolatedModules: true,
-    },
+  transform: {
+    '^.+\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        isolatedModules: true,
+      },
+    ],
   },
   testEnvironment: 'node',
   setupFilesAfterEnv: [
