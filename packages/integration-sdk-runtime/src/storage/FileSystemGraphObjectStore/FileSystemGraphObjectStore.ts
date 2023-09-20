@@ -22,10 +22,14 @@ import { InMemoryGraphObjectStore } from '../memory';
 import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
-import { chunk } from 'lodash';
+import { chunk, min } from 'lodash';
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
+
+export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 5_000_000;
+// no more than 10^9 bytes
+export const MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 1_000_000_000;
 
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
@@ -35,7 +39,7 @@ export interface FileSystemGraphObjectStoreParams {
   integrationSteps?: IntegrationStep[];
   /**
    * The maximum size in bytes of entities/relationships stored in memory at one time.
-   * default: 25_000_000
+   * default: 5_000_000
    */
   graphObjectBufferThresholdInBytes?: number;
   /**
@@ -44,6 +48,7 @@ export interface FileSystemGraphObjectStoreParams {
    * this value up.
    *
    * Default: 500
+   * @deprecated this argument is no longer used. Please use `graphObjectBufferThresholdInBytes` instead.
    */
   graphObjectBufferThreshold?: number;
 
@@ -128,8 +133,8 @@ const ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE = 2000000;
 export class FileSystemGraphObjectStore implements GraphObjectStore {
   private readonly semaphore: Sema;
   private readonly localGraphObjectStore = new InMemoryGraphObjectStore();
-  private readonly graphObjectBufferThreshold: number;
   private readonly graphObjectFileSize: number;
+  private readonly graphObjectBufferThresholdInBytes: number;
   private readonly prettifyFiles: boolean;
   private readonly stepIdToGraphObjectIndexMetadataMap: Map<
     string,
@@ -142,14 +147,15 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
-    this.graphObjectBufferThreshold =
-      params?.graphObjectBufferThreshold ||
-      DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD;
     this.graphObjectFileSize =
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
 
     this.prettifyFiles = params?.prettifyFiles || false;
-
+    this.graphObjectBufferThresholdInBytes = min([
+      params?.graphObjectBufferThresholdInBytes ||
+        DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
+      MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
+    ])!;
     if (params?.integrationSteps) {
       this.stepIdToGraphObjectIndexMetadataMap =
         integrationStepsToGraphObjectIndexMetadataMap(params.integrationSteps);
@@ -164,8 +170,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
     if (
-      this.localGraphObjectStore.getTotalEntityItemCount() >=
-      this.graphObjectBufferThreshold
+      this.localGraphObjectStore.getTotalEntitySizeInBytes() >=
+      this.graphObjectBufferThresholdInBytes
     ) {
       await this.flushEntitiesToDisk(onEntitiesFlushed);
     }
@@ -179,8 +185,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
     if (
-      this.localGraphObjectStore.getTotalRelationshipItemCount() >=
-      this.graphObjectBufferThreshold
+      this.localGraphObjectStore.getTotalRelationshipSizeInBytes() >=
+      this.graphObjectBufferThresholdInBytes
     ) {
       await this.flushRelationshipsToDisk(onRelationshipsFlushed);
     }
@@ -290,7 +296,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
             );
           }
 
-          this.localGraphObjectStore.flushEntities(entities);
+          this.localGraphObjectStore.flushEntities(entities, stepId);
 
           if (onEntitiesFlushed) {
             await onEntitiesFlushed(entities);
@@ -334,7 +340,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
             );
           }
 
-          this.localGraphObjectStore.flushRelationships(relationships);
+          this.localGraphObjectStore.flushRelationships(relationships, stepId);
 
           if (onRelationshipsFlushed) {
             await onRelationshipsFlushed(relationships);
