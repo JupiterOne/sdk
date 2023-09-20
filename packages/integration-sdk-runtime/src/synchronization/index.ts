@@ -503,7 +503,8 @@ export async function uploadDataChunk<
           },
         },
       );
-      if (Date.now() - startTime >= 10_000) {
+      const duration = Date.now() - startTime;
+      if (duration >= 10_000) {
         logger.info(
           {
             uploadCorrelationId,
@@ -511,6 +512,7 @@ export async function uploadDataChunk<
             attemptNum: ctx.attemptNum,
             batchSize: batch.length,
             batchSizeInBytes: getSizeOfObject(batch),
+            uploadDuration: duration,
           },
           'Finished uploading big batch',
         );
