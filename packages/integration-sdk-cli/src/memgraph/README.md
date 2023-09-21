@@ -3,7 +3,7 @@
 ## Installation
 
 This command assumes you have three additional values stored in your local .env
-file: NEO4J_URI NEO4J_USER NEO4J_PASSWORD
+file: MEMGRAPH_URI MEMGRAPH_USER MEMGRAPH_PASSWORD
 
 This can be used for uploading to local or remote Memgraph databases. For
 easy access to a local Memgraph instance, you can launch one via a Memgraph provided
