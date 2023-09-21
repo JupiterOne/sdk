@@ -9,6 +9,11 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.7.0 - 2023-09-21
+
+- Changed the log level of the `Collected metric` log that is published when
+  logger.publishMetric is called to "debug"
+
 ## 10.5.3 - 2023-09-18
 
 - Use the same logger for all logs created via the `j1-integration run` command
