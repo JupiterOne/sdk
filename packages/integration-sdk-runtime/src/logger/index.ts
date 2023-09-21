@@ -45,7 +45,7 @@ const bunyanFormat = require('bunyan-format');
 
 interface CreateLoggerInput<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 > {
   name: string;
   invocationConfig?: InvocationConfig<TExecutionContext, TStepExecutionContext>;
@@ -55,7 +55,8 @@ interface CreateLoggerInput<
 }
 
 interface CreateIntegrationLoggerInput<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 > extends CreateLoggerInput<
     IntegrationExecutionContext<TIntegrationConfig>,
     IntegrationStepExecutionContext<TIntegrationConfig>
@@ -65,7 +66,7 @@ interface CreateIntegrationLoggerInput<
 
 export function createLogger<
   TExecutionContext extends ExecutionContext,
-  TStepExecutionContext extends StepExecutionContext
+  TStepExecutionContext extends StepExecutionContext,
 >({
   name,
   pretty,
@@ -116,7 +117,8 @@ export function createLogger<
  * serializers common to all integrations.
  */
 export function createIntegrationLogger<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 >({
   name,
   invocationConfig,
@@ -125,7 +127,7 @@ export function createIntegrationLogger<
   onFailure,
 }: CreateIntegrationLoggerInput<TIntegrationConfig>): IntegrationLogger {
   const serializeInstanceConfig = createInstanceConfigSerializer(
-    invocationConfig?.instanceConfigFields
+    invocationConfig?.instanceConfigFields,
   );
 
   return createLogger({
@@ -147,7 +149,7 @@ export function createIntegrationLogger<
 }
 
 function createInstanceConfigSerializer<
-  TConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig
+  TConfig extends IntegrationInstanceConfig = IntegrationInvocationConfig,
 >(fields?: IntegrationInstanceConfigFieldMap<TConfig>) {
   return (config: any) => {
     if (!config) {
@@ -240,7 +242,7 @@ export class IntegrationLogger
       },
       {
         logMetric: false,
-      }
+      },
     );
 
     return this._logger.warn(...params);
@@ -268,7 +270,7 @@ export class IntegrationLogger
 
     return this._logger.trace(
       { verbose: true, ...additionalFields },
-      ...remainingArgs
+      ...remainingArgs,
     );
   }
 
@@ -282,7 +284,7 @@ export class IntegrationLogger
       },
       {
         logMetric: false,
-      }
+      },
     );
 
     this._logger.error(...params);
@@ -304,7 +306,7 @@ export class IntegrationLogger
 
   emit<T extends EventLookup, K extends keyof EventLookup>(
     name: K,
-    data: T[K]
+    data: T[K],
   ) {
     return super.emit(name, data);
   }
@@ -326,7 +328,7 @@ export class IntegrationLogger
   stepSkip(
     step: StepMetadata,
     reason: DisabledStepReason,
-    additionalContext?: StepLogAdditionalContext
+    additionalContext?: StepLogAdditionalContext,
   ) {
     if (!reason || reason === DisabledStepReason.NONE) {
       return;
@@ -376,7 +378,7 @@ export class IntegrationLogger
     const eventName = 'step_failure';
     const { errorId, description } = createErrorEventDescription(
       err,
-      `Step "${step.name}" failed to complete due to error.`
+      `Step "${step.name}" failed to complete due to error.`,
     );
     this.handleFailure({ eventName, errorId, err, description });
   }
@@ -388,7 +390,7 @@ export class IntegrationLogger
       {
         synchronizationJobId: job.id,
       },
-      description
+      description,
     );
     this.publishEvent({ name, description });
   }
@@ -400,7 +402,7 @@ export class IntegrationLogger
       {
         synchronizationJobId: job.id,
       },
-      description
+      description,
     );
     this.publishEvent({ name, description });
   }
@@ -409,7 +411,7 @@ export class IntegrationLogger
     const eventName = 'validation_failure';
     const { errorId, description } = createErrorEventDescription(
       err,
-      `Error occurred while validating integration configuration.`
+      `Error occurred while validating integration configuration.`,
     );
     this.handleFailure({ eventName, errorId, err, description });
   }
@@ -443,7 +445,7 @@ export class IntegrationLogger
 
   publishMetric(
     metric: Omit<Metric, 'timestamp'>,
-    { logMetric = true }: PublishMetricOptions = {}
+    { logMetric = true }: PublishMetricOptions = {},
   ) {
     const metricWithTimestamp = {
       ...metric,
@@ -497,7 +499,7 @@ export function createErrorEventDescription(
    * Optional data that will be added as name/value pairs to the
    * event description.
    */
-  eventData?: object
+  eventData?: object,
 ) {
   const errorId = uuid();
 
