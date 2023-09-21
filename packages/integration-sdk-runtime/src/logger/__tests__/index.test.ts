@@ -625,7 +625,7 @@ describe('publishMetric', () => {
       invocationConfig,
     });
 
-    const infoSpy = jest.spyOn(logger, 'info');
+    const debugSpy = jest.spyOn(logger, 'debug');
 
     logger.publishMetric({
       name: 'metric',
@@ -633,8 +633,8 @@ describe('publishMetric', () => {
       unit: 'Milliseconds',
     });
 
-    expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledWith(
+    expect(debugSpy).toHaveBeenCalledTimes(1);
+    expect(debugSpy).toHaveBeenCalledWith(
       {
         metric: {
           name: 'metric',
