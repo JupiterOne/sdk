@@ -18,17 +18,19 @@ import {
   iterateRelationshipTypeIndex,
   readGraphObjectFile,
 } from './indices';
+import { InMemoryGraphObjectStore } from '../memory';
 import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
 import { chunk, min } from 'lodash';
-import { InMemoryGraphObjectStore } from '../memory';
 
+export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 5_000_000;
 // no more than 10^9 bytes
 export const MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 1_000_000_000;
+
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
 const BINARY_SEMAPHORE_CONCURRENCY = 1;
@@ -49,6 +51,7 @@ export interface FileSystemGraphObjectStoreParams {
    * @deprecated this argument is no longer used. Please use `graphObjectBufferThresholdInBytes` instead.
    */
   graphObjectBufferThreshold?: number;
+
   /**
    * The maximum number of entities/relationships stored in each file.
    */
@@ -147,13 +150,12 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.graphObjectFileSize =
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
 
+    this.prettifyFiles = params?.prettifyFiles || false;
     this.graphObjectBufferThresholdInBytes = min([
       params?.graphObjectBufferThresholdInBytes ||
         DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
       MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
     ])!;
-    this.prettifyFiles = params?.prettifyFiles || false;
-
     if (params?.integrationSteps) {
       this.stepIdToGraphObjectIndexMetadataMap =
         integrationStepsToGraphObjectIndexMetadataMap(params.integrationSteps);

@@ -40,7 +40,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          token: ${{ secrets.AUTO_GITHUB_PAT_TOKEN }}
+          token: $\{{ secrets.AUTO_GITHUB_PAT_TOKEN }}
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -49,5 +49,5 @@ jobs:
       - name: Build and Release
         uses: jupiterone/action-npm-build-release@v1
         with:
-          npm_auth_token: ${{ secrets.NPM_AUTH_TOKEN }}
-          gh_token: ${{ secrets.AUTO_GITHUB_PAT_TOKEN }}
+          npm_auth_token: $\{{ secrets.NPM_AUTH_TOKEN }}
+          gh_token: $\{{ secrets.AUTO_GITHUB_PAT_TOKEN }}

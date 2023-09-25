@@ -201,6 +201,7 @@ describe('#InMemoryGraphObjectStore', () => {
 
     const e1 = createTestEntity();
     const e2 = createTestEntity();
+
     const stepId = uuid();
     await store.addEntities(stepId, [e1, e2]);
     store.flushEntities([e1], stepId);
@@ -215,6 +216,7 @@ describe('#InMemoryGraphObjectStore', () => {
 
     const r1 = createTestRelationship();
     const r2 = createTestRelationship();
+
     const stepId = uuid();
     await store.addRelationships(stepId, [r1, r2]);
     store.flushRelationships([r1], stepId);

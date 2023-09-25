@@ -286,6 +286,7 @@ describe('addEntities', () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferThresholdInBytes: getSizeOfObject(entities) + 1,
     });
+
     const flushEntitiesSpy = jest.spyOn(store, 'flushEntitiesToDisk');
     await store.addEntities(storageDirectoryPath, entities);
 
@@ -334,6 +335,7 @@ describe('addRelationships', () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore({
       graphObjectBufferThresholdInBytes: getSizeOfObject(relationships) + 1,
     });
+
     const flushRelationshipsSpy = jest.spyOn(store, 'flushRelationshipsToDisk');
     await store.addRelationships(storageDirectoryPath, relationships);
 

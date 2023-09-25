@@ -9,7 +9,33 @@ and this project adheres to
 
 ## Unreleased
 
-- Add `--noPretty` option to cli to disable pretty printing of logs locally
+## 10.7.0 - 2023-09-21
+
+- Changed the log level of the `Collected metric` log that is published when
+  logger.publishMetric is called to "debug"
+
+## 10.5.3 - 2023-09-18
+
+- Use the same logger for all logs created via the `j1-integration run` command
+  to improve formatting consistency
+- Update internal `err` log serializer
+
+## 10.5.2 - 2023-09-14
+
+- Improvements to integration graph generator
+
+## 10.5.0 - 2023-09-12
+
+- Add `error_unexpected_error` to IntegrationErrorEventName
+
+## 10.4.0 - 2023-09-11
+
+- Revert change in 10.1.0 due to system health issues
+
+## 10.3.0 - 2023-09-07
+
+- Update `jest.js` config to remove deprecated option.
+- Add `--noPretty` option to cli to disable pretty printing of logs locally.
 
 ## 10.2.0 - 2023-09-01
 

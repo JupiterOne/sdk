@@ -1,4 +1,5 @@
 import Logger from 'bunyan';
+import { inspect } from 'util';
 import { EventEmitter } from 'events';
 import { randomUUID as uuid } from 'crypto';
 
@@ -79,7 +80,16 @@ export function createLogger<
     name,
     level: (process.env.LOG_LEVEL || 'info') as Logger.LogLevel,
     serializers: {
-      err: Logger.stdSerializers.err,
+      err: function (err) {
+        if (!err || !err.stack) return err;
+        return {
+          message: err.message,
+          name: err.name,
+          stack: inspect(err, false, 10),
+          code: err.code,
+          signal: err.signal,
+        };
+      },
     },
   };
 
@@ -443,7 +453,7 @@ export class IntegrationLogger
     };
 
     if (logMetric) {
-      this.info({ metric: metricWithTimestamp }, 'Collected metric.');
+      this.debug({ metric: metricWithTimestamp }, 'Collected metric.');
     }
 
     // emit the metric so that consumers can collect the metric
