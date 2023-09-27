@@ -82,10 +82,7 @@ async function executeVisualizeTypesAction(
     projectPath,
   });
 
-  if (
-    !(metadata.entities || []).length &&
-    !(metadata.relationships || []).length
-  ) {
+  if (!metadata.entities?.length && !metadata.relationships?.length) {
     log.info(
       'No entities or relationships found to generate types graph for. Exiting.',
     );
