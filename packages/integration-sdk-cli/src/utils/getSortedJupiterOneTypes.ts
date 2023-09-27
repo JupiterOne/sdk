@@ -69,10 +69,10 @@ function alphabetizeMetadataProperties(
   metadata: StepGraphObjectMetadataProperties,
 ): StepGraphObjectMetadataProperties {
   return {
-    entities: metadata.entities.sort(
+    entities: metadata.entities?.sort(
       alphabetizeEntityMetadataPropertyByTypeCompareFn,
     ),
-    relationships: metadata.relationships.sort(
+    relationships: metadata.relationships?.sort(
       alphabetizeRelationshipMetadataPropertyByTypeCompareFn,
     ),
     mappedRelationships: metadata.mappedRelationships?.sort(
@@ -102,7 +102,7 @@ export function collectGraphObjectMetadataFromSteps(
       IntegrationStepExecutionContext<object>
     >;
 
-    for (const e of step.entities) {
+    for (const e of step.entities || []) {
       if (entityTypeSet.has(e._type)) {
         continue;
       }
@@ -111,7 +111,7 @@ export function collectGraphObjectMetadataFromSteps(
       entities.push(e);
     }
 
-    for (const r of step.relationships) {
+    for (const r of step.relationships || []) {
       const relationshipSetValue = toRelationshipSetValue(r);
 
       if (relationshipTypeSet.has(relationshipSetValue)) {

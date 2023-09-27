@@ -180,13 +180,13 @@ export interface StepGraphObjectMetadataProperties {
    * Metadata about the entities ingested in this integration step. This is
    * used to generate documentation.
    */
-  entities: StepEntityMetadata[];
+  entities?: StepEntityMetadata[];
 
   /**
    * Metadata about the relationships ingested in this integration step. This is
    * used to generate documentation.
    */
-  relationships: StepRelationshipMetadata[];
+  relationships?: StepRelationshipMetadata[];
 
   /**
    * Metadata about any mapped relationships ingested in this integration step. This is

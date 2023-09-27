@@ -675,7 +675,7 @@ export function toMatchStepMetadata(
   const step = stepDependencyGraph.getNodeData(stepId);
 
   let restEntities = results.collectedEntities;
-  for (const entityMetadata of step.entities) {
+  for (const entityMetadata of step.entities || []) {
     const { targets, rest } = filterGraphObjects(
       restEntities,
       (e) => e._type === entityMetadata._type,
@@ -697,7 +697,7 @@ export function toMatchStepMetadata(
     restEntities = rest;
   }
   if (restEntities.length > 0) {
-    const declaredTypes = step.entities.map((e) => e._type);
+    const declaredTypes = (step.entities || []).map((e) => e._type);
     const encounteredTypes = [
       ...new Set(results.collectedEntities.map((e) => e._type)),
     ];
@@ -714,7 +714,7 @@ export function toMatchStepMetadata(
   } = filterGraphObjects(results.collectedRelationships, isMappedRelationship);
 
   let restDirectRelationships = collectedDirectRelationships;
-  for (const relationshipMetadata of step.relationships) {
+  for (const relationshipMetadata of step.relationships || []) {
     const { targets, rest } = filterGraphObjects(
       restDirectRelationships,
       (r) => r._type === relationshipMetadata._type,
@@ -739,7 +739,7 @@ export function toMatchStepMetadata(
     restDirectRelationships = rest;
   }
   if (restDirectRelationships.length > 0) {
-    const declaredTypes = step.relationships.map((r) => r._type);
+    const declaredTypes = (step.relationships || []).map((r) => r._type);
     const encounteredTypes = [
       ...new Set(
         results.collectedRelationships

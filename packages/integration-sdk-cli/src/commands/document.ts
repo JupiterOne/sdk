@@ -52,7 +52,10 @@ async function executeDocumentAction(
     projectPath,
   });
 
-  if (!metadata.entities.length && !metadata.relationships.length) {
+  if (
+    !(metadata.entities || []).length &&
+    !(metadata.relationships || []).length
+  ) {
     log.info(
       'No entities or relationships found to generate documentation for. Exiting.',
     );
@@ -160,9 +163,9 @@ function generateGraphObjectDocumentationFromStepsMetadata(
   let relationshipSection = '';
   let mappedRelationshipSection = '';
 
-  if (metadata.entities.length) {
+  if ((metadata.entities || []).length) {
     const generatedEntityTable = generateEntityTableFromAllStepEntityMetadata(
-      metadata.entities,
+      metadata.entities || [],
     );
 
     entitySection += `
@@ -174,10 +177,10 @@ The following entities are created:
 ${generatedEntityTable}`;
   }
 
-  if (metadata.relationships.length) {
+  if ((metadata.relationships || []).length) {
     const generatedRelationshipTable =
       generateRelationshipTableFromAllStepEntityMetadata(
-        metadata.relationships,
+        metadata.relationships || [],
       );
 
     relationshipSection += `

@@ -603,8 +603,8 @@ export function getDeclaredTypesInStep<
   const partialTypes: string[] = [];
 
   [
-    ...step.entities,
-    ...step.relationships,
+    ...(step.entities || []),
+    ...(step.relationships || []),
     ...(step.mappedRelationships || []),
   ].map((e) => {
     declaredTypes.push(e._type);

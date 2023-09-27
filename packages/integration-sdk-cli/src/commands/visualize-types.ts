@@ -82,7 +82,10 @@ async function executeVisualizeTypesAction(
     projectPath,
   });
 
-  if (!metadata.entities.length && !metadata.relationships.length) {
+  if (
+    !(metadata.entities || []).length &&
+    !(metadata.relationships || []).length
+  ) {
     log.info(
       'No entities or relationships found to generate types graph for. Exiting.',
     );
@@ -133,7 +136,7 @@ export function getNodesAndEdgesFromStepMetadata(
   },
 ): { nodes: Node[]; edges: Edge[] } {
   const relationshipEdges = getEdgesFromStepRelationshipMetadata(
-    metadata.relationships,
+    metadata.relationships || [],
     {
       types: options?.types,
     },
@@ -145,7 +148,7 @@ export function getNodesAndEdgesFromStepMetadata(
         types: options?.types,
       },
     );
-  const entityNodes = getNodesFromStepEntityMetadata(metadata.entities, {
+  const entityNodes = getNodesFromStepEntityMetadata(metadata.entities || [], {
     types: options?.types,
     edges: [...relationshipEdges, ...mappedRelationshipEdges],
   });

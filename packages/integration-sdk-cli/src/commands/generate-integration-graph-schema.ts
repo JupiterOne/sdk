@@ -98,7 +98,7 @@ export function generateIntegrationGraphSchema(
   ): IntegrationGraphSchemaEntityMetadata[] {
     const entities: IntegrationGraphSchemaEntityMetadata[] = [];
 
-    for (const entityMetadata of stepEntityMetadata) {
+    for (const entityMetadata of stepEntityMetadata || []) {
       const entitySchemaKey = getEntitySchemaKey(entityMetadata);
 
       if (uniqueEntitySchemaSet.has(entitySchemaKey)) continue;
@@ -115,7 +115,7 @@ export function generateIntegrationGraphSchema(
   ) {
     const relationships: IntegrationGraphSchemaRelationshipMetadata[] = [];
 
-    for (const relationshipMetadata of stepRelationshipMetadata) {
+    for (const relationshipMetadata of stepRelationshipMetadata || []) {
       const relationshipSchemaKey =
         getRelationshipSchemaKey(relationshipMetadata);
 
@@ -157,13 +157,13 @@ export function generateIntegrationGraphSchema(
 
   for (const step of integrationSteps) {
     integrationGraphSchema.entities = integrationGraphSchema.entities.concat(
-      getIntegrationGraphSchemaEntityMetadataForStep(step.entities),
+      getIntegrationGraphSchemaEntityMetadataForStep(step.entities || []),
     );
 
     integrationGraphSchema.relationships =
       integrationGraphSchema.relationships.concat(
         getIntegrationGraphSchemaRelationshipMetadataForStep(
-          step.relationships,
+          step.relationships || [],
         ),
       );
 

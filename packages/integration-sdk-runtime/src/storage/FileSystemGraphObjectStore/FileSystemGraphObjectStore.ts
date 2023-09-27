@@ -91,7 +91,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
       relationships: new Map(),
     };
 
-    for (const entityMetadata of step.entities) {
+    for (const entityMetadata of step.entities || []) {
       if (entityMetadata.indexMetadata) {
         metadataMap.entities.set(
           entityMetadata._type,
@@ -100,7 +100,7 @@ function integrationStepsToGraphObjectIndexMetadataMap(
       }
     }
 
-    for (const relationshipMetadata of step.relationships) {
+    for (const relationshipMetadata of step.relationships || []) {
       if (relationshipMetadata.indexMetadata) {
         metadataMap.relationships.set(
           relationshipMetadata._type,
