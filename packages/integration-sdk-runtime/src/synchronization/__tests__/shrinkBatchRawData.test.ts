@@ -5,6 +5,7 @@ import {
 import { restoreProjectStructure } from '@jupiterone/integration-sdk-private-test-utils';
 import { createIntegrationLogger } from '../../logger';
 import { shrinkBatchRawData } from '../shrinkBatchRawData';
+import { DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES } from '..';
 
 describe('shrinkBatchRawData', () => {
   const logger = createIntegrationLogger({
@@ -20,7 +21,7 @@ describe('shrinkBatchRawData', () => {
   });
 
   it('should shrink rawData until batch size is < 6 million bytes', () => {
-    const largeData = new Array(500000).join('aaaaaaaaaa');
+    const largeData = new Array(450000).join('aaaaaaaaaa');
     const data = [
       {
         _class: 'test',
@@ -123,7 +124,7 @@ describe('shrinkBatchRawData', () => {
       },
     ];
 
-    shrinkBatchRawData(data, logger);
+    shrinkBatchRawData(data, logger, DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES);
     expect(logger.info).toBeCalledTimes(2);
     expect(logger.info).toHaveBeenNthCalledWith(
       1,
@@ -191,7 +192,7 @@ describe('shrinkBatchRawData', () => {
       },
     ];
     try {
-      shrinkBatchRawData(data, logger);
+      shrinkBatchRawData(data, logger, DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES);
       throw new Error('this was not supposed to happen');
     } catch (err) {
       expect(err).toBeInstanceOf(IntegrationError);
@@ -301,7 +302,7 @@ describe('shrinkBatchRawData', () => {
       },
     ];
     try {
-      shrinkBatchRawData(data, logger);
+      shrinkBatchRawData(data, logger, DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES);
       shrinkBatchRawDataSucceeded = true;
     } catch (err) {
       expect(err).toBeInstanceOf(IntegrationError);
