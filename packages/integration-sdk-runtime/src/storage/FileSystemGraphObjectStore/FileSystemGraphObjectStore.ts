@@ -23,13 +23,14 @@ import { FlushedEntityData } from '../types';
 import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
 import { chunk, min } from 'lodash';
+import { DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES } from '../../synchronization';
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
 
-export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 5_000_000;
-// no more than 10^9 bytes
-export const MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES = 1_000_000_000;
+// no more than 2^30 bytes (1GB)
+export const MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES =
+  1_073_741_824 as const;
 
 // it is important that this value is set to 1
 // to ensure that only one operation can be performed at a time.
@@ -153,7 +154,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.prettifyFiles = params?.prettifyFiles || false;
     this.graphObjectBufferThresholdInBytes = min([
       params?.graphObjectBufferThresholdInBytes ||
-        DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
+        DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
       MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
     ])!;
     if (params?.integrationSteps) {
