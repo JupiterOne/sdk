@@ -57,8 +57,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     await uploadGraphObjectData(
       synchronizationJobContext,
       flushedObjectData,
-      5,
-      10,
       350, //bytes
     );
 
@@ -129,8 +127,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       await uploadGraphObjectData(
         synchronizationJobContext,
         flushedObjectData,
-        250,
-        250,
         bytesToBatch,
       );
 
@@ -171,8 +167,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     await uploadGraphObjectData(
       synchronizationJobContext,
       bigObjectData,
-      250,
-      250,
       bytesToBatch,
     );
 
@@ -238,8 +232,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     await uploadGraphObjectData(
       synchronizationJobContext,
       bigObjectData,
-      250,
-      250,
       bytesToBatch,
     );
 
