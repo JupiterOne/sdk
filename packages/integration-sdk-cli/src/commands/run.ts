@@ -109,9 +109,6 @@ export function run(): Command {
                 stepId,
                 synchronizationJobContext: synchronizationContext,
                 uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
-                uploadBatchSize: options.uploadBatchSize,
-                uploadRelationshipsBatchSize:
-                  options.uploadRelationshipBatchSize,
               });
             },
           },

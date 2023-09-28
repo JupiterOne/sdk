@@ -29,8 +29,6 @@ import { batchGraphObjectsBySizeInBytes, getSizeOfObject } from './batchBySize';
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
-export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
-
 export const DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES = 5_000_000;
 
 const UPLOAD_CONCURRENCY = 6;
@@ -72,9 +70,6 @@ export interface SynchronizeInput {
    * When no value is provided, a new job will be created.
    */
   integrationJobId?: string;
-
-  uploadBatchSize?: number | undefined;
-  uploadRelationshipBatchSize?: number | undefined;
 
   skipFinalize?: boolean;
 }
@@ -147,8 +142,6 @@ export interface SynchronizationJobContext {
   apiClient: ApiClient;
   job: SynchronizationJob;
   logger: IntegrationLogger;
-  uploadBatchSize?: number | undefined;
-  uploadRelationshipBatchSize?: number | undefined;
 }
 
 /**
@@ -157,8 +150,7 @@ export interface SynchronizationJobContext {
 export async function initiateSynchronization(
   input: SynchronizeInput,
 ): Promise<SynchronizationJobContext> {
-  const { logger, apiClient, uploadBatchSize, uploadRelationshipBatchSize } =
-    input;
+  const { logger, apiClient } = input;
 
   const jobConfiguration = buildJobConfiguration(input);
 
@@ -194,8 +186,6 @@ export async function initiateSynchronization(
         jobConfiguration.integrationJobId ?? job.integrationJobId,
       synchronizationJobId: job.id,
     }),
-    uploadBatchSize,
-    uploadRelationshipBatchSize,
   };
 }
 
@@ -276,14 +266,8 @@ async function getPartialDatasets() {
 export async function uploadGraphObjectData(
   synchronizationJobContext: SynchronizationJobContext,
   graphObjectData: FlushedGraphObjectData,
-  uploadBatchSize?: number,
-  uploadRelationshipsBatchSize?: number,
   uploadBatchSizeInBytes?: number,
 ) {
-  const entityBatchSize = uploadBatchSize;
-  const relationshipsBatchSize =
-    uploadRelationshipsBatchSize || uploadBatchSize;
-
   try {
     if (
       Array.isArray(graphObjectData.entities) &&
@@ -300,7 +284,6 @@ export async function uploadGraphObjectData(
         synchronizationJobContext,
         'entities',
         graphObjectData.entities,
-        entityBatchSize,
         uploadBatchSizeInBytes,
       );
 
@@ -327,7 +310,6 @@ export async function uploadGraphObjectData(
         synchronizationJobContext,
         'relationships',
         graphObjectData.relationships,
-        relationshipsBatchSize,
         uploadBatchSizeInBytes,
       );
 
@@ -350,12 +332,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
 
   async function uploadGraphObjectFile(parsedData: FlushedGraphObjectData) {
-    await uploadGraphObjectData(
-      context,
-      parsedData,
-      context.uploadBatchSize,
-      context.uploadRelationshipBatchSize,
-    );
+    await uploadGraphObjectData(context, parsedData);
   }
 
   await timeOperation({
@@ -558,7 +535,6 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   { job, apiClient, logger }: SynchronizationJobContext,
   type: K,
   data: T[K][],
-  uploadBatchSize?: number,
   uploadBatchSizeInBytes?: number,
 ) {
   const batches: T[K][][] = batchGraphObjectsBySizeInBytes(
