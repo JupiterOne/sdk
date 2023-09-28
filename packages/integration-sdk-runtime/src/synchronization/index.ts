@@ -435,8 +435,7 @@ function handleUploadDataChunkError({
   );
 
   if (isRequestUploadTooLargeError(err)) {
-    // shrink rawData further to try and achieve a batch size of < 6MB
-    shrinkBatchRawData(batch, logger);
+    shrinkBatchRawData(batch, logger, DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES);
   } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
       code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',

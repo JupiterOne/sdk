@@ -7,15 +7,6 @@ import {
 import { UploadDataLookup } from '.';
 import { IntegrationLogger } from '../logger';
 
-// Uploads above 6 MiB will fail.  This is technically
-// 6144000 bytes, but we need header space.  Most web
-// servers will only allow 8KB or 16KB as a max header
-// size, so 6144000 - 16384 = 6127616 bytes
-// however, we do have to consider the size of whatever aws sdk wraps
-// our payload in. In practice we have seen batches as small as 5800000
-// fail. To be completely safe, we are using 5500000 bytes as default
-export const MAX_BATCH_SIZE_IN_BYTES = 5_500_000;
-
 // TODO [INT-3707]: uncomment and use when implementing method
 // to shrink single entity's rawData until that entity is < 1MB
 
@@ -30,7 +21,7 @@ export const MAX_BATCH_SIZE_IN_BYTES = 5_500_000;
 export function shrinkBatchRawData(
   batchData: UploadDataLookup[keyof UploadDataLookup][],
   logger: IntegrationLogger,
-  maxBatchSize = MAX_BATCH_SIZE_IN_BYTES,
+  maxBatchSize: number,
 ): void {
   logger.info(`Attempting to shrink rawData`);
   const startTimeInMilliseconds = Date.now();

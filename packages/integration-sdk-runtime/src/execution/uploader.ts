@@ -4,9 +4,9 @@ import { FlushedGraphObjectData } from '../storage/types';
 import {
   uploadGraphObjectData,
   SynchronizationJobContext,
+  DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
 } from '../synchronization';
 import { randomUUID as uuid } from 'crypto';
-import { MAX_BATCH_SIZE_IN_BYTES } from '../synchronization/shrinkBatchRawData';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;
@@ -140,14 +140,8 @@ export function createPersisterApiStepGraphObjectDataUploader({
   stepId,
   synchronizationJobContext,
   uploadConcurrency,
-  uploadBatchSizeInBytes,
+  uploadBatchSizeInBytes = DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
-  if (
-    uploadBatchSizeInBytes &&
-    uploadBatchSizeInBytes > MAX_BATCH_SIZE_IN_BYTES
-  ) {
-    uploadBatchSizeInBytes = MAX_BATCH_SIZE_IN_BYTES;
-  }
   return createQueuedStepGraphObjectDataUploader({
     stepId,
     uploadConcurrency,
