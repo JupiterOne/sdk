@@ -1,0 +1,24 @@
+import {
+  IntegrationStep,
+  IntegrationStepExecutionContext,
+} from '@jupiterone/integration-sdk-core';
+
+import { IntegrationConfig } from '../../config';
+import { Steps{{#if entities}}, Entities{{/if}}{{#if relationships}}, Relationships{{/if}} } from '../constants';
+
+export const {{camelCase name}}Steps: IntegrationStep<IntegrationConfig>[] = [
+  {
+    id: Steps.{{constantCase name}},
+    name: '{{titleCase name}}',
+    entities: [{{#each entities}}Entities.{{constantCase resourceName}}{{#unless @last}},{{/unless}}{{/each}}],
+    relationships: [{{#each relationships}}Relationships.{{constantCase (generateRelationshipName this)}}{{#unless @last}},{{/unless}}{{/each}}],
+    dependsOn: [],
+    executionHandler: {{camelCase name}},
+  },
+];
+
+export async function {{camelCase name}}({
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  // TODO
+}

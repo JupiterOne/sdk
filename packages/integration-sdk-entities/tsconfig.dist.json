@@ -3,9 +3,11 @@
   "compilerOptions": {
     "sourceMap": true
   },
+  "include": ["src"],
   "exclude": [
-    "./jest.setup.ts",
-    "**/dist/*",
+    "jest.config.js",
+    "jest.setup.ts",
+    "**/dist/**/*",
     "**/*.test.ts",
     "**/__tests__/**/*.ts",
     "**/__mocks__/**/*.ts"

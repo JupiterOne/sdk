@@ -1,0 +1,38 @@
+import {
+  IntegrationExecutionContext,
+  {{#if configFields}}IntegrationValidationError,{{/if}}
+  IntegrationInstanceConfigFieldMap,
+} from '@jupiterone/integration-sdk-core';
+import { createAPIClient } from './client';
+
+export const instanceConfigFields = {
+  {{#each configFields}}
+  {{camelCase field}}: {
+    type: '{{type}}',
+    mask: {{mask}}
+  },
+  {{/each}}
+} satisfies IntegrationInstanceConfigFieldMap;
+
+export interface IntegrationConfig {
+  {{#each configFields}}
+  {{camelCase field}}: {{ type }};
+  {{/each}}
+}
+
+export async function validateInvocation(
+  context: IntegrationExecutionContext<IntegrationConfig>,
+) {
+  const { config } = context.instance;
+
+  {{#if configFields}}
+  if ({{#each configFields}}!config.{{camelCase field}}{{#unless @last}}||{{/unless}}{{/each}}) {
+    throw new IntegrationValidationError(
+      'Config requires all of {{#each configFields}}{{camelCase field}}{{#unless @last}},{{/unless}}{{/each}}',
+    );
+  }
+  {{/if}}
+
+  const apiClient = createAPIClient(config);
+  await apiClient.verifyAuthentication();
+}

@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios';
-import Alpha from '@lifeomic/alpha';
+import { Alpha, AlphaOptions } from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -16,6 +16,7 @@ interface CreateApiClientInput {
   account: string;
   accessToken?: string;
   retryOptions?: RetryOptions;
+  alphaOptions?: AlphaOptions;
 }
 
 interface RetryOptions {
@@ -39,6 +40,7 @@ export function createApiClient({
   account,
   accessToken,
   retryOptions,
+  alphaOptions,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
     'LifeOmic-Account': account,
@@ -49,11 +51,14 @@ export function createApiClient({
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  return new Alpha({
+  const opts: AlphaOptions = {
     baseURL: apiBaseUrl,
     headers,
     retry: retryOptions ?? {},
-  }) as ApiClient;
+    ...alphaOptions,
+  };
+
+  return new Alpha(opts) as ApiClient;
 }
 
 interface GetApiBaseUrlInput {

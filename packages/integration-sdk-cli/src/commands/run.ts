@@ -17,9 +17,9 @@ import {
 import { createPersisterApiStepGraphObjectDataUploader } from '@jupiterone/integration-sdk-runtime/dist/src/execution/uploader';
 
 import { loadConfig } from '../config';
-import * as log from '../log';
 import {
   addApiClientOptionsToCommand,
+  addLoggingOptions,
   addPathOptionsToCommand,
   addSyncOptionsToCommand,
   configureRuntimeFilesystem,
@@ -37,6 +37,7 @@ export function run(): Command {
   addPathOptionsToCommand(command);
   addApiClientOptionsToCommand(command);
   addSyncOptionsToCommand(command);
+  addLoggingOptions(command);
 
   return command
     .description('collect and sync to upload entities and relationships')
@@ -50,14 +51,18 @@ export function run(): Command {
 
       const clientApiOptions = getApiClientOptions(actionCommand.opts());
       const apiClient = createApiClient(clientApiOptions);
-      log.debug(
-        `Configured JupiterOne API client. (apiBaseUrl: '${clientApiOptions.apiBaseUrl}', account: ${clientApiOptions.account})`,
-      );
 
       let logger = createIntegrationLogger({
         name: 'local',
-        pretty: true,
+        pretty: !options.noPretty,
       });
+
+      logger.info(
+        {
+          apiBaseUrl: clientApiOptions.apiBaseUrl,
+        },
+        `Configured JupiterOne API Client`,
+      );
 
       const synchronizationContext = await initiateSynchronization({
         logger,
@@ -81,7 +86,7 @@ export function run(): Command {
       );
 
       const graphObjectStore = new FileSystemGraphObjectStore({
-        prettifyFiles: true,
+        prettifyFiles: !options.noPretty,
         integrationSteps: invocationConfig.integrationSteps,
       });
 
@@ -104,9 +109,6 @@ export function run(): Command {
                 stepId,
                 synchronizationJobContext: synchronizationContext,
                 uploadConcurrency: DEFAULT_UPLOAD_CONCURRENCY,
-                uploadBatchSize: options.uploadBatchSize,
-                uploadRelationshipsBatchSize:
-                  options.uploadRelationshipBatchSize,
               });
             },
           },
@@ -114,20 +116,23 @@ export function run(): Command {
 
         await eventPublishingQueue.onIdle();
 
-        log.displayExecutionResults(executionResults);
-
         if (options.skipFinalize) {
-          log.info(
+          logger.info(
             'Skipping synchronization finalization. Job will remain in "AWAITING_UPLOADS" state.',
           );
-          const jobStatus = await synchronizationStatus(synchronizationContext);
-          log.displaySynchronizationResults(jobStatus);
+          const synchronizationJob = await synchronizationStatus(
+            synchronizationContext,
+          );
+          logger.info({ synchronizationJob }, 'Synchronization job status.');
         } else {
-          const synchronizationResult = await finalizeSynchronization({
+          const synchronizationJob = await finalizeSynchronization({
             ...synchronizationContext,
             partialDatasets: executionResults.metadata.partialDatasets,
           });
-          log.displaySynchronizationResults(synchronizationResult);
+          logger.info(
+            { synchronizationJob },
+            'Synchronization finalization result.',
+          );
         }
       } catch (err) {
         await eventPublishingQueue.onIdle();
@@ -142,8 +147,7 @@ export function run(): Command {
           ...synchronizationContext,
           reason: err.message,
         });
-
-        log.displaySynchronizationResults(abortResult);
+        logger.error({ abortResult }, 'Synchronization job abort result.');
       } finally {
         logger.publishMetric({
           name: 'duration-total',

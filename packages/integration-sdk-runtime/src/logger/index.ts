@@ -1,4 +1,5 @@
 import Logger from 'bunyan';
+import { inspect } from 'util';
 import { EventEmitter } from 'events';
 import { randomUUID as uuid } from 'crypto';
 
@@ -29,6 +30,7 @@ import {
   PublishErrorEventInput,
   DisabledStepReason,
   PublishMetricOptions,
+  StepLogAdditionalContext,
 } from '@jupiterone/integration-sdk-core';
 
 export * from './registerEventHandlers';
@@ -53,7 +55,8 @@ interface CreateLoggerInput<
 }
 
 interface CreateIntegrationLoggerInput<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 > extends CreateLoggerInput<
     IntegrationExecutionContext<TIntegrationConfig>,
     IntegrationStepExecutionContext<TIntegrationConfig>
@@ -77,7 +80,16 @@ export function createLogger<
     name,
     level: (process.env.LOG_LEVEL || 'info') as Logger.LogLevel,
     serializers: {
-      err: Logger.stdSerializers.err,
+      err: function (err) {
+        if (!err || !err.stack) return err;
+        return {
+          message: err.message,
+          name: err.name,
+          stack: inspect(err, false, 10),
+          code: err.code,
+          signal: err.signal,
+        };
+      },
     },
   };
 
@@ -105,7 +117,8 @@ export function createLogger<
  * serializers common to all integrations.
  */
 export function createIntegrationLogger<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 >({
   name,
   invocationConfig,
@@ -312,7 +325,11 @@ export class IntegrationLogger
     this.publishEvent({ name, description });
   }
 
-  stepSkip(step: StepMetadata, reason: DisabledStepReason) {
+  stepSkip(
+    step: StepMetadata,
+    reason: DisabledStepReason,
+    additionalContext?: StepLogAdditionalContext,
+  ) {
     if (!reason || reason === DisabledStepReason.NONE) {
       return;
     }
@@ -334,7 +351,22 @@ export class IntegrationLogger
         break;
       }
       case DisabledStepReason.CONFIG: {
-        description += `This step is disabled via configuration. Please contact support to enable.`;
+        description += `Step was disabled via configuration. Please contact support to enable.`;
+        break;
+      }
+      case DisabledStepReason.USER_CONFIG: {
+        description += `Step was disabled via configuration. Update instance config to enable.`;
+        break;
+      }
+      case DisabledStepReason.PARENT_DISABLED: {
+        const parentStepName = additionalContext?.parentStep?.name;
+        if (!parentStepName) {
+          this.warn(`Parent step not provided for child step ${step.name}`);
+        }
+        description += parentStepName
+          ? `Step was disabled because parent step "${parentStepName}" was disabled. In order to enable this step, please check logs for more information about the parent step.`
+          : 'Step was disabled because parent step was disabled. In order to enable this step, please check logs for more information about the parent step.';
+        break;
       }
     }
 
@@ -421,7 +453,7 @@ export class IntegrationLogger
     };
 
     if (logMetric) {
-      this.info({ metric: metricWithTimestamp }, 'Collected metric.');
+      this.debug({ metric: metricWithTimestamp }, 'Collected metric.');
     }
 
     // emit the metric so that consumers can collect the metric
@@ -490,7 +522,6 @@ export function createErrorEventDescription(
 
   const nameValuePairs: NameValuePair[] = [
     ['errorCode', errorCode],
-    ['errorId', errorId],
     ['reason', errorReason],
   ];
 

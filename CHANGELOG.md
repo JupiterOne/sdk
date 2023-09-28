@@ -9,13 +9,186 @@ and this project adheres to
 
 ## Unreleased
 
+## 10.7.0 - 2023-09-21
+
+- Changed the log level of the `Collected metric` log that is published when
+  logger.publishMetric is called to "debug"
+
+## 10.5.3 - 2023-09-18
+
+- Use the same logger for all logs created via the `j1-integration run` command
+  to improve formatting consistency
+- Update internal `err` log serializer
+
+## 10.5.2 - 2023-09-14
+
+- Improvements to integration graph generator
+
+## 10.5.0 - 2023-09-12
+
+- Add `error_unexpected_error` to IntegrationErrorEventName
+
+## 10.4.0 - 2023-09-11
+
+- Revert change in 10.1.0 due to system health issues
+
+## 10.3.0 - 2023-09-07
+
+- Update `jest.js` config to remove deprecated option.
+- Add `--noPretty` option to cli to disable pretty printing of logs locally.
+
+## 10.2.0 - 2023-09-01
+
+- Allow user to override `AlphaOptions` in `createApiClient`
+
+## 10.1.0 - 2023-08-28
+
+- 'InMemoryGraphObjectStore' no longer stores a set amount of entities or
+  relationships, rather it works by measuring size in bytes of graph objects by
+  default.
+
+## 10.0.0 - 2023-08-03
+
+- Bump TypeScript, ESLint, and Prettier to next major versions. Integration
+  projects may encounter breaking changes when they adopt these new versions.
+  For example, Prettier changed some default formatting. To fix the Prettier
+  formatting, you may run the following command:
+
+  `yarn:format` or `prettier --write \"**/*.{ts,js,json,css,md,yml}\"`
+
+## 9.11.1 - 2023-08-01
+
+- Introduce batchingBySize option.
+
+## 9.10.0 - 2023-07-31
+
+- Introduce `executionHandlerWrapper` execution wrapper. See
+  [development documentation](./docs/integrations/development.md) for more
+  information.
+
+## 9.9.1 - 2023-07-24
+
 ### Changed
 
-- **BREAKING** - Bump version of Node.js to v18 and require version
-  > =18.16.0 <19.x.
+- Pass an instantiated credential provider to `@lifeomic/alpha` client so that
+  credentials stop getting re-loaded when hitting the synchronization API from a
+  private endpoint
+
+## 9.8.0 - 2023-07-04
+
+### Added
+
+- Add log for skipped steps for each disabled child step.
+
+## 9.7.0 - 2023-07-05
+
+### Added
+
+- Introduce `afterExecution` integration execution hook. See
+  [development documentation](./docs/integrations/development.md) for more
+  information.
+
+## 9.6.2 - 2023-06-30
+
+### Updated
+
+Adds logging when an integration fails to initialize or finalize a
+synchronization job
+
+## 9.6.0 - 2023-06-30
+
+### Added
+
+Introduces a new feature to `j1-integration` that allows generating a new
+integration using a series of inputs.
+
+Example:
+
+```
+j1-integration generate
+```
+
+## 9.5.0 - 2023-06-19
+
+### Updated
+
+- modify `generateIngestionSourcesConfigCommand` to include child steps metadata
+  in the `childIngestionSources` property
+
+## 9.4.1 - 2023-06-07
+
+### Updated
+
+- fix dependencies to be node 18 compatible
+
+## 9.4.0 - 2023-05-11
+
+### Updated
+
+- Updated `@lifeomic/alpha` dependency to `v5.1.1`.
+
+## 9.3.1 - 2023-05-10
+
+### Changed
+
+- Remove steps using the ingestion source id to `childIngestionSources`
+
+## 9.3.0 - 2023-05-09
+
+### Changed
+
+- optimized memory usage in `DuplicateKeyTracker`
+
+## 9.2.0 - 2023-05-03
+
+### Added
+
+- `executeWithContext(context: TExecutionContext, ...)` now accepts a
+  `context.instance` property
+- modify step start states using ingestionSourcesConfig / disabledSources.
+
+## 9.1.0 - 2023-05-03
+
+### Added
+
+- Added `disabledSources` field to the `IntegrationInstance` type from the
+  `@jupiterone/integration-sdk-core` package.
+
+## 9.0.0
+
+### Changed
+
+- **BREAKING** - Bump version of Node.js to v18 and require version >=18.16.0
+  <19.x.
+
+- **BREAKING** - Remove asynchronous `jobState.hasKey()`
+
+  The `hasKey` function has no asynchronous implementation, and awaiting
+  `jobState.hasKey` can unexpectedly cause duplicate key errors in some specific
+  edge cases (see https://github.com/JupiterOne/sdk/pull/694/files).
+
 - Remove the following Node.js event listeners due to Node.js core deprecation:
   - `unhandledRejection`
   - `multipleResolves`
+
+## 8.38.0 - 2023-04-28
+
+### Added
+
+- Add steps using the ingestion source id to `childIngestionSources`
+
+## 8.37.0 - 2023-04-28
+
+### Changed
+
+- Reduced log level of graph object uploads from info to debug
+
+## 8.36.0 - 2023-04-21
+
+### Changed
+
+- Set the integrationJobId to the syncJob's integrationJobId if a job id was not
+  passed in in the jobConfiguration.
 
 ## 8.35.0 - 2023-04-12
 
@@ -1310,13 +1483,13 @@ of the support.jupiterone.io site.
 Old:
 
 ```ts
-getData: <T>(key: string) => Promise<T>;
+getData: <T,>(key: string) => Promise<T>;
 ```
 
 New:
 
 ```ts
-getData: <T>(key: string) => Promise<T | undefined>;
+getData: <T,>(key: string) => Promise<T | undefined>;
 ```
 
 ## 5.8.0 - 2021-02-26

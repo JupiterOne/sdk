@@ -5,6 +5,7 @@ import { randomUUID as uuid } from 'crypto';
 import waitForExpect from 'wait-for-expect';
 
 import {
+  DisabledStepReason,
   Entity,
   GraphObjectStore,
   IntegrationError,
@@ -816,7 +817,7 @@ describe('executeStepDependencyGraph', () => {
       { err: error, errorId: expect.any(String), code: 'ABC-123' },
       expect.stringMatching(
         new RegExp(
-          `Step "a" failed to complete due to error. \\(errorCode="ABC-123", errorId="(.*)"\\)$`,
+          `Step "a" failed to complete due to error. \\(errorCode="ABC-123", reason="oopsie"\\)$`,
         ),
       ),
     );
@@ -1301,7 +1302,152 @@ describe('executeStepDependencyGraph', () => {
     expect(spyD).toHaveBeenCalledTimes(0);
 
     expect(spyA).toHaveBeenCalledBefore(spyC);
-    expect(spyC).toHaveBeenCalledBefore(spyD);
-    expect(spyE).toHaveBeenCalledBefore(spyD);
+  });
+
+  test('should log parent and child skipped steps', async () => {
+    // Arrange
+    const stepSkipSpy = jest.spyOn(executionContext.logger, 'stepSkip');
+    jest
+      .spyOn(executionContext.logger, 'child')
+      .mockReturnValue(executionContext.logger);
+
+    const spyA = jest.fn();
+    const spyB = jest.fn();
+    const spyC = jest.fn();
+    const spyD = jest.fn();
+    const spyE = jest.fn();
+
+    const parentStep = {
+      id: 'b',
+      name: 'b',
+      entities: [],
+      relationships: [],
+      executionHandler: spyB,
+    };
+
+    const childStep = {
+      id: 'd',
+      name: 'd',
+      entities: [],
+      relationships: [],
+      dependsOn: ['b', 'c', 'e'],
+      executionHandler: spyD,
+    };
+
+    /**
+     *     e
+     *       \
+     * a - c - d
+     *       /
+     *     b
+     *
+     * In this situation, 'a', 'e', and 'b' are leaf nodes
+     * 'c' depends on 'a',
+     * 'd' depends on 'e', 'c', and 'b'
+     */
+    const steps: IntegrationStep[] = [
+      {
+        id: 'a',
+        name: 'a',
+        entities: [],
+        relationships: [],
+        executionHandler: spyA,
+      },
+      parentStep,
+      {
+        id: 'c',
+        name: 'c',
+        entities: [],
+        relationships: [],
+        dependsOn: ['a'],
+        executionHandler: spyC,
+      },
+      childStep,
+      {
+        id: 'e',
+        name: 'e',
+        entities: [],
+        relationships: [],
+        executionHandler: spyE,
+      },
+    ];
+
+    const stepStartStates = getDefaultStepStartStates(steps);
+    stepStartStates['b'] = {
+      disabled: true,
+      disabledReason: DisabledStepReason.CONFIG,
+    };
+
+    // Act
+    const results = await executeSteps(steps, stepStartStates);
+
+    // Assert
+    expect(results).toEqual(
+      expect.arrayContaining([
+        {
+          id: 'a',
+          name: 'a',
+          declaredTypes: [],
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'b',
+          name: 'b',
+          declaredTypes: [],
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.DISABLED,
+        },
+        {
+          id: 'c',
+          name: 'c',
+          declaredTypes: [],
+          partialTypes: [],
+          encounteredTypes: [],
+          dependsOn: ['a'],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'd',
+          name: 'd',
+          declaredTypes: [],
+          partialTypes: [],
+          encounteredTypes: [],
+          dependsOn: ['b', 'c', 'e'],
+          status: StepResultStatus.DISABLED,
+        },
+        {
+          id: 'e',
+          name: 'e',
+          declaredTypes: [],
+          partialTypes: [],
+          encounteredTypes: [],
+          status: StepResultStatus.SUCCESS,
+        },
+      ]),
+    );
+
+    expect(spyA).toHaveBeenCalledTimes(1);
+    expect(spyC).toHaveBeenCalledTimes(1);
+    expect(spyE).toHaveBeenCalledTimes(1);
+
+    expect(spyB).toHaveBeenCalledTimes(0);
+    expect(spyD).toHaveBeenCalledTimes(0);
+
+    expect(spyA).toHaveBeenCalledBefore(spyC);
+
+    // Assert skipStep being called for parent and child steps
+    expect(stepSkipSpy).toHaveBeenCalledTimes(2);
+    // Child step "d" is just skipped once even though it depends on more steps
+    // As "b" is processed first, the "stepSkip" function is invoked for "d" with "b" acting as its parent.
+    // However, for the remaining steps, even though "d" is a child, it has already been logged.
+    expect(stepSkipSpy.mock.calls).toEqual([
+      // Parent step call
+      [parentStep, DisabledStepReason.CONFIG],
+      // Child step call
+      [childStep, DisabledStepReason.PARENT_DISABLED, { parentStep }],
+    ]);
   });
 });

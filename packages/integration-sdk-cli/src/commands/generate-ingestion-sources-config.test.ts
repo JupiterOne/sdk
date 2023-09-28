@@ -26,7 +26,7 @@ describe('#generateIngestionSourcesConfig', () => {
     },
   };
 
-  it('should return the ingestionConfig with steps using the ingestion source id in the childIngestionSources.', () => {
+  it('should return the ingestionConfig with empty childIngestionSources', () => {
     const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
       {
         id: 'fetch-vulnerability-alerts',
@@ -55,7 +55,7 @@ describe('#generateIngestionSourcesConfig', () => {
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]
         .childIngestionSources,
-    ).toEqual(['fetch-vulnerability-alerts']);
+    ).toBeEmpty();
     // ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS] is undefined because there are no steps using that ingestionSourceId
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS],
@@ -63,6 +63,33 @@ describe('#generateIngestionSourcesConfig', () => {
   });
 
   it('should return the ingestionConfig with childIngestionSources', () => {
+    const stepFetchVulnerabilityAlerts = {
+      id: 'fetch-vulnerability-alerts',
+      name: 'Fetch Vulnerability Alerts',
+      entities: [
+        {
+          resourceName: 'GitHub Vulnerability Alerts',
+          _type: 'github_finding',
+          _class: ['Finding'],
+        },
+      ],
+      relationships: [],
+      dependsOn: ['fetch-repos'],
+      ingestionSourceId: INGESTION_SOURCE_IDS.FINDING_ALERTS,
+    };
+    const stepFetchIssues = {
+      id: 'fetch-issues',
+      name: 'Fetch Issues',
+      entities: [
+        {
+          resourceName: 'GitHub Issue',
+          _type: 'github_issue',
+          _class: ['Issue'],
+        },
+      ],
+      relationships: [],
+      dependsOn: ['fetch-repos', 'fetch-users', 'fetch-collaborators'],
+    };
     const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
       {
         id: 'fetch-repos',
@@ -80,32 +107,11 @@ describe('#generateIngestionSourcesConfig', () => {
         executionHandler: jest.fn(),
       },
       {
-        id: 'fetch-vulnerability-alerts',
-        name: 'Fetch Vulnerability Alerts',
-        entities: [
-          {
-            resourceName: 'GitHub Vulnerability Alerts',
-            _type: 'github_finding',
-            _class: ['Finding'],
-          },
-        ],
-        relationships: [],
-        dependsOn: ['fetch-repos'],
-        ingestionSourceId: INGESTION_SOURCE_IDS.FINDING_ALERTS,
+        ...stepFetchVulnerabilityAlerts,
         executionHandler: jest.fn(),
       },
       {
-        id: 'fetch-issues',
-        name: 'Fetch Issues',
-        entities: [
-          {
-            resourceName: 'GitHub Issue',
-            _type: 'github_issue',
-            _class: ['Issue'],
-          },
-        ],
-        relationships: [],
-        dependsOn: ['fetch-repos', 'fetch-users', 'fetch-collaborators'],
+        ...stepFetchIssues,
         executionHandler: jest.fn(),
       },
       {
@@ -131,27 +137,17 @@ describe('#generateIngestionSourcesConfig', () => {
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]);
-    // New property added with the right child ingestion sources
+    // New property added
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS]
         .childIngestionSources,
     ).toEqual(
-      expect.arrayContaining([
-        'fetch-repos',
-        'fetch-vulnerability-alerts',
-        'fetch-issues',
-      ]),
+      expect.arrayContaining([stepFetchVulnerabilityAlerts, stepFetchIssues]),
     );
-    // For FINDING_ALERTS:
-    // Original object doesn't change
+    // For FINDING_ALERTS the ingestionConfig keep exactly the same
     expect(
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS],
     ).toMatchObject(ingestionConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]);
-    // New property added with only 'fetch-vulnerability-alerts' added as child ingestion source
-    expect(
-      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS]
-        .childIngestionSources,
-    ).toEqual(['fetch-vulnerability-alerts']);
   });
 
   it('should not add the source if it does not exist in the ingestionConfig', () => {

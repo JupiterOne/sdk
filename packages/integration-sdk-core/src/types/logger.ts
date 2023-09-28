@@ -10,10 +10,15 @@ interface ChildLogFunction {
   (options: object): IntegrationLogger;
 }
 
+export interface StepLogAdditionalContext {
+  parentStep?: StepMetadata;
+}
+
 type StepLogFunction = (step: StepMetadata) => void;
 type StepLogFunctionWithReason = (
   step: StepMetadata,
   reason: DisabledStepReason,
+  additionalContext?: StepLogAdditionalContext,
 ) => void;
 type StepLogFunctionWithError = (step: StepMetadata, err: Error) => void;
 type SynchronizationLogFunction = (job: SynchronizationJob) => void;
@@ -84,6 +89,13 @@ export interface PublishWarnEventInput extends PublishEventInput {
  * marking the job as failed.
  */
 export enum IntegrationErrorEventName {
+  /**
+   * An unexpected error event to generally handle errors.
+   * Use unexpected_error for issue that cannot
+   * be addressed by the user and are not clearly known.
+   */
+  UnexpectedError = 'error_unexpected_error',
+
   /**
    * A missing permission that will cause a job failure.
    * Use warn_missing_permission if attempting to notify user

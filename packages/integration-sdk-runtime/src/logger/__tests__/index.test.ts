@@ -146,7 +146,7 @@ describe('createIntegrationLogger', () => {
       name: 'integration-logger',
       level: 'info',
       serializers: {
-        err: Logger.stdSerializers.err,
+        err: expect.any(Function),
       },
     });
   });
@@ -163,7 +163,7 @@ describe('createIntegrationLogger', () => {
       name: 'integration-logger',
       level: 'info',
       serializers: {
-        err: Logger.stdSerializers.err,
+        err: expect.any(Function),
       },
       streams: [{ stream: expect.any(Writable) }],
     });
@@ -317,13 +317,14 @@ describe('step event publishing', () => {
     logger.stepSkip(step, DisabledStepReason.BETA);
     logger.stepSkip(step, DisabledStepReason.PERMISSION);
     logger.stepSkip(step, DisabledStepReason.CONFIG);
+    logger.stepSkip(step, DisabledStepReason.USER_CONFIG);
     logger.stepSkip(step, DisabledStepReason.NONE);
 
     // just use some error that contains a code
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(7);
+    expect(onEmitEvent).toHaveBeenCalledTimes(8);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
       level: PublishEventLevel.Info,
@@ -356,14 +357,20 @@ describe('step event publishing', () => {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". This step is disabled via configuration. Please contact support to enable.',
+        'Skipped step "Mochi". Step was disabled via configuration. Please contact support to enable.',
     });
     expect(onEmitEvent).toHaveBeenNthCalledWith(7, {
+      name: 'step_skip',
+      level: PublishEventLevel.Info,
+      description:
+        'Skipped step "Mochi". Step was disabled via configuration. Update instance config to enable.',
+    });
+    expect(onEmitEvent).toHaveBeenNthCalledWith(8, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
       description: expect.stringMatching(
         new RegExp(
-          `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", errorId="(.*)"\\)$`,
+          `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", reason="ripperoni"\\)$`,
         ),
       ),
     });
@@ -420,7 +427,7 @@ describe('provider auth error details', () => {
           new RegExp(
             '^Step "Mochi" failed to complete due to error.' +
               PROVIDER_AUTH_ERROR_HELP +
-              ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
+              ` \\(errorCode="${error.code}", reason="${expectedReason}"\\)$`,
           ),
         ),
       });
@@ -436,7 +443,7 @@ describe('provider auth error details', () => {
           new RegExp(
             '^Error occurred while validating integration configuration.' +
               PROVIDER_AUTH_ERROR_HELP +
-              ` \\(errorCode="${error.code}", errorId="[^"]*", reason="${expectedReason}"\\)$`,
+              ` \\(errorCode="${error.code}", reason="${expectedReason}"\\)$`,
           ),
         ),
       });
@@ -487,7 +494,7 @@ describe('validation failure logging', () => {
 
     const error = new Error('WAT?');
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", errorId="(.*)", reason="Unexpected error .*?"\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", reason="Unexpected error .*?"\\)$`,
     );
 
     logger.validationFailure(error);
@@ -519,7 +526,7 @@ describe('validation failure logging', () => {
 
     const error = new IntegrationValidationError('Bad Mochi');
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", errorId="(.*)", reason="Bad Mochi"\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="${error.code}", reason="Bad Mochi"\\)$`,
     );
 
     logger.validationFailure(error);
@@ -547,24 +554,18 @@ describe('createErrorEventDescription', () => {
   test('supplies default reason if an error without a code is provided', () => {
     const error = new Error('soba');
 
-    const { description, errorId } = createErrorEventDescription(
-      error,
-      'testing',
-    );
+    const { description } = createErrorEventDescription(error, 'testing');
     expect(description).toEqual(
-      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", errorId="${errorId}", reason="${UNEXPECTED_ERROR_REASON}")`,
+      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", reason="${UNEXPECTED_ERROR_REASON}")`,
     );
   });
 
   test('displays code and message from error if error is an integration error', () => {
     const error = new IntegrationValidationError('soba');
 
-    const { description, errorId } = createErrorEventDescription(
-      error,
-      'testing',
-    );
+    const { description } = createErrorEventDescription(error, 'testing');
     expect(description).toEqual(
-      `testing (errorCode="${error.code}", errorId="${errorId}", reason="soba")`,
+      `testing (errorCode="${error.code}", reason="soba")`,
     );
   });
 });
@@ -624,7 +625,7 @@ describe('publishMetric', () => {
       invocationConfig,
     });
 
-    const infoSpy = jest.spyOn(logger, 'info');
+    const debugSpy = jest.spyOn(logger, 'debug');
 
     logger.publishMetric({
       name: 'metric',
@@ -632,8 +633,8 @@ describe('publishMetric', () => {
       unit: 'Milliseconds',
     });
 
-    expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledWith(
+    expect(debugSpy).toHaveBeenCalledTimes(1);
+    expect(debugSpy).toHaveBeenCalledWith(
       {
         metric: {
           name: 'metric',

@@ -1,0 +1,30 @@
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
+import { StepTestConfig } from '@jupiterone/integration-sdk-testing';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import { invocationConfig } from '../src';
+import { IntegrationConfig } from '../src/config';
+
+if (process.env.LOAD_ENV) {
+  dotenv.config({
+    path: path.join(__dirname, '../.env'),
+  });
+}
+
+{{#each configField}}
+const DEFAULT_{{constantCase field}} = '';
+{{/each}}
+
+export const integrationConfig: IntegrationConfig = {
+  {{#each configField}}
+  {{camelCase field}}: process.env.{{constantCase field}} || DEFAULT_{{constantCase field}}
+  {{/each}}
+};
+
+export function buildStepTestConfigForStep(stepId: string): StepTestConfig {
+  return {
+    stepId,
+    instanceConfig: integrationConfig,
+    invocationConfig: invocationConfig as IntegrationInvocationConfig,
+  };
+}

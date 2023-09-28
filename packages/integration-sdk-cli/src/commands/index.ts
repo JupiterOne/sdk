@@ -11,3 +11,4 @@ export * from './visualize-dependencies';
 export * from './generate-integration-graph-schema';
 export * from './troubleshoot';
 export * from './generate-ingestion-sources-config';
+export * from './generate';

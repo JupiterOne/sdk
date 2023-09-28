@@ -1,0 +1,32 @@
+import {
+  {{#if relationships}}RelationshipClass,{{/if}}
+  StepEntityMetadata,
+  StepRelationshipMetadata,
+} from '@jupiterone/integration-sdk-core';
+
+export const Steps = {
+  {{#each steps}}
+  {{constantCase name}}: '{{kebabCase name}}',
+  {{/each}}
+} satisfies Record<string, string>;
+
+export const Entities = {
+  {{#each entities}}
+  {{constantCase resourceName}}: {
+    resourceName: '{{resourceName}}',
+    _type: '{{_type}}',
+    _class: [{{#each _class}}'{{this}}'{{#unless @last}},{{/unless}}{{/each}}],
+  },
+  {{/each}}
+} satisfies Record<string, StepEntityMetadata>;
+
+export const Relationships = {
+  {{#each relationships}}
+  {{constantCase (generateRelationshipName this)}}: {
+    sourceType: Entities.{{ constantCase from.resourceName }}._type,
+    targetType: Entities.{{ constantCase to.resourceName }}._type,
+    _type: '{{snakeCase (generateRelationshipType this)}}',
+    _class: RelationshipClass.{{_class}},
+  },
+  {{/each}}
+} satisfies Record<string, StepRelationshipMetadata>;

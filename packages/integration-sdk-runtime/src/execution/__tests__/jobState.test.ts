@@ -163,21 +163,21 @@ describe('#hasKey', () => {
     vol.reset();
   });
 
-  test('answers false when no entity or relationship added', async () => {
+  test('answers false when no entity or relationship added', () => {
     const jobState = createTestStepJobState();
-    expect(await jobState.hasKey('a')).toBeFalse();
+    expect(jobState.hasKey('a')).toBeFalse();
   });
 
   test('answers true when entity added', async () => {
     const jobState = createTestStepJobState();
     await jobState.addEntity(createTestEntity({ _key: 'a' }));
-    expect(await jobState.hasKey('a')).toBeTrue();
+    expect(jobState.hasKey('a')).toBeTrue();
   });
 
   test('answers true when relationship added', async () => {
     const jobState = createTestStepJobState();
     await jobState.addRelationship(createTestRelationship({ _key: 'a' }));
-    expect(await jobState.hasKey('a')).toBeTrue();
+    expect(jobState.hasKey('a')).toBeTrue();
   });
 
   test('key normalization', async () => {
@@ -187,8 +187,8 @@ describe('#hasKey', () => {
       ),
     });
     await jobState.addEntity(createTestEntity({ _key: 'A' }));
-    expect(await jobState.hasKey('A')).toBeTrue();
-    expect(await jobState.hasKey('a')).toBeTrue();
+    expect(jobState.hasKey('A')).toBeTrue();
+    expect(jobState.hasKey('a')).toBeTrue();
   });
 
   test('should handle concurrent reads from in-memory key store when using synchronous hasKey', async () => {
@@ -227,7 +227,7 @@ describe('upload callbacks', () => {
       createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThreshold: 2,
+        graphObjectBufferThresholdInBytes: 400,
       }),
       uploader: uploadCollector.uploader,
     });
@@ -253,7 +253,7 @@ describe('upload callbacks', () => {
       createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThreshold: 2,
+        graphObjectBufferThresholdInBytes: 400,
       }),
       uploader: uploadCollector.uploader,
     });
@@ -278,9 +278,7 @@ describe('upload callbacks', () => {
     const uploadCollector =
       createInMemoryStepGraphObjectDataUploaderCollector();
     const jobState = createTestStepJobState({
-      graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThreshold: 5,
-      }),
+      graphObjectStore: new FileSystemGraphObjectStore(),
       uploader: uploadCollector.uploader,
     });
 
@@ -322,7 +320,7 @@ describe('upload callbacks', () => {
 
     const jobState = createTestStepJobState({
       graphObjectStore: new FileSystemGraphObjectStore({
-        graphObjectBufferThreshold: 2,
+        graphObjectBufferThresholdInBytes: 400,
       }),
       uploader,
     });

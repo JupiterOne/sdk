@@ -1,23 +1,30 @@
 import { mocked } from 'jest-mock';
-import ora from 'ora';
-
-import {
-  exportAssetsToJson,
-  ExportAssetsToJsonParams,
-} from '../exportAssetsToJson';
+import { exportAssetsToJson } from '../exportAssetsToJson';
 import { DEFAULT_EXPORT_DIRECTORY } from '../../commands';
 import { bulkDownloadToJson } from '../bulkDownloadToJson';
 import * as log from '../../log';
 import { TEST_API_KEY } from '../../__tests__/utils';
+import { ExportAssetsParams } from '../exportAssets';
+import { randomUUID } from 'crypto';
 
 jest.mock('../bulkDownloadToJson');
 jest.mock('../../log');
-jest.mock('ora');
 
-const mockedBulkDownload = mocked(bulkDownloadToJson, true);
-const mockedSpinner = ora().start();
+jest.mock('ora', () => {
+  return () => {
+    return {
+      start: jest.fn().mockReturnThis(),
+      stop: jest.fn(),
+      fail: jest.fn(),
+      succeed: jest.fn(),
+    };
+  };
+});
 
-const options: ExportAssetsToJsonParams = {
+const mockedBulkDownload = mocked(bulkDownloadToJson);
+
+const options: ExportAssetsParams = {
+  account: randomUUID(),
   storageDirectory: DEFAULT_EXPORT_DIRECTORY,
   includeDeleted: true,
   includeEntities: true,
@@ -46,11 +53,6 @@ test('should download both entities and relationships when specified to include 
       assetType: 'relationships',
       progress: expect.anything(),
     }),
-  );
-  expect(mockedSpinner.succeed).toHaveBeenCalledWith(
-    expect.stringMatching(
-      /Export Successful, Downloaded \d+ entities and \d+ relationships!/g,
-    ),
   );
 });
 
@@ -96,7 +98,4 @@ test('should log error when there is an issue bulk downloading', async () => {
 
   await expect(exportAssetsToJson(options)).rejects.toThrow(error);
   expect(log.error).toHaveBeenCalledWith('Failed to export assets to JSON');
-  expect(mockedSpinner.fail).toHaveBeenCalledWith(
-    'Failed to export assets to JSON',
-  );
 });

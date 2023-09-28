@@ -14,7 +14,7 @@ import { IntegrationLogger } from '../logger';
 // however, we do have to consider the size of whatever aws sdk wraps
 // our payload in. In practice we have seen batches as small as 5800000
 // fail. To be completely safe, we are using 5500000 bytes as default
-const MAX_BATCH_SIZE = 5500000;
+export const MAX_BATCH_SIZE_IN_BYTES = 5_500_000;
 
 // TODO [INT-3707]: uncomment and use when implementing method
 // to shrink single entity's rawData until that entity is < 1MB
@@ -30,7 +30,7 @@ const MAX_BATCH_SIZE = 5500000;
 export function shrinkBatchRawData(
   batchData: UploadDataLookup[keyof UploadDataLookup][],
   logger: IntegrationLogger,
-  maxBatchSize = MAX_BATCH_SIZE,
+  maxBatchSize = MAX_BATCH_SIZE_IN_BYTES,
 ): void {
   logger.info(`Attempting to shrink rawData`);
   const startTimeInMilliseconds = Date.now();

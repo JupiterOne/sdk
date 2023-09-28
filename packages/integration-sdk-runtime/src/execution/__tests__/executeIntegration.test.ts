@@ -76,7 +76,8 @@ async function getSortedLocalGraphData(): Promise<
 }
 
 export interface InstanceConfigurationData<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 > {
   validateInvocation: IntegrationInvocationValidationFunction<TIntegrationConfig>;
   instance: IntegrationInstance<TIntegrationConfig>;
@@ -93,7 +94,8 @@ describe('executeIntegrationInstance', () => {
   const executionStartedOn = Date.now();
 
   async function executeIntegrationInstanceWithConfig<
-    TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+    TIntegrationConfig extends
+      IntegrationInstanceConfig = IntegrationInstanceConfig,
   >(
     config: InstanceConfigurationData<TIntegrationConfig>,
     options: ExecuteIntegrationOptions = {},
@@ -253,6 +255,62 @@ describe('executeIntegrationInstance', () => {
         },
       },
     );
+  });
+
+  test('calls "afterExecution" hook when integration execution completes successfully', async () => {
+    const afterExecutionFn = jest.fn().mockResolvedValueOnce(Promise.resolve());
+
+    await executeIntegrationInstanceWithConfig(
+      createInstanceConfiguration({
+        invocationConfig: {
+          integrationSteps: [],
+          afterExecution: afterExecutionFn,
+        },
+      }),
+    );
+
+    const expectedContext: IntegrationExecutionContext = {
+      instance: LOCAL_INTEGRATION_INSTANCE,
+      logger: expect.any(IntegrationLoggerImpl),
+      executionHistory: {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
+      executionConfig: {},
+    };
+
+    expect(afterExecutionFn).toHaveBeenCalledTimes(1);
+    expect(afterExecutionFn).toHaveBeenCalledWith(expectedContext);
+  });
+
+  test('does not throw if "afterExecution" hook throws', async () => {
+    const afterExecutionFn = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('expected error'));
+
+    await executeIntegrationInstanceWithConfig(
+      createInstanceConfiguration({
+        invocationConfig: {
+          integrationSteps: [],
+          afterExecution: afterExecutionFn,
+        },
+      }),
+    );
+
+    const expectedContext: IntegrationExecutionContext = {
+      instance: LOCAL_INTEGRATION_INSTANCE,
+      logger: expect.any(IntegrationLoggerImpl),
+      executionHistory: {
+        current: {
+          startedOn: executionStartedOn,
+        },
+      },
+      executionConfig: {},
+    };
+
+    expect(afterExecutionFn).toHaveBeenCalledTimes(1);
+    expect(afterExecutionFn).toHaveBeenCalledWith(expectedContext);
   });
 
   test('runs multiple dependency graphs in order and returns integration step results and metadata about partial datasets', async () => {

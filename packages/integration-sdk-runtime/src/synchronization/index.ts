@@ -1,5 +1,4 @@
 import path from 'path';
-import chunk from 'lodash/chunk';
 import pMap from 'p-map';
 
 import {
@@ -25,11 +24,13 @@ import { createEventPublishingQueue } from './events';
 import { AxiosInstance } from 'axios';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
+import { batchGraphObjectsBySizeInBytes, getSizeOfObject } from './batchBySize';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
 
-export const DEFAULT_UPLOAD_BATCH_SIZE = 250;
+export const DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES = 5_000_000;
+
 const UPLOAD_CONCURRENCY = 6;
 
 export enum RequestHeaders {
@@ -69,9 +70,6 @@ export interface SynchronizeInput {
    * When no value is provided, a new job will be created.
    */
   integrationJobId?: string;
-
-  uploadBatchSize?: number | undefined;
-  uploadRelationshipBatchSize?: number | undefined;
 
   skipFinalize?: boolean;
 }
@@ -144,8 +142,6 @@ export interface SynchronizationJobContext {
   apiClient: ApiClient;
   job: SynchronizationJob;
   logger: IntegrationLogger;
-  uploadBatchSize?: number | undefined;
-  uploadRelationshipBatchSize?: number | undefined;
 }
 
 /**
@@ -154,8 +150,7 @@ export interface SynchronizationJobContext {
 export async function initiateSynchronization(
   input: SynchronizeInput,
 ): Promise<SynchronizationJobContext> {
-  const { logger, apiClient, uploadBatchSize, uploadRelationshipBatchSize } =
-    input;
+  const { logger, apiClient } = input;
 
   const jobConfiguration = buildJobConfiguration(input);
 
@@ -169,6 +164,13 @@ export async function initiateSynchronization(
     );
     job = response.data.job;
   } catch (err) {
+    logger.warn(
+      {
+        err,
+        'err.$response': (err as any)?.$response,
+      },
+      'Error occurred while initiating synchronization job',
+    );
     throw synchronizationApiError(
       err,
       'Error occurred while initiating synchronization job',
@@ -184,8 +186,6 @@ export async function initiateSynchronization(
         jobConfiguration.integrationJobId ?? job.integrationJobId,
       synchronizationJobId: job.id,
     }),
-    uploadBatchSize,
-    uploadRelationshipBatchSize,
   };
 }
 
@@ -239,16 +239,18 @@ export async function finalizeSynchronization({
     );
     finalizedJob = response.data.job;
   } catch (err) {
+    logger.warn(
+      {
+        err,
+        'err.$response': (err as any)?.$response,
+      },
+      'Error occurred while finalizing synchronization job',
+    );
     throw synchronizationApiError(
       err,
       'Error occurred while finalizing synchronization job.',
     );
   }
-
-  logger.info(
-    { synchronizationJob: finalizedJob },
-    'Synchronization finalization result.',
-  );
 
   return finalizedJob;
 }
@@ -264,19 +266,14 @@ async function getPartialDatasets() {
 export async function uploadGraphObjectData(
   synchronizationJobContext: SynchronizationJobContext,
   graphObjectData: FlushedGraphObjectData,
-  uploadBatchSize?: number,
-  uploadRelationshipsBatchSize?: number,
+  uploadBatchSizeInBytes?: number,
 ) {
-  const entityBatchSize = uploadBatchSize;
-  const relationshipsBatchSize =
-    uploadRelationshipsBatchSize || uploadBatchSize;
-
   try {
     if (
       Array.isArray(graphObjectData.entities) &&
       graphObjectData.entities.length != 0
     ) {
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           entities: graphObjectData.entities.length,
         },
@@ -287,10 +284,10 @@ export async function uploadGraphObjectData(
         synchronizationJobContext,
         'entities',
         graphObjectData.entities,
-        entityBatchSize,
+        uploadBatchSizeInBytes,
       );
 
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           entities: graphObjectData.entities.length,
         },
@@ -302,7 +299,7 @@ export async function uploadGraphObjectData(
       Array.isArray(graphObjectData.relationships) &&
       graphObjectData.relationships.length != 0
     ) {
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           relationships: graphObjectData.relationships.length,
         },
@@ -313,10 +310,10 @@ export async function uploadGraphObjectData(
         synchronizationJobContext,
         'relationships',
         graphObjectData.relationships,
-        relationshipsBatchSize,
+        uploadBatchSizeInBytes,
       );
 
-      synchronizationJobContext.logger.info(
+      synchronizationJobContext.logger.debug(
         {
           relationships: graphObjectData.relationships.length,
         },
@@ -335,12 +332,7 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
   context.logger.synchronizationUploadStart(context.job);
 
   async function uploadGraphObjectFile(parsedData: FlushedGraphObjectData) {
-    await uploadGraphObjectData(
-      context,
-      parsedData,
-      context.uploadBatchSize,
-      context.uploadRelationshipBatchSize,
-    );
+    await uploadGraphObjectData(context, parsedData);
   }
 
   await timeOperation({
@@ -437,6 +429,7 @@ function handleUploadDataChunkError({
       systemErrorResponseData,
       attemptsRemaining: attemptContext.attemptsRemaining,
       uploadCorrelationId,
+      'err.$response': (err as any)?.$response,
     },
     'Handling upload error...',
   );
@@ -465,7 +458,7 @@ export async function uploadDataChunk<
     async (ctx) => {
       // TODO [INT-3707]: on first try, shrink raw data of every entity
       // to the point where each entity is < 1MB
-      logger.info(
+      logger.debug(
         {
           uploadCorrelationId,
           uploadType: type,
@@ -474,9 +467,9 @@ export async function uploadDataChunk<
         },
         'Uploading data...',
       );
-
+      const startTime = Date.now();
       await apiClient.post(
-        `/persister/synchronization/jobs/${jobId}/${type}`,
+        `/persister/synchronization/jobs/${jobId}/${type as string}`,
         {
           [type]: batch,
         },
@@ -488,8 +481,21 @@ export async function uploadDataChunk<
           },
         },
       );
-
-      logger.info(
+      const duration = Date.now() - startTime;
+      if (duration >= 10_000) {
+        logger.info(
+          {
+            uploadCorrelationId,
+            uploadType: type,
+            attemptNum: ctx.attemptNum,
+            batchSize: batch.length,
+            batchSizeInBytes: getSizeOfObject(batch),
+            uploadDuration: duration,
+          },
+          'Finished uploading big batch',
+        );
+      }
+      logger.debug(
         {
           uploadCorrelationId,
           uploadType: type,
@@ -529,9 +535,14 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
   { job, apiClient, logger }: SynchronizationJobContext,
   type: K,
   data: T[K][],
-  uploadBatchSize?: number,
+  uploadBatchSizeInBytes?: number,
 ) {
-  const batches = chunk(data, uploadBatchSize || DEFAULT_UPLOAD_BATCH_SIZE);
+  const batches: T[K][][] = batchGraphObjectsBySizeInBytes(
+    data,
+    uploadBatchSizeInBytes || DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
+    logger,
+  );
+
   await pMap(
     batches,
     async (batch: T[K][]) => {

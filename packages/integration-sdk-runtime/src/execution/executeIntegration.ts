@@ -6,6 +6,7 @@ import {
   ExecutionHistory,
   IntegrationInstance,
   IntegrationInstanceConfig,
+  IntegrationInstanceExecutionContext,
   IntegrationInvocationConfig,
   IntegrationLogger,
   IntegrationStepResult,
@@ -14,7 +15,6 @@ import {
   Relationship,
   StepExecutionContext,
   StepResultStatus,
-  StepStartStates,
 } from '@jupiterone/integration-sdk-core';
 
 import {
@@ -49,6 +49,7 @@ import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 import { DuplicateKeyTracker } from './duplicateKeyTracker';
+import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -61,6 +62,7 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  pretty?: boolean;
 }
 
 export interface ExecuteWithContextOptions {
@@ -82,7 +84,7 @@ export async function executeIntegrationLocally(
   const logger = createIntegrationLogger({
     name: 'Local',
     invocationConfig: config,
-    pretty: true,
+    pretty: options?.pretty,
   });
   const registeredEventListeners = registerIntegrationLoggerEventHandlers(
     () => logger,
@@ -105,7 +107,8 @@ export async function executeIntegrationLocally(
  * Starts execution of an integration instance.
  */
 export async function executeIntegrationInstance<
-  TIntegrationConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends
+    IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   logger: IntegrationLogger,
   instance: IntegrationInstance<TIntegrationConfig>,
@@ -165,7 +168,7 @@ async function tryPublishDiskUsageMetric<
  * using context that was provided.
  */
 export async function executeWithContext<
-  TExecutionContext extends ExecutionContext,
+  TExecutionContext extends IntegrationInstanceExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
 >(
   context: TExecutionContext,
@@ -184,10 +187,6 @@ export async function executeWithContext<
     },
     'Starting execution with config...',
   );
-
-  if (shouldPublishDiskUsageMetric) {
-    await tryPublishDiskUsageMetric(context);
-  }
 
   let diskUsagePublishInterval: NodeJS.Timeout | undefined;
   let executionComplete = false;
@@ -217,88 +216,112 @@ export async function executeWithContext<
   }
 
   try {
-    await removeStorageDirectory();
-
-    try {
-      await config.validateInvocation?.(context);
-    } catch (err) {
-      logger.validationFailure(err);
-      throw err;
-    }
-
-    const stepStartStates: StepStartStates =
-      (await config.getStepStartStates?.(context)) ??
-      getDefaultStepStartStates(config.integrationSteps);
-
-    validateStepStartStates(config.integrationSteps, stepStartStates);
-
-    if (shouldPublishDiskUsageMetric) {
-      diskUsagePublishInterval = createDiskUsagePublishInterval();
-    }
-
-    const {
-      graphObjectStore = new FileSystemGraphObjectStore(),
-      createStepGraphObjectDataUploader,
-    } = options;
-
-    const integrationStepResults = await executeSteps({
-      executionContext: context,
-      integrationSteps: config.integrationSteps,
-      stepStartStates,
-      duplicateKeyTracker: new DuplicateKeyTracker(
-        config.normalizeGraphObjectKey,
-      ),
-      graphObjectStore,
-      dataStore: new MemoryDataStore(),
-      createStepGraphObjectDataUploader,
-      beforeAddEntity: config.beforeAddEntity,
-      beforeAddRelationship: config.beforeAddRelationship,
-      afterAddEntity: createAfterAddEntityInternalHook(logger),
-      afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
-      dependencyGraphOrder: config.dependencyGraphOrder,
-    });
-
-    const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
-      integrationStepResults,
-    );
-
-    const summary: ExecuteIntegrationResult = {
-      integrationStepResults,
-      metadata: {
-        partialDatasets,
-      },
-    };
-
-    await writeJsonToPath({
-      path: 'summary.json',
-      data: summary,
-    });
-
-    context.logger.info(
-      { collectionResult: summary },
-      'Integration data collection has completed.',
-    );
-
-    processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
-      if (step.status === StepResultStatus.SUCCESS && undeclaredTypes.length) {
-        context.logger.error(
-          { undeclaredTypes },
-          `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
-            ` all known entity and relationship types are declared.`,
-        );
-      }
-    });
-
-    return summary;
-  } finally {
-    executionComplete = true;
-
-    if (diskUsagePublishInterval) {
-      clearInterval(diskUsagePublishInterval);
-    }
-
     if (shouldPublishDiskUsageMetric) {
       await tryPublishDiskUsageMetric(context);
+    }
+
+    try {
+      await removeStorageDirectory();
+
+      try {
+        await config.validateInvocation?.(context);
+      } catch (err) {
+        logger.validationFailure(err);
+        throw err;
+      }
+
+      const configStepStartStates =
+        (await config.getStepStartStates?.(context)) ??
+        getDefaultStepStartStates(config.integrationSteps);
+
+      validateStepStartStates(config.integrationSteps, configStepStartStates);
+
+      const stepStartStates = getIngestionSourceStepStartStates({
+        integrationSteps: config.integrationSteps,
+        configStepStartStates,
+        disabledSources: context.instance?.disabledSources?.map(
+          (source) => source.ingestionSourceId,
+        ),
+      });
+
+      if (shouldPublishDiskUsageMetric) {
+        diskUsagePublishInterval = createDiskUsagePublishInterval();
+      }
+
+      const {
+        graphObjectStore = new FileSystemGraphObjectStore(),
+        createStepGraphObjectDataUploader,
+      } = options;
+
+      const integrationStepResults = await executeSteps({
+        executionContext: context,
+        integrationSteps: config.integrationSteps,
+        stepStartStates,
+        duplicateKeyTracker: new DuplicateKeyTracker(
+          config.normalizeGraphObjectKey,
+        ),
+        graphObjectStore,
+        dataStore: new MemoryDataStore(),
+        createStepGraphObjectDataUploader,
+        beforeAddEntity: config.beforeAddEntity,
+        beforeAddRelationship: config.beforeAddRelationship,
+        afterAddEntity: createAfterAddEntityInternalHook(logger),
+        afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
+        dependencyGraphOrder: config.dependencyGraphOrder,
+        executionHandlerWrapper: config.executionHandlerWrapper,
+      });
+
+      const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
+        integrationStepResults,
+      );
+
+      const summary: ExecuteIntegrationResult = {
+        integrationStepResults,
+        metadata: {
+          partialDatasets,
+        },
+      };
+
+      await writeJsonToPath({
+        path: 'summary.json',
+        data: summary,
+      });
+
+      processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
+        if (
+          step.status === StepResultStatus.SUCCESS &&
+          undeclaredTypes.length
+        ) {
+          context.logger.error(
+            { undeclaredTypes, stepId: step.id },
+            `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
+              ` all known entity and relationship types are declared.`,
+          );
+        }
+      });
+
+      return summary;
+    } finally {
+      executionComplete = true;
+
+      if (diskUsagePublishInterval) {
+        clearInterval(diskUsagePublishInterval);
+      }
+
+      if (shouldPublishDiskUsageMetric) {
+        await tryPublishDiskUsageMetric(context);
+      }
+    }
+  } finally {
+    if (config?.afterExecution) {
+      try {
+        await config.afterExecution(context);
+      } catch (err) {
+        // NOTE (austinkelleher): We should not hard fail when the
+        // "afterExecution" hook throws. This hook is typically used for things
+        // like closing out clients.
+        context.logger.error({ err }, 'Error triggering "afterExecution" hook');
+      }
     }
   }
 }

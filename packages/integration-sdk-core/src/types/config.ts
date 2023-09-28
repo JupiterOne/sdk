@@ -1,5 +1,9 @@
 import { IntegrationInstanceConfig } from './instance';
-import { GetStepStartStatesFunction, Step } from './step';
+import {
+  GetStepStartStatesFunction,
+  Step,
+  StepExecutionHandlerWrapperFunction,
+} from './step';
 import { InvocationValidationFunction } from './validation';
 import {
   ExecutionContext,
@@ -43,14 +47,24 @@ export type AfterAddRelationshipHookFunction<
 
 export type LoadExecutionConfigFunction<
   TInstanceConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-  TExecutionConfig extends IntegrationExecutionConfig = IntegrationExecutionConfig,
+  TExecutionConfig extends
+    IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = (options: { config: TInstanceConfig }) => TExecutionConfig;
+
+export type AfterExecutionFunction<TExecutionContext extends ExecutionContext> =
+  (context: TExecutionContext) => Promise<void>;
 
 export interface InvocationConfig<
   TExecutionContext extends ExecutionContext,
   TStepExecutionContext extends StepExecutionContext,
 > {
   validateInvocation?: InvocationValidationFunction<TExecutionContext>;
+  /**
+   * Called after an integration execution has completed. You may this this hook
+   * for performing operations such as closing out open clients in an
+   * integration.
+   */
+  afterExecution?: AfterExecutionFunction<TExecutionContext>;
   getStepStartStates?: GetStepStartStatesFunction<TExecutionContext>;
   integrationSteps: Step<TStepExecutionContext>[];
   normalizeGraphObjectKey?: KeyNormalizationFunction;
@@ -66,15 +80,6 @@ export interface InvocationConfig<
    * the same dependency graph.
    */
   dependencyGraphOrder?: string[];
-}
-
-export interface IntegrationInvocationConfig<
-  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
-> extends InvocationConfig<
-    IntegrationExecutionContext<TConfig>,
-    IntegrationStepExecutionContext<TConfig>
-  > {
-  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
   /**
    * This configuration element is used to store information about data
    * ingestion sources that can be enabled or disabled. When this element
@@ -86,6 +91,23 @@ export interface IntegrationInvocationConfig<
    *
    */
   ingestionConfig?: IntegrationIngestionConfigFieldMap;
+  /**
+   * Wraps the executionHandler for each step in an operation to allow for adding
+   * context before and after the executionHandler completes. Can be used for adding
+   * logic like tracing or logging.
+   *
+   * If not provided, the handler will run normally.
+   */
+  executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
+}
+
+export interface IntegrationInvocationConfig<
+  TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
+> extends InvocationConfig<
+    IntegrationExecutionContext<TConfig>,
+    IntegrationStepExecutionContext<TConfig>
+  > {
+  instanceConfigFields?: IntegrationInstanceConfigFieldMap<TConfig>;
 }
 
 export interface IntegrationInstanceConfigField {

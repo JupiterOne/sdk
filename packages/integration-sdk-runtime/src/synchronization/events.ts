@@ -16,13 +16,15 @@ export const createEventPublishingQueue = (
   { apiClient, logger, job }: SynchronizationJobContext,
   config?: AxiosRequestConfig,
 ): EventPublishingQueue => {
-  if (!job.integrationJobId) return createNoopEventPublishingQueue();
+  if (!job.integrationJobId) {
+    return createNoopEventPublishingQueue();
+  }
 
   const queue = new PromiseQueue({ concurrency: 1 });
 
   return {
     enqueue(event: IntegrationEvent) {
-      return queue.add(async () => {
+      void queue.add(async () => {
         try {
           await apiClient.post(
             `/persister/synchronization/jobs/${job.id}/events`,
@@ -46,7 +48,7 @@ export const createEventPublishingQueue = (
         }
       });
     },
-    onIdle: () => queue.onIdle(),
+    onIdle: async () => queue.onIdle(),
   };
 };
 
@@ -55,11 +57,11 @@ export const createEventPublishingQueue = (
  */
 function createNoopEventPublishingQueue(): EventPublishingQueue {
   return {
-    enqueue: async (_event) => {
+    enqueue(_event) {
       // noop
     },
-    onIdle: async () => {
-      // noop
+    async onIdle() {
+      return Promise.resolve();
     },
   };
 }

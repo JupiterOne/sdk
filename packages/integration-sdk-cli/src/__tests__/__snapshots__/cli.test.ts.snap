@@ -14,7 +14,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -56,7 +56,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -97,7 +97,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -136,7 +136,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -174,7 +174,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -223,7 +223,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -262,7 +262,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -310,7 +310,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -357,7 +357,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -396,7 +396,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -437,7 +437,7 @@ JupiterOne. This may require provisioning some resources on the provider's side
 <!--
 ********************************************************************************
 NOTE: ALL OF THE FOLLOWING DOCUMENTATION IS GENERATED USING THE
-\\"j1-integration document\\" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
+"j1-integration document" COMMAND. DO NOT EDIT BY HAND! PLEASE SEE THE DEVELOPER
 DOCUMENTATION FOR USAGE INFORMATION:
 
 https://github.com/JupiterOne/sdk/blob/main/docs/integrations/development.md
@@ -462,6 +462,6 @@ END OF GENERATED DOCUMENTATION AFTER BELOW MARKER
 <!-- {J1_DOCUMENTATION_MARKER_END} -->"
 `;
 
-exports[`generate-integration-graph-schema should generate integration graph schema with TypeScript integration 1`] = `"{\\"entities\\":[{\\"resourceName\\":\\"The User\\",\\"_class\\":\\"User\\",\\"_type\\":\\"my_user\\"},{\\"resourceName\\":\\"The Group\\",\\"_class\\":[\\"Group\\",\\"Other\\"],\\"_type\\":\\"my_group\\"}],\\"relationships\\":[{\\"_class\\":\\"HAS\\",\\"sourceType\\":\\"my_group\\",\\"targetType\\":\\"my_user\\"}],\\"mappedRelationships\\":[{\\"sourceType\\":\\"my_user\\",\\"_class\\":\\"IS\\",\\"targetType\\":\\"employee\\",\\"direction\\":\\"FORWARD\\"}]}"`;
+exports[`generate-integration-graph-schema should generate integration graph schema with TypeScript integration 1`] = `"{"entities":[{"resourceName":"The User","_class":"User","_type":"my_user"},{"resourceName":"The Group","_class":["Group","Other"],"_type":"my_group"}],"relationships":[{"_class":"HAS","sourceType":"my_group","targetType":"my_user"}],"mappedRelationships":[{"sourceType":"my_user","_class":"IS","targetType":"employee","direction":"FORWARD"}]}"`;
 
-exports[`generate-integration-graph-schema should generate integration graph schema with integration JavaScript dist 1`] = `"{\\"entities\\":[{\\"resourceName\\":\\"The User\\",\\"_class\\":\\"User\\",\\"_type\\":\\"my_user\\"},{\\"resourceName\\":\\"The Group\\",\\"_class\\":[\\"Group\\",\\"Other\\"],\\"_type\\":\\"my_group\\"}],\\"relationships\\":[{\\"_class\\":\\"HAS\\",\\"sourceType\\":\\"my_group\\",\\"targetType\\":\\"my_user\\"}],\\"mappedRelationships\\":[{\\"sourceType\\":\\"my_user\\",\\"_class\\":\\"IS\\",\\"targetType\\":\\"employee\\",\\"direction\\":\\"FORWARD\\"}]}"`;
+exports[`generate-integration-graph-schema should generate integration graph schema with integration JavaScript dist 1`] = `"{"entities":[{"resourceName":"The User","_class":"User","_type":"my_user"},{"resourceName":"The Group","_class":["Group","Other"],"_type":"my_group"}],"relationships":[{"_class":"HAS","sourceType":"my_group","targetType":"my_user"}],"mappedRelationships":[{"sourceType":"my_user","_class":"IS","targetType":"employee","direction":"FORWARD"}]}"`;

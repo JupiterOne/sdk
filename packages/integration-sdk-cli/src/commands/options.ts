@@ -1,5 +1,4 @@
 import {
-  DEFAULT_UPLOAD_BATCH_SIZE,
   getAccountFromEnvironment,
   getApiKeyFromEnvironment,
   JUPITERONE_DEV_API_BASE_URL,
@@ -7,6 +6,10 @@ import {
 } from '@jupiterone/integration-sdk-runtime';
 import { Command, Option, OptionValues } from 'commander';
 import path from 'path';
+
+export function addLoggingOptions(command: Command) {
+  return command.option('--noPretty', 'disable pretty logging', false);
+}
 
 export interface PathOptions {
   projectPath: string;
@@ -35,8 +38,6 @@ export interface SyncOptions {
   source: 'integration-managed' | 'integration-external' | 'api';
   scope?: string | undefined;
   integrationInstanceId?: string | undefined;
-  uploadBatchSize: number;
-  uploadRelationshipBatchSize: number;
   skipFinalize: boolean;
 }
 
@@ -65,18 +66,6 @@ export function addSyncOptionsToCommand(command: Command): Command {
       'integration-managed',
     )
     .option('--scope <anystring>', 'specify synchronization job scope value')
-    .option(
-      '-u, --upload-batch-size <number>',
-      'specify number of entities and relationships per upload batch',
-      (value, _previous: Number) => Number(value),
-      DEFAULT_UPLOAD_BATCH_SIZE,
-    )
-    .option(
-      '-ur, --upload-relationship-batch-size <number>',
-      'specify number of relationships per upload batch, overrides --upload-batch-size',
-      (value, _previous: Number) => Number(value),
-      DEFAULT_UPLOAD_BATCH_SIZE,
-    )
     .option(
       '--skip-finalize',
       'skip synchronization finalization to leave job open for additional uploads',
@@ -123,8 +112,6 @@ export function getSyncOptions(options: OptionValues): SyncOptions {
     source: options.source,
     scope: options.scope,
     integrationInstanceId: options.integrationInstanceId,
-    uploadBatchSize: options.uploadBatchSize,
-    uploadRelationshipBatchSize: options.uploadRelationshipBatchSize,
     skipFinalize: options.skipFinalize,
   };
 }

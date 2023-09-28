@@ -22,6 +22,8 @@ that was sent up will be diffed against JupiterOne's understanding of the
       - [`beforeAddEntity(context: IntegrationExecutionContext<IntegrationConfig>, e: Entity): Entity`](#beforeaddentitycontext-integrationexecutioncontextintegrationconfig-e-entity-entity)
       - [`beforeAddRelationship(context: IntegrationExecutionContext<IntegrationConfig>, r: Relationship): Promise<Relationship> | Relationship`](#beforeaddrelationshipcontext-integrationexecutioncontextintegrationconfig-r-relationship-promiserelationship--relationship)
       - [`ingestionConfig`](#ingestionconfig)
+      - [`afterExecution(context: IntegrationExecutionContext<IntegrationConfig>): Promise<void>`](#afterexecutioncontext-integrationexecutioncontextintegrationconfig-promisevoid)
+      - [`executionHandlerWrapper(context: {step: Step<IntegrationStepExecutionContext>}, stepFunction: () => Promise<void>): Promise<void>`](#executionhandlerwrappercontext-step-stepintegrationstepexecutioncontext-stepfunction---promisevoid-promisevoid)
     - [How integrations are executed](#how-integrations-are-executed)
       - [Validation](#validation)
       - [Collection](#collection)
@@ -80,6 +82,7 @@ that was sent up will be diffed against JupiterOne's understanding of the
       - [Command `j1-integration document`](#command-j1-integration-document)
       - [Command `j1-integration validate-question-file`](#command-j1-integration-validate-question-file)
       - [Command `j1-integration generate-integration-graph-schema`](#command-j1-integration-generate-integration-graph-schema)
+      - [Command `j1-integration troubleshoot`](#command-j1-integration-troubleshoot)
       - [Future commands and utilities](#future-commands-and-utilities)
         - [More commands and options](#more-commands-and-options)
           - [Command `j1-integration plan`](#command-j1-integration-plan)
@@ -498,6 +501,61 @@ export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
     integrationSteps,
     ingestionConfig,
   };
+```
+
+#### `afterExecution(context: IntegrationExecutionContext<IntegrationConfig>): Promise<void>`
+
+`afterExecution` is an optional hook function that can be provided. The function
+is called after an integration has executed, regardless of whether the execution
+was successful or not. An example of when you may decide to use this function is
+when you need to close out a globally configured client in an integration.
+
+Example:
+
+```typescript
+import { IntegrationInvocationConfig } from '@jupiterone/integration-sdk-core';
+import { IntegrationConfig } from './types';
+
+export const invocationConfig: IntegrationInvocationConfig<IntegrationConfig> =
+  {
+    instanceConfigFields: {},
+    integrationSteps: [],
+    async afterExecution(context) {
+      context.logger.info('Integration execution completed...');
+    },
+  };
+```
+
+#### `executionHandlerWrapper(context: {step: Step<IntegrationStepExecutionContext>}, stepFunction: () => Promise<void>): Promise<void>`
+
+`executionHandlerWrapper` is an optional hook function that can be provided. The
+function runs everytime `step.executionHandler()` is called, and wraps the
+execution handler call and response. This allows a user to update run steps
+immediately before and after the executionHandler. An example of when you would
+use this, is to add tracing to your execution handler.
+
+Example:
+
+```typescript
+import {
+  IntegrationStepExecutionContext,
+  Step,
+  StepExecutionHandlerWrapperFunction,
+} from '@jupiterone/integration-sdk-core';
+
+export const executionHandlerWrapper: StepExecutionHandlerWrapperFunction<
+  IntegrationStepExecutionContext
+> = async (
+  context: {
+    step: Step<IntegrationStepExecutionContext>;
+  },
+  stepFunction: () => Promise<void>,
+) => {
+  console.log(`Starting execution handler for step ${context.step.id}`);
+  const resp = await stepFunction();
+  console.log(`Ending execution handler for step ${context.step.id}`);
+  return resp;
+};
 ```
 
 ### How integrations are executed
@@ -1401,6 +1459,10 @@ ex: `j1-integration collect --step step-fetch-users --cache-path ./my-cache`
 
 Disables schema validation.
 
+###### Option `--noPretty`
+
+Disables pretty printing of logs and collected data.
+
 #### Command `j1-integration sync`
 
 Validates data collected by the `collect` command and uploads it to JupiterOne.
@@ -1499,6 +1561,10 @@ Cannot be used with the `--development` flag.
 
 ex:
 `yarn j1-integration sync --integrationInstanceId <integration instance id> --api-base-url <api base url>`
+
+###### Option `--noPretty`
+
+Disables pretty printing of logs.
 
 #### Command `j1-integration run`
 

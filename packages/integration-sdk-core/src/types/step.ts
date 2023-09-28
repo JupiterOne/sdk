@@ -15,8 +15,10 @@ export enum DisabledStepReason {
   NONE = 'none', // No reason was provided
   PERMISSION = 'permission', // Missing permission disabled this step
   BETA = 'beta', // Step is in beta and only enabled on request
-  CONFIG = 'config', // Step was disabled via config
+  CONFIG = 'config', // Step was disabled via config that is controlled by J1
+  USER_CONFIG = 'user_config', // Step was disabled via config that is controlled by the user
   API_VERSION = 'api_version', // Step is disabled due to lack of support in an API version
+  PARENT_DISABLED = 'parent_disabled', // Step is disabled because its parent is also disabled
 }
 
 export interface StepStartState {
@@ -144,7 +146,7 @@ export interface StepGraphObjectMetadata {
   partial?: boolean;
 
   /**
-   * Contains metadadata that can be leveraged inside of the graph object store
+   * Contains metadata that can be leveraged inside of the graph object store
    */
   indexMetadata?: GraphObjectIndexMetadata;
 }
@@ -238,3 +240,12 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    */
   ingestionSourceId?: string;
 };
+
+export type StepExecutionHandlerWrapperFunction<
+  TStepExecutionContext extends StepExecutionContext,
+> = (
+  context: {
+    step: Step<TStepExecutionContext>;
+  },
+  stepFunction: () => Promise<void>,
+) => Promise<void>;
