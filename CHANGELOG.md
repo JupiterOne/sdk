@@ -19,6 +19,7 @@ and this project adheres to
     options from CLI sync commands
   - Removed unused `uploadBatchSize` and `uploadRelationshipBatchSize`
     parameters from programmatic sync methods
+
 ## 10.7.1 - 2023-09-26
 
 - Use batching by size as default - and the only option.
@@ -27,7 +28,6 @@ and this project adheres to
 
 - Changed the log level of the `Collected metric` log that is published when
   logger.publishMetric is called to "debug"
-
 
 ## 10.6.0 - 2023-09-21
 
