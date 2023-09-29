@@ -7,10 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Unreleased
+
+## 11.0.0
+
 - **Breaking:** Change `TargetFilterKey` type to only allow composite keys.
   Plain string keys are no longer allowed.
 
-## Unreleased
+- **Breaking:** Batch size Options removed:
+  - Removed unused `--upload-batch-size` and `--upload-relationship-batch-size`
+    options from CLI sync commands
+  - Removed unused `uploadBatchSize` and `uploadRelationshipBatchSize`
+    parameters from programmatic sync methods
 
 ## 10.7.0 - 2023-09-21
 
