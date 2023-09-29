@@ -19,11 +19,22 @@ and this project adheres to
     options from CLI sync commands
   - Removed unused `uploadBatchSize` and `uploadRelationshipBatchSize`
     parameters from programmatic sync methods
+## 10.7.1 - 2023-09-26
+
+- Use batching by size as default - and the only option.
 
 ## 10.7.0 - 2023-09-21
 
 - Changed the log level of the `Collected metric` log that is published when
   logger.publishMetric is called to "debug"
+
+
+## 10.6.0 - 2023-09-21
+
+- Release with 10.1.0 changes again:
+- 'InMemoryGraphObjectStore' no longer stores a set amount of entities or
+  relationships, rather it works by measuring size in bytes of graph objects by
+  default.
 
 ## 10.5.3 - 2023-09-18
 
