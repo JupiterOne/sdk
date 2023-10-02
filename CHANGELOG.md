@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 11.0.1
+
+- **Breaking:** Also remove the deprecated/unused `graphObjectBufferThreshold`
+  on the FileSystemGraphObjectStoreParams
+
 ## 11.0.0
 
 - **Breaking:** Change `TargetFilterKey` type to only allow composite keys.
