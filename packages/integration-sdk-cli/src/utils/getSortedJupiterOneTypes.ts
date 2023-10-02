@@ -57,8 +57,8 @@ function alphabetizeEntityMetadataPropertyByTypeCompareFn(
 }
 
 function alphabetizeRelationshipMetadataPropertyByTypeCompareFn(
-  a: StepRelationshipMetadata,
-  b: StepRelationshipMetadata,
+  a: StepRelationshipMetadata | StepMappedRelationshipMetadata,
+  b: StepRelationshipMetadata | StepMappedRelationshipMetadata,
 ): number {
   if (a.sourceType > b.sourceType) return 1;
   if (a.sourceType < b.sourceType) return -1;
@@ -69,6 +69,10 @@ function alphabetizeRelationshipMetadataPropertyByTypeCompareFn(
   if (a._class > b._class) return 1;
   if (a._class < b._class) return -1;
 
+  if ('direction' in a && 'direction' in b) {
+    if (a.direction > b.direction) return 1;
+    if (a.direction < b.direction) return -1;
+  }
   return 0;
 }
 
