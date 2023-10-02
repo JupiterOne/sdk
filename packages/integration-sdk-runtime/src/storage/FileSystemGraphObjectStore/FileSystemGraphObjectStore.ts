@@ -43,15 +43,6 @@ export interface FileSystemGraphObjectStoreParams {
    * default: 5_000_000
    */
   graphObjectBufferThresholdInBytes?: number;
-  /**
-   * The maximum number of graph objects that this store can buffer in memory
-   * before writing to disk. Machines with more memory should consider bumping
-   * this value up.
-   *
-   * Default: 500
-   * @deprecated this argument is no longer used. Please use `graphObjectBufferThresholdInBytes` instead.
-   */
-  graphObjectBufferThreshold?: number;
 
   /**
    * The maximum number of entities/relationships stored in each file.
