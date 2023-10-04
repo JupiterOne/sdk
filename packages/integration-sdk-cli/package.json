@@ -40,10 +40,10 @@
     "plop": "^3.1.2",
     "runtypes": "5.1.0",
     "upath": "^1.2.0",
-    "url-exists": "^1.0.3",
-    "vis": "^4.21.0-EOL"
+    "url-exists": "^1.0.3"
   },
   "devDependencies": {
+    "vis": "^4.21.0-EOL",
     "@jupiterone/integration-sdk-private-test-utils": "^11.0.2",
     "@pollyjs/adapter-node-http": "^6.0.5",
     "@pollyjs/core": "^6.0.5",

@@ -5,7 +5,7 @@ import * as path from 'path';
 
 import { generateVisHTML } from '../utils/generateVisHTML';
 
-import { Node, Edge } from 'vis';
+import type { Node, Edge } from 'vis';
 
 // Color list to denote which steps have more direct dependencies.
 // Starting from cooler colors to warmer colors.
