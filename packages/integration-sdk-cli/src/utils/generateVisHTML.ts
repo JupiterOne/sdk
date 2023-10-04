@@ -1,5 +1,5 @@
 import { defaultsDeep } from 'lodash';
-import { Node, Edge, Options } from 'vis';
+import type { Node, Edge, Options } from 'vis';
 
 export const nothingToDisplayMessage = 'There was no data found to visualize.';
 
