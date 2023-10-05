@@ -712,13 +712,13 @@ describe('executeStepDependencyGraph', () => {
       stepStartStates,
       graphObjectStore,
       (stepId) => {
-          return createPassingUploader(stepId, passingUploaderCollector);
+        return createPassingUploader(stepId, passingUploaderCollector);
       },
     );
 
     const expectedCollected: FlushedGraphObjectData[] = [
       {
-        entities: [eA,eB,eC],
+        entities: [eA, eB, eC],
         relationships: [],
       },
     ];

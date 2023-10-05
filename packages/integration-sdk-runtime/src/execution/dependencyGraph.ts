@@ -467,11 +467,12 @@ export function executeStepDependencyGraph<
                 })
               : undefined,
           async (relationships) =>
-          relationships.length ?
-            uploader?.enqueue({
-              entities: [],
-              relationships,
-            }) : undefined,
+            relationships.length
+              ? uploader?.enqueue({
+                  entities: [],
+                  relationships,
+                })
+              : undefined,
         );
         try {
           await uploader?.waitUntilUploadsComplete();
