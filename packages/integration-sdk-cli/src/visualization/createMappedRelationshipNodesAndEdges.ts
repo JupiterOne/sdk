@@ -1,4 +1,4 @@
-import { Node, Edge, NodeOptions } from 'vis';
+import type { Node, Edge, NodeOptions } from 'vis';
 import {
   Entity,
   MappedRelationship,

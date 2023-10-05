@@ -374,7 +374,7 @@ describe('MappedRelationshipLiteralOptions', () => {
         another: 'thing',
         whatever: 'stuff',
       },
-      targetFilterKeys: ['another', ['something', 'whatever']],
+      targetFilterKeys: [['something', 'whatever']],
       sourceEntityKey: 'a',
     };
 
@@ -385,7 +385,7 @@ describe('MappedRelationshipLiteralOptions', () => {
       }),
     ).toEqual({
       ...expected,
-      _key: 'a|has|REVERSE:another=thing:something=more:whatever=stuff',
+      _key: 'a|has|REVERSE:something=more:whatever=stuff',
       _mapping: {
         ...expected._mapping,
         ...mapping,

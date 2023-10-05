@@ -467,7 +467,7 @@ export class IntegrationLogger
     };
 
     if (logMetric) {
-      this.info({ metric: metricWithTimestamp }, 'Collected metric.');
+      this.debug({ metric: metricWithTimestamp }, 'Collected metric.');
     }
 
     // emit the metric so that consumers can collect the metric

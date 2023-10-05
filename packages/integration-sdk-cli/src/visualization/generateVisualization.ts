@@ -1,6 +1,6 @@
 import globby from 'globby';
 import upath from 'upath';
-import { Edge } from 'vis';
+import type { Edge } from 'vis';
 
 import { writeFileToPath } from '@jupiterone/integration-sdk-runtime';
 
