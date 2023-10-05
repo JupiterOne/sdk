@@ -16,6 +16,7 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
+  IntegrationErrorEventName,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -394,20 +395,6 @@ export function executeStepDependencyGraph<
         status = StepResultStatus.FAILURE;
       }
 
-      await context.jobState.flush();
-
-      if (context.jobState.waitUntilUploadsComplete) {
-        try {
-          // Failing to upload all integration data should not be considered a
-          // fatal failure. We just want to make this step as a partial success
-          // and move on with our lives!
-          await context.jobState.waitUntilUploadsComplete();
-        } catch (err) {
-          context.logger.stepFailure(step, err);
-          status = StepResultStatus.FAILURE;
-        }
-      }
-
       updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
@@ -460,6 +447,42 @@ export function executeStepDependencyGraph<
 
     void promiseQueue
       .onIdle()
+      .then(async () => {
+        /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
+         * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
+         * I think we should decouple as much as possible upload from step success.
+         */
+        let uploader: StepGraphObjectDataUploader | undefined;
+        if (createStepGraphObjectDataUploader) {
+          uploader = createStepGraphObjectDataUploader(
+            Array.from(stepResultsMap.keys()).pop() as string,
+          );
+        }
+        await graphObjectStore.flush(
+          async (entities) =>
+            entities.length
+              ? uploader?.enqueue({
+                  entities,
+                  relationships: [],
+                })
+              : undefined,
+          async (relationships) =>
+          relationships.length ?
+            uploader?.enqueue({
+              entities: [],
+              relationships,
+            }) : undefined,
+        );
+        try {
+          await uploader?.waitUntilUploadsComplete();
+        } catch (error) {
+          executionContext.logger.publishErrorEvent({
+            name: IntegrationErrorEventName.UnexpectedError,
+            description: 'Upload to persister failed',
+          });
+          throw error;
+        }
+      })
       .then(() => resolve([...stepResultsMap.values()]))
       .catch(reject);
   });

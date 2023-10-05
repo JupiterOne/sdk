@@ -1,5 +1,4 @@
 import { Sema } from 'async-sema';
-import pMap from 'p-map';
 
 import {
   Entity,
@@ -245,101 +244,102 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async flushEntitiesToDisk(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
-    await this.lockOperation(() =>
-      pMap(
-        this.localGraphObjectStore.collectEntitiesByStep(),
-        async ([stepId, entities]) => {
-          const indexable = entities.filter((e) => {
-            const indexMetadata = this.getIndexMetadataForGraphObjectType({
-              stepId,
-              _type: e._type,
-              graphObjectCollectionType: 'entities',
-            });
-
-            if (typeof indexMetadata === 'undefined') {
-              return true;
-            }
-
-            return indexMetadata.enabled === true;
+    await this.lockOperation(async () => {
+      const entitiesByStep = this.localGraphObjectStore.collectEntitiesByStep();
+      let entitiesToUpload: Entity[] = [];
+      for (const [stepId, entities] of entitiesByStep) {
+        const indexable = entities.filter((e) => {
+          const indexMetadata = this.getIndexMetadataForGraphObjectType({
+            stepId,
+            _type: e._type,
+            graphObjectCollectionType: 'entities',
           });
 
-          if (indexable.length) {
-            await Promise.all(
-              chunk(indexable, this.graphObjectFileSize).map(async (data) => {
-                const graphObjectsToFilePaths = await flushDataToDisk({
-                  storageDirectoryPath: stepId,
-                  collectionType: 'entities',
-                  data,
-                  pretty: this.prettifyFiles,
-                });
+          if (typeof indexMetadata === 'undefined') {
+            return true;
+          }
 
-                for (const {
-                  graphDataPath,
-                  collection,
-                } of graphObjectsToFilePaths) {
-                  for (const [index, e] of collection.entries()) {
-                    this.entityOnDiskLocationMap.set(e._key, {
-                      graphDataPath,
-                      index,
-                    });
-                  }
+          return indexMetadata.enabled === true;
+        });
+
+        if (indexable.length) {
+          await Promise.all(
+            chunk(indexable, this.graphObjectFileSize).map(async (data) => {
+              const graphObjectsToFilePaths = await flushDataToDisk({
+                storageDirectoryPath: stepId,
+                collectionType: 'entities',
+                data,
+                pretty: this.prettifyFiles,
+              });
+
+              for (const {
+                graphDataPath,
+                collection,
+              } of graphObjectsToFilePaths) {
+                for (const [index, e] of collection.entries()) {
+                  this.entityOnDiskLocationMap.set(e._key, {
+                    graphDataPath,
+                    index,
+                  });
                 }
-              }),
-            );
-          }
+              }
+            }),
+          );
+        }
 
-          this.localGraphObjectStore.flushEntities(entities, stepId);
+        this.localGraphObjectStore.flushEntities(entities, stepId);
+        entitiesToUpload = entitiesToUpload.concat(entities);
+      }
 
-          if (onEntitiesFlushed) {
-            await onEntitiesFlushed(entities);
-          }
-        },
-      ),
-    );
+      if (onEntitiesFlushed) {
+        await onEntitiesFlushed(entitiesToUpload);
+      }
+    });
   }
 
   async flushRelationshipsToDisk(
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
-    await this.lockOperation(() =>
-      pMap(
-        this.localGraphObjectStore.collectRelationshipsByStep(),
-        async ([stepId, relationships]) => {
-          const indexable = relationships.filter((r) => {
-            const indexMetadata = this.getIndexMetadataForGraphObjectType({
-              stepId,
-              _type: r._type,
-              graphObjectCollectionType: 'relationships',
-            });
-
-            if (typeof indexMetadata === 'undefined') {
-              return true;
-            }
-
-            return indexMetadata.enabled === true;
+    await this.lockOperation(async () => {
+      const relationshipsByStep =
+        this.localGraphObjectStore.collectRelationshipsByStep();
+      let relationshipsToUpload: Relationship[] = [];
+      for (const [stepId, relationships] of relationshipsByStep) {
+        const indexable = relationships.filter((r) => {
+          const indexMetadata = this.getIndexMetadataForGraphObjectType({
+            stepId,
+            _type: r._type,
+            graphObjectCollectionType: 'relationships',
           });
 
-          if (indexable.length) {
-            await Promise.all(
-              chunk(indexable, this.graphObjectFileSize).map(async (data) => {
-                await flushDataToDisk({
-                  storageDirectoryPath: stepId,
-                  collectionType: 'relationships',
-                  data,
-                  pretty: this.prettifyFiles,
-                });
-              }),
-            );
+          if (typeof indexMetadata === 'undefined') {
+            return true;
           }
 
-          this.localGraphObjectStore.flushRelationships(relationships, stepId);
+          return indexMetadata.enabled === true;
+        });
 
-          if (onRelationshipsFlushed) {
-            await onRelationshipsFlushed(relationships);
-          }
-        },
-      ),
-    );
+        if (indexable.length) {
+          await Promise.all(
+            chunk(indexable, this.graphObjectFileSize).map(async (data) => {
+              await flushDataToDisk({
+                storageDirectoryPath: stepId,
+                collectionType: 'relationships',
+                data,
+                pretty: this.prettifyFiles,
+              });
+            }),
+          );
+        }
+
+        this.localGraphObjectStore.flushRelationships(relationships, stepId);
+        relationshipsToUpload = relationshipsToUpload.concat(relationships);
+      }
+
+      if (onRelationshipsFlushed) {
+        await onRelationshipsFlushed(relationshipsToUpload);
+      }
+    });
   }
 
   getIndexMetadataForGraphObjectType({

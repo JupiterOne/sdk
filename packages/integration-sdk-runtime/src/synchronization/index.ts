@@ -541,7 +541,15 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
     uploadBatchSizeInBytes || DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
     logger,
   );
-
+  logger.info(
+    {
+      batches: batches.map((b) => ({
+        length: b.length,
+        sizeInBytes: getSizeOfObject(b),
+      })),
+    },
+    'Sending Batches',
+  );
   await pMap(
     batches,
     async (batch: T[K][]) => {
