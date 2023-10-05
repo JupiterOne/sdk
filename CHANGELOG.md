@@ -9,6 +9,14 @@ and this project adheres to
 
 # Unreleased
 
+## 11.0.3
+
+- Moved `vis` dependency to devDependencies
+
+## 11.0.2
+
+- Republish 11.0.1
+
 ## 11.0.1
 
 - **Breaking:** Also remove the deprecated/unused `graphObjectBufferThreshold`
