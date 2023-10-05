@@ -4,5 +4,5 @@
     "packages/integration-sdk-*",
     "packages/cli"
   ],
-  "version": "11.0.2"
+  "version": "11.0.3"
 }
