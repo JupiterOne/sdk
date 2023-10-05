@@ -32,7 +32,7 @@ type RelationshipPropertyValue =
   | null
   | RelationshipMapping;
 
-export type TargetFilterKey = string | string[];
+export type TargetFilterKey = string[];
 
 /** According to Persister, must be one of
  * string | string[] | number | number[] | boolean | boolean[]

@@ -1,4 +1,4 @@
-import { Edge, Node } from 'vis';
+import type { Edge, Node } from 'vis';
 
 import {
   generateVisHTML,

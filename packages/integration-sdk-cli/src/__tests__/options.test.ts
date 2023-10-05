@@ -9,15 +9,12 @@ import {
   validateSyncOptions,
 } from '../commands/options';
 import {
-  DEFAULT_UPLOAD_BATCH_SIZE,
   JUPITERONE_DEV_API_BASE_URL,
   JUPITERONE_PROD_API_BASE_URL,
 } from '@jupiterone/integration-sdk-runtime';
 
 const syncOptions = (values?: Partial<SyncOptions>): SyncOptions => ({
   source: 'integration-managed',
-  uploadBatchSize: DEFAULT_UPLOAD_BATCH_SIZE,
-  uploadRelationshipBatchSize: DEFAULT_UPLOAD_BATCH_SIZE,
   skipFinalize: false,
   ...values,
 });

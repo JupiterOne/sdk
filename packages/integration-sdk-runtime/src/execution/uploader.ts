@@ -4,9 +4,9 @@ import { FlushedGraphObjectData } from '../storage/types';
 import {
   uploadGraphObjectData,
   SynchronizationJobContext,
+  DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
 } from '../synchronization';
 import { randomUUID as uuid } from 'crypto';
-import { MAX_BATCH_SIZE_IN_BYTES } from '../synchronization/shrinkBatchRawData';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;
@@ -133,8 +133,6 @@ export interface CreatePersisterApiStepGraphObjectDataUploaderParams {
   stepId: string;
   synchronizationJobContext: SynchronizationJobContext;
   uploadConcurrency: number;
-  uploadBatchSize?: number;
-  uploadRelationshipsBatchSize?: number;
   uploadBatchSizeInBytes?: number;
 }
 
@@ -142,16 +140,8 @@ export function createPersisterApiStepGraphObjectDataUploader({
   stepId,
   synchronizationJobContext,
   uploadConcurrency,
-  uploadBatchSize,
-  uploadRelationshipsBatchSize,
-  uploadBatchSizeInBytes,
+  uploadBatchSizeInBytes = DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
-  if (
-    uploadBatchSizeInBytes &&
-    uploadBatchSizeInBytes > MAX_BATCH_SIZE_IN_BYTES
-  ) {
-    uploadBatchSizeInBytes = MAX_BATCH_SIZE_IN_BYTES;
-  }
   return createQueuedStepGraphObjectDataUploader({
     stepId,
     uploadConcurrency,
@@ -166,8 +156,6 @@ export function createPersisterApiStepGraphObjectDataUploader({
         await uploadGraphObjectData(
           context,
           graphObjectData,
-          uploadBatchSize,
-          uploadRelationshipsBatchSize,
           uploadBatchSizeInBytes,
         );
       } catch (err) {
@@ -175,8 +163,7 @@ export function createPersisterApiStepGraphObjectDataUploader({
           {
             err,
             uploadConcurrency,
-            uploadBatchSize,
-            uploadRelationshipsBatchSize,
+            uploadBatchSizeInBytes,
           },
           'Error uploading graph object data',
         );

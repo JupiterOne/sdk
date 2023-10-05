@@ -1,7 +1,7 @@
 import times from 'lodash/times';
 import noop from 'lodash/noop';
 
-import { Entity, Relationship } from '@jupiterone/integration-sdk-core';
+import { Entity } from '@jupiterone/integration-sdk-core';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 
 import { getApiBaseUrl, createApiClient } from '../../api';
@@ -9,110 +9,6 @@ import { createIntegrationLogger } from '../../logger';
 
 import { uploadData, uploadGraphObjectData } from '../index';
 import { getExpectedRequestHeaders } from '../../../test/util/request';
-
-test('uploads entity data in batches of 250', async () => {
-  const { job, logger, apiClient } = createTestContext();
-
-  const data = times(
-    510,
-    (i): Entity => ({
-      _key: `entity:${i}`,
-      _type: 'resource',
-      _class: 'Resource',
-    }),
-  );
-
-  const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
-
-  await uploadData(
-    {
-      job,
-      logger,
-      apiClient,
-    },
-    'entities',
-    data,
-  );
-
-  expect(postSpy).toHaveBeenCalledTimes(3);
-
-  const expectedRequestHeaders = getExpectedRequestHeaders();
-
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(0, 250),
-    },
-    expectedRequestHeaders,
-  );
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(250, 500),
-    },
-    expectedRequestHeaders,
-  );
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(500, 510),
-    },
-    expectedRequestHeaders,
-  );
-});
-
-test('uploads relationship data in batches of 250', async () => {
-  const { job, logger, apiClient } = createTestContext();
-
-  const data = times(
-    510,
-    (i): Relationship => ({
-      _key: `relationship:${i}`,
-      _type: 'resource',
-      _class: 'Resource',
-      _fromEntityKey: `entity:${i}`,
-      _toEntityKey: `entity:${i + 1}`,
-    }),
-  );
-
-  const postSpy = jest.spyOn(apiClient, 'post').mockImplementation(noop as any);
-
-  await uploadData(
-    {
-      job,
-      logger,
-      apiClient,
-    },
-    'relationships',
-    data,
-  );
-
-  expect(postSpy).toHaveBeenCalledTimes(3);
-
-  const expectedRequestHeaders = getExpectedRequestHeaders();
-
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/relationships`,
-    {
-      relationships: data.slice(0, 250),
-    },
-    expectedRequestHeaders,
-  );
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/relationships`,
-    {
-      relationships: data.slice(250, 500),
-    },
-    expectedRequestHeaders,
-  );
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/relationships`,
-    {
-      relationships: data.slice(500, 510),
-    },
-    expectedRequestHeaders,
-  );
-});
 
 test('should retry a failed upload', async () => {
   const { job, logger, apiClient } = createTestContext();
@@ -143,30 +39,14 @@ test('should retry a failed upload', async () => {
     data,
   );
 
-  expect(postSpy).toHaveBeenCalledTimes(4);
+  expect(postSpy).toHaveBeenCalledTimes(2);
 
   const expectedRequestHeaders = getExpectedRequestHeaders();
 
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
-      entities: data.slice(0, 250),
-    },
-    expectedRequestHeaders,
-  );
-
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(250, 500),
-    },
-    expectedRequestHeaders,
-  );
-
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(500, 510),
+      entities: data,
     },
     expectedRequestHeaders,
   );
@@ -204,34 +84,17 @@ test('should retry a failed upload and not log warn when error is a "Credentials
     data,
   );
 
-  expect(postSpy).toHaveBeenCalledTimes(4);
+  expect(postSpy).toHaveBeenCalledTimes(2);
 
   const expectedRequestHeaders = getExpectedRequestHeaders();
 
   expect(postSpy).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${job.id}/entities`,
     {
-      entities: data.slice(0, 250),
+      entities: data,
     },
     expectedRequestHeaders,
   );
-
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(250, 500),
-    },
-    expectedRequestHeaders,
-  );
-
-  expect(postSpy).toHaveBeenCalledWith(
-    `/persister/synchronization/jobs/${job.id}/entities`,
-    {
-      entities: data.slice(500, 510),
-    },
-    expectedRequestHeaders,
-  );
-
   expect(loggerWarnSpy).toHaveBeenCalledTimes(0);
 });
 

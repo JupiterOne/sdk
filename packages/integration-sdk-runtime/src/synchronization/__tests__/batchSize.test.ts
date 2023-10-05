@@ -13,6 +13,7 @@ import {
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import { SynchronizationJobContext, uploadGraphObjectData } from '..';
+import { getSizeOfObject } from '../batchBySize';
 export const BYTES_IN_MB = 1048576;
 function createFlushedGraphObjectData(
   numEntity: number,
@@ -36,7 +37,7 @@ function createFlushedGraphObjectData(
 describe('#createPersisterApiStepGraphObjectDataUploader', () => {
   const flushedObjectData = createFlushedGraphObjectData(20, 20);
 
-  test('should use different batch sizes when given a batchSize and relationshipBatchSize', async () => {
+  test('should use different batch sizes when given a batchSize different than default', async () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
@@ -56,8 +57,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     await uploadGraphObjectData(
       synchronizationJobContext,
       flushedObjectData,
-      5,
-      10,
+      350, //bytes
     );
 
     const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
@@ -66,78 +66,10 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     );
 
     for (const call of entityCalls) {
-      expect(call[1].entities.length).toBeLessThanOrEqual(5);
+      expect(getSizeOfObject(call[1].entities)).toBeLessThanOrEqual(350);
     }
     for (const call of relationshipsCalls) {
-      expect(call[1].relationships.length).toBeLessThanOrEqual(10);
-    }
-  });
-
-  test('should use batchSize when no relationship batchSize given', async () => {
-    const apiClient = createApiClient({
-      apiBaseUrl: getApiBaseUrl(),
-      account: uuid(),
-    });
-
-    const postSpy = jest.spyOn(apiClient, 'post') as any;
-
-    postSpy.mockResolvedValue({});
-
-    const job = generateSynchronizationJob();
-    const synchronizationJobContext: SynchronizationJobContext = {
-      logger: createMockIntegrationLogger(),
-      apiClient,
-      job,
-    };
-
-    await uploadGraphObjectData(
-      synchronizationJobContext,
-      flushedObjectData,
-      5,
-    );
-
-    const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
-    const relationshipsCalls = postSpy.mock.calls.filter(
-      (c) => c[1].relationships,
-    );
-
-    for (const call of entityCalls) {
-      expect(call[1].entities.length).toBeLessThanOrEqual(5);
-    }
-    for (const call of relationshipsCalls) {
-      expect(call[1].relationships.length).toBeLessThanOrEqual(5);
-    }
-  });
-
-  test('should still use separate relationship batch size when entity batch size not given', async () => {
-    const apiClient = createApiClient({
-      apiBaseUrl: getApiBaseUrl(),
-      account: uuid(),
-    });
-
-    const postSpy = jest.spyOn(apiClient, 'post') as any;
-    postSpy.mockResolvedValue({});
-
-    const job = generateSynchronizationJob();
-    const synchronizationJobContext: SynchronizationJobContext = {
-      logger: createMockIntegrationLogger(),
-      apiClient,
-      job,
-    };
-
-    await uploadGraphObjectData(
-      synchronizationJobContext,
-      flushedObjectData,
-      undefined,
-      5,
-    );
-
-    const relationshipsCalls = postSpy.mock.calls.filter(
-      (c) => c[1].relationships,
-    );
-
-    for (const call of relationshipsCalls) {
-      expect(call[1].relationships.length).toBeLessThanOrEqual(5);
+      expect(getSizeOfObject(call[1].relationships)).toBeLessThanOrEqual(350);
     }
   });
 
@@ -195,8 +127,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       await uploadGraphObjectData(
         synchronizationJobContext,
         flushedObjectData,
-        250,
-        250,
         bytesToBatch,
       );
 
@@ -237,8 +167,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     await uploadGraphObjectData(
       synchronizationJobContext,
       bigObjectData,
-      250,
-      250,
       bytesToBatch,
     );
 
@@ -304,8 +232,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     await uploadGraphObjectData(
       synchronizationJobContext,
       bigObjectData,
-      250,
-      250,
       bytesToBatch,
     );
 

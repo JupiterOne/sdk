@@ -6,8 +6,11 @@ import {
   StepMappedRelationshipMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
-import { collectGraphObjectMetadataFromSteps } from './getSortedJupiterOneTypes';
 import { randomUUID as uuid } from 'crypto';
+import {
+  alphabetizeMetadataProperties,
+  collectGraphObjectMetadataFromSteps,
+} from './getSortedJupiterOneTypes';
 
 function createIntegrationStep({
   entities = [],
@@ -212,5 +215,65 @@ describe('collectGraphObjectMetadataFromSteps', () => {
 
       expect(metadata.mappedRelationships).toEqual([r1, r2]);
     });
+  });
+});
+
+describe('alphabetizeMetadataProperties', () => {
+  it('should correctly sort an array of StepRelationshipMetadata', () => {
+    const { relationships } = alphabetizeMetadataProperties(
+      collectGraphObjectMetadataFromSteps([
+        createIntegrationStep({
+          relationships: [
+            {
+              _type: 'aws_account_has_service',
+              sourceType: 'aws_account',
+              _class: RelationshipClass.HAS,
+              targetType: 'aws_waf',
+            },
+          ],
+        }),
+        createIntegrationStep({
+          relationships: [
+            {
+              _type: 'aws_account_owns_service',
+              sourceType: 'aws_account',
+              _class: RelationshipClass.OWNS,
+              targetType: 'aws_apigateway',
+            },
+          ],
+        }),
+        createIntegrationStep({
+          relationships: [
+            {
+              _type: 'aws_account_has_service',
+              sourceType: 'aws_account',
+              _class: RelationshipClass.HAS,
+              targetType: 'aws_apigateway',
+            },
+          ],
+        }),
+      ]),
+    );
+
+    expect(relationships).toEqual([
+      {
+        _type: 'aws_account_has_service',
+        sourceType: 'aws_account',
+        _class: 'HAS',
+        targetType: 'aws_apigateway',
+      },
+      {
+        _type: 'aws_account_owns_service',
+        sourceType: 'aws_account',
+        _class: 'OWNS',
+        targetType: 'aws_apigateway',
+      },
+      {
+        _type: 'aws_account_has_service',
+        sourceType: 'aws_account',
+        _class: 'HAS',
+        targetType: 'aws_waf',
+      },
+    ]);
   });
 });

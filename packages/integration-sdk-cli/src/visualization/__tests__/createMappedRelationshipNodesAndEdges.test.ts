@@ -17,7 +17,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
       _mapping: {
         relationshipDirection: RelationshipDirection.FORWARD,
         sourceEntityKey: 'key-1',
-        targetFilterKeys: ['_key'],
+        targetFilterKeys: [['_key']],
         targetEntity: {
           _key: 'key-2',
         },
@@ -140,7 +140,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
           sourceEntityKey: 'key-1',
-          targetFilterKeys: ['_key'],
+          targetFilterKeys: [['_key']],
           targetEntity: {
             _key: '789',
           },
@@ -154,7 +154,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
           sourceEntityKey: 'key-2',
-          targetFilterKeys: ['_key'],
+          targetFilterKeys: [['_key']],
           targetEntity: {
             _key: '789',
           },
@@ -218,7 +218,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
           sourceEntityKey: 'key-1',
-          targetFilterKeys: ['_class'],
+          targetFilterKeys: [['_class']],
           targetEntity: {
             _class: '789',
           },
@@ -232,7 +232,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
           sourceEntityKey: 'key-2',
-          targetFilterKeys: ['_class'],
+          targetFilterKeys: [['_class']],
           targetEntity: {
             _class: '789',
           },
@@ -299,7 +299,7 @@ describe('#createMappedRelationshipNodesAndEdges', () => {
         _mapping: {
           relationshipDirection: RelationshipDirection.FORWARD,
           sourceEntityKey: 'key-1',
-          targetFilterKeys: ['_type'],
+          targetFilterKeys: [['_type']],
           targetEntity: {
             _type: '789',
           },
@@ -477,13 +477,12 @@ describe('#CreatePlaceholderEntity', () => {
           id: 'target-id',
           otherKey: 'otherValue',
         },
-        targetFilterKeys: ['_key', 'id', ['_key', '_type']],
+        targetFilterKeys: [['_key', '_type']],
       },
     };
 
     expect(createPlaceholderEntity(mappedRelationship._mapping)).toEqual({
       _key: 'target-key',
-      id: 'target-id',
       _type: 'target-type',
     });
   });

@@ -1,7 +1,7 @@
 import { createCommand } from 'commander';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { Edge, Node, Options } from 'vis';
+import type { Edge, Node, Options } from 'vis';
 
 import {
   RelationshipDirection,

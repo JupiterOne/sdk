@@ -1,14 +1,14 @@
-import { loadConfig } from '../config';
-import * as path from 'path';
-import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 import {
   IntegrationStepExecutionContext,
   Step,
-  StepGraphObjectMetadataProperties,
   StepEntityMetadata,
-  StepRelationshipMetadata,
+  StepGraphObjectMetadataProperties,
   StepMappedRelationshipMetadata,
+  StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
+import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
+import * as path from 'path';
+import { loadConfig } from '../config';
 
 export interface TypesCommandArgs {
   projectPath: string;
@@ -57,15 +57,26 @@ function alphabetizeEntityMetadataPropertyByTypeCompareFn(
 }
 
 function alphabetizeRelationshipMetadataPropertyByTypeCompareFn(
-  a: StepRelationshipMetadata,
-  b: StepRelationshipMetadata,
+  a: StepRelationshipMetadata | StepMappedRelationshipMetadata,
+  b: StepRelationshipMetadata | StepMappedRelationshipMetadata,
 ): number {
-  if (a._type > b._type) return 1;
-  if (a._type < b._type) return -1;
+  if (a.sourceType > b.sourceType) return 1;
+  if (a.sourceType < b.sourceType) return -1;
+
+  if (a.targetType > b.targetType) return 1;
+  if (a.targetType < b.targetType) return -1;
+
+  if (a._class > b._class) return 1;
+  if (a._class < b._class) return -1;
+
+  if ('direction' in a && 'direction' in b) {
+    if (a.direction > b.direction) return 1;
+    if (a.direction < b.direction) return -1;
+  }
   return 0;
 }
 
-function alphabetizeMetadataProperties(
+export function alphabetizeMetadataProperties(
   metadata: StepGraphObjectMetadataProperties,
 ): StepGraphObjectMetadataProperties {
   return {
