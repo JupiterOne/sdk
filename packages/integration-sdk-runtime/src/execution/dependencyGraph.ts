@@ -442,48 +442,50 @@ export function executeStepDependencyGraph<
 
       return status;
     }
+    async function forceFlushEverything() {
+      /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
+       * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
+       */
+      let uploader: StepGraphObjectDataUploader | undefined;
+      if (createStepGraphObjectDataUploader) {
+        uploader = createStepGraphObjectDataUploader(
+          Array.from(stepResultsMap.keys()).pop() as string,
+        );
+      }
+      await graphObjectStore.flush(
+        async (entities) =>
+          entities.length
+            ? uploader?.enqueue({
+                entities,
+                relationships: [],
+              })
+            : undefined,
+        async (relationships) =>
+          relationships.length
+            ? uploader?.enqueue({
+                entities: [],
+                relationships,
+              })
+            : undefined,
+      );
+      try {
+        await uploader?.waitUntilUploadsComplete();
+      } catch (error) {
+        executionContext.logger.publishErrorEvent({
+          name: IntegrationErrorEventName.UnexpectedError,
+          description: 'Upload to persister failed',
+        });
+        //How can we fail gracefully here?
+        throw error;
+      }
+    }
+
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 
     void promiseQueue
       .onIdle()
-      .then(async () => {
-        /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
-         * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
-         * I think we should decouple as much as possible upload from step success.
-         */
-        let uploader: StepGraphObjectDataUploader | undefined;
-        if (createStepGraphObjectDataUploader) {
-          uploader = createStepGraphObjectDataUploader(
-            Array.from(stepResultsMap.keys()).pop() as string,
-          );
-        }
-        await graphObjectStore.flush(
-          async (entities) =>
-            entities.length
-              ? uploader?.enqueue({
-                  entities,
-                  relationships: [],
-                })
-              : undefined,
-          async (relationships) =>
-            relationships.length
-              ? uploader?.enqueue({
-                  entities: [],
-                  relationships,
-                })
-              : undefined,
-        );
-        try {
-          await uploader?.waitUntilUploadsComplete();
-        } catch (error) {
-          executionContext.logger.publishErrorEvent({
-            name: IntegrationErrorEventName.UnexpectedError,
-            description: 'Upload to persister failed',
-          });
-          throw error;
-        }
-      })
+      .then(forceFlushEverything)
       .then(() => resolve([...stepResultsMap.values()]))
       .catch(reject);
   });
