@@ -40,7 +40,8 @@ export function loadInvocationConfig(
   let integrationModule: any;
 
   try {
-    integrationModule = require(path.resolve(projectSourceDirectory, 'index'));
+    integrationModule = require('@jupiterone/graph-rumble');
+    //integrationModule = require(path.resolve(projectSourceDirectory, 'index'));
   } catch (err) {
     throw new IntegrationInvocationConfigLoadError(
       'Error loading integration invocation configuration. Ensure "invocationConfig" is exported from "src/index". Additional details: ' +
