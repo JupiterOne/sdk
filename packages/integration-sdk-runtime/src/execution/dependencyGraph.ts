@@ -453,6 +453,9 @@ export function executeStepDependencyGraph<
       if (createStepGraphObjectDataUploader) {
         uploader = createStepGraphObjectDataUploader(lastStepId);
       }
+      const stepsInvolvedInUpload = graphObjectStore.getStepsStored
+        ? graphObjectStore.getStepsStored()
+        : [];
       await graphObjectStore.flush(
         async (entities) =>
           entities.length
@@ -476,12 +479,13 @@ export function executeStepDependencyGraph<
           name: IntegrationErrorEventName.UnexpectedError,
           description: 'Upload to persister failed',
         });
-
-        executionContext.logger.stepFailure(
-          workingGraph.getNodeData(lastStepId),
-          err,
-        );
-        stepResultsMap[lastStepId] = StepResultStatus.FAILURE;
+        for (const stepId of stepsInvolvedInUpload) {
+          executionContext.logger.stepFailure(
+            workingGraph.getNodeData(stepId),
+            err,
+          );
+          stepResultsMap[stepId] = StepResultStatus.FAILURE;
+        }
       }
     }
 

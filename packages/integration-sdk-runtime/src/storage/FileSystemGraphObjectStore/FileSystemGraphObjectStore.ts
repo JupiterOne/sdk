@@ -152,6 +152,9 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         integrationStepsToGraphObjectIndexMetadataMap(params.integrationSteps);
     }
   }
+  getStepsStored() {
+    return this.localGraphObjectStore.getStepsStored();
+  }
 
   async addEntities(
     stepId: string,
