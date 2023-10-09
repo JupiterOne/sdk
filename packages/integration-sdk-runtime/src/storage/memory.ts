@@ -327,13 +327,13 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   getStepsStored(): string[] {
     const stepIds: string[] = [];
 
-    for (const graphObjectData of this.relationshipKeyToRelationshipMap.values()) {
+    for (const [_, graphObjectData] of this.relationshipKeyToRelationshipMap) {
       const { stepId } = graphObjectData;
       if (!stepIds.includes(stepId)) {
         stepIds.push(stepId);
       }
     }
-    for (const graphObjectData of this.entityKeyToEntityMap.values()) {
+    for (const [_, graphObjectData] of this.entityKeyToEntityMap) {
       const { stepId } = graphObjectData;
       if (!stepIds.includes(stepId)) {
         stepIds.push(stepId);

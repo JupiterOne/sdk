@@ -447,11 +447,10 @@ export function executeStepDependencyGraph<
        * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
        */
       let uploader: StepGraphObjectDataUploader | undefined;
-      const lastStepId: string = Array.from(
-        stepResultsMap.keys(),
-      ).pop() as string;
       if (createStepGraphObjectDataUploader) {
-        uploader = createStepGraphObjectDataUploader(lastStepId);
+        uploader = createStepGraphObjectDataUploader(
+          Array.from(stepResultsMap.keys()).pop() as string,
+        );
       }
       const stepsInvolvedInUpload = graphObjectStore.getStepsStored
         ? graphObjectStore.getStepsStored()
