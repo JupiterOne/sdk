@@ -447,10 +447,11 @@ export function executeStepDependencyGraph<
        * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
        */
       let uploader: StepGraphObjectDataUploader | undefined;
+      const lastStepId: string = Array.from(
+        stepResultsMap.keys(),
+      ).pop() as string;
       if (createStepGraphObjectDataUploader) {
-        uploader = createStepGraphObjectDataUploader(
-          Array.from(stepResultsMap.keys()).pop() as string,
-        );
+        uploader = createStepGraphObjectDataUploader(lastStepId);
       }
       await graphObjectStore.flush(
         async (entities) =>
@@ -470,13 +471,17 @@ export function executeStepDependencyGraph<
       );
       try {
         await uploader?.waitUntilUploadsComplete();
-      } catch (error) {
+      } catch (err) {
         executionContext.logger.publishErrorEvent({
           name: IntegrationErrorEventName.UnexpectedError,
           description: 'Upload to persister failed',
         });
-        //How can we fail gracefully here?
-        throw error;
+
+        executionContext.logger.stepFailure(
+          workingGraph.getNodeData(lastStepId),
+          err,
+        );
+        stepResultsMap[lastStepId] = StepResultStatus.FAILURE;
       }
     }
 
