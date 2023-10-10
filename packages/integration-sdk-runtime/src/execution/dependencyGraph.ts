@@ -452,6 +452,9 @@ export function executeStepDependencyGraph<
           Array.from(stepResultsMap.keys()).pop() as string,
         );
       }
+      const stepsInvolvedInUpload = graphObjectStore.getStepsStored
+        ? graphObjectStore.getStepsStored()
+        : [];
       await graphObjectStore.flush(
         async (entities) =>
           entities.length
@@ -470,13 +473,18 @@ export function executeStepDependencyGraph<
       );
       try {
         await uploader?.waitUntilUploadsComplete();
-      } catch (error) {
+      } catch (err) {
         executionContext.logger.publishErrorEvent({
           name: IntegrationErrorEventName.UnexpectedError,
           description: 'Upload to persister failed',
         });
-        //How can we fail gracefully here?
-        throw error;
+        for (const stepId of stepsInvolvedInUpload) {
+          executionContext.logger.stepFailure(
+            workingGraph.getNodeData(stepId),
+            err,
+          );
+          stepResultsMap[stepId] = StepResultStatus.FAILURE;
+        }
       }
     }
 

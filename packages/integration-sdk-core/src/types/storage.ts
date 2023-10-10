@@ -46,4 +46,6 @@ export interface GraphObjectStore {
   getIndexMetadataForGraphObjectType?: (
     params: GetIndexMetadataForGraphObjectTypeParams,
   ) => GraphObjectIndexMetadata | undefined;
+
+  getStepsStored?: () => string[];
 }

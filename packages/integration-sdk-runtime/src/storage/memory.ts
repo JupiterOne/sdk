@@ -323,4 +323,22 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
       0,
     );
   }
+
+  getStepsStored(): string[] {
+    const stepIds: string[] = [];
+
+    for (const [_, graphObjectData] of this.relationshipKeyToRelationshipMap) {
+      const { stepId } = graphObjectData;
+      if (!stepIds.includes(stepId)) {
+        stepIds.push(stepId);
+      }
+    }
+    for (const [_, graphObjectData] of this.entityKeyToEntityMap) {
+      const { stepId } = graphObjectData;
+      if (!stepIds.includes(stepId)) {
+        stepIds.push(stepId);
+      }
+    }
+    return stepIds;
+  }
 }
