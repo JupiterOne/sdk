@@ -1,4 +1,4 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { Alpha, AlphaOptions } from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
@@ -8,6 +8,7 @@ import {
   IntegrationAccountRequiredError,
   IntegrationApiKeyRequiredError,
 } from './error';
+import { gzipData } from '../synchronization/util';
 
 export type ApiClient = AxiosInstance;
 
@@ -16,6 +17,7 @@ interface CreateApiClientInput {
   account: string;
   accessToken?: string;
   retryOptions?: RetryOptions;
+  compressUploads?: boolean;
   alphaOptions?: AlphaOptions;
 }
 
@@ -40,6 +42,7 @@ export function createApiClient({
   account,
   accessToken,
   retryOptions,
+  compressUploads,
   alphaOptions,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
@@ -50,7 +53,6 @@ export function createApiClient({
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
-
   const opts: AlphaOptions = {
     baseURL: apiBaseUrl,
     headers,
@@ -58,7 +60,30 @@ export function createApiClient({
     ...alphaOptions,
   };
 
-  return new Alpha(opts) as ApiClient;
+  const client = new Alpha(opts) as ApiClient;
+  if (compressUploads) {
+    client.interceptors.request.use(compressRequest);
+  }
+  return client;
+}
+
+export async function compressRequest(config: AxiosRequestConfig) {
+  if (
+    config.method === 'post' &&
+    config.url &&
+    /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/.test(
+      config.url,
+    )
+  ) {
+    if (config.headers) {
+      config.headers['Content-Encoding'] = 'gzip';
+    } else {
+      config.headers = {
+        'Content-Encoding': 'gzip',
+      };
+    }
+    config.data = await gzipData(config.data);
+  }
 }
 
 interface GetApiBaseUrlInput {
