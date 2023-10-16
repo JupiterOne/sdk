@@ -27,18 +27,18 @@ export function generateIntegrationGraphSchemaCommand() {
       process.cwd(),
     )
     .option(
-      '-m, --module <mod>',
+      '-m, --module-name <module>',
       'name of modules to load (ex "@jupiterone/graph-rumble". Will load using require of package rather than filename)',
     )
     .action(async (options) => {
-      const { projectPath, outputFile, mod } = options;
+      const { projectPath, outputFile, moduleName } = options;
 
       log.info(
         `Generating integration graph schema (projectPath=${projectPath}, outputFile=${outputFile})`,
       );
       let config;
-      if (mod) {
-        config = await loadConfigFromModule(mod);
+      if (moduleName) {
+        config = await loadConfigFromModule(moduleName);
       } else {
         config = await loadConfigFromTarget(projectPath);
       }
