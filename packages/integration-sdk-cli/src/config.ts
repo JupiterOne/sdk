@@ -59,6 +59,21 @@ function loadConfigFromDist(projectPath: string) {
   return loadConfig(path.join(projectPath, 'dist'));
 }
 
+export function loadConfigFromModule(mod: string) {
+  let integrationModule: any;
+
+  try {
+    integrationModule = require(mod);
+  } catch (err) {
+    throw new IntegrationInvocationConfigLoadError(
+      `Error loading integration invocation configuration. Ensure "invocationConfig" is exported from "${mod}". Additional details: ` +
+        err,
+    );
+  }
+
+  return integrationModule.invocationConfig as IntegrationInvocationConfig;
+}
+
 /**
  * The way that integration npm packages are distributed has changed over time.
  * This function handles different cases where the invocation config has
