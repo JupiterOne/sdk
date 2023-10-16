@@ -34,7 +34,7 @@ export function generateIntegrationGraphSchemaCommand() {
       const { projectPath, outputFile, moduleName } = options;
 
       log.info(
-        `Generating integration graph schema (projectPath=${projectPath}, outputFile=${outputFile})`,
+        `Generating integration graph schema (projectPath=${projectPath}, outputFile=${outputFile}, moduleName=${moduleName})`,
       );
       let config;
       if (moduleName) {

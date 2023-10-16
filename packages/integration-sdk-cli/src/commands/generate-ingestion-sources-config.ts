@@ -34,7 +34,7 @@ export function generateIngestionSourcesConfigCommand() {
       const { projectPath, outputFile, moduleName } = options;
 
       log.info(
-        `Generating ingestion sources config (projectPath=${projectPath}, outputFile=${outputFile})`,
+        `Generating ingestion sources config (projectPath=${projectPath}, outputFile=${outputFile}, moduleName=${moduleName})`,
       );
       let config;
       if (moduleName) {
