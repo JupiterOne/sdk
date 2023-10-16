@@ -38,7 +38,7 @@ export function generateIntegrationGraphSchemaCommand() {
       );
       let config;
       if (moduleName) {
-        config = await loadConfigFromModule(moduleName);
+        config = loadConfigFromModule(moduleName);
       } else {
         config = await loadConfigFromTarget(projectPath);
       }

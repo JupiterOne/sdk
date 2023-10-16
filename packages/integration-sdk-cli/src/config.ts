@@ -59,7 +59,7 @@ function loadConfigFromDist(projectPath: string) {
   return loadConfig(path.join(projectPath, 'dist'));
 }
 
-export async function loadConfigFromModule(mod: string) {
+export function loadConfigFromModule(mod: string) {
   let integrationModule: any;
 
   try {
