@@ -1,0 +1,12 @@
+openapi: 3.0.1
+info:
+  title: root
+  description: Automatically generated package.json, please edit manually
+  x-cortex-git:
+    github:
+      repository: JupiterOne/sdk
+  x-cortex-owners:
+    - type: group
+      name: JupiterOne/security
+  x-cortex-service-groups: tier-4
+  x-cortex-tag: root
