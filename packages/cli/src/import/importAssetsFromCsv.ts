@@ -1,7 +1,7 @@
 import globby from 'globby';
 import upath from 'upath';
 import createSpinner from 'ora';
-import { AxiosInstance } from 'axios';
+import type { Alpha } from '@lifeomic/alpha';
 import path from 'path';
 import pMap from 'p-map';
 import { retry } from '@lifeomic/attempt';
@@ -33,7 +33,7 @@ async function waitForSyncCompletion({ jobId, apiClient, progress }) {
 
 interface ImportAssetsTypeParams {
   storageDirectory: string;
-  apiClient: AxiosInstance;
+  apiClient: Alpha;
   jobId: string;
   assetType: 'entities' | 'relationships';
   progress: (currentFile: string) => void;
