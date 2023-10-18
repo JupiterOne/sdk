@@ -21,8 +21,11 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: yarn
 
+      - name: Set host
+        run: echo "$(dig +short registry.yarnpkg.com | tail -1) registry.yarnpkg.com" | sudo tee -a /etc/hosts
+
       - name: Install dependencies
-        run: yarn --frozen-lockfile --verbose
+        run: yarn --frozen-lockfile
 
       - name: Run tests
         run: yarn test:ci
