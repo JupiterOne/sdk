@@ -420,7 +420,7 @@ function handleUploadDataChunkError({
    * }
    */
   const systemErrorResponseData = getSystemErrorResponseData(err);
-
+  delete err?.config?.data;
   logger.info(
     {
       err,
@@ -518,11 +518,7 @@ export async function uploadDataChunk<
             uploadCorrelationId,
           });
         } catch (error) {
-          logger.warn(
-            { error },
-            'handleUploadDataChunkError function threw',
-            error,
-          );
+          logger.warn({ error }, 'handleUploadDataChunkError function threw');
           throw error;
         }
       },
