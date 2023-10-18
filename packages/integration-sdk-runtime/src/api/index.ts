@@ -1,4 +1,3 @@
-import { AxiosInstance } from 'axios';
 import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
@@ -10,7 +9,7 @@ import {
 } from './error';
 import { gzipData } from '../synchronization/util';
 
-export type ApiClient = AxiosInstance;
+export type ApiClient = Alpha;
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
