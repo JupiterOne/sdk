@@ -695,6 +695,14 @@
     "@aws-sdk/types" "3.329.0"
     tslib "^2.5.0"
 
+"@aws-sdk/url-parser@^3.357.0":
+  version "3.374.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/url-parser/-/url-parser-3.374.0.tgz#d8a017b37ab0d8f66baab552c9587c024a4f2d3a"
+  integrity sha512-RC3yEj4iqw5vbCmR4IQ3rhmFQilwHtWO1mZ9kRTUxfJCge3TVlrZzj9PRW3hxlYKdu3xZjSvCgX3ip8SFKXtbw==
+  dependencies:
+    "@smithy/url-parser" "^1.0.1"
+    tslib "^2.5.0"
+
 "@aws-sdk/util-base64@3.310.0":
   version "3.310.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/util-base64/-/util-base64-3.310.0.tgz#d0fd49aff358c5a6e771d0001c63b1f97acbe34c"
@@ -2530,10 +2538,10 @@
     validate-npm-package-name "5.0.0"
     yargs-parser "20.2.4"
 
-"@lifeomic/alpha@^5.1.1":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@lifeomic/alpha/-/alpha-5.1.1.tgz#87fd0ea0f3fe36b3d5e68ff616c005d78adc8cb2"
-  integrity sha512-h24Db5ryu3pcEeidzNFpwrzqOXz9qj0gziWofy3n41o2zWlNRVCYeoiFUEjJZqzfyQ2tkrWg9vxmdgnT2X6daA==
+"@lifeomic/alpha@^5.2.0":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@lifeomic/alpha/-/alpha-5.2.0.tgz#aa420217a74b798509506dc671ea44587a553a84"
+  integrity sha512-xe7DizIVZ4LNwiYGwhmS1otYEWCtiPmkEGJ6hohLlhdnEym8pfX0nBasknrXDPepN8QB/RQ5Ir+6Yh2Ms/AYIg==
   dependencies:
     "@aws-crypto/sha256-browser" "^2.0.1"
     "@aws-sdk/abort-controller" "^3.110.0"
@@ -2541,7 +2549,9 @@
     "@aws-sdk/credential-provider-node" "^3.121.0"
     "@aws-sdk/node-http-handler" "^3.118.1"
     "@aws-sdk/signature-v4" "^3.110.0"
+    "@aws-sdk/url-parser" "^3.357.0"
     "@types/aws-lambda" "^8.10.101"
+    axios "^0.27.2"
     lodash "^4.17.21"
     nearley "2"
     url-parse "^1.5.10"
@@ -2995,6 +3005,30 @@
   integrity sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==
   dependencies:
     "@sinonjs/commons" "^3.0.0"
+
+"@smithy/querystring-parser@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@smithy/querystring-parser/-/querystring-parser-1.1.0.tgz#4bf4be6d1db8b769d346a0d98c5b0db4e99a8ba6"
+  integrity sha512-Lm/FZu2qW3XX+kZ4WPwr+7aAeHf1Lm84UjNkKyBu16XbmEV7ukfhXni2aIwS2rcVf8Yv5E7wchGGpOFldj9V4Q==
+  dependencies:
+    "@smithy/types" "^1.2.0"
+    tslib "^2.5.0"
+
+"@smithy/types@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@smithy/types/-/types-1.2.0.tgz#9dc65767b0ee3d6681704fcc67665d6fc9b6a34e"
+  integrity sha512-z1r00TvBqF3dh4aHhya7nz1HhvCg4TRmw51fjMrh5do3h+ngSstt/yKlNbHeb9QxJmFbmN8KEVSWgb1bRvfEoA==
+  dependencies:
+    tslib "^2.5.0"
+
+"@smithy/url-parser@^1.0.1":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@smithy/url-parser/-/url-parser-1.1.0.tgz#1d88af653b02fda0be59064bfe5420c0b34b4dcb"
+  integrity sha512-tpvi761kzboiLNGEWczuybMPCJh6WHB3cz9gWAG95mSyaKXmmX8ZcMxoV+irZfxDqLwZVJ22XTumu32S7Ow8aQ==
+  dependencies:
+    "@smithy/querystring-parser" "^1.1.0"
+    "@smithy/types" "^1.2.0"
+    tslib "^2.5.0"
 
 "@tootallnate/once@2":
   version "2.0.0"
@@ -3641,7 +3675,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.11.0.tgz#d61f46d83b2519250e2784daf5b09479a8b41c59"
   integrity sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
 
-axios@^0.27.0:
+axios@^0.27.2:
   version "0.27.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.27.2.tgz#207658cc8621606e586c85db4b41a750e756d972"
   integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==

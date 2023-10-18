@@ -1,5 +1,5 @@
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { Alpha, AlphaOptions } from '@lifeomic/alpha';
+import { AxiosInstance } from 'axios';
+import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -62,12 +62,18 @@ export function createApiClient({
 
   const client = new Alpha(opts) as ApiClient;
   if (compressUploads) {
+    // interceptors is incorrectly typed even without the case to ApiClient.
+    // an AxiosInterceptor doesn't work here. You must use the AlphaInterceptor
+    // as we are registering these interceptors on the Alpha instance.
+    // AlphaInterceptors _must_ return the config or a Promise for the config.
     client.interceptors.request.use(compressRequest);
   }
   return client;
 }
 
-export async function compressRequest(config: AxiosRequestConfig) {
+export const compressRequest: AlphaInterceptor = async function (
+  config: AlphaOptions,
+) {
   if (
     config.method === 'post' &&
     config.url &&
@@ -84,7 +90,8 @@ export async function compressRequest(config: AxiosRequestConfig) {
     }
     config.data = await gzipData(config.data);
   }
-}
+  return config;
+};
 
 interface GetApiBaseUrlInput {
   dev: boolean;
