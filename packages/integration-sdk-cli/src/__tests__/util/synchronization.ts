@@ -3,6 +3,7 @@ import {
   SynchronizationJob,
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
+import { gunzipSync } from 'zlib';
 
 interface SetupOptions {
   baseUrl: string;
@@ -37,7 +38,13 @@ export function setupSynchronizerApi({
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/entities`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
-      job.numEntitiesUploaded += JSON.parse(req.body!).entities.length;
+      if (req.hasHeader('Content-Encoding')) {
+        const result = gunzipSync(Buffer.from(req.body!));
+        const data = JSON.parse(result.toString());
+        job.numEntitiesUploaded += data.entities.length;
+      } else {
+        job.numEntitiesUploaded += JSON.parse(req.body!).entities.length;
+      }
       res.status(200).json({ job });
     });
 
@@ -52,9 +59,15 @@ export function setupSynchronizerApi({
     .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/relationships`)
     .intercept((req, res) => {
       allowCrossOrigin(req, res);
-      job.numRelationshipsUploaded += JSON.parse(
-        req.body!,
-      ).relationships.length;
+      if (req.hasHeader('Content-Encoding')) {
+        const result = gunzipSync(Buffer.from(req.body!));
+        const data = JSON.parse(result.toString());
+        job.numRelationshipsUploaded += data.relationships.length;
+      } else {
+        job.numRelationshipsUploaded += JSON.parse(
+          req.body!,
+        ).relationships.length;
+      }
       res.status(200).json({ job });
     });
 

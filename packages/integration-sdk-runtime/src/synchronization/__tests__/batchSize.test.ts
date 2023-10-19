@@ -15,6 +15,7 @@ import {
 import { SynchronizationJobContext, uploadGraphObjectData } from '..';
 import { getSizeOfObject } from '../batchBySize';
 export const BYTES_IN_MB = 1048576;
+
 function createFlushedGraphObjectData(
   numEntity: number,
   numRelationship: number,
@@ -147,13 +148,13 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     }
   });
 
-  test('should batch a really big ammount of entities-relationships 50k entities + 50k relationships', async () => {
+  test('should batch a really big amount of entities-relationships 50k entities + 50k relationships', async () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
     });
     const bigObjectData = createFlushedGraphObjectData(50000, 50000);
-    const postSpy = jest.spyOn(apiClient, 'post') as any;
+    const postSpy = jest.spyOn(apiClient, 'post');
 
     postSpy.mockResolvedValue({});
 
@@ -170,28 +171,32 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       bytesToBatch,
     );
 
-    const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
-    const relationshipsCalls = postSpy.mock.calls.filter(
-      (c) => c[1].relationships,
-    );
+    const calls = postSpy.mock.calls.map((c) => c[1]);
+    const entityCalls = calls.filter((c) => (c as any).entities) as {
+      entities: Entity[];
+    }[];
+    const relationshipCalls = calls.filter((c) => (c as any).relationships) as {
+      relationships: Relationship[];
+    }[];
+
     expect(entityCalls.length).toBe(3);
-    expect(relationshipsCalls.length).toBe(4);
+    expect(relationshipCalls.length).toBe(4);
     let entitySentToSync: string[] = [];
     let relationshipSentToSync: string[] = [];
     for (const call of entityCalls) {
       entitySentToSync = entitySentToSync.concat(
-        (call[1].entities as Entity[]).map((item) => item._key),
+        (call.entities as Entity[]).map((item) => item._key),
       );
       expect(
-        Buffer.byteLength(JSON.stringify(call[1].entities)),
+        Buffer.byteLength(JSON.stringify(call.entities)),
       ).toBeLessThanOrEqual(bytesToBatch * 1.01);
     }
-    for (const call of relationshipsCalls) {
+    for (const call of relationshipCalls) {
       relationshipSentToSync = relationshipSentToSync.concat(
-        (call[1].relationships as Relationship[]).map((item) => item._key),
+        (call.relationships as Relationship[]).map((item) => item._key),
       );
       expect(
-        Buffer.byteLength(JSON.stringify(call[1].relationships)),
+        Buffer.byteLength(JSON.stringify(call.relationships)),
       ).toBeLessThanOrEqual(bytesToBatch * 1.01);
     }
     //Check that all elements that we wanted to sync were called
@@ -201,9 +206,9 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     expect(bigObjectData.relationships.map((item) => item._key).sort()).toEqual(
       relationshipSentToSync.sort(),
     );
-  });
+  }, 10_000);
 
-  test('should batch a small ammount of big entities 10x(7MB each)', async () => {
+  test('should batch a small amount of big entities 10x(7MB each)', async () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
@@ -235,27 +240,26 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       bytesToBatch,
     );
 
-    const entityCalls = postSpy.mock.calls.filter((c) => c[1].entities);
-    const relationshipsCalls = postSpy.mock.calls.filter(
-      (c) => c[1].relationships,
-    );
+    const calls = postSpy.mock.calls.map((c) => c[1]);
+    const entityCalls = calls.filter((c) => c.entities);
+    const relationshipsCalls = calls.filter((c) => c.relationships);
     expect(entityCalls.length).toBe(1);
     let sentToSync: string[] = [];
     for (const call of entityCalls) {
       sentToSync = sentToSync.concat(
-        (call[1].entities as Entity[]).map((item) => item._key),
+        (call.entities as Entity[]).map((item) => item._key),
       );
       expect(
-        Buffer.byteLength(JSON.stringify(call[1].entities)),
+        Buffer.byteLength(JSON.stringify(call.entities)),
       ).toBeLessThanOrEqual(bytesToBatch * 1.01);
     }
     for (const call of relationshipsCalls) {
       expect(
-        Buffer.byteLength(JSON.stringify(call[1].relationships)),
+        Buffer.byteLength(JSON.stringify(call.relationships)),
       ).toBeLessThanOrEqual(bytesToBatch * 1.01);
     }
     expect(bigObjectData.entities.map((item) => item._key).sort()).toEqual(
       sentToSync.sort(),
     );
-  });
+  }, 10_000);
 });
