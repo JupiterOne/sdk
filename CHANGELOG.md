@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+## 11.1.0 - 2023-10-19
+
 - Add `compressUploads` to `CreateAPIClientOptions`. Enabling this will send
   gzipped payloads.
 
