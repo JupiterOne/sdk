@@ -16,7 +16,6 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
-  IntegrationErrorEventName,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -474,16 +473,12 @@ export function executeStepDependencyGraph<
       try {
         await uploader?.waitUntilUploadsComplete();
       } catch (err) {
-        executionContext.logger.publishErrorEvent({
-          name: IntegrationErrorEventName.UnexpectedError,
-          description: 'Upload to persister failed',
-        });
         for (const stepId of stepsInvolvedInUpload) {
           executionContext.logger.stepFailure(
             workingGraph.getNodeData(stepId),
             err,
           );
-          stepResultsMap[stepId] = StepResultStatus.FAILURE;
+          updateStepResultStatus(stepId, StepResultStatus.FAILURE, typeTracker);
         }
       }
     }
