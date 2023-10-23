@@ -16,6 +16,7 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
+  UploadError,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -394,6 +395,21 @@ export function executeStepDependencyGraph<
         status = StepResultStatus.FAILURE;
       }
 
+      if (context.jobState.waitUntilUploadsComplete) {
+        try {
+          // Failing to upload all integration data should not be considered a
+          // fatal failure. We just want to make this step as a partial success
+          // and move on with our lives!
+          await context.jobState.waitUntilUploadsComplete();
+        } catch (err) {
+          if (err instanceof UploadError) {
+            failAllStepsWithError(err.stepsInvolved, err);
+          } else {
+            context.logger.stepFailure(step, err);
+            status = StepResultStatus.FAILURE;
+          }
+        }
+      }
       updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
@@ -441,44 +457,61 @@ export function executeStepDependencyGraph<
 
       return status;
     }
+    function failAllStepsWithError(steps, err) {
+      for (const stepId of steps) {
+        executionContext.logger.stepFailure(
+          workingGraph.getNodeData(stepId),
+          err,
+        );
+        updateStepResultStatus(stepId, StepResultStatus.FAILURE, typeTracker);
+      }
+    }
     async function forceFlushEverything() {
       /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
        * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
        */
       let uploader: StepGraphObjectDataUploader | undefined;
+      const lastStep = Array.from(stepResultsMap.keys()).pop() as string;
       if (createStepGraphObjectDataUploader) {
-        uploader = createStepGraphObjectDataUploader(
-          Array.from(stepResultsMap.keys()).pop() as string,
-        );
+        uploader = createStepGraphObjectDataUploader(lastStep);
       }
-      const stepsInvolvedInUpload = graphObjectStore.getStepsStored
-        ? graphObjectStore.getStepsStored()
-        : [];
       await graphObjectStore.flush(
-        async (entities) =>
+        async (entities, stepsInvolved) =>
           entities.length
-            ? uploader?.enqueue({
-                entities,
-                relationships: [],
-              })
+            ? uploader?.enqueue(
+                {
+                  entities,
+                  relationships: [],
+                },
+                stepsInvolved,
+              )
             : undefined,
-        async (relationships) =>
+        async (relationships, stepsInvolved) =>
           relationships.length
-            ? uploader?.enqueue({
-                entities: [],
-                relationships,
-              })
+            ? uploader?.enqueue(
+                {
+                  entities: [],
+                  relationships,
+                },
+                stepsInvolved,
+              )
             : undefined,
       );
       try {
         await uploader?.waitUntilUploadsComplete();
       } catch (err) {
-        for (const stepId of stepsInvolvedInUpload) {
+        if (err instanceof UploadError) {
+          failAllStepsWithError(err.stepsInvolved, err);
+        } else {
           executionContext.logger.stepFailure(
-            workingGraph.getNodeData(stepId),
+            workingGraph.getNodeData(lastStep),
             err,
           );
-          updateStepResultStatus(stepId, StepResultStatus.FAILURE, typeTracker);
+          updateStepResultStatus(
+            lastStep,
+            StepResultStatus.FAILURE,
+            typeTracker,
+          );
         }
       }
     }

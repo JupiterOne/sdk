@@ -1,4 +1,4 @@
-import { IntegrationError } from '@jupiterone/integration-sdk-core';
+import { UploadError } from '@jupiterone/integration-sdk-core';
 import PQueue from 'p-queue/dist';
 import { FlushedGraphObjectData } from '../storage/types';
 import {
@@ -10,7 +10,10 @@ import { randomUUID as uuid } from 'crypto';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;
-  enqueue: (graphObjectData: FlushedGraphObjectData) => Promise<void>;
+  enqueue: (
+    graphObjectData: FlushedGraphObjectData,
+    stepsInvolved?: string[],
+  ) => Promise<void>;
   waitUntilUploadsComplete: () => Promise<void>;
 }
 
@@ -37,10 +40,10 @@ export function createQueuedStepGraphObjectDataUploader({
 
   let completed = false;
   const uploadErrors: Error[] = [];
-
+  const stepsInvolvedInFailures = new Set<string>();
   return {
     stepId,
-    async enqueue(graphObjectData) {
+    async enqueue(graphObjectData, stepsInvolved) {
       if (completed) {
         // This step has already called ran `waitUntilUploadsComplete`, so we
         // do not want to allow any additional enqueuing.
@@ -75,6 +78,12 @@ export function createQueuedStepGraphObjectDataUploader({
           // The JupiterOne synchronization should be resilient enough to handle
           // cases where this could cause an issue (e.g. a relationship getting
           // uploaded that references an entity that failed to upload).
+          if (stepsInvolved) {
+            stepsInvolved.forEach(
+              stepsInvolvedInFailures.add,
+              stepsInvolvedInFailures,
+            );
+          }
           uploadErrors.push(err);
         });
     },
@@ -93,15 +102,12 @@ export function createQueuedStepGraphObjectDataUploader({
       }
 
       if (uploadErrors.length) {
-        throw new IntegrationError({
-          code: 'UPLOAD_ERROR',
-          message: `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=${uploadErrors.join(
+        throw new UploadError(
+          `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=${uploadErrors.join(
             ',',
           )})`,
-          // Just include the first error cause. We should be able to gather
-          // additional information from the joined error messages.
-          cause: uploadErrors[0],
-        });
+          Array.from(stepsInvolvedInFailures.values()),
+        );
       }
     },
   };
