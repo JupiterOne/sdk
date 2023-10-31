@@ -9,6 +9,15 @@ and this project adheres to
 
 # Unreleased
 
+## 11.1.0 - 2023-10-19
+
+- Add `compressUploads` to `CreateAPIClientOptions`. Enabling this will send
+  gzipped payloads.
+
+- Allow loading modules by name (ex. @jupiterone/graph-rumble) in the
+  `generate-ingestion-sources-config` and `generate-integration-graph-schema`
+  commands
+
 ## 11.0.3
 
 - Moved `vis` dependency to devDependencies

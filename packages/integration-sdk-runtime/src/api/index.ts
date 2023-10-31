@@ -1,5 +1,4 @@
-import { AxiosInstance } from 'axios';
-import { Alpha, AlphaOptions } from '@lifeomic/alpha';
+import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -8,14 +7,16 @@ import {
   IntegrationAccountRequiredError,
   IntegrationApiKeyRequiredError,
 } from './error';
+import { gzipData } from '../synchronization/util';
 
-export type ApiClient = AxiosInstance;
+export type ApiClient = Alpha;
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
   retryOptions?: RetryOptions;
+  compressUploads?: boolean;
   alphaOptions?: AlphaOptions;
 }
 
@@ -40,6 +41,7 @@ export function createApiClient({
   account,
   accessToken,
   retryOptions,
+  compressUploads,
   alphaOptions,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
@@ -50,7 +52,6 @@ export function createApiClient({
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
-
   const opts: AlphaOptions = {
     baseURL: apiBaseUrl,
     headers,
@@ -58,8 +59,38 @@ export function createApiClient({
     ...alphaOptions,
   };
 
-  return new Alpha(opts) as ApiClient;
+  const client = new Alpha(opts) as ApiClient;
+  if (compressUploads) {
+    // interceptors is incorrectly typed even without the case to ApiClient.
+    // an AxiosInterceptor doesn't work here. You must use the AlphaInterceptor
+    // as we are registering these interceptors on the Alpha instance.
+    // AlphaInterceptors _must_ return the config or a Promise for the config.
+    client.interceptors.request.use(compressRequest);
+  }
+  return client;
 }
+
+export const compressRequest: AlphaInterceptor = async function (
+  config: AlphaOptions,
+) {
+  if (
+    config.method === 'post' &&
+    config.url &&
+    /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/.test(
+      config.url,
+    )
+  ) {
+    if (config.headers) {
+      config.headers['Content-Encoding'] = 'gzip';
+    } else {
+      config.headers = {
+        'Content-Encoding': 'gzip',
+      };
+    }
+    config.data = await gzipData(config.data);
+  }
+  return config;
+};
 
 interface GetApiBaseUrlInput {
   dev: boolean;
