@@ -82,6 +82,7 @@ export function executeStepDependencyGraph<
   executionContext,
   inputGraph,
   stepStartStates,
+  stepConcurrency,
   duplicateKeyTracker,
   graphObjectStore,
   dataStore,
@@ -95,6 +96,7 @@ export function executeStepDependencyGraph<
   executionContext: TExecutionContext;
   inputGraph: DepGraph<Step<TStepExecutionContext>>;
   stepStartStates: StepStartStates;
+  stepConcurrency?: number;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
   dataStore: MemoryDataStore;
@@ -114,7 +116,11 @@ export function executeStepDependencyGraph<
   const workingGraph = inputGraph.clone();
 
   // create a queue for managing promises to be executed
-  const promiseQueue = new PromiseQueue();
+  const promiseQueueOptions: { concurrency?: number } = {};
+  if (stepConcurrency !== undefined) {
+    promiseQueueOptions.concurrency = stepConcurrency;
+  }
+  const promiseQueue = new PromiseQueue(promiseQueueOptions);
 
   const typeTracker = new TypeTracker();
   const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
