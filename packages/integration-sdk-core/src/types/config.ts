@@ -81,6 +81,13 @@ export interface InvocationConfig<
    */
   dependencyGraphOrder?: string[];
   /**
+   * Optionally define the number of steps to execute in parallel.
+   *
+   * If this value is not provided the concurrency defaults to
+   * Number.POSITIVE_INFINITY
+   */
+  stepConcurrency?: number;
+  /**
    * This configuration element is used to store information about data
    * ingestion sources that can be enabled or disabled. When this element
    * is provided, it is expected that one or more steps will reference
