@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 11.2.0 - 2023-11-16
+
+- Add `stepConcurrency` to `InvocationConfig` allowing customization of step
+  concurrency.
+
 ## 11.1.0 - 2023-10-19
 
 - Add `compressUploads` to `CreateAPIClientOptions`. Enabling this will send
