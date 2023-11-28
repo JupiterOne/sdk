@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 11.3.1 - 2023-11-28
+
+- Patch to fix issue with deployment pipeline not processing
+
 ## 11.3.0 - 2023-11-28
 
 - Change Step Start/End logs to debug level and add duration field to Step
