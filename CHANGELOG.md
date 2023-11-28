@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 11.3.0 - 2023-11-28
+
+- Change Step Start/End logs to debug level and add duration field to Step
+  summary
+
 ## 11.2.0 - 2023-11-16
 
 - Add `stepConcurrency` to `InvocationConfig` allowing customization of step
