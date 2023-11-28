@@ -256,7 +256,7 @@ describe('step event publishing', () => {
   test('writes logs for stepEnd, stepStart, and stepFailure events', () => {
     const logger = createIntegrationLogger({ name, invocationConfig });
 
-    const infoSpy = jest.spyOn(logger, 'info');
+    const infoSpy = jest.spyOn(logger, 'debug');
     const errorSpy = jest.spyOn(logger, 'error');
 
     const step: IntegrationStep = {
