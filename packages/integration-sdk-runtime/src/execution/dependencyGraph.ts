@@ -343,6 +343,7 @@ export function executeStepDependencyGraph<
       const { logger } = context;
 
       logger.stepStart(step);
+      const startTime = Date.now();
 
       let status: StepResultStatus | undefined;
 
@@ -371,6 +372,7 @@ export function executeStepDependencyGraph<
             maybeLogUndeclaredTypes(context, step, typeTracker);
           }
         }
+        const stepDuration = Date.now() - startTime;
         context.logger.stepSuccess(step);
 
         logger.info(
@@ -378,14 +380,17 @@ export function executeStepDependencyGraph<
             status,
             stepId,
             summary: typeTracker.summarizeStep(stepId),
+            duration: stepDuration,
           },
           'Step summary',
         );
       } catch (err) {
+        const stepDuration = Date.now() - startTime;
         logger.info(
           {
             stepId,
             summary: typeTracker.summarizeStep(stepId),
+            duration: stepDuration,
           },
           'Failed step summary',
         );
