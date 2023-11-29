@@ -36,7 +36,7 @@
     "globby": "^11.0.0",
     "lodash": "^4.17.15",
     "p-map": "^4.0.0",
-    "p-queue": "^6.3.0",
+    "p-queue": "^6.6.2",
     "rimraf": "^3.0.2"
   },
   "devDependencies": {
