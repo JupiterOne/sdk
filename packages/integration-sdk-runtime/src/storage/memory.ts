@@ -170,7 +170,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
       // We mark this as void because we want to fire the task away and not wait for it to resolve
       // that is handled by the combination of onQueueSizeIsLessThanLimit and onIdle
-      void queue.add(async () => iteratee(graphObjectData.entity as T));
+      void queue.add(() => iteratee(graphObjectData.entity as T));
       // Don't flood the queue with promises. If we get to twice our concurrency we wait
       // This is queued tasks, not tasks that running we could have up to
       // concurrency-tasks (running) + concurrency-tasks (queued)
