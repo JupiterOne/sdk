@@ -211,12 +211,14 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options: { concurrency: number },
   ) {
-    await this.localGraphObjectStore.iterateEntities(filter, iteratee);
+    await this.localGraphObjectStore.iterateEntities(filter, iteratee, options);
 
     await iterateEntityTypeIndex({
       type: filter._type,
       iteratee,
+      options,
     });
   }
 

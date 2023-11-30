@@ -278,8 +278,8 @@ export function createStepJobState({
       return duplicateKeyTracker.hasKey(_key);
     },
 
-    iterateEntities: (filter, iteratee) =>
-      graphObjectStore.iterateEntities(filter, iteratee),
+    iterateEntities: (filter, iteratee, options) =>
+      graphObjectStore.iterateEntities(filter, iteratee, options),
 
     iterateRelationships: (filter, iteratee) =>
       graphObjectStore.iterateRelationships(filter, iteratee),

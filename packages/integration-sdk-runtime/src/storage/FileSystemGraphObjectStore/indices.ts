@@ -14,12 +14,12 @@ import { onQueueSizeIsLessThanLimit } from '../queue';
 interface BaseIterateCollectionIndexParams<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
+  options?: { concurrency: number };
 }
 
 interface IterateCollectionIndexParams<GraphObject>
   extends BaseIterateCollectionIndexParams<GraphObject> {
   collectionType: 'entities' | 'relationships';
-  options?: { concurrency: number };
 }
 
 async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
@@ -52,11 +52,13 @@ async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
+  options,
 }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,
     iteratee,
     collectionType: 'entities',
+    options,
   });
 }
 

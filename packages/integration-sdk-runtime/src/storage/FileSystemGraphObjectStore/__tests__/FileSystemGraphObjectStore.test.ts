@@ -29,6 +29,7 @@ import { RelationshipClass } from '@jupiterone/data-model';
 import { FlushedGraphObjectData } from '../../types';
 import sortBy from 'lodash/sortBy';
 import { getSizeOfObject } from '../../../synchronization/batchBySize';
+import { warn } from 'console';
 
 jest.mock('fs');
 
@@ -575,6 +576,42 @@ describe('iterateEntities', () => {
         }),
       ]),
     );
+  });
+
+  test('should allow concurrency when iterating entities', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const entityType = uuid();
+
+    type TestEntity = Entity & { randomField: string };
+
+    const entities = times(5, () =>
+      createTestEntity({ _type: entityType, randomField: 'field' }),
+    );
+
+    await store.addEntities(storageDirectoryPath, entities);
+
+    const taskBeginTimes = {};
+    const collectedEntities: TestEntity[] = [];
+    const task = async (e: TestEntity) => {
+      taskBeginTimes[e._key] = Date.now();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      collectedEntities.push(e);
+    };
+
+    await store.iterateEntities<TestEntity>({ _type: entityType }, task, {
+      concurrency: 5,
+    });
+
+    for (const e1 of entities) {
+      for (const e2 of entities) {
+        expect(
+          Math.abs(taskBeginTimes[e1._key] - taskBeginTimes[e2._key]),
+        ).toBeLessThan(100);
+      }
+    }
+
+    expect(collectedEntities.length).toBe(5);
   });
 });
 

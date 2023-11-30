@@ -5,6 +5,7 @@ import {
   createTestEntity,
   createTestRelationship,
 } from '@jupiterone/integration-sdk-private-test-utils';
+import { times } from 'lodash';
 
 async function collectEntitiesByType(
   store: InMemoryGraphObjectStore,
@@ -79,6 +80,61 @@ describe('#InMemoryGraphObjectStore', () => {
 
     expect(await collectEntitiesByType(store, e1._type)).toEqual([e1]);
     expect(await collectEntitiesByType(store, e2._type)).toEqual([e2]);
+  });
+
+  test('tasks should run concurrently', async () => {
+    const concurrency = 5;
+
+    const taskStartTimes = {};
+
+    // This tests the concurrency by making each task take _at least_ 250 ms.
+    // Then it compares the start time of each task to all the other tasks.
+    // Since concurrency is equal to the number of entities we are iterating
+    // all the tasks should start immediately and the difference in start time should be
+    // less than 250ms
+    const task = async (entity: Entity) => {
+      taskStartTimes[entity._key] = Date.now();
+      await new Promise((resolve) => setTimeout(resolve, 250)); // Mock task delay
+    };
+    const store = new InMemoryGraphObjectStore();
+
+    const entities = times(concurrency, () =>
+      createTestEntity({ _type: 'test' }),
+    );
+    await store.addEntities(uuid(), entities);
+
+    await store.iterateEntities({ _type: 'test' }, task, { concurrency });
+
+    // All tasks should have started with 250ms of each other since concurrency is 5
+    for (const e1 of entities) {
+      for (const e2 of entities) {
+        expect(
+          Math.abs(taskStartTimes[e2._key] - taskStartTimes[e1._key]),
+        ).toBeLessThan(1000);
+      }
+    }
+  });
+
+  test('tasks should not run with more than expected concurrency', async () => {
+    const concurrency = 1;
+
+    const taskStartTimes = {};
+
+    const task = async (entity: Entity) => {
+      taskStartTimes[entity._key] = Date.now();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    };
+    const store = new InMemoryGraphObjectStore();
+
+    const entities = times(2, () => createTestEntity({ _type: 'test' }));
+    await store.addEntities(uuid(), entities);
+
+    await store.iterateEntities({ _type: 'test' }, task, { concurrency });
+    expect(
+      Math.abs(
+        taskStartTimes[entities[0]._key] - taskStartTimes[entities[1]._key],
+      ),
+    ).toBeGreaterThan(99);
   });
 
   test('should not throw if iterating entity _type that does not exist', async () => {
