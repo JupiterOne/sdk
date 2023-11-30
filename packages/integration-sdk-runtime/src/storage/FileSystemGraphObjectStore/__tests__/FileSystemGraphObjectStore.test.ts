@@ -29,7 +29,6 @@ import { RelationshipClass } from '@jupiterone/data-model';
 import { FlushedGraphObjectData } from '../../types';
 import sortBy from 'lodash/sortBy';
 import { getSizeOfObject } from '../../../synchronization/batchBySize';
-import { warn } from 'console';
 
 jest.mock('fs');
 

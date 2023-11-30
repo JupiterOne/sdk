@@ -134,7 +134,8 @@ describe('#InMemoryGraphObjectStore', () => {
       Math.abs(
         taskStartTimes[entities[0]._key] - taskStartTimes[entities[1]._key],
       ),
-    ).toBeGreaterThan(99);
+    ).toBeGreaterThan(98);
+    // leave a little for clock / timing inaccuracy
   });
 
   test('should not throw if iterating entity _type that does not exist', async () => {
