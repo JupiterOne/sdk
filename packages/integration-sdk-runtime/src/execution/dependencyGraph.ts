@@ -375,15 +375,34 @@ export function executeStepDependencyGraph<
         const stepDuration = Date.now() - startTime;
         context.logger.stepSuccess(step);
 
-        logger.info(
-          {
-            status,
-            stepId,
-            summary: typeTracker.summarizeStep(stepId),
-            duration: stepDuration,
-          },
-          'Step summary',
+        const summary = typeTracker.summarizeStep(stepId);
+        const graphObjectCount = Object.values(summary).reduce(
+          (total, typeSummary) => total + typeSummary.total,
+          0,
         );
+        if (graphObjectCount) {
+          logger.info(
+            {
+              status,
+              stepId,
+              summary: typeTracker.summarizeStep(stepId),
+              graphObjectCount,
+              duration: stepDuration,
+            },
+            'Step summary',
+          );
+        } else {
+          logger.debug(
+            {
+              status,
+              stepId,
+              summary: typeTracker.summarizeStep(stepId),
+              graphObjectCount,
+              duration: stepDuration,
+            },
+            'Step summary',
+          );
+        }
       } catch (err) {
         const stepDuration = Date.now() - startTime;
         logger.info(
