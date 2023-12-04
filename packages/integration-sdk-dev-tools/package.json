@@ -6,7 +6,7 @@
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",
   "engines": {
-    "node": ">=18.0.0 <19.x"
+    "node": ">=18.0.0 <21.x"
   },
   "files": [
     "config"
