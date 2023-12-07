@@ -324,7 +324,7 @@ describe('step event publishing', () => {
     const error = new IntegrationLocalConfigFieldMissingError('ripperoni');
     logger.stepFailure(step, error);
 
-    expect(onEmitEvent).toHaveBeenCalledTimes(8);
+    expect(onEmitEvent).toHaveBeenCalledTimes(7);
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'step_start',
       level: PublishEventLevel.Info,
@@ -357,15 +357,9 @@ describe('step event publishing', () => {
       name: 'step_skip',
       level: PublishEventLevel.Info,
       description:
-        'Skipped step "Mochi". Step was disabled via configuration. Please contact support to enable.',
-    });
-    expect(onEmitEvent).toHaveBeenNthCalledWith(7, {
-      name: 'step_skip',
-      level: PublishEventLevel.Info,
-      description:
         'Skipped step "Mochi". Step was disabled via configuration. Update instance config to enable.',
     });
-    expect(onEmitEvent).toHaveBeenNthCalledWith(8, {
+    expect(onEmitEvent).toHaveBeenNthCalledWith(7, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
       description: expect.stringMatching(

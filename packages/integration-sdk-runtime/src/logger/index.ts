@@ -350,10 +350,6 @@ export class IntegrationLogger
         description += `The required permission was not provided to perform this step.`;
         break;
       }
-      case DisabledStepReason.CONFIG: {
-        description += `Step was disabled via configuration. Please contact support to enable.`;
-        break;
-      }
       case DisabledStepReason.USER_CONFIG: {
         description += `Step was disabled via configuration. Update instance config to enable.`;
         break;
@@ -368,10 +364,16 @@ export class IntegrationLogger
           : 'Step was disabled because parent step was disabled. In order to enable this step, please check logs for more information about the parent step.';
         break;
       }
+      case DisabledStepReason.CONFIG: {
+        // Don't log this message if there is an override in getStepStartStates
+        break;
+      }
     }
 
     this.info(description);
-    this.publishEvent({ name, description });
+    if (reason !== DisabledStepReason.CONFIG) {
+      this.publishEvent({ name, description });
+    }
   }
 
   stepFailure(step: StepMetadata, err: Error) {
