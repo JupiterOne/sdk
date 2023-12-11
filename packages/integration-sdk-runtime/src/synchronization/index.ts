@@ -25,6 +25,7 @@ import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes, getSizeOfObject } from './batchBySize';
 import type { Alpha } from '@lifeomic/alpha';
+import { withTracing } from '../execution/tracer';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -162,7 +163,9 @@ export async function initiateSynchronization(
       '/persister/synchronization/jobs',
       jobConfiguration,
     );
-    job = response.data.job;
+    console.log({ initiateSynchronization: response });
+    // @ts-ignore
+    job = response.job as any;
   } catch (err) {
     logger.warn(
       {
@@ -201,7 +204,8 @@ export async function synchronizationStatus({
     const response = await apiClient.get(
       `/persister/synchronization/jobs/${job.id}`,
     );
-    status = response.data.job;
+    // @ts-ignore
+    status = response.job as any;
   } catch (err) {
     throw synchronizationApiError(
       err,
@@ -237,7 +241,8 @@ export async function finalizeSynchronization({
         partialDatasets,
       },
     );
-    finalizedJob = response.data.job;
+    // @ts-ignore
+    finalizedJob = response.job as any;
   } catch (err) {
     logger.warn(
       {
@@ -467,19 +472,21 @@ export async function uploadDataChunk<
         'Uploading data...',
       );
       const startTime = Date.now();
-      await apiClient.post(
-        `/persister/synchronization/jobs/${jobId}/${type as string}`,
-        {
-          [type]: batch,
-        },
-        {
-          headers: {
-            // NOTE: Other headers that were applied when the client was created,
-            // are still maintained
-            [RequestHeaders.CorrelationId]: uploadCorrelationId,
+      await withTracing('uploadData', async () => {
+        await apiClient.post(
+          `/persister/synchronization/jobs/${jobId}/${type as string}`,
+          {
+            [type]: batch,
           },
-        },
-      );
+          {
+            headers: {
+              // NOTE: Other headers that were applied when the client was created,
+              // are still maintained
+              [RequestHeaders.CorrelationId]: uploadCorrelationId,
+            },
+          },
+        );
+      });
       const duration = Date.now() - startTime;
       if (duration >= 10_000) {
         logger.info(
@@ -580,7 +587,9 @@ export async function abortSynchronization({
       `/persister/synchronization/jobs/${job.id}/abort`,
       { reason },
     );
-    abortedJob = response.data.job;
+
+    // @ts-ignore
+    abortedJob = response.job as any;
   } catch (err) {
     throw synchronizationApiError(
       err,

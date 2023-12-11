@@ -119,6 +119,7 @@ export function createMockStepExecutionContext<
   return {
     ...createMockExecutionContext<TConfig>(options),
     jobState: createMockJobState(options),
+    tracer: {} as any,
   };
 }
 

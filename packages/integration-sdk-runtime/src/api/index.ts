@@ -8,6 +8,7 @@ import {
   IntegrationApiKeyRequiredError,
 } from './error';
 import { gzipData } from '../synchronization/util';
+import path from 'path';
 
 export type ApiClient = Alpha;
 
@@ -67,10 +68,37 @@ export function createApiClient({
     // AlphaInterceptors _must_ return the config or a Promise for the config.
     client.interceptors.request.use(compressRequest);
   }
+  const x = {
+    async post(url: string, data: Record<string, any>, config: AlphaOptions) {
+      const loc = path.join(apiBaseUrl, url);
+      const response = await fetch(loc, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const data = await response.text();
+        console.log({ data });
+        throw new Error('bad response');
+      }
+      return response.json();
+    },
+    async get(url: string) {
+      const loc = path.join(apiBaseUrl, url);
+      const response = await fetch(loc);
+      if (!response.ok) {
+        throw new Error('bad response');
+      }
+      return await response.json();
+    },
+  };
+  return x as ApiClient;
+
   return client;
 }
 
-export const compressRequest: AlphaInterceptor = async function (
+export const compressRequest: AlphaInterceptor = async function(
   config: AlphaOptions,
 ) {
   if (

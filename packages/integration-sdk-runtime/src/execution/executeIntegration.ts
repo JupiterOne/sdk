@@ -14,9 +14,11 @@ import {
   PartialDatasets,
   Relationship,
   StepExecutionContext,
+  StepExecutionHandlerWrapperFunction,
   StepResultStatus,
 } from '@jupiterone/integration-sdk-core';
 
+import { Tracer } from '@opentelemetry/sdk-trace-base';
 import {
   getRootStorageDirectorySize,
   isCompressionEnabled,
@@ -33,7 +35,6 @@ import {
   publishEntitiesCollectedMetric,
   publishMappedRelationshipsCollectedMetric,
   publishRelationshipsCollectedMetric,
-  timeOperation,
 } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import { createIntegrationInstanceForLocalExecution } from './instance';
@@ -50,6 +51,7 @@ import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 import { DuplicateKeyTracker } from './duplicateKeyTracker';
 import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
+import { setTracer, withTracing } from './tracer';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -62,6 +64,7 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  tracer?: Tracer;
   pretty?: boolean;
 }
 
@@ -108,7 +111,7 @@ export async function executeIntegrationLocally(
  */
 export async function executeIntegrationInstance<
   TIntegrationConfig extends
-    IntegrationInstanceConfig = IntegrationInstanceConfig,
+  IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   logger: IntegrationLogger,
   instance: IntegrationInstance<TIntegrationConfig>,
@@ -124,6 +127,24 @@ export async function executeIntegrationInstance<
     getMaskedFields(config),
   );
 
+  if (options.tracer) {
+    setTracer(options.tracer);
+  }
+
+  return withTracing('duration-collect', () =>
+    executeWithContext(
+      {
+        instance: instanceWithTrimmedConfig,
+        logger,
+        executionHistory,
+        executionConfig:
+          config.loadExecutionConfig?.(instanceWithTrimmedConfig) || {},
+      },
+      config,
+      options,
+    ),
+  );
+  /*
   return timeOperation({
     logger,
     metricName: 'duration-collect',
@@ -140,6 +161,7 @@ export async function executeIntegrationInstance<
         options,
       ),
   });
+  */
 }
 
 function publishDiskUsageMetric<TExecutionContext extends ExecutionContext>(
@@ -195,14 +217,16 @@ export async function executeWithContext<
     return setInterval(() => {
       isRootStorageDirectoryPresent()
         .then((present) => {
-          if (!present) return;
+          withTracing('disk-usage', () => {
+            if (!present) return;
 
-          return getRootStorageDirectorySize().then((size) => {
-            if (executionComplete) {
-              return;
-            }
+            return getRootStorageDirectorySize().then((size) => {
+              if (executionComplete) {
+                return;
+              }
 
-            publishDiskUsageMetric(context, size);
+              publishDiskUsageMetric(context, size);
+            });
           });
         })
         .catch((err) => {
@@ -221,10 +245,14 @@ export async function executeWithContext<
     }
 
     try {
-      await removeStorageDirectory();
+      withTracing('removeStorageDirectory', async () => {
+        await removeStorageDirectory();
+      });
 
       try {
-        await config.validateInvocation?.(context);
+        withTracing('validateInvocation', async () => {
+          await config.validateInvocation?.(context);
+        });
       } catch (err) {
         logger.validationFailure(err);
         throw err;
@@ -253,24 +281,33 @@ export async function executeWithContext<
         createStepGraphObjectDataUploader,
       } = options;
 
-      const integrationStepResults = await executeSteps({
-        executionContext: context,
-        integrationSteps: config.integrationSteps,
-        stepStartStates,
-        stepConcurrency: config.stepConcurrency,
-        duplicateKeyTracker: new DuplicateKeyTracker(
-          config.normalizeGraphObjectKey,
-        ),
-        graphObjectStore,
-        dataStore: new MemoryDataStore(),
-        createStepGraphObjectDataUploader,
-        beforeAddEntity: config.beforeAddEntity,
-        beforeAddRelationship: config.beforeAddRelationship,
-        afterAddEntity: createAfterAddEntityInternalHook(logger),
-        afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
-        dependencyGraphOrder: config.dependencyGraphOrder,
-        executionHandlerWrapper: config.executionHandlerWrapper,
-      });
+      const executionHandlerWrapper: StepExecutionHandlerWrapperFunction<
+        any
+      > = async (ctx, fn) => {
+        return await withTracing(ctx.step.id, () => {
+          return fn();
+        });
+      };
+      const integrationStepResults = await withTracing('executeSteps', () =>
+        executeSteps({
+          executionContext: context,
+          integrationSteps: config.integrationSteps,
+          stepStartStates,
+          stepConcurrency: config.stepConcurrency,
+          duplicateKeyTracker: new DuplicateKeyTracker(
+            config.normalizeGraphObjectKey,
+          ),
+          graphObjectStore,
+          dataStore: new MemoryDataStore(),
+          createStepGraphObjectDataUploader,
+          beforeAddEntity: config.beforeAddEntity,
+          beforeAddRelationship: config.beforeAddRelationship,
+          afterAddEntity: createAfterAddEntityInternalHook(logger),
+          afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
+          dependencyGraphOrder: config.dependencyGraphOrder,
+          executionHandlerWrapper: executionHandlerWrapper,
+        }),
+      );
 
       const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
         integrationStepResults,
@@ -288,18 +325,20 @@ export async function executeWithContext<
         data: summary,
       });
 
-      processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
-        if (
-          step.status === StepResultStatus.SUCCESS &&
-          undeclaredTypes.length
-        ) {
-          context.logger.error(
-            { undeclaredTypes, stepId: step.id },
-            `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
+      withTracing('processDeclaredTypesDiff', () =>
+        processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
+          if (
+            step.status === StepResultStatus.SUCCESS &&
+            undeclaredTypes.length
+          ) {
+            context.logger.error(
+              { undeclaredTypes, stepId: step.id },
+              `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
               ` all known entity and relationship types are declared.`,
-          );
-        }
-      });
+            );
+          }
+        }),
+      );
 
       return summary;
     } finally {

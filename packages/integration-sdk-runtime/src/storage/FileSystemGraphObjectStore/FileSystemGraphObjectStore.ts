@@ -24,6 +24,7 @@ import { getRootStorageAbsolutePath } from '../../fileSystem';
 import { BigMap } from '../../execution/utils/bigMap';
 import { chunk, min } from 'lodash';
 import { DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES } from '../../synchronization';
+import { withTracing } from '../../execution/tracer';
 
 export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
@@ -145,7 +146,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     this.prettifyFiles = params?.prettifyFiles || false;
     this.graphObjectBufferThresholdInBytes = min([
       params?.graphObjectBufferThresholdInBytes ||
-        DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
+      DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
       MAX_GRAPH_OBJECT_BUFFER_THRESHOLD_IN_BYTES,
     ])!;
     if (params?.integrationSteps) {
@@ -159,14 +160,18 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     newEntities: Entity[],
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ) {
-    await this.localGraphObjectStore.addEntities(stepId, newEntities);
+    await withTracing('addEntities', async () => {
+      await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
-    if (
-      this.localGraphObjectStore.getTotalEntitySizeInBytes() >=
-      this.graphObjectBufferThresholdInBytes
-    ) {
-      await this.flushEntitiesToDisk(onEntitiesFlushed);
-    }
+      if (
+        this.localGraphObjectStore.getTotalEntitySizeInBytes() >=
+        this.graphObjectBufferThresholdInBytes
+      ) {
+        await withTracing('flushEntitiesToDisk', async () => {
+          await this.flushEntitiesToDisk(onEntitiesFlushed);
+        });
+      }
+    });
   }
 
   async addRelationships(
@@ -174,14 +179,21 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     newRelationships: Relationship[],
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
-    await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
+    await withTracing('addRelationships', async () => {
+      await this.localGraphObjectStore.addRelationships(
+        stepId,
+        newRelationships,
+      );
 
-    if (
-      this.localGraphObjectStore.getTotalRelationshipSizeInBytes() >=
-      this.graphObjectBufferThresholdInBytes
-    ) {
-      await this.flushRelationshipsToDisk(onRelationshipsFlushed);
-    }
+      if (
+        this.localGraphObjectStore.getTotalRelationshipSizeInBytes() >=
+        this.graphObjectBufferThresholdInBytes
+      ) {
+        await withTracing('flushEntitiesToDisk', async () => {
+          await this.flushRelationshipsToDisk(onRelationshipsFlushed);
+        });
+      }
+    });
   }
 
   /**
@@ -190,22 +202,26 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
    * located on disk.
    */
   async findEntity(_key: string | undefined): Promise<Entity | undefined> {
-    if (!_key) return;
-    const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
-    if (bufferedEntity) {
-      return bufferedEntity;
-    }
+    return withTracing('findEntity', async () => {
+      if (!_key) return;
+      const bufferedEntity = await this.localGraphObjectStore.findEntity(_key);
+      if (bufferedEntity) {
+        return bufferedEntity;
+      }
 
-    const entityLocationOnDisk = this.entityOnDiskLocationMap.get(_key);
-    if (!entityLocationOnDisk) return;
+      const entityLocationOnDisk = this.entityOnDiskLocationMap.get(_key);
+      if (!entityLocationOnDisk) {
+        return;
+      }
 
-    const filePath = getRootStorageAbsolutePath(
-      entityLocationOnDisk.graphDataPath,
-    );
-    const { entities } = await readGraphObjectFile<FlushedEntityData>({
-      filePath,
+      const filePath = getRootStorageAbsolutePath(
+        entityLocationOnDisk.graphDataPath,
+      );
+      const { entities } = await readGraphObjectFile<FlushedEntityData>({
+        filePath,
+      });
+      return entities[entityLocationOnDisk.index];
     });
-    return entities[entityLocationOnDisk.index];
   }
 
   async iterateEntities<T extends Entity = Entity>(
@@ -291,7 +307,9 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           this.localGraphObjectStore.flushEntities(entities, stepId);
 
           if (onEntitiesFlushed) {
-            await onEntitiesFlushed(entities);
+            await withTracing('onEntitiesFlushed', async () => {
+              await onEntitiesFlushed(entities);
+            });
           }
         },
       ),
@@ -335,7 +353,9 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
           this.localGraphObjectStore.flushRelationships(relationships, stepId);
 
           if (onRelationshipsFlushed) {
-            await onRelationshipsFlushed(relationships);
+            await withTracing('onRelationshipsFlushed', async () => {
+              await onRelationshipsFlushed(relationships);
+            });
           }
         },
       ),

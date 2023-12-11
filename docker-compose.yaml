@@ -1,0 +1,17 @@
+version: "2.1"
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - 16686:16686
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.88.0
+    command: [ "--config=/etc/otel/config.yaml" ]
+    ports:
+      - 8006:8006
+      - 8888:8888
+      - 55679:55679
+      - 4317:4317
+      - 4318:4318
+    volumes:
+      - ./config.yaml:/etc/otel/config.yaml

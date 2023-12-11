@@ -33,6 +33,7 @@ import {
   DuplicateEntityReport,
   DuplicateKeyTracker,
 } from './duplicateKeyTracker';
+import { withTracing } from './tracer';
 
 /**
  * This function accepts a list of steps and constructs a dependency graph
@@ -561,6 +562,8 @@ function buildStepContext<
       stepId,
     }),
     jobState,
+    // @ts-ignore
+    tracer: withTracing,
   };
 
   return stepExecutionContext as TStepExecutionContext;

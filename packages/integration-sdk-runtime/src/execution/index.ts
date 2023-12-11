@@ -25,6 +25,7 @@ export {
   DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
   seperateStepsByDependencyGraph,
 } from './utils/seperateStepsByDependencyGraph';
+export { withTracing } from  './tracer';
 
 export { trimStringValues } from './utils/trimStringValues';
 export { getMaskedFields } from './utils/getMaskedFields';

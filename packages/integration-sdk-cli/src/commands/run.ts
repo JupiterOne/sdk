@@ -28,6 +28,13 @@ import {
   validateApiClientOptions,
   validateSyncOptions,
 } from './options';
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import {
+  BatchSpanProcessor,
+  NodeTracerProvider,
+} from '@opentelemetry/sdk-trace-node';
+import { Resource } from '@opentelemetry/resources';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 
 const DEFAULT_UPLOAD_CONCURRENCY = 5;
 
@@ -92,6 +99,27 @@ export function run(): Command {
 
       try {
         const enableSchemaValidation = !options.disableSchemaValidation;
+        const resource = Resource.default().merge(
+          new Resource({
+            [SemanticResourceAttributes.SERVICE_NAME]: 'integration-sdk-run',
+            [SemanticResourceAttributes.SERVICE_VERSION]: '0.1.0',
+          }),
+        );
+        const tracerProvider = new NodeTracerProvider({
+          resource,
+        });
+        const exporter = new OTLPTraceExporter({
+          url:
+            'http://' +
+            (process.env.OTEL_COLLECTOR_URL ?? 'localhost:4318') +
+            '/v1/traces',
+        });
+        const processor = new BatchSpanProcessor(exporter);
+        tracerProvider.addSpanProcessor(processor);
+        tracerProvider.register();
+
+        const tracer = tracerProvider.getTracer('tracer');
+
         const executionResults = await executeIntegrationInstance(
           logger,
           createIntegrationInstanceForLocalExecution(invocationConfig),
@@ -102,6 +130,7 @@ export function run(): Command {
             },
           },
           {
+            tracer,
             enableSchemaValidation,
             graphObjectStore,
             createStepGraphObjectDataUploader(stepId) {
@@ -134,6 +163,12 @@ export function run(): Command {
             'Synchronization finalization result.',
           );
         }
+        await tracerProvider.forceFlush();
+        await tracerProvider.shutdown();
+        await processor.forceFlush();
+        await exporter.forceFlush();
+
+        await exporter.shutdown();
       } catch (err) {
         await eventPublishingQueue.onIdle();
         if (!logger.isHandledError(err)) {

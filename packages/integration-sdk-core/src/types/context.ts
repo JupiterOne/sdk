@@ -51,12 +51,14 @@ export type IntegrationInstanceExecutionContext<
 export type IntegrationExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends
-    IntegrationExecutionConfig = IntegrationExecutionConfig,
+  IntegrationExecutionConfig = IntegrationExecutionConfig,
 > = IntegrationLoadExecutionConfigContext<TConfig> & {
   executionConfig: TExecutionConfig;
 };
 
 export type StepExecutionContext = ExecutionContext & {
+  tracer: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
+
   jobState: JobState;
 };
 
@@ -69,6 +71,6 @@ export type StepExecutionContext = ExecutionContext & {
 export interface IntegrationStepExecutionContext<
   TConfig extends IntegrationInstanceConfig = IntegrationInstanceConfig,
   TExecutionConfig extends
-    IntegrationExecutionConfig = IntegrationExecutionConfig,
+  IntegrationExecutionConfig = IntegrationExecutionConfig,
 > extends IntegrationExecutionContext<TConfig, TExecutionConfig>,
-    StepExecutionContext {}
+  StepExecutionContext { }

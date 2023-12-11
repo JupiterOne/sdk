@@ -17,6 +17,15 @@ import {
   configureRuntimeFilesystem,
 } from './options';
 
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import {
+  BatchSpanProcessor,
+  NodeTracerProvider,
+} from '@opentelemetry/sdk-trace-node';
+import { Resource } from '@opentelemetry/resources';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+
 // coercion function to collect multiple values for a flag
 const collector = (value: string, arr: string[]) => {
   arr.push(...value.split(','));
@@ -84,6 +93,31 @@ export function collect() {
 
       const enableSchemaValidation = !options.disableSchemaValidation;
 
+      const resource = Resource.default().merge(
+        new Resource({
+          [SemanticResourceAttributes.SERVICE_NAME]: 'integration-sdk',
+          [SemanticResourceAttributes.SERVICE_VERSION]: '0.1.0',
+        }),
+      );
+      const tracerProvider = new NodeTracerProvider({
+        resource,
+      });
+      const exporter = new OTLPTraceExporter({
+        url:
+          'http://' +
+          (process.env.OTEL_COLLECTOR_URL ?? 'localhost:4318') +
+          '/v1/traces',
+      });
+      const processor = new BatchSpanProcessor(exporter);
+      tracerProvider.addSpanProcessor(processor);
+      tracerProvider.register();
+      registerInstrumentations({
+        instrumentations: [
+          getNoodeAutoInstrumentations();
+        ]
+      })
+
+      const tracer = tracerProvider.getTracer('tracer');
       const results = await executeIntegrationLocally(
         config,
         {
@@ -95,8 +129,16 @@ export function collect() {
           enableSchemaValidation,
           graphObjectStore,
           pretty: !options.noPretty,
+          tracer,
         },
       );
+
+      await tracerProvider.forceFlush();
+      await tracerProvider.shutdown();
+      await processor.forceFlush();
+      await exporter.forceFlush();
+
+      await exporter.shutdown();
 
       log.displayExecutionResults(results);
     });
