@@ -226,9 +226,12 @@ export class IntegrationLogger
   }
 
   debug(...params: any[]) {
+    // @ts-ignore
     return this._logger.debug(...params);
   }
+
   info(...params: any[]) {
+    // @ts-ignore
     return this._logger.info(...params);
   }
 
@@ -245,10 +248,13 @@ export class IntegrationLogger
       },
     );
 
+  // @ts-ignore
     return this._logger.warn(...params);
   }
 
   fatal(...params: any[]) {
+
+    // @ts-ignore
     return this._logger.fatal(...params);
   }
 
@@ -287,6 +293,7 @@ export class IntegrationLogger
       },
     );
 
+    // @ts-ignore
     this._logger.error(...params);
   }
 
