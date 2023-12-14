@@ -583,17 +583,6 @@ describe('uploadDataChunk', () => {
     const context = createTestContext();
     const job = generateSynchronizationJob();
 
-    // we could throw any error here I just copied the above
-    const jobNotAwaitingUploadsError = new Error('400 bad request');
-    (jobNotAwaitingUploadsError as any).response = {
-      data: {
-        error: {
-          code: 'JOB_NOT_AWAITING_UPLOADS',
-          message: 'JOB_NOT_AWAITING_UPLOADS',
-        },
-      },
-    };
-
     const type = 'entities';
     const batch = [];
 
