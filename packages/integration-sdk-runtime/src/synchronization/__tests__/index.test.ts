@@ -578,6 +578,64 @@ describe('uploadDataChunk', () => {
     expect(uploadDataChunkErr).not.toBe(undefined);
     expect(postSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('should clean errors before throwing', async () => {
+    const context = createTestContext();
+    const job = generateSynchronizationJob();
+
+    // we could throw any error here I just copied the above
+    const jobNotAwaitingUploadsError = new Error('400 bad request');
+    (jobNotAwaitingUploadsError as any).response = {
+      data: {
+        error: {
+          code: 'JOB_NOT_AWAITING_UPLOADS',
+          message: 'JOB_NOT_AWAITING_UPLOADS',
+        },
+      },
+    };
+
+    const type = 'entities';
+    const batch = [];
+
+    const mockLogger = {
+      trace: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      fatal: jest.fn(),
+    };
+
+    jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
+      const err = Error('thing went bad');
+      Object.assign(err, {
+        config: {
+          data: 'Stuff',
+          headers: {
+            Authroization: 'some fake token',
+            'content-type': 'application/json',
+          },
+        },
+      });
+      throw err;
+    });
+
+    try {
+      await uploadDataChunk({
+        logger: mockLogger as any,
+        apiClient: context.apiClient,
+        jobId: job.id,
+        type,
+        batch,
+      });
+    } catch { }
+
+    const firstInfoCall = mockLogger.info.mock.calls[0];
+    const args = firstInfoCall[0];
+    const axiosError = args['err'];
+    expect(axiosError.config.data).toBeUndefined();
+    expect(axiosError.config.headers.Authorization).toBeUndefined();
+  });
 });
 
 function createTestContext(
@@ -586,6 +644,7 @@ function createTestContext(
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
+    accessToken: 'fake-token',
   });
 
   const logger = createIntegrationLogger({

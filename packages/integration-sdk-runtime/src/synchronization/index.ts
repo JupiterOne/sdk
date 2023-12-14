@@ -9,6 +9,8 @@ import {
   SynchronizationJob,
 } from '@jupiterone/integration-sdk-core';
 
+import { AxiosError } from 'axios';
+
 import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
@@ -467,19 +469,25 @@ export async function uploadDataChunk<
         'Uploading data...',
       );
       const startTime = Date.now();
-      await apiClient.post(
-        `/persister/synchronization/jobs/${jobId}/${type as string}`,
-        {
-          [type]: batch,
-        },
-        {
-          headers: {
-            // NOTE: Other headers that were applied when the client was created,
-            // are still maintained
-            [RequestHeaders.CorrelationId]: uploadCorrelationId,
+      try {
+        await apiClient.post(
+          `/persister/synchronization/jobs/${jobId}/${type as string}`,
+          {
+            [type]: batch,
           },
-        },
-      );
+          {
+            headers: {
+              // NOTE: Other headers that were applied when the client was created,
+              // are still maintained
+              [RequestHeaders.CorrelationId]: uploadCorrelationId,
+            },
+          },
+        );
+      } catch (err) {
+        cleanAxiosError(err);
+        throw err;
+      }
+
       const duration = Date.now() - startTime;
       if (duration >= 10_000) {
         logger.info(
@@ -589,4 +597,14 @@ export async function abortSynchronization({
   }
 
   return abortedJob;
+}
+
+function cleanAxiosError(err: AxiosError) {
+  if (err.config?.headers?.Authorization) {
+    delete err.config.headers.Authorization;
+  }
+
+  if (err.config?.data) {
+    delete err.config.data;
+  }
 }
