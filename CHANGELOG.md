@@ -9,6 +9,12 @@ and this project adheres to
 
 # Unreleased
 
+## 11.4.0 - 2023-12-14
+
+- Support Node 20.x
+- Improved logging for upload errors
+- Added `region` and `_key` properties to visualized entities
+
 ## 11.3.1 - 2023-11-28
 
 - Patch to fix issue with deployment pipeline not processing
