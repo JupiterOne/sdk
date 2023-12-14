@@ -628,7 +628,7 @@ describe('uploadDataChunk', () => {
         type,
         batch,
       });
-    } catch { }
+    } catch {}
 
     const firstInfoCall = mockLogger.info.mock.calls[0];
     const args = firstInfoCall[0];
