@@ -596,7 +596,7 @@ describe('uploadDataChunk', () => {
     };
 
     jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
-      const err = Error('thing went bad');
+      const err = new Error('thing went bad');
       Object.assign(err, {
         config: {
           data: 'Stuff',
@@ -610,7 +610,7 @@ describe('uploadDataChunk', () => {
     });
 
     await expect(
-      await uploadDataChunk({
+      uploadDataChunk({
         logger: mockLogger as any,
         apiClient: context.apiClient,
         jobId: job.id,
