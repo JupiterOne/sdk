@@ -257,6 +257,7 @@ export async function executeWithContext<
         executionContext: context,
         integrationSteps: config.integrationSteps,
         stepStartStates,
+        stepConcurrency: config.stepConcurrency,
         duplicateKeyTracker: new DuplicateKeyTracker(
           config.normalizeGraphObjectKey,
         ),

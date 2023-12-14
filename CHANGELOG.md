@@ -9,6 +9,29 @@ and this project adheres to
 
 # Unreleased
 
+## 11.3.1 - 2023-11-28
+
+- Patch to fix issue with deployment pipeline not processing
+
+## 11.3.0 - 2023-11-28
+
+- Change Step Start/End logs to debug level and add duration field to Step
+  summary
+
+## 11.2.0 - 2023-11-16
+
+- Add `stepConcurrency` to `InvocationConfig` allowing customization of step
+  concurrency.
+
+## 11.1.0 - 2023-10-19
+
+- Add `compressUploads` to `CreateAPIClientOptions`. Enabling this will send
+  gzipped payloads.
+
+- Allow loading modules by name (ex. @jupiterone/graph-rumble) in the
+  `generate-ingestion-sources-config` and `generate-integration-graph-schema`
+  commands
+
 ## 11.0.3
 
 - Moved `vis` dependency to devDependencies

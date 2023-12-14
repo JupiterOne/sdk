@@ -49,6 +49,7 @@ export async function executeSteps<
   afterAddEntity,
   afterAddRelationship,
   dependencyGraphOrder,
+  stepConcurrency,
   executionHandlerWrapper,
 }: {
   executionContext: TExecutionContext;
@@ -63,6 +64,7 @@ export async function executeSteps<
   afterAddEntity?: AfterAddEntityHookFunction<TExecutionContext>;
   afterAddRelationship?: AfterAddRelationshipHookFunction<TExecutionContext>;
   dependencyGraphOrder?: string[];
+  stepConcurrency?: number;
   executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
@@ -88,6 +90,7 @@ export async function executeSteps<
         executionContext,
         inputGraph: buildStepDependencyGraph(steps),
         stepStartStates: pick(stepStartStates, stepIds),
+        stepConcurrency,
         duplicateKeyTracker,
         graphObjectStore,
         dataStore,

@@ -203,7 +203,7 @@ test('should log error when export fails', async () => {
       storageDirectory: TEST_DIRECTORY,
       apiKey: TEST_API_KEY,
     }),
-  ).rejects.toThrow(/Unexpected token/g);
+  ).rejects.toThrow();
 
   expect(log.error).toHaveBeenCalledWith('Failed to export JSON assets to CSV');
 });

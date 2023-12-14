@@ -314,14 +314,14 @@ export class IntegrationLogger
   stepStart(step: StepMetadata) {
     const name = 'step_start';
     const description = `Starting step "${step.name}"...`;
-    this.info(description);
+    this.debug(description);
     this.publishEvent({ name, description });
   }
 
   stepSuccess(step: StepMetadata) {
     const name = 'step_end';
     const description = `Completed step "${step.name}".`;
-    this.info(description);
+    this.debug(description);
     this.publishEvent({ name, description });
   }
 

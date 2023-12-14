@@ -7,7 +7,7 @@ import {
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { createCommand } from 'commander';
-import { loadConfigFromTarget } from '../config';
+import { loadConfigFromModule, loadConfigFromTarget } from '../config';
 import { promises as fs } from 'fs';
 import * as log from '../log';
 
@@ -26,13 +26,22 @@ export function generateIntegrationGraphSchemaCommand() {
       'path to integration project directory',
       process.cwd(),
     )
+    .option(
+      '-m, --module-name <module>',
+      'name of modules to load (ex "@jupiterone/graph-rumble". Will load using require of package rather than filename)',
+    )
     .action(async (options) => {
-      const { projectPath, outputFile } = options;
+      const { projectPath, outputFile, moduleName } = options;
 
       log.info(
-        `Generating integration graph schema (projectPath=${projectPath}, outputFile=${outputFile})`,
+        `Generating integration graph schema (projectPath=${projectPath}, outputFile=${outputFile}, moduleName=${moduleName})`,
       );
-      const config = await loadConfigFromTarget(projectPath);
+      let config;
+      if (moduleName) {
+        config = loadConfigFromModule(moduleName);
+      } else {
+        config = await loadConfigFromTarget(projectPath);
+      }
 
       const integrationGraphSchema = generateIntegrationGraphSchema(
         config.integrationSteps,
