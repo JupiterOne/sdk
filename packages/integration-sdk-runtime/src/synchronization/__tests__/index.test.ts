@@ -609,16 +609,15 @@ describe('uploadDataChunk', () => {
       throw err;
     });
 
-    try {
+    await expect(
       await uploadDataChunk({
         logger: mockLogger as any,
         apiClient: context.apiClient,
         jobId: job.id,
         type,
         batch,
-      });
-    } catch {}
-
+      }),
+    ).rejects.toBeInstanceOf(Error);
     const firstInfoCall = mockLogger.info.mock.calls[0];
     const args = firstInfoCall[0];
     const axiosError = args['err'];
