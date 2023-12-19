@@ -5,6 +5,7 @@ import {
   IntegrationEntityData,
   schemaWhitelistedPropertyNames,
   schemaWhitelists,
+  validateValueType,
 } from '../createIntegrationEntity';
 
 const networkSourceData = {
@@ -13,8 +14,6 @@ const networkSourceData = {
   CIDR: '255.255.255.0',
   name: 'My Network',
   notInDataModel: 'Not In Data Model',
-  owner: { name: 'Bob' },
-  summary: [{ title: 'Summary' }, { description: 'Description' }],
 };
 
 const networkResourceEntity = {
@@ -74,6 +73,50 @@ describe('schemaWhitelistedPropertyNames', () => {
   });
 });
 
+describe('validateValueType', () => {
+  test('should accept string type', () => {
+    expect(() => validateValueType('Sample String', 'testPath')).not.toThrow();
+  });
+
+  test('should accept number type', () => {
+    expect(() => validateValueType(123, 'testPath')).not.toThrow();
+  });
+
+  test('should accept boolean type', () => {
+    expect(() => validateValueType(true, 'testPath')).not.toThrow();
+  });
+
+  test('should accept null type', () => {
+    expect(() => validateValueType(null, 'testPath')).not.toThrow();
+  });
+
+  test('should accept array of supported types', () => {
+    expect(() => validateValueType([1, 'a', true], 'testPath')).not.toThrow();
+  });
+
+  test('should validate nested arrays with supported types', () => {
+    expect(() =>
+      validateValueType([1, ['a', 2], [true, false]], 'testPath'),
+    ).not.toThrow();
+  });
+
+  test('should reject nested arrays with unsupported types', () => {
+    expect(() =>
+      validateValueType([1, ['a', { key: 'value' }], true], 'testPath'),
+    ).toThrow();
+  });
+
+  test('should reject object type', () => {
+    expect(() => validateValueType({ key: 'value' }, 'testPath')).toThrow();
+  });
+
+  test('should reject unsupported type in array', () => {
+    expect(() =>
+      validateValueType([1, 2, { key: 'value' }], 'testPath'),
+    ).toThrow();
+  });
+});
+
 describe('createIntegrationEntity', () => {
   test('combines source with assignments', () => {
     const entity = createIntegrationEntity({
@@ -116,20 +159,6 @@ describe('createIntegrationEntity', () => {
       entityData,
     });
     expect('notWhitelisted' in entity).toBe(false);
-  });
-
-  test('ignore source properties that are object types', () => {
-    const entity = createIntegrationEntity({
-      entityData,
-    });
-    expect('owner' in entity).toBe(false);
-  });
-
-  test('ignore source properties that are object[] types', () => {
-    const entity = createIntegrationEntity({
-      entityData,
-    });
-    expect('summary' in entity).toBe(false);
   });
 
   test('handles empty tags in source data', () => {

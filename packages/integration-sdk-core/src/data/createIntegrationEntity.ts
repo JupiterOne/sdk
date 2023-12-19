@@ -10,7 +10,7 @@ import { parseTimePropertyValue } from './converters';
 import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
-const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
+const SUPPORTED_TYPES = ['string', 'number', 'boolean', 'array', 'undefined'];
 
 /**
  * Properties to be assigned to a generated entity which are declared in code
@@ -180,6 +180,40 @@ function generateEntity({
 }
 
 /**
+ * Validates that the provided value conforms to the supported types.
+ * If the value is an array, this function is called recursively on each element
+ * to ensure nested arrays are also validated. This function throws an error
+ * if it encounters a value type that is not supported.
+ *
+ * @param value The value to be validated. It can be a single value or an array.
+ *              For arrays, each element is validated recursively.
+ * @param path The path to the current property being validated, used for error messaging.
+ *             This is updated with each recursive call to reflect the current context.
+ */
+export function validateValueType(value: any, path: string): void {
+  // Explicitly allow null values
+  if (value === null) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    // If the value is an array, validate each element
+    value.forEach((item, index) => {
+      validateValueType(item, `${path}[${index}]`);
+    });
+  } else {
+    // For non-array values, check if the type is supported
+    const valueType = typeof value;
+    if (!SUPPORTED_TYPES.includes(valueType)) {
+      throw new IntegrationError({
+        code: 'UNSUPPORTED_TYPE',
+        message: `Unsupported type found at "${path}": ${valueType}`,
+      });
+    }
+  }
+}
+
+/**
  * Answers a form of the provider data with only the properties supported by the
  * data model schema.
  *
@@ -192,12 +226,14 @@ function whitelistedProviderData(
 ): Omit<ProviderSourceData, 'tags'> {
   const whitelistedProviderData: ProviderSourceData = {};
   const schemaProperties = schemaWhitelistedPropertyNames(_class);
+
   for (const [key, value] of Object.entries(source)) {
+    // Ensure the property is part of the schema and not null
     if (value != null && schemaProperties.includes(key)) {
-      const valueType = Array.isArray(value) ? typeof value[0] : typeof value;
-      if (SUPPORTED_TYPES.includes(valueType)) {
-        whitelistedProviderData[key] = value;
-      }
+      if (key != 'tags') validateValueType(value, key);
+
+      // If validation passes, assign the value to the whitelisted data
+      whitelistedProviderData[key] = value;
     }
   }
   return whitelistedProviderData;
