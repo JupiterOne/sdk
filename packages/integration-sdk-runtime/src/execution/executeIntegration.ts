@@ -62,13 +62,14 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  resultsCallback?: (results: IntegrationStepResult[]) => Promise<void>;
   pretty?: boolean;
 }
 
-export interface ExecuteWithContextOptions {
-  graphObjectStore?: GraphObjectStore;
-  createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
-}
+type ExecuteWithContextOptions = Pick<
+  ExecuteIntegrationOptions,
+  'graphObjectStore' | 'resultsCallback' | 'createStepGraphObjectDataUploader'
+>;
 
 const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
 
@@ -251,6 +252,7 @@ export async function executeWithContext<
       const {
         graphObjectStore = new FileSystemGraphObjectStore(),
         createStepGraphObjectDataUploader,
+        resultsCallback,
       } = options;
 
       const integrationStepResults = await executeSteps({
@@ -287,6 +289,17 @@ export async function executeWithContext<
         path: 'summary.json',
         data: summary,
       });
+
+      if (resultsCallback != null) {
+        try {
+          await resultsCallback(integrationStepResults);
+        } catch (err) {
+          context.logger.warn(
+            err,
+            'Unable to run results callback for integration job',
+          );
+        }
+      }
 
       processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
         if (
