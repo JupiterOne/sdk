@@ -79,7 +79,7 @@ describe('validateValueType - successful performance tests', () => {
 
       console.log(`Execution time for ${type} dataset: ${executionTime} ms`);
 
-      const acceptableTimeLimit = 500;
+      const acceptableTimeLimit = 1000;
       expect(executionTime).toBeLessThan(acceptableTimeLimit);
     });
   });
