@@ -87,6 +87,9 @@ Note the `git checkout`/`git push` is required because Lerna will expect that
 you've already created a remote branch before bumping, tagging, and pushing the
 local changes to remote.
 
+Attention! The last commit should be lerna's version increase. So commit the
+update to the changelog before running lerna.
+
 [1]:
   https://support.jupiterone.io/hc/en-us/articles/360022722094-JupiterOne-Platform-API
 [2]: https://github.com/JupiterOne/jupiterone-client-nodejs
