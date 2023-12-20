@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 11.5.0 - 2023-12-19
+
+- Introduce `resultsCallback` hook
+- Make `IntegrationEntityData.source` optional
+
 ## 11.4.0 - 2023-12-14
 
 - Support Node 20.x
