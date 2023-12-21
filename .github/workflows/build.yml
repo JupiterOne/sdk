@@ -12,17 +12,20 @@ jobs:
 
     steps:
       - name: Check out code repository source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - id: setup-node
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: yarn
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: yarn --frozen-lockfile
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: Run tests
         run: yarn test:ci
@@ -35,40 +38,49 @@ jobs:
   release:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # if: github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
 
     steps:
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: yarn
+          registry-url: https://registry.npmjs.org
+
+      - run: |
+          for dir in packages/*/; do
+            version=$(cat $dir/package.json | jq '.version')
+            if [[ $version != *"-alpha"* ]]; then
+              echo "Non alpha version found, aborting run"
+              exit 1
+            fi
+          done
 
       # Fetch tags and describe the commit before the merge commit
       # to see if it's a version publish
-      - name: Fetch tags
-        run: |
-          git fetch --tags
-          if git describe --exact-match --match "v[0-9]*.[0-9]*.[0-9]*" HEAD^2
-          then
-            echo "Found version commit tag. Publishing."
-            echo "publish=true" >> $GITHUB_ENV
-          else
-            echo "Version commit tag not found. Not publishing."
-          fi
+      # - name: Fetch tags
+      #   run: |
+      #     git fetch --tags
+      #     if git describe --exact-match --match "v[0-9]*.[0-9]*.[0-9]*" HEAD^2
+      #     then
+      #       echo "Found version commit tag. Publishing."
+      #       echo "publish=true" >> $GITHUB_ENV
+      #     else
+      #       echo "Version commit tag not found. Not publishing."
+      #     fi
 
       - name: Publish
-        if: env.publish == 'true'
+        # if: env.publish == 'true'
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
           yarn --frozen-lock-file
-          yarn lerna publish from-package --no-verify-access --yes
+          # yarn lerna publish from-package --no-verify-access --yes
