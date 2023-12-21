@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 11.5.2 - 2023-12-21
+
+- No new changes. Needed to force a new deployment.
+
 ## 11.5.1 - 2023-12-20
 
 - No new changes. Needed to force a new deployment.
