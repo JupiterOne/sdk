@@ -87,4 +87,4 @@ jobs:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           yarn --frozen-lock-file
-          npx lerna publish from-package --yes --no-verify-access --contents dist
+          npx lerna publish from-package --yes --no-verify-access
