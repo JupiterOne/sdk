@@ -80,15 +80,17 @@ to move to). Don't forget to update the `CHANGELOG.md` file!
 ```shell
 git checkout -b release-<major>.<minor>.<patch>
 git push -u origin release-<major>.<minor>.<patch>
-yarn lerna version {major, minor, patch}
+yarn lerna version <major>.<minor>.<patch>
 ```
 
 Note the `git checkout`/`git push` is required because Lerna will expect that
 you've already created a remote branch before bumping, tagging, and pushing the
 local changes to remote.
 
-Attention! The last commit should be lerna's version increase. So commit the
-update to the changelog before running lerna.
+❕Make sure to have committed all your changes before running
+`yarn lerna version` since it will commit the version update and tag that
+commit. Rebasing or amending lerna's commit will cause the tag to point to a
+different commit.
 
 [1]:
   https://support.jupiterone.io/hc/en-us/articles/360022722094-JupiterOne-Platform-API
