@@ -193,7 +193,7 @@ function generateEntity({
 export function validateValueType(
   value: any,
   path: string,
-  depth: number = 1,
+  currentValueDepth: number = 1,
 ): void {
   // Explicitly allow null values
   if (value === null) {
@@ -202,7 +202,7 @@ export function validateValueType(
 
   if (Array.isArray(value)) {
     // If the depth is > 1 then we won't allow arrays inside arrays.
-    if (depth > 1) {
+    if (currentValueDepth > 1) {
       throw new IntegrationError({
         code: 'UNSUPPORTED_TYPE',
         message: `Unsupported type found at "${path}": Nested arrays are not supported.`,
@@ -211,7 +211,7 @@ export function validateValueType(
 
     // If the value is an array, validate each element
     value.forEach((item, index) => {
-      validateValueType(item, `${path}[${index}]`, ++depth);
+      validateValueType(item, `${path}[${index}]`, ++currentValueDepth);
     });
   } else {
     // For non-array values, check if the type is supported
