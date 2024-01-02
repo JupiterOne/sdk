@@ -189,6 +189,9 @@ function generateEntity({
  *              For arrays, each element is validated recursively.
  * @param path The path to the current property being validated, used for error messaging.
  *             This is updated with each recursive call to reflect the current context.
+ * @param currentValueDepth The current depth of recursion for array validation. It starts at 1
+ *             and increments with each recursive call into deeper array levels.
+ *             This parameter is used to prevent validation of nested arrays beyond the first level.
  */
 export function validateValueType(
   value: any,
