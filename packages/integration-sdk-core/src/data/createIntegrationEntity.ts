@@ -125,7 +125,7 @@ function generateEntity({
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
   const entity: GeneratedEntity = {
-    ...whitelistedProviderData(source, _class),
+    ...allowedProviderData(source, _class),
     ...assign,
     _class,
     _rawData,
@@ -229,17 +229,18 @@ export function validateValueType(
 }
 
 /**
- * Answers a form of the provider data with only the properties supported by the
+ * Filters the provider data to include only the properties allowed by the
  * data model schema.
  *
- * @param source resource data from the resource provider/external system
- * @param _class entity `_class: string[]` value
+ * @param {ProviderSourceData} source - The resource data from the provider or external system.
+ * @param {string[]} _class - An array representing the entity's class for schema validation.
+ * @returns {Omit<ProviderSourceData, 'tags'>} - The filtered provider data with only allowed properties.
  */
-function whitelistedProviderData(
+function allowedProviderData(
   source: ProviderSourceData,
   _class: string[],
 ): Omit<ProviderSourceData, 'tags'> {
-  const whitelistedProviderData: ProviderSourceData = {};
+  const filteredProviderData: ProviderSourceData = {};
   const schemaProperties = schemaWhitelistedPropertyNames(_class);
 
   for (const [key, value] of Object.entries(source)) {
@@ -247,11 +248,11 @@ function whitelistedProviderData(
     if (value != null && schemaProperties.includes(key)) {
       if (key != 'tags') validateValueType(value, key);
 
-      // If validation passes, assign the value to the whitelisted data
-      whitelistedProviderData[key] = value;
+      // If validation passes, assign the value to the filtered data
+      filteredProviderData[key] = value;
     }
   }
-  return whitelistedProviderData;
+  return filteredProviderData;
 }
 
 /**
