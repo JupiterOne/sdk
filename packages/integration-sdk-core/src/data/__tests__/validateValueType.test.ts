@@ -22,12 +22,6 @@ describe('validateValueType', () => {
     expect(() => validateValueType([1, 'a', true], 'testPath')).not.toThrow();
   });
 
-  test('should validate nested arrays with supported types', () => {
-    expect(() =>
-      validateValueType([1, ['a', 2], [true, false]], 'testPath'),
-    ).not.toThrow();
-  });
-
   test('should reject nested arrays with unsupported types', () => {
     expect(() =>
       validateValueType([1, ['a', { key: 'value' }], true], 'testPath'),
@@ -41,6 +35,12 @@ describe('validateValueType', () => {
   test('should reject unsupported type in array', () => {
     expect(() =>
       validateValueType([1, 2, { key: 'value' }], 'testPath'),
+    ).toThrow();
+  });
+
+  test('should reject array inside arrays', () => {
+    expect(() =>
+      validateValueType([1, 2, { key: 'value' }, [1, [4, 5, 6]]], 'testPath'),
     ).toThrow();
   });
 });

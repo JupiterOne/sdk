@@ -190,16 +190,28 @@ function generateEntity({
  * @param path The path to the current property being validated, used for error messaging.
  *             This is updated with each recursive call to reflect the current context.
  */
-export function validateValueType(value: any, path: string): void {
+export function validateValueType(
+  value: any,
+  path: string,
+  depth: number = 1,
+): void {
   // Explicitly allow null values
   if (value === null) {
     return;
   }
 
   if (Array.isArray(value)) {
+    // If the depth is > 1 then we won't allow arrays inside arrays.
+    if (depth > 1) {
+      throw new IntegrationError({
+        code: 'UNSUPPORTED_TYPE',
+        message: `Unsupported type found at "${path}": Nested arrays are not supported.`,
+      });
+    }
+
     // If the value is an array, validate each element
     value.forEach((item, index) => {
-      validateValueType(item, `${path}[${index}]`);
+      validateValueType(item, `${path}[${index}]`, ++depth);
     });
   } else {
     // For non-array values, check if the type is supported
