@@ -125,7 +125,7 @@ function generateEntity({
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
   const entity: GeneratedEntity = {
-    ...(source ? allowedProviderData(source, _class), : {}),
+    ...(source ? allowedProviderData(source, _class) : {}),
     ...assign,
     _class,
     _rawData,
