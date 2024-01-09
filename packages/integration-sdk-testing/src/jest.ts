@@ -286,6 +286,45 @@ function dedupSchemaEnumValues(schema: GraphObjectSchema): GraphObjectSchema {
   };
 }
 
+/**
+ * Step to remove specified properties marked for exclusion
+ * in the schemas. This step will run after all deduplication
+ * processes to ensure that the properties will be removed from
+ * the final schema.
+ *
+ * Example: parameter: { exclude: true }
+ *
+ * @param schema
+ */
+function removeSchemaExcludedValues(
+  schema: GraphObjectSchema,
+): GraphObjectSchema {
+  if (!schema.properties) {
+    return schema;
+  }
+
+  const newProperties: Record<string, any> = {};
+
+  for (const propertyName in schema.properties) {
+    const property = schema.properties[propertyName];
+
+    if (property.exclude === true) {
+      if (schema.required?.includes(propertyName)) {
+        schema.required = schema.required.filter(
+          (item) => item !== propertyName,
+        );
+      }
+    } else {
+      newProperties[propertyName] = property;
+    }
+  }
+
+  return {
+    ...schema,
+    properties: newProperties,
+  };
+}
+
 function generateGraphObjectSchemaFromDataModelSchemas(
   schemas: GraphObjectSchema[],
 ) {
@@ -331,6 +370,7 @@ function generateGraphObjectSchemaFromDataModelSchemas(
   let resultSchema = dedupSchemaPropertyTypes(deepmerge.all(newSchemas));
   resultSchema = dedupSchemaRequiredPropertySchema(resultSchema);
   resultSchema = dedupSchemaEnumValues(resultSchema);
+  resultSchema = removeSchemaExcludedValues(resultSchema);
 
   return resultSchema;
 }

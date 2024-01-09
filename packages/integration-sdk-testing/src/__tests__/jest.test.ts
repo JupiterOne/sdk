@@ -296,6 +296,80 @@ describe('#toMatchGraphObjectSchema', () => {
     });
   });
 
+  test('should remove properties marked for deletion from schema', () => {
+    const standardEntity = {
+      _key: 'arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0',
+      _type: 'aws_securityhub_standard',
+      _class: ['Standard'],
+      name: 'AWS Foundational Security Best Practices v1.0.0',
+      displayName: 'AWS Foundational Security Best Practices v1.0.0',
+      enabledByDefault: true,
+      managingCompany: 'AWS',
+      managingProduct: 'Security Hub',
+      region: 'us-east-1',
+      _rawData: [
+        {
+          name: 'default',
+          rawData: {
+            EnabledByDefault: true,
+            Name: 'AWS Foundational Security Best Practices v1.0.0',
+            StandardsArn:
+              'arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0',
+            StandardsManagedBy: {
+              Company: 'AWS',
+              Product: 'Security Hub',
+            },
+          },
+        },
+      ],
+    };
+
+    const failedResult = toMatchGraphObjectSchema(standardEntity, {
+      _class: ['Standard'],
+      schema: {
+        additionalProperties: true,
+        properties: {
+          _type: { const: 'aws_securityhub_standard' },
+          _rawData: {
+            type: 'array',
+            items: { type: 'object' },
+          },
+          displayName: { type: 'string' },
+        },
+      },
+    });
+
+    expect(failedResult.message()).toContain(
+      'Error validating graph object against schema',
+    );
+    expect(failedResult).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    const succeededResult = toMatchGraphObjectSchema(standardEntity, {
+      _class: ['Standard'],
+      schema: {
+        additionalProperties: true,
+        properties: {
+          _type: { const: 'aws_securityhub_standard' },
+          _rawData: {
+            type: 'array',
+            items: { type: 'object' },
+          },
+          displayName: { type: 'string' },
+          version: { exclude: true },
+        },
+      },
+    });
+
+    expect(succeededResult.message()).toContain('Success!');
+    expect(succeededResult).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
   test('should match array of custom entities using schema', () => {
     const result = toMatchGraphObjectSchema(
       [
