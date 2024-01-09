@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 11.7.0 - 2024-01-09
+
+- Added option to require all implemented steps to have a spec.
+
 ## 11.6.0 - 2024-01-09
 
 - Added in `exclude` option to entity schema which can be used to override
