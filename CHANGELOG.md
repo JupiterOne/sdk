@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 11.7.1 - 2024-01-09
+
+- Updated types for Jest toImplementSpec matcher
+
 ## 11.7.0 - 2024-01-09
 
 - Added option to require all implemented steps to have a spec.
