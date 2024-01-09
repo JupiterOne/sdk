@@ -358,7 +358,7 @@ describe('#toMatchGraphObjectSchema', () => {
             items: { type: 'object' },
           },
           displayName: { type: 'string' },
-          version: { delete: true },
+          version: { exclude: true },
         },
       },
     });
