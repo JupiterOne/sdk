@@ -145,6 +145,9 @@ declare global {
        */
       toImplementSpec<T extends IntegrationInstanceConfig>(
         spec: IntegrationSpecConfig<T>,
+        options?: {
+          requireSpec?: boolean;
+        },
       ): R;
     }
   }
