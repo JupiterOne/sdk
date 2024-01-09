@@ -1139,6 +1139,76 @@ describe('#toImplementSpec', () => {
       pass: false,
     });
   });
+
+  test('should fail if spec is missing and requireSpec is true', () => {
+    const implementation: IntegrationInvocationConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          executionHandler,
+        },
+      ],
+    };
+
+    const spec: IntegrationSpecConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          implemented: true,
+        },
+        {
+          id: 'step-2',
+          name: 'Step 2',
+          entities: [
+            {
+              resourceName: 'RESOURCE-3',
+              _type: 'resource_3',
+              _class: 'Record',
+            },
+          ],
+          relationships: [
+            {
+              _type: 'resource_1_has_resource_3',
+              sourceType: 'resource_1',
+              _class: RelationshipClass.HAS,
+              targetType: 'resource_3',
+            },
+          ],
+          dependsOn: ['step-1'],
+          implemented: true,
+        },
+      ],
+    };
+    const result = toImplementSpec(implementation, spec, { requireSpec: true });
+
+    expect(result.message()).toContain(
+      'toImplementSpec.requireSpec is true but at least 1 step is missing from spec.',
+    );
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+  });
 });
 
 describe('#toMatchStepMetadata', () => {

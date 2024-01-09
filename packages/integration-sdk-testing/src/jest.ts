@@ -648,19 +648,72 @@ export function toImplementSpec<
 >(
   integration: IntegrationInvocationConfig<TConfig>,
   spec: IntegrationSpecConfig<TConfig>,
+  options?: {
+    requireSpec?: boolean;
+  },
 ) {
   const unimplementedSteps: string[] = [];
+
+  // Normalize the spec and integration objects
+  // as the order does not matter for the test
+  const normalizedSpec: IntegrationSpecConfig<TConfig> = {
+    ...spec,
+    integrationSteps: spec.integrationSteps.map((step) => ({
+      ...step,
+      entities: step.entities.sort((a, b) => a._type.localeCompare(b._type)),
+      relationships: step.relationships.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
+      mappedRelationships: step.mappedRelationships?.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.direction.localeCompare(b.direction) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
+      dependsOn: step.dependsOn ? [...step.dependsOn].sort() : undefined,
+    })),
+  };
+
+  const normalizedIntegration: IntegrationInvocationConfig<TConfig> = {
+    ...integration,
+    integrationSteps: integration.integrationSteps.map((step) => ({
+      ...step,
+      entities: step.entities.sort((a, b) => a._type.localeCompare(b._type)),
+      relationships: step.relationships.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
+      mappedRelationships: step.mappedRelationships?.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.direction.localeCompare(b.direction) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
+      dependsOn: step.dependsOn ? [...step.dependsOn].sort() : undefined,
+    })),
+  };
 
   const implementedStepsProposed: { [id: string]: StepBase<TConfig> } = {};
   const implementedStepsActual: { [id: string]: StepBase<TConfig> } = {};
   const implementedStepsByIdMap: {
     [id: string]: Step<IntegrationStepExecutionContext<TConfig>>;
-  } = integration.integrationSteps.reduce(
+  } = normalizedIntegration.integrationSteps.reduce(
     (implStepsById, step) => ({ ...implStepsById, [step.id]: step }),
     {},
   );
 
-  for (const specStep of spec.integrationSteps) {
+  for (const specStep of normalizedSpec.integrationSteps) {
     if (specStep.implemented === false) {
       unimplementedSteps.push(specStep.id);
     } else {
@@ -683,6 +736,26 @@ export function toImplementSpec<
       },
       'Spec steps marked as `implemented: false`',
     );
+  }
+
+  if (options?.requireSpec) {
+    const specStepIds = normalizedSpec.integrationSteps
+      .filter((step) => step.implemented)
+      .map((step) => step.id)
+      .sort();
+    const integrationStepIds = normalizedIntegration.integrationSteps
+      .map((step) => step.id)
+      .sort();
+
+    try {
+      expect(integrationStepIds).toEqual(specStepIds);
+    } catch (err) {
+      return {
+        message: () =>
+          `toImplementSpec.requireSpec is true but at least 1 step is missing from spec.\n${err.message}`,
+        pass: false,
+      };
+    }
   }
 
   try {
