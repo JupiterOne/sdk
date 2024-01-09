@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 11.6.0 - 2024-01-09
+
+- Added in `exclude` option to entity schema which can be used to override
+  required properties before validation.
+
 ## 11.5.2 - 2023-12-21
 
 - No new changes. Needed to force a new deployment.
