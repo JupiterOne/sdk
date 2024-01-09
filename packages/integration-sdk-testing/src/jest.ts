@@ -654,10 +654,28 @@ export function toImplementSpec<
 ) {
   const unimplementedSteps: string[] = [];
 
+  // Normalize the spec and integration objects
+  // as the order does not matter for the test
   const normalizedSpec: IntegrationSpecConfig<TConfig> = {
     ...spec,
     integrationSteps: spec.integrationSteps.map((step) => ({
       ...step,
+      entities: step.entities.sort((a, b) => a._type.localeCompare(b._type)),
+      relationships: step.relationships.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
+      mappedRelationships: step.mappedRelationships?.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.direction.localeCompare(b.direction) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
       dependsOn: step.dependsOn ? [...step.dependsOn].sort() : undefined,
     })),
   };
@@ -666,6 +684,22 @@ export function toImplementSpec<
     ...integration,
     integrationSteps: integration.integrationSteps.map((step) => ({
       ...step,
+      entities: step.entities.sort((a, b) => a._type.localeCompare(b._type)),
+      relationships: step.relationships.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
+      mappedRelationships: step.mappedRelationships?.sort(
+        (a, b) =>
+          a._type.localeCompare(b._type) ||
+          a._class.localeCompare(b._class) ||
+          a.direction.localeCompare(b.direction) ||
+          a.sourceType.localeCompare(b.sourceType) ||
+          a.targetType.localeCompare(b.targetType),
+      ),
       dependsOn: step.dependsOn ? [...step.dependsOn].sort() : undefined,
     })),
   };
