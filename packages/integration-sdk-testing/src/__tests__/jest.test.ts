@@ -444,7 +444,7 @@ describe('#toMatchGraphObjectSchema', () => {
 
     expect(result.message()).toEqual(
       `Error validating graph object against schema (data=${JSON.stringify(
-        data,
+        { ...data, _rawData: undefined },
         null,
         2,
       )}, errors=${expectedSerialzedErrors}, index=0)

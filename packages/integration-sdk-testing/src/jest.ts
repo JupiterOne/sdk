@@ -608,7 +608,11 @@ function toMatchSchema<T extends Entity | ExplicitRelationship>(
   received = Array.isArray(received) ? received : [received];
 
   for (let i = 0; i < received.length; i++) {
-    const data = received[i];
+    // Removes raw data before schema validation
+    const data = {
+      ...received[i],
+    };
+    delete data._rawData;
 
     if (dataModelIntegrationSchema.validate(schema, data)) {
       continue;
