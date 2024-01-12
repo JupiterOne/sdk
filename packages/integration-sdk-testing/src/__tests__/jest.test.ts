@@ -444,7 +444,7 @@ describe('#toMatchGraphObjectSchema', () => {
 
     expect(result.message()).toEqual(
       `Error validating graph object against schema (data=${JSON.stringify(
-        { ...data, _rawData: undefined },
+        data,
         null,
         2,
       )}, errors=${expectedSerialzedErrors}, index=0)
@@ -508,6 +508,50 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
     });
 
     expect(result.message()).toEqual('Success!');
+  });
+
+  test('Should allow an entity with _rawData', () => {
+    const entity: Entity = generateCollectedEntity();
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: ['Service'],
+      schema: generateGraphObjectSchema(),
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+
+    expect(result.message()).toEqual('Success!');
+  });
+
+  test('Should not allow an entity with _rawData if excluded', () => {
+    const entity: Entity = generateCollectedEntity();
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: ['Service'],
+      schema: generateGraphObjectSchema({
+        _rawData: { exclude: true },
+      }),
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toContain(
+      `{
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "_rawData"
+    },
+    "message": "must NOT have additional properties"
+  }`,
+    );
   });
 });
 
