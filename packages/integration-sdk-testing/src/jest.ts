@@ -494,11 +494,26 @@ export function toMatchGraphObjectSchema<T extends Entity>(
     }
   }
 
+  // Adds the rawData schema which will allow you to have
+  // rawData in your entity without needing to specify it
+  // in the schema.
+  // To ensure that rawData is not present you can exclude
+  // the value in the schema by setting `exclude: true`
+  const rawDataSchema: GraphObjectSchema = {
+    properties: {
+      _rawData: {
+        type: 'array',
+        items: { type: 'object' },
+      },
+    },
+  };
+
   const newEntitySchema: GraphObjectSchema =
     generateGraphObjectSchemaFromDataModelSchemas([
       // Merging should have the highest-level schemas at the end of the array
       // so that they can override the parent classes
       ...schemas.reverse(),
+      rawDataSchema,
       schema,
     ]);
 
