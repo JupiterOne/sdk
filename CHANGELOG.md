@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 11.8.0 - 2024-01-16
+
+- Added `_rawData` property to entity spec by default. This can be overridden
+  using `schema: { _rawData: { exclude: true } }`.
+
 ## 11.7.1 - 2024-01-09
 
 - Updated types for Jest toImplementSpec matcher
