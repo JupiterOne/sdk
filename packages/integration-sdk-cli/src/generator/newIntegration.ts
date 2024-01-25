@@ -90,10 +90,17 @@ function newIntegration(plop: NodePlopAPI) {
         return [];
       }
 
+      // @jupiterone/graph-foo -> graph-foo
+      // graph-foo -> graph-foo
+      const directoryName = path.join(
+        process.cwd(),
+        path.basename(data.packageName),
+      );
+
       const actions: any[] = [];
       actions.push({
         type: 'addMany',
-        destination: '.',
+        destination: directoryName,
         base: path.join(__dirname, '/template'),
         templateFiles: path.join(__dirname + '/template/**'),
         globOptions: { dot: true },
@@ -104,7 +111,10 @@ function newIntegration(plop: NodePlopAPI) {
       for (const step of data.steps) {
         actions.push({
           type: 'add',
-          path: path.normalize(`src/steps/${kebabCase(step.name)}/index.ts`),
+          path: path.join(
+            directoryName,
+            path.normalize(`src/steps/${kebabCase(step.name)}/index.ts`),
+          ),
           templateFile: path.join(__dirname, 'stepTemplate/index.ts.hbs'),
           data: step,
           force: true,
@@ -113,19 +123,19 @@ function newIntegration(plop: NodePlopAPI) {
 
       actions.push({
         type: 'yarnInstall',
-        path: '.',
+        path: directoryName,
         verbose: true,
       });
 
       actions.push({
         type: 'yarnFormat',
-        path: '.',
+        path: directoryName,
         verbose: true,
       });
 
       actions.push({
         type: 'yarnLint',
-        path: '.',
+        path: directoryName,
         verbose: true,
       });
 
