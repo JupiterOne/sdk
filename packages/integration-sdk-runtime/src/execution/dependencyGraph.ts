@@ -405,20 +405,6 @@ export function executeStepDependencyGraph<
         status = StepResultStatus.FAILURE;
       }
 
-      await context.jobState.flush();
-
-      if (context.jobState.waitUntilUploadsComplete) {
-        try {
-          // Failing to upload all integration data should not be considered a
-          // fatal failure. We just want to make this step as a partial success
-          // and move on with our lives!
-          await context.jobState.waitUntilUploadsComplete();
-        } catch (err) {
-          context.logger.stepFailure(step, err);
-          status = StepResultStatus.FAILURE;
-        }
-      }
-
       updateStepResultStatus(stepId, status, typeTracker);
       enqueueLeafSteps();
     }
@@ -466,11 +452,54 @@ export function executeStepDependencyGraph<
 
       return status;
     }
+    async function forceFlushEverything() {
+      /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
+       * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
+       */
+      let uploader: StepGraphObjectDataUploader | undefined;
+      if (createStepGraphObjectDataUploader) {
+        uploader = createStepGraphObjectDataUploader(
+          Array.from(stepResultsMap.keys()).pop() as string,
+        );
+      }
+      const stepsInvolvedInUpload = graphObjectStore.getStepsStored
+        ? graphObjectStore.getStepsStored()
+        : [];
+      await graphObjectStore.flush(
+        async (entities) =>
+          entities.length
+            ? uploader?.enqueue({
+                entities,
+                relationships: [],
+              })
+            : undefined,
+        async (relationships) =>
+          relationships.length
+            ? uploader?.enqueue({
+                entities: [],
+                relationships,
+              })
+            : undefined,
+      );
+      try {
+        await uploader?.waitUntilUploadsComplete();
+      } catch (err) {
+        for (const stepId of stepsInvolvedInUpload) {
+          executionContext.logger.stepFailure(
+            workingGraph.getNodeData(stepId),
+            err,
+          );
+          updateStepResultStatus(stepId, StepResultStatus.FAILURE, typeTracker);
+        }
+      }
+    }
+
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 
     void promiseQueue
       .onIdle()
+      .then(forceFlushEverything)
       .then(() => resolve([...stepResultsMap.values()]))
       .catch(reject);
   });
