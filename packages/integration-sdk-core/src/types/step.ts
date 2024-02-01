@@ -93,6 +93,9 @@ export type IntegrationStepResult = Omit<
    * Entity or relationship types encountered during step execution.
    */
   encounteredTypes: string[];
+
+  startTime?: number;
+  endTime?: number;
 };
 
 export type IntegrationStep<
