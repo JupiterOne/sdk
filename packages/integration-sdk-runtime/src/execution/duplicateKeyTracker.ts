@@ -28,6 +28,10 @@ export class DuplicateKeyTracker {
     );
   }
 
+  getEncounteredKeys() {
+    return this.graphObjectKeyMap.keys();
+  }
+
   registerKey(_key: string) {
     const normalizedKey = this.normalizationFunction(_key);
     if (this.graphObjectKeyMap.has(normalizedKey)) {

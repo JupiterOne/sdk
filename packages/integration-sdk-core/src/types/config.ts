@@ -83,10 +83,18 @@ export interface InvocationConfig<
   /**
    * Optionally define the number of steps to execute in parallel.
    *
-   * If this value is not provided the concurrency defaults to
+   * If this value is not provided, the concurrency defaults to
    * Number.POSITIVE_INFINITY
    */
   stepConcurrency?: number;
+  /**
+   * Optionally collect the encountered keys and return them in
+   * the integration results. This can result in a large quantity
+   * of keys being returned.
+   *
+   * If this value is not provided, the default is false.
+   */
+  collectEncounteredKeys?: boolean;
   /**
    * This configuration element is used to store information about data
    * ingestion sources that can be enabled or disabled. When this element
