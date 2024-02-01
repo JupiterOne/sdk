@@ -1967,6 +1967,125 @@ describe('executeIntegrationInstance', () => {
       },
     ]);
   });
+
+  test('should call results callback', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        collectEncounteredKeys: true,
+        integrationSteps: [
+          {
+            id: 'hitori',
+            name: 'Fetch Person 1',
+            entities: [
+              {
+                resourceName: 'Test Person',
+                _type: 'test_person_1',
+                _class: 'User',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'person_1',
+                _type: 'test_person_1',
+                _class: 'User',
+              });
+            },
+          },
+          {
+            id: 'futari',
+            name: 'Fetch Person 2',
+            entities: [
+              {
+                resourceName: 'Test Person 2',
+                _type: 'test_person_2',
+                _class: 'User',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'person_2',
+                _type: 'test_person_2',
+                _class: 'User',
+              });
+            },
+          },
+          {
+            id: 'tomodachi',
+            name: 'Build person relationships',
+            entities: [],
+            relationships: [
+              {
+                sourceType: 'test_person_1',
+                targetType: 'test_person_2',
+                _type: 'test_person_1_has_test_person_2',
+                _class: RelationshipClass.HAS,
+              },
+            ],
+            dependsOn: ['hitori', 'futari'],
+            async executionHandler({ jobState }) {
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  fromKey: 'person_1',
+                  fromType: 'test_person',
+                  _class: RelationshipClass.HAS,
+                  toKey: 'person_2',
+                  toType: 'test_person_2',
+                  properties: {
+                    _type: 'test_person_1_has_test_person_2',
+                  },
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    const expectedResults: ExecuteIntegrationResult = {
+      integrationStepResults: [
+        {
+          id: 'hitori',
+          name: 'Fetch Person 1',
+          declaredTypes: ['test_person_1'],
+          partialTypes: [],
+          encounteredTypes: ['test_person_1'],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'futari',
+          name: 'Fetch Person 2',
+          declaredTypes: ['test_person_2'],
+          partialTypes: [],
+          encounteredTypes: ['test_person_2'],
+          status: StepResultStatus.SUCCESS,
+        },
+        {
+          id: 'tomodachi',
+          name: 'Build person relationships',
+          declaredTypes: ['test_person_1_has_test_person_2'],
+          partialTypes: [],
+          encounteredTypes: ['test_person_1_has_test_person_2'],
+          status: StepResultStatus.SUCCESS,
+          dependsOn: ['hitori', 'futari'],
+        },
+      ],
+      encounteredKeys: [['person_1', 'person_2', 'person_1|has|person_2']],
+      metadata: {
+        partialDatasets: {
+          types: [],
+        },
+      },
+    };
+
+    const resultsCallback = jest.fn();
+    await executeIntegrationInstanceWithConfig(config, {
+      resultsCallback,
+    });
+    expect(resultsCallback).toHaveBeenCalledOnce();
+    expect(resultsCallback).toHaveBeenCalledWith(expectedResults);
+  });
 });
 
 describe('executeIntegrationLocally', () => {

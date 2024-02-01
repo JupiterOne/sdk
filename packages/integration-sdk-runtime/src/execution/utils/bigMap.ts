@@ -28,6 +28,14 @@ export class BigMap<K, V> {
     return valueForKey(this.maps, key);
   }
 
+  keys() {
+    return this.maps.map((m) => Array.from(m.keys()));
+  }
+
+  values() {
+    return this.maps.map((m) => Array.from(m.values()));
+  }
+
   getMapsLength() {
     return this.maps.length;
   }

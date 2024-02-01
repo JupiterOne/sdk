@@ -53,6 +53,7 @@ import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceSte
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
+  encounteredKeys?: string[][];
   metadata: {
     partialDatasets: PartialDatasets;
   };
@@ -62,7 +63,7 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
-  resultsCallback?: (results: IntegrationStepResult[]) => Promise<void>;
+  resultsCallback?: (results: ExecuteIntegrationResult) => Promise<void>;
   pretty?: boolean;
 }
 
@@ -255,14 +256,16 @@ export async function executeWithContext<
         resultsCallback,
       } = options;
 
+      const duplicateKeyTracker = new DuplicateKeyTracker(
+        config.normalizeGraphObjectKey,
+      );
+
       const integrationStepResults = await executeSteps({
         executionContext: context,
         integrationSteps: config.integrationSteps,
         stepStartStates,
         stepConcurrency: config.stepConcurrency,
-        duplicateKeyTracker: new DuplicateKeyTracker(
-          config.normalizeGraphObjectKey,
-        ),
+        duplicateKeyTracker,
         graphObjectStore,
         dataStore: new MemoryDataStore(),
         createStepGraphObjectDataUploader,
@@ -280,6 +283,9 @@ export async function executeWithContext<
 
       const summary: ExecuteIntegrationResult = {
         integrationStepResults,
+        encounteredKeys: config.collectEncounteredKeys
+          ? duplicateKeyTracker.getEncounteredKeys()
+          : undefined,
         metadata: {
           partialDatasets,
         },
@@ -292,7 +298,7 @@ export async function executeWithContext<
 
       if (resultsCallback != null) {
         try {
-          await resultsCallback(integrationStepResults);
+          await resultsCallback(summary);
         } catch (err) {
           context.logger.warn(
             err,
