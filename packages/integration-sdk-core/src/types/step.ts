@@ -96,6 +96,7 @@ export type IntegrationStepResult = Omit<
 
   startTime?: number;
   endTime?: number;
+  duration?: number;
 };
 
 export type IntegrationStep<
