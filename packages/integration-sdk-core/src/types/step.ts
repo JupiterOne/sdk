@@ -94,8 +94,19 @@ export type IntegrationStepResult = Omit<
    */
   encounteredTypes: string[];
 
+  /**
+   * Start time of the step in milliseconds since the Unix epoch.
+   */
   startTime?: number;
+
+  /**
+   * End time of the step in milliseconds since the Unix epoch.
+   */
   endTime?: number;
+
+  /**
+   * Duration of the step in milliseconds, calculated as endTime - startTime.
+   */
   duration?: number;
 };
 
