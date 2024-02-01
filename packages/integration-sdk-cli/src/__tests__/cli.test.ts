@@ -125,6 +125,9 @@ describe('collect', () => {
           partialTypes: [],
           encounteredTypes: ['test_account'],
           status: StepResultStatus.CACHED,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'fetch-groups',
@@ -134,6 +137,9 @@ describe('collect', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'fetch-users',
@@ -166,6 +172,9 @@ describe('collect', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'fetch-groups',
@@ -175,6 +184,9 @@ describe('collect', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'fetch-users',
@@ -183,6 +195,9 @@ describe('collect', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
       ],
       metadata: {
@@ -212,6 +227,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -240,6 +258,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: ['my_user'],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -288,6 +309,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -319,6 +343,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'fetch-groups',
@@ -336,6 +363,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -369,6 +399,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'fetch-groups',
@@ -386,6 +419,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -416,6 +452,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'fetch-groups',
@@ -425,6 +464,9 @@ describe('collect', () => {
             partialTypes: [],
             encounteredTypes: [],
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'fetch-users',

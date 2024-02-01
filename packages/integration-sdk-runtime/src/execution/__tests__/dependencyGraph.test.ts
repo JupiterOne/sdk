@@ -311,6 +311,9 @@ describe('executeStepDependencyGraph', () => {
         partialTypes: [],
         encounteredTypes: ['my_type_b'],
         status: StepResultStatus.SUCCESS,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
     ]);
 
@@ -605,6 +608,9 @@ describe('executeStepDependencyGraph', () => {
         partialTypes: [],
         encounteredTypes: [],
         status: StepResultStatus.SUCCESS,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
       {
         id: 'b',
@@ -614,6 +620,9 @@ describe('executeStepDependencyGraph', () => {
         encounteredTypes: [],
         dependsOn: ['a'],
         status: StepResultStatus.FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
       {
         id: 'c',
@@ -623,6 +632,9 @@ describe('executeStepDependencyGraph', () => {
         encounteredTypes: [],
         dependsOn: ['b'],
         status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
     ]);
 
@@ -755,6 +767,9 @@ describe('executeStepDependencyGraph', () => {
         partialTypes: [],
         encounteredTypes: [eA._type],
         status: StepResultStatus.SUCCESS,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
       {
         id: 'b',
@@ -764,6 +779,9 @@ describe('executeStepDependencyGraph', () => {
         encounteredTypes: [eB._type],
         dependsOn: ['a'],
         status: StepResultStatus.FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
       {
         id: 'c',
@@ -773,6 +791,9 @@ describe('executeStepDependencyGraph', () => {
         encounteredTypes: [eC._type],
         dependsOn: ['b'],
         status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
     ]);
 
@@ -870,6 +891,9 @@ describe('executeStepDependencyGraph', () => {
         partialTypes: [],
         encounteredTypes: [],
         status: StepResultStatus.FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
       {
         id: 'b',
@@ -879,6 +903,9 @@ describe('executeStepDependencyGraph', () => {
         encounteredTypes: [],
         dependsOn: ['a'],
         status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
       {
         id: 'c',
@@ -888,6 +915,9 @@ describe('executeStepDependencyGraph', () => {
         encounteredTypes: [],
         dependsOn: ['b'],
         status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+        startTime: expect.any(Number),
+        endTime: expect.any(Number),
+        duration: expect.any(Number),
       },
     ]);
 
@@ -1256,6 +1286,9 @@ describe('executeStepDependencyGraph', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'b',
@@ -1273,6 +1306,9 @@ describe('executeStepDependencyGraph', () => {
           encounteredTypes: [],
           dependsOn: ['a'],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'd',
@@ -1290,6 +1326,9 @@ describe('executeStepDependencyGraph', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
       ]),
     );
@@ -1391,6 +1430,9 @@ describe('executeStepDependencyGraph', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'b',
@@ -1408,6 +1450,9 @@ describe('executeStepDependencyGraph', () => {
           encounteredTypes: [],
           dependsOn: ['a'],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'd',
@@ -1425,6 +1470,9 @@ describe('executeStepDependencyGraph', () => {
           partialTypes: [],
           encounteredTypes: [],
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
       ]),
     );

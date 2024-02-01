@@ -138,17 +138,25 @@ export function executeStepDependencyGraph<
   /**
    * Updates the result of a step result with the provided satus
    */
-  function updateStepResultStatus(
-    stepId: string,
-    status: StepResultStatus,
-    typeTracker: TypeTracker,
-  ) {
+  function updateStepResultStatus(params: {
+    stepId: string;
+    status: StepResultStatus;
+    typeTracker: TypeTracker;
+    startTime?: number;
+    endTime?: number;
+    duration?: number;
+  }) {
+    const { stepId, status, typeTracker, startTime, endTime, duration } =
+      params;
     const existingResult = stepResultsMap.get(stepId);
     if (existingResult) {
       stepResultsMap.set(stepId, {
         ...existingResult,
         status,
         encounteredTypes: typeTracker.getEncounteredTypesForStep(stepId),
+        startTime,
+        endTime,
+        duration,
       });
     }
   }
@@ -419,7 +427,14 @@ export function executeStepDependencyGraph<
         }
       }
 
-      updateStepResultStatus(stepId, status, typeTracker);
+      updateStepResultStatus({
+        stepId,
+        status,
+        typeTracker,
+        startTime,
+        endTime: Date.now(),
+        duration: Date.now() - startTime,
+      });
       enqueueLeafSteps();
     }
 
