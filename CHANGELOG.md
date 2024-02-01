@@ -9,6 +9,15 @@ and this project adheres to
 
 # Unreleased
 
+## 12.0.0 - 2024-02-01
+
+- Added in `collectEncounteredKeys` to invocation config. This will allow keys
+  encountered during the integration to be returned after execution.
+- **breaking** Updated interface for `resultsCallback` in `executeIntegration`
+  to include the entire job summary.
+- Enhanced step summaries to include `startTime`, `endTime`, and `duration`
+  properties.
+
 ## 11.8.0 - 2024-01-16
 
 - Added `_rawData` property to entity spec by default. This can be overridden
