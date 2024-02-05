@@ -1,10 +1,10 @@
 {
   "name": "{{packageName}}",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "{{packageDescription}}",
   "license": "MPL-2.0",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "src",
     "jupiterone"
@@ -13,7 +13,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18.0.0 <19.x"
+    "node": ">=18.0.0 <20.x"
   },
   "scripts": {
     "start": "j1-integration collect",
@@ -36,28 +36,11 @@
     "postversion": "cp package.json ./dist/package.json"
   },
   "peerDependencies": {
-    "@jupiterone/integration-sdk-core": "^10.5.0"
+    "@jupiterone/integration-sdk-core": "^12.0.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-core": "^10.5.0",
-    "@jupiterone/integration-sdk-dev-tools": "^10.5.0",
-    "@jupiterone/integration-sdk-testing": "^10.5.0",
-    "auto": "^10.36.5"
-  },
-  "auto": {
-    "plugins": [
-      [
-        "npm",
-        {
-          "setRcToken": false,
-          "publishFolder": "./dist"
-        }
-      ],
-      "released"
-    ],
-    "onlyPublishWithReleaseLabel": true,
-    "shipit": {
-      "prerelease": false
-    }
+    "@jupiterone/integration-sdk-core": "^12.0.0",
+    "@jupiterone/integration-sdk-dev-tools": "^12.0.0",
+    "@jupiterone/integration-sdk-testing": "^12.0.0",
   }
 }
