@@ -1,46 +1,20 @@
-import fetch, { Response } from 'node-fetch';
+import fetch, { type Response } from 'node-fetch';
 import {
-  IntegrationLogger,
+  type IntegrationLogger,
   IntegrationProviderAPIError,
 } from '@jupiterone/integration-sdk-core';
-import { AttemptContext, retry, sleep } from '@lifeomic/attempt';
+import { type AttemptContext, retry, sleep } from '@lifeomic/attempt';
 import {
   fatalRequestError,
   isRetryableRequest,
   retryableRequestError,
 } from './errors';
-
-type OptionalPromise<T> = T | Promise<T>;
-
-interface RequestOptions {
-  method?: 'GET' | 'POST';
-  body?: Record<string, unknown>;
-  headers?: Record<string, string>;
-  authenticate?: boolean;
-}
-
-export type APIResourceIterationCallback<T> = (
-  resources: T[]
-) => boolean | void | Promise<boolean | void>;
-
-interface RetryOptions {
-  maxAttempts: number;
-  delay: number;
-  factor: number;
-  timeout: number;
-  handleError: (
-    err: any,
-    context: AttemptContext,
-    logger?: IntegrationLogger
-  ) => OptionalPromise<void>;
-}
-
-interface ClientConfig {
-  baseUrl: string;
-  logger?: IntegrationLogger;
-  retryOptions?: Partial<RetryOptions>;
-  logErrorBody?: boolean;
-}
+import type {
+  ClientConfig,
+  OptionalPromise,
+  RetryOptions,
+  RequestOptions,
+} from './types';
 
 const defaultErrorHandler = async (
   err: any,
