@@ -1,0 +1,40 @@
+import {
+  IntegrationStep,
+  IntegrationStepExecutionContext,
+} from '@jupiterone/integration-sdk-core';
+
+import { IntegrationConfig } from '../../config';
+import {
+  Steps,
+  Entities,
+} from '../constants';
+import { createAPIClient } from '../../client';
+import { create{{pascalCase entityName}}Entity } from '../converters';
+
+export const {{camelCase stepId}}Steps: IntegrationStep<IntegrationConfig>[] = [
+  {
+    id: Steps.{{pascalCase stepId}},
+    name: '{{stepName}}',
+    entities: [Entities.{{constantCase entityName}}],
+    relationships: [],
+    dependsOn: [
+      {{#each dependsOn}}
+        '{{this}}'{{#unless @last}},{{/unless}}
+      {{/each}}
+    ],
+    executionHandler: {{camelCase stepId}},
+  },
+];
+
+export async function {{camelCase stepId}}({
+  jobState,
+  executionConfig,
+  instance,
+}: IntegrationStepExecutionContext<IntegrationConfig>) {
+  {{#if apiCall}}
+  const client = createAPIClient(instance.config, executionConfig);
+
+  const data = await client.{{camelCase stepId}}();
+  {{/if}}
+  await jobState.addEntity(create{{pascalCase entityName}}Entity({{#if apiCall}}data{{/if}}));
+}

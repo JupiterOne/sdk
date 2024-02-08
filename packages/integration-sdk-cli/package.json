@@ -20,7 +20,7 @@
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration && yarn copy-files",
     "prepack": "yarn build:dist",
-    "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate",
+    "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate && cp -r src/generator/bocchi-templates dist/src/generator/bocchi-templates",
     "plop": "plop --plopfile dist/src/generator/newIntegration.js"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "@jupiterone/integration-sdk-runtime": "^12.0.0",
     "chalk": "^4",
     "commander": "^9.4.0",
+    "ejs": "^3.1.9",
     "fs-extra": "^10.1.0",
     "globby": "^11.0.0",
     "inquirer-checkbox-plus-prompt": "^1.4.2",

@@ -1,5 +1,11 @@
 import { RelationshipClass } from '@jupiterone/integration-sdk-core';
 
+export type StepType =
+  | 'singleton'
+  | 'fetch-entities'
+  | 'fetch-child-entities'
+  | 'fetch-relationships';
+
 export interface Template {
   instanceConfigFields: {
     [propertyName: string]: IntegrationConfigProperty;

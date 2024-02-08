@@ -1,0 +1,24 @@
+{{#each input.converters}}
+export function create{{pascalCase converter.entityName}}Entity(data: any) {
+    return createIntegrationEntity({
+        entityData: {
+            source: data,
+            assign: {
+                _key: data.{{converter.keyField}},
+                _type: Entities.{{upperSnakeCase converter.entityName}}._type,
+                _class: Entities.{{upperSnakeCase converter.entityName}}._class,
+                {{#if converter.staticFields}}
+                    {{#each converter.staticFields}}
+                        {{@key}}: {{this}},
+                    {{/each}}
+                {{/if}}
+                {{#if converter.staticFields}}
+                    {{#each converter.fieldConverters}}
+                        {{@key}}: data.{{this}},
+                    {{/each}}
+                {{/if}}
+            },
+        },
+    });
+}
+{{/each}}
