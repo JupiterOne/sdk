@@ -18,13 +18,25 @@ export interface RetryOptions {
   handleError: (
     err: any,
     context: AttemptContext,
-    logger?: IntegrationLogger
+    logger: IntegrationLogger,
   ) => OptionalPromise<void>;
+}
+
+export interface RateLimitHeaders {
+  limit: string;
+  remaining: string;
+  reset: string;
+}
+
+export interface RateLimitThrottlingOptions {
+  threshold: number;
+  rateLimitHeaders?: RateLimitHeaders;
 }
 
 export interface ClientConfig {
   baseUrl: string;
-  logger?: IntegrationLogger;
+  logger: IntegrationLogger;
   retryOptions?: Partial<RetryOptions>;
   logErrorBody?: boolean;
+  rateLimitThrottling?: RateLimitThrottlingOptions;
 }

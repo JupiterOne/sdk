@@ -29,8 +29,7 @@
   "devDependencies": {
     "@jupiterone/integration-sdk-dev-tools": "^12.0.0",
     "@jupiterone/integration-sdk-private-test-utils": "^12.0.0",
-    "@types/node-fetch": "^2.6.11",
-    "fetch-mock-jest": "^1.5.1"
+    "@types/node-fetch": "^2.6.11"
   },
   "bugs": {
     "url": "https://github.com/JupiterOne/sdk/issues"

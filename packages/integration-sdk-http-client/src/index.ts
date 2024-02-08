@@ -1,4 +1,4 @@
-import fetch, { type Response } from 'node-fetch';
+import fetch, { Headers, type Response } from 'node-fetch';
 import {
   type IntegrationLogger,
   IntegrationProviderAPIError,
@@ -14,12 +14,14 @@ import type {
   OptionalPromise,
   RetryOptions,
   RequestOptions,
+  RateLimitThrottlingOptions,
+  RateLimitHeaders,
 } from './types';
 
-const defaultErrorHandler = async (
+export const defaultErrorHandler = async (
   err: any,
   context: AttemptContext,
-  logger?: IntegrationLogger
+  logger: IntegrationLogger,
 ) => {
   if (err.code === 'ECONNRESET' || err.message.includes('ECONNRESET')) {
     return;
@@ -32,10 +34,10 @@ const defaultErrorHandler = async (
   }
 
   if (err.status === 429) {
-    const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5000;
-    logger?.warn(
+    const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5_000;
+    logger.warn(
       { retryAfter },
-      `Received a rate limit error. Waiting before retrying.`
+      'Received a rate limit error. Waiting before retrying.',
     );
     await sleep(retryAfter);
   }
@@ -49,21 +51,67 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   handleError: defaultErrorHandler,
 };
 
+const DEFAULT_RATE_LIMIT_HEADERS: { [key in keyof RateLimitHeaders]: string } =
+  {
+    limit: 'x-rate-limit-limit',
+    remaining: 'x-rate-limit-remaining',
+    reset: 'x-rate-limit-reset',
+  };
+
 export abstract class APIClient {
-  protected authenticationHeaders: Record<string, string>;
-  protected logger?: IntegrationLogger;
+  protected baseUrl: string;
+  protected logger: IntegrationLogger;
   protected retryOptions: RetryOptions;
   protected logErrorBody: boolean;
-  protected baseUrl: string;
+  protected rateLimitThrottling: RateLimitThrottlingOptions | undefined;
 
+  /**
+   * The authentication headers for the API requests
+   */
+  protected authenticationHeaders: Record<string, string>;
+
+  /**
+   * Create a new API client
+   *
+   * @param {ClientConfig} config - The configuration for the client
+   * @param {string} config.baseUrl - The base URL for the API
+   * @param {IntegrationLogger} config.logger - The logger to use
+   * @param {Partial<RetryOptions>} [config.retryOptions] - The retry options for the client,
+   *     if not provided, the default retry options will be used
+   * @param {boolean} [config.logErrorBody] - Whether to log the error body,
+   *     if true, the error body will be logged when a request fails
+   * @param {RateLimitThrottlingOptions} [config.rateLimitThrottling] - The rate limit throttling options,
+   *     if not provided, rate limit throttling will not be enabled
+   * @param {number} [config.rateLimitThrottling.threshold] - The threshold at which to throttle requests
+   * @param {RateLimitHeaders} [config.rateLimitThrottling.rateLimitHeaders] - The headers to use for rate limiting
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.limit='x-rate-limit-limit'] - The header for the rate limit limit
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.remaining='x-rate-limit-remaining'] - The header for the rate limit remaining
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='x-rate-limit-reset'] - The header for the rate limit reset
+   * @example
+   * ```typescript
+   * const client = new APIClient({
+   *   baseUrl: 'https://api.example.com',
+   *   logger: context.logger,
+   *   rateLimitThrottling: {
+   *     threshold: 0.3,
+   *     rateLimitHeaders: {
+   *       limit: 'x-ratelimit-limit',
+   *       remaining: 'x-ratelimit-remaining',
+   *       reset: 'x-ratelimit-reset',
+   *     },
+   *   },
+   * })
+   *  ```
+   */
   constructor(config: ClientConfig) {
-    this.baseUrl = config.baseUrl;
+    this.baseUrl = config.baseUrl.replace(/\/$/g, '');
     this.logger = config.logger;
     this.retryOptions = {
       ...DEFAULT_RETRY_OPTIONS,
       ...config.retryOptions,
     };
     this.logErrorBody = config.logErrorBody ?? false;
+    this.rateLimitThrottling = config.rateLimitThrottling;
   }
 
   protected withBaseUrl(endpoint: string): string {
@@ -103,18 +151,26 @@ export abstract class APIClient {
   abstract getAuthenticationHeaders(): OptionalPromise<Record<string, string>>;
 
   /**
-   * Perform a request to the API
+   * Perform a request to the API.
+   *
    * @param {string} endpoint - The endpoint to request
    * @param {RequestOptions} options - The options for the request
    * @param {string} [options.method=GET] - The HTTP method to use
    * @param {Record<string, unknown>} [options.body] - The body of the request
+   * @param {Record<string, string>} [options.headers] - The headers for the request
    * @param {boolean} [options.authenticate=true] - Whether to include authentication headers
    * @return {Promise<Response>} - The response from the API
    */
   protected async request(
     endpoint: string,
-    { method = 'GET', body, headers, authenticate = true }: RequestOptions
+    options?: RequestOptions,
   ): Promise<Response> {
+    const {
+      method = 'GET',
+      body,
+      headers,
+      authenticate = true,
+    } = options ?? {};
     if (authenticate && !this.authenticationHeaders) {
       this.authenticationHeaders = await this.getAuthenticationHeaders();
     }
@@ -131,44 +187,64 @@ export abstract class APIClient {
     return response;
   }
 
+  /**
+   * Perform a request to the API with retries and error handling.
+   *
+   * @param {string} endpoint - The endpoint to request
+   * @param {RequestOptions} options - The options for the request
+   * @param {string} [options.method=GET] - The HTTP method to use
+   * @param {Record<string, unknown>} [options.body] - The body of the request
+   * @param {Record<string, string>} [options.headers] - The headers for the request
+   * @param {boolean} [options.authenticate=true] - Whether to include authentication headers
+   * @return {Promise<Response>} - The response from the API
+   */
   protected async retryRequest(
     endpoint: string,
-    { method = 'GET', body, authenticate = true }: RequestOptions
+    options?: RequestOptions,
   ): Promise<Response> {
+    const {
+      method = 'GET',
+      body,
+      headers,
+      authenticate = true,
+    } = options ?? {};
     return retry(
       async () => {
-        let response: Response | undefined;
-        try {
-          response = await this.request(endpoint, {
-            method,
-            body,
-            authenticate,
-          });
-        } catch (err) {
-          this.logger?.error(
-            { code: err.code, err, endpoint },
-            'Error sending request'
-          );
-          throw err;
-        }
+        return this.withRateLimiting(async () => {
+          let response: Response | undefined;
+          try {
+            response = await this.request(endpoint, {
+              method,
+              body,
+              headers,
+              authenticate,
+            });
+          } catch (err) {
+            this.logger.error(
+              { code: err.code, err, endpoint },
+              'Error sending request',
+            );
+            throw err;
+          }
 
-        if (response.ok) {
-          return response;
-        }
+          if (response.ok) {
+            return response;
+          }
 
-        let error: IntegrationProviderAPIError | undefined;
-        const requestErrorParams = {
-          endpoint,
-          response,
-          logger: this.logger,
-          logErrorBody: this.logErrorBody,
-        };
-        if (isRetryableRequest(response)) {
-          error = await retryableRequestError(requestErrorParams);
-        } else {
-          error = await fatalRequestError(requestErrorParams);
-        }
-        throw error;
+          let error: IntegrationProviderAPIError | undefined;
+          const requestErrorParams = {
+            endpoint,
+            response,
+            logger: this.logger,
+            logErrorBody: this.logErrorBody,
+          };
+          if (isRetryableRequest(response)) {
+            error = await retryableRequestError(requestErrorParams);
+          } else {
+            error = await fatalRequestError(requestErrorParams);
+          }
+          throw error;
+        });
       },
       {
         maxAttempts: this.retryOptions.maxAttempts,
@@ -178,7 +254,112 @@ export abstract class APIClient {
         handleError: async (err, context) => {
           await this.retryOptions.handleError(err, context, this.logger);
         },
-      }
+      },
+    );
+  }
+
+  /**
+   * Wait until the rate limit reset time before sending the next request
+   * if the rate limit threshold is exceeded.
+   *
+   * @param {function} fn - The function to rate limit
+   * @return {Promise<Response>}
+   */
+  protected async withRateLimiting(
+    fn: () => Promise<Response>,
+  ): Promise<Response> {
+    const response = await fn();
+    if (!this.rateLimitThrottling) {
+      return response;
+    }
+    const { rateLimitLimit, rateLimitRemaining } = this.parseRateLimitHeaders(
+      response.headers,
+    );
+    if (
+      this.shouldThrottleNextRequest({
+        rateLimitLimit,
+        rateLimitRemaining,
+        threshold: this.rateLimitThrottling.threshold,
+      })
+    ) {
+      const timeToSleepInMs = this.getRetryDelayMs(response.headers);
+      const thresholdPercentage = this.rateLimitThrottling.threshold * 100;
+      const resetHeaderName =
+        this.rateLimitThrottling.rateLimitHeaders?.reset ??
+        'x-rate-limit-reset';
+
+      this.logger.warn(
+        { rateLimitLimit, rateLimitRemaining, timeToSleepInMs },
+        `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`,
+      );
+      await sleep(timeToSleepInMs);
+    }
+    return response;
+  }
+
+  private parseRateLimitHeaders(headers: Headers): {
+    rateLimitLimit: number | undefined;
+    rateLimitRemaining: number | undefined;
+  } {
+    const strRateLimitLimit = this.getRateLimitHeaderValue(headers, 'limit');
+    const strRateLimitRemaining = this.getRateLimitHeaderValue(
+      headers,
+      'remaining',
+    );
+    return {
+      rateLimitLimit: strRateLimitLimit
+        ? parseInt(strRateLimitLimit, 10)
+        : undefined,
+      rateLimitRemaining: strRateLimitRemaining
+        ? parseInt(strRateLimitRemaining, 10)
+        : undefined,
+    };
+  }
+
+  /**
+   * Determine if the next request should be throttled based on the rate limit headers
+   *
+   * @param {object} params - The parameters for the function
+   * @param {number|undefined} params.rateLimitLimit - The rate limit limit
+   * @param {number|undefined} params.rateLimitRemaining - The rate limit remaining
+   * @param {number} params.threshold - The threshold at which to throttle requests
+   * @return {boolean} - Whether the next request should be throttled
+   */
+  private shouldThrottleNextRequest(params: {
+    rateLimitLimit: number | undefined;
+    rateLimitRemaining: number | undefined;
+    threshold: number;
+  }): boolean {
+    const { rateLimitLimit, rateLimitRemaining } = params;
+    if (rateLimitLimit === undefined || rateLimitRemaining === undefined)
+      return false;
+
+    const rateLimitConsumed = rateLimitLimit - rateLimitRemaining;
+    return rateLimitConsumed / rateLimitLimit > params.threshold;
+  }
+
+  /**
+   * Determine wait time by getting the delta X-Rate-Limit-Reset and the Date header
+   * Add 1 second to account for sub second differences between the clocks that create these headers
+   */
+  private getRetryDelayMs(headers: Headers) {
+    const resetValue = this.getRateLimitHeaderValue(headers, 'reset');
+    if (!resetValue) {
+      // If the header is not present, we can't determine the wait time, so we'll just wait 60 seconds
+      return 60_000;
+    }
+    const nowDate = new Date(headers.get('date') ?? Date.now());
+    const retryDate = new Date(parseInt(resetValue, 10) * 1000);
+    return retryDate.getTime() - nowDate.getTime() + 1000;
+  }
+
+  private getRateLimitHeaderValue(
+    headers: Headers,
+    header: keyof RateLimitHeaders,
+  ) {
+    return headers.get(
+      this.rateLimitThrottling?.rateLimitHeaders?.[header] ??
+        DEFAULT_RATE_LIMIT_HEADERS[header],
     );
   }
 }

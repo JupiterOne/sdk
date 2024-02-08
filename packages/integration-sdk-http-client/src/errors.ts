@@ -15,7 +15,7 @@ export type RateLimitErrorParams = ConstructorParameters<
 interface RequestErrorParams {
   endpoint: string;
   response: Response;
-  logger?: IntegrationLogger;
+  logger: IntegrationLogger;
   logErrorBody: boolean;
 }
 
@@ -46,13 +46,13 @@ export async function retryableRequestError({
   logger,
   logErrorBody,
 }: RequestErrorParams): Promise<RetryableIntegrationProviderApiError> {
-  if (logErrorBody && logger) {
+  if (logErrorBody) {
     let errorBody: any;
     try {
       errorBody = await response.json();
-      logger?.error(
+      logger.error(
         { errBody: JSON.stringify(errorBody) },
-        'Encountered error from API'
+        'Encountered error from API',
       );
     } catch (e) {
       // pass
@@ -83,13 +83,13 @@ export async function fatalRequestError({
   logger,
   logErrorBody,
 }: RequestErrorParams): Promise<IntegrationProviderAPIError> {
-  if (logErrorBody && logger) {
+  if (logErrorBody) {
     let errorBody: any;
     try {
       errorBody = await response.json();
-      logger?.error(
+      logger.error(
         { errBody: JSON.stringify(errorBody) },
-        'Encountered error from API'
+        'Encountered error from API',
       );
     } catch (e) {
       // pass
