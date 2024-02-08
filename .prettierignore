@@ -5,3 +5,4 @@ dist/
 .j1-integration-cache
 snippets/
 lerna.json
+**/**.ejs.ts

@@ -1,0 +1,83 @@
+{
+  "instanceConfigFields": {
+    "email": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string",
+      "mask": true
+    }
+  },
+  "authentication": {
+    "strategy": "configField",
+    "outputHeaders": {
+      "x-api-user": "%config.email%",
+      "x-api-token": "%config.token%"
+    }
+  },
+  "steps": [
+    {
+      "id": "fetch-organizations",
+      "name": "Fetch Organizations",
+      "entity": {
+        "_type": "signal_sciences_organization",
+        "_class": ["Organization"],
+        "_keyFormat": "%entity.name%"
+      },
+      "dataPath": "data",
+      "request": {
+        "urlTemplate": "/corps"
+      }
+    },
+    {
+      "id": "fetch-users",
+      "name": "Fetch Users",
+      "entity": {
+        "_type": "signal_sciences_user",
+        "_class": ["User"],
+        "_keyFormat": "%entity.email%",
+        "parentRelationship": {
+          "_class": "HAS"
+        }
+      },
+      "mappedRelationships": [
+        {
+          "_class": "IS",
+          "direction": "REVERSE",
+          "fieldMappings": [
+            {
+              "targetValue": "google_user",
+              "targetProperty": "_type"
+            },
+            {
+              "sourceProperty": "email",
+              "targetProperty": "email"
+            }
+          ]
+        }
+      ],
+      "dataPath": "data",
+      "request": {
+        "urlTemplate": "/corps/%entity.signal_sciences_organization._key%/users"
+      },
+      "dependsOn": ["fetch-organizations"]
+    },
+    {
+      "id": "fetch-firewalls",
+      "name": "Fetch Firewalls",
+      "entity": {
+        "_type": "signal_sciences_cloudwaf",
+        "_class": ["Firewall"],
+        "_keyFormat": "%entity.id%",
+        "parentRelationship": {
+          "_class": "HAS"
+        }
+      },
+      "dataPath": "data",
+      "request": {
+        "urlTemplate": "/corps/%entity.signal_sciences_organization._key%/cloudwafInstances"
+      },
+      "dependsOn": ["fetch-organizations"]
+    }
+  ]
+}
