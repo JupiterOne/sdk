@@ -3,8 +3,30 @@ import checkboxPlus from 'inquirer-checkbox-plus-prompt';
 import path from 'path';
 import { kebabCase } from 'lodash';
 import { yarnFormat, yarnInstall, yarnLint } from './actions';
-import { Template } from '../project-bocchi/utils/types';
+import { StepType, Template } from '../project-bocchi/utils/types';
 import * as fs from 'fs';
+import { determineTypeOfStep } from '../project-bocchi/utils/step';
+
+/**
+ * Output folder (output/)
+ * graph-<NAME>/
+ *   docs/
+ *   jupiterone/
+ *   src/
+ *     steps/
+ *       fetch-users/
+ *         - index.ts
+ *       fetch-groups/
+ *         - index.ts
+ *       constants.ts
+ *       converters.ts
+ *       index.ts
+ *     client.ts
+ *     config.ts
+ *     index.ts
+ *     types.ts
+ *   test/
+ */
 
 function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnFormat', yarnFormat);
@@ -86,6 +108,15 @@ function bocchi(plop: NodePlopAPI) {
       );
 
       const actions: any[] = [];
+      actions.push({
+        type: 'addMany',
+        destination: directoryName,
+        base: path.join(__dirname, '/bocchi-templates/templates'),
+        templateFiles: path.join(__dirname + '/bocchi-templates/templates/**'),
+        globOptions: { dot: true },
+        force: true,
+        data,
+      });
 
       const template: Template = JSON.parse(
         fs.readFileSync(data.templateFile, 'utf8'),
@@ -100,6 +131,25 @@ function bocchi(plop: NodePlopAPI) {
           dependsOn: step.dependsOn ?? [],
         };
 
+        let stepTemplateFile: string;
+        const typeOfStep = determineTypeOfStep(step);
+
+        switch (typeOfStep) {
+          case StepType.SINGLETON:
+            stepTemplateFile = 'singleton.ts.hbs';
+            break;
+          case StepType.FETCH_ENTITIES:
+            stepTemplateFile = 'fetch-entities.ts.hbs';
+            break;
+          case StepType.FETCH_CHILD_ENTITIES:
+            stepTemplateFile = 'fetch-child-entities.ts.hbs';
+            break;
+          default:
+            stepTemplateFile = 'build-relationships.ts.hbs';
+        }
+
+        // ./packages/integration-sdk-cli/src/generator/bocchi-templates/semgrep.json
+
         actions.push({
           type: 'add',
           path: path.join(
@@ -108,7 +158,7 @@ function bocchi(plop: NodePlopAPI) {
           ),
           templateFile: path.join(
             __dirname,
-            'bocchi-templates/singleton.ts.hbs',
+            `bocchi-templates/step-templates/${stepTemplateFile}`,
           ),
           data: nicksSweetObj,
           force: true,

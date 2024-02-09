@@ -1,10 +1,11 @@
 import { RelationshipClass } from '@jupiterone/integration-sdk-core';
 
-export type StepType =
-  | 'singleton'
-  | 'fetch-entities'
-  | 'fetch-child-entities'
-  | 'fetch-relationships';
+export const StepType = {
+  SINGLETON: 'singleton',
+  FETCH_ENTITIES: 'fetch-entities',
+  FETCH_CHILD_ENTITIES: 'fetch-child-entities',
+  BUILD_RELATIONSHIPS: 'build-relationships',
+};
 
 export interface Template {
   instanceConfigFields: {
@@ -70,8 +71,8 @@ export interface Step {
   };
   response: {
     dataPath: string;
-    nextTokenPath?: string;
     responseType: 'SINGLETON' | 'LIST';
+    nextTokenPath?: string;
   };
   directRelationships?: {
     targetKey: string;

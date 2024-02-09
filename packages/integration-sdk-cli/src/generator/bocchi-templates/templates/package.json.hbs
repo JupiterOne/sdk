@@ -1,0 +1,46 @@
+{
+  "name": "{{packageName}}",
+  "version": "0.0.1",
+  "description": "{{packageDescription}}",
+  "license": "MPL-2.0",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "src",
+    "jupiterone"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.0.0 <20.x"
+  },
+  "scripts": {
+    "start": "j1-integration collect",
+    "graph": "j1-integration visualize",
+    "graph:types": "j1-integration visualize-types",
+    "graph:spec": "j1-integration visualize-types --project-path docs/spec --output-file ./.j1-integration/types-graph/index.spec.html",
+    "graph:dependencies": "j1-integration visualize-dependencies",
+    "validate:questions:dry": "j1-integration validate-question-file --dry-run",
+    "validate:questions": "j1-integration validate-question-file -a $MANAGED_QUESTIONS_JUPITERONE_ACCOUNT_ID -k $MANAGED_QUESTIONS_JUPITERONE_API_KEY",
+    "lint": "eslint . --cache --fix --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,js,json,css,md,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,css,md,yml}\"",
+    "type-check": "tsc",
+    "test": "jest",
+    "test:env": "LOAD_ENV=1 yarn test",
+    "test:ci": "yarn format:check && yarn lint && yarn type-check && yarn test",
+    "build": "tsc -p tsconfig.dist.json --declaration && cp README.md dist/README.md && cp -r jupiterone/ dist/jupiterone/",
+    "build:docker": "tsc --declaration false --emitDeclarationOnly false -p tsconfig.dist.json",
+    "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main",
+    "postversion": "cp package.json ./dist/package.json"
+  },
+  "peerDependencies": {
+    "@jupiterone/integration-sdk-core": "^12.0.0"
+  },
+  "devDependencies": {
+    "@jupiterone/integration-sdk-core": "^12.0.0",
+    "@jupiterone/integration-sdk-dev-tools": "^12.0.0",
+    "@jupiterone/integration-sdk-testing": "^12.0.0",
+  }
+}

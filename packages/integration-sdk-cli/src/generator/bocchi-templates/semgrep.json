@@ -24,9 +24,12 @@
         "_class": ["Organization"],
         "_keyFormat": "%entity.name%"
       },
-      "dataPath": "data",
       "request": {
         "urlTemplate": "/corps"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
       }
     },
     {
@@ -35,10 +38,11 @@
       "entity": {
         "_type": "signal_sciences_user",
         "_class": ["User"],
-        "_keyFormat": "%entity.email%",
-        "parentRelationship": {
-          "_class": "HAS"
-        }
+        "_keyFormat": "%entity.email%"
+      },
+      "parentAssociation": {
+        "parentEntityType": "signal_sciences_organization",
+        "relationshipClass": "HAS"
       },
       "mappedRelationships": [
         {
@@ -56,9 +60,12 @@
           ]
         }
       ],
-      "dataPath": "data",
       "request": {
         "urlTemplate": "/corps/%entity.signal_sciences_organization._key%/users"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
       },
       "dependsOn": ["fetch-organizations"]
     },
@@ -68,14 +75,18 @@
       "entity": {
         "_type": "signal_sciences_cloudwaf",
         "_class": ["Firewall"],
-        "_keyFormat": "%entity.id%",
-        "parentRelationship": {
-          "_class": "HAS"
-        }
+        "_keyFormat": "%entity.id%"
       },
-      "dataPath": "data",
+      "parentAssociation": {
+        "parentEntityType": "signal_sciences_organization",
+        "relationshipClass": "HAS"
+      },
       "request": {
         "urlTemplate": "/corps/%entity.signal_sciences_organization._key%/cloudwafInstances"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
       },
       "dependsOn": ["fetch-organizations"]
     }
