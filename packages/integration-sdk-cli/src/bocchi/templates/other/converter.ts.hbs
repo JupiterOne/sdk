@@ -1,25 +1,27 @@
 {{#each this}}
-    {{#with entity }}
-        export function create{{pascalCase resourceName}}Entity(data: any) {
-            return createIntegrationEntity({
-                entityData: {
-                    source: data,
-                    assign: {
-                        _key: data.{{_keyPath}},
-                        _type: Entities.{{constantCase resourceName}}._type,
-                        _class: Entities.{{constantCase resourceName}}._class,
-                        {{#if staticFields}}
-                            {{#each staticFields}}
-                                {{@key}}: {{this}},
-                            {{/each}}
-                        {{/if}}
-                        {{#if fieldMappings}}
-                            {{#each fieldMappings}}
-                                {{@key}}: data.{{this}},
-                            {{/each}}
-                        {{/if}}
-                    },
-                },
-            });
-        }
+    {{#with entity}}
+export function create{{pascalCase resourceName}}Entity(data: any) {
+    return createIntegrationEntity({
+        entityData: {
+            source: data,
+            assign: {
+                _key: data.{{_keyPath}},
+                _type: Entities.{{constantCase resourceName}}._type,
+                _class: Entities.{{constantCase resourceName}}._class,
+                {{#if staticFields}}
+                    {{#each staticFields}}
+                        {{@key}}: {{this}},
+                    {{/each}}
+                {{/if}}
+                {{#if fieldMappings}}
+                    {{#each fieldMappings}}
+                        {{@key}}: data.{{this}},
+                    {{/each}}
+                {{/if}}
+            },
+        },
+    });
+}
+    {{/with}}
+
 {{/each}}
