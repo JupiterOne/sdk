@@ -15,7 +15,7 @@ import { create{{pascalCase entity.resourceName}}Entity } from '../converters';
 
 export const {{camelCase entity.resourceName}}Steps: IntegrationStep<IntegrationConfig>[] = [
   {
-    id: Steps.{{pascalCase id}},
+    id: Steps.{{constantCase id}},
     name: '{{name}}',
     entities: [Entities.{{constantCase entity.resourceName}}],
     relationships: [],
