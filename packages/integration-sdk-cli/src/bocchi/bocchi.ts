@@ -2,10 +2,10 @@ import { NodePlopAPI } from 'plop';
 import checkboxPlus from 'inquirer-checkbox-plus-prompt';
 import path from 'path';
 import { kebabCase } from 'lodash';
-import { yarnFormat, yarnInstall, yarnLint } from './actions';
-import { StepType, Template } from '../project-bocchi/utils/types';
+import { yarnFormat, yarnInstall, yarnLint } from '../generator/actions';
+import { Template } from './utils/types';
 import * as fs from 'fs';
-import { determineTypeOfStep } from '../project-bocchi/utils/step';
+import { stepTemplateHelper } from './actions/steps';
 
 /**
  * Output folder (output/)
@@ -27,6 +27,8 @@ import { determineTypeOfStep } from '../project-bocchi/utils/step';
  *     types.ts
  *   test/
  */
+
+// ./packages/integration-sdk-cli/src/bocchi/templates/semgrep.json
 
 function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnFormat', yarnFormat);
@@ -100,6 +102,13 @@ function bocchi(plop: NodePlopAPI) {
         return [];
       }
 
+      const {
+        // vendorName,
+        // packageName,
+        // packageDescription,
+        templateFile,
+      } = data;
+
       // @jupiterone/graph-foo -> graph-foo
       // graph-foo -> graph-foo
       const directoryName = path.join(
@@ -111,45 +120,19 @@ function bocchi(plop: NodePlopAPI) {
       actions.push({
         type: 'addMany',
         destination: directoryName,
-        base: path.join(__dirname, '/bocchi-templates/templates'),
-        templateFiles: path.join(__dirname + '/bocchi-templates/templates/**'),
+        base: path.join(__dirname, '/templates/other'),
+        templateFiles: path.join(__dirname + '/templates/other/**'),
         globOptions: { dot: true },
         force: true,
         data,
       });
 
       const template: Template = JSON.parse(
-        fs.readFileSync(data.templateFile, 'utf8'),
+        fs.readFileSync(templateFile, 'utf8'),
       );
 
       for (const step of template.steps) {
-        const nicksSweetObj = {
-          stepId: step.id,
-          stepName: step.name,
-          entityName: 'TEST',
-          apiCall: true,
-          dependsOn: step.dependsOn ?? [],
-        };
-
-        let stepTemplateFile: string;
-        const typeOfStep = determineTypeOfStep(step);
-
-        switch (typeOfStep) {
-          case StepType.SINGLETON:
-            stepTemplateFile = 'singleton.ts.hbs';
-            break;
-          case StepType.FETCH_ENTITIES:
-            stepTemplateFile = 'fetch-entities.ts.hbs';
-            break;
-          case StepType.FETCH_CHILD_ENTITIES:
-            stepTemplateFile = 'fetch-child-entities.ts.hbs';
-            break;
-          default:
-            stepTemplateFile = 'build-relationships.ts.hbs';
-        }
-
-        // ./packages/integration-sdk-cli/src/generator/bocchi-templates/semgrep.json
-
+        const { stepTemplateData, stepTemplateFile } = stepTemplateHelper(step);
         actions.push({
           type: 'add',
           path: path.join(
@@ -158,9 +141,9 @@ function bocchi(plop: NodePlopAPI) {
           ),
           templateFile: path.join(
             __dirname,
-            `bocchi-templates/step-templates/${stepTemplateFile}`,
+            `templates/steps/${stepTemplateFile}`,
           ),
-          data: nicksSweetObj,
+          data: stepTemplateData,
           force: true,
         });
       }

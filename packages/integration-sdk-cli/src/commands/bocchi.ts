@@ -8,7 +8,7 @@ export function bocchi() {
     .action(async (cmdOpts) => {
       const Plop = await dynamicImport('plop');
       const configPath = path.resolve(
-        path.join(__dirname, '../generator/bocchi.js'),
+        path.join(__dirname, '../bocchi/bocchi.js'),
       );
       Plop.Plop.prepare(
         {
