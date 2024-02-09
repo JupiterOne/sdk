@@ -11,30 +11,30 @@ import {
 {{#if apiCall}}import { createAPIClient } from '../../client';{{/if}}
 import { create{{pascalCase entityName}}Entity } from '../converters';
 
-export const {{camelCase stepId}}Steps: IntegrationStep<IntegrationConfig>[] = [
+export const {{camelCase entity.resourceName}}Steps: IntegrationStep<IntegrationConfig>[] = [
   {
-    id: Steps.{{pascalCase stepId}},
-    name: '{{stepName}}',
-    entities: [Entities.{{constantCase entityName}}],
+    id: Steps.{{pascalCase id}},
+    name: '{{name}}',
+    entities: [Entities.{{constantCase entity.resourceName}}],
     relationships: [],
     dependsOn: [
       {{#each dependsOn}}
         '{{this}}'{{#unless @last}},{{/unless}}
       {{/each}}
     ],
-    executionHandler: {{camelCase stepId}},
+    executionHandler: {{camelCase id}},
   },
 ];
 
-export async function {{camelCase stepId}}({
+export async function {{camelCase id}}({
   jobState,
   executionConfig,
   instance,
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
-  {{#if apiCall}}
+  {{#if request}}
   const client = createAPIClient(instance.config, executionConfig);
 
-  const data = await client.{{camelCase stepId}}();
+  const data = await client.get{{camelCase entity.resourceName}}();
   {{/if}}
-  await jobState.addEntity(create{{pascalCase entityName}}Entity({{#if apiCall}}data{{/if}}));
+  await jobState.addEntity(create{{pascalCase entity.resourceName}}Entity({{#if request}}data{{/if}}));
 }

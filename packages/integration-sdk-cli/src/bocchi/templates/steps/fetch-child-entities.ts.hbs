@@ -10,24 +10,24 @@ import {
   Entities,
 } from '../constants';
 import { createAPIClient } from '../../client';
-import { create{{pascalCase entityName}}Entity } from '../converters';
+import { create{{pascalCase entity.resourceName}}Entity } from '../converters';
 
-export const {{camelCase stepId}}Steps: IntegrationStep<IntegrationConfig>[] = [
+export const {{camelCase id}}Steps: IntegrationStep<IntegrationConfig>[] = [
   {
-    id: Steps.{{pascalCase stepId}},
-    name: '{{stepName}}',
-    entities: [Entities.{{constantCase entityName}}],
+    id: Steps.{{pascalCase id}},
+    name: '{{name}}',
+    entities: [Entities.{{constantCase entity.resourceName}}],
     relationships: [],
     dependsOn: [
       {{#each dependsOn}}
         '{{this}}'{{#unless @last}},{{/unless}}
       {{/each}}
     ],
-    executionHandler: {{camelCase stepId}},
+    executionHandler: {{camelCase id}},
   },
 ];
 
-export async function {{camelCase stepId}}({
+export async function {{camelCase id}}({
   instance,
   jobState,
   executionConfig,
@@ -37,10 +37,10 @@ export async function {{camelCase stepId}}({
   await jobState.iterateEntities(
     { _type: '{{ parentAssociation.parentEntityType }}' },
     async (parentEntity) => {
-      await client.iterate{{pascalCase entityName}}(
+      await client.iterate{{pascalCase entity.resourceName}}(
         parentEntity,
         async (data) => {
-          const entity = await jobState.addEntity(create{{pascalCase entityName}}Entity(data));
+          const entity = await jobState.addEntity(create{{pascalCase entity.resourceName}}Entity(data));
 
           await jobState.addRelationship(createDirectRelationship({
             from: parentEntity,
