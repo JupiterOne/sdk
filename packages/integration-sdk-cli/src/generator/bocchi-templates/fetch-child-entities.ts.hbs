@@ -1,0 +1,54 @@
+import {
+  createDirectRelationship,
+  IntegrationStep,
+  IntegrationStepExecutionContext,
+} from '@jupiterone/integration-sdk-core';
+
+import { IntegrationConfig } from '../../config';
+import {
+  Steps,
+  Entities,
+} from '../constants';
+import { createAPIClient } from '../../client';
+import { create{{pascalCase entityName}}Entity } from '../converters';
+
+export const {{camelCase stepId}}Steps: IntegrationStep<IntegrationConfig>[] = [
+  {
+    id: Steps.{{pascalCase stepId}},
+    name: '{{stepName}}',
+    entities: [Entities.{{constantCase entityName}}],
+    relationships: [],
+    dependsOn: [
+      {{#each dependsOn}}
+        '{{this}}'{{#unless @last}},{{/unless}}
+      {{/each}}
+    ],
+    executionHandler: {{camelCase stepId}},
+  },
+];
+
+export async function {{camelCase stepId}}({
+  instance,
+  jobState,
+  executionConfig,
+}: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
+  const client = createAPIClient(instance.config, executionConfig);
+
+  await jobState.iterateEntities(
+    { _type: '{{ parentAssociation.parentEntityType }}' },
+    async (parentEntity) => {
+      await client.iterate{{pascalCase entityName}}(
+        parentEntity,
+        async (data) => {
+          const entity = await jobState.addEntity(create{{pascalCase entityName}}Entity(data));
+
+          await jobState.addRelationship(createDirectRelationship({
+            from: parentEntity,
+            _class: RelationshipClass.{{ parentAssociation.relationshipClass }},
+            to: entity,
+          });
+        },
+      );
+    }
+  );
+}

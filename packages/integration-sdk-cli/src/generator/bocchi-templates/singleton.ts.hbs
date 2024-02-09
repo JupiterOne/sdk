@@ -8,7 +8,7 @@ import {
   Steps,
   Entities,
 } from '../constants';
-import { createAPIClient } from '../../client';
+{{#if apiCall}}import { createAPIClient } from '../../client';{{/if}}
 import { create{{pascalCase entityName}}Entity } from '../converters';
 
 export const {{camelCase stepId}}Steps: IntegrationStep<IntegrationConfig>[] = [
