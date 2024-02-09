@@ -1,5 +1,5 @@
-import { type IntegrationLogger } from '@jupiterone/integration-sdk-core';
-import { type AttemptContext } from '@lifeomic/attempt';
+import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
+import { AttemptContext } from '@lifeomic/attempt';
 
 export type OptionalPromise<T> = T | Promise<T>;
 

@@ -1,15 +1,15 @@
-import fetch, { Headers, type Response } from 'node-fetch';
+import fetch, { Headers, Response } from 'node-fetch';
 import {
-  type IntegrationLogger,
+  IntegrationLogger,
   IntegrationProviderAPIError,
 } from '@jupiterone/integration-sdk-core';
-import { type AttemptContext, retry, sleep } from '@lifeomic/attempt';
+import { AttemptContext, retry, sleep } from '@lifeomic/attempt';
 import {
   fatalRequestError,
   isRetryableRequest,
   retryableRequestError,
 } from './errors';
-import type {
+import {
   ClientConfig,
   OptionalPromise,
   RetryOptions,
@@ -104,7 +104,7 @@ export abstract class APIClient {
    *  ```
    */
   constructor(config: ClientConfig) {
-    this.baseUrl = config.baseUrl.replace(/\/$/g, '');
+    this.baseUrl = config.baseUrl;
     this.logger = config.logger;
     this.retryOptions = {
       ...DEFAULT_RETRY_OPTIONS,
@@ -115,7 +115,7 @@ export abstract class APIClient {
   }
 
   protected withBaseUrl(endpoint: string): string {
-    return `${this.baseUrl}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+    return new URL(endpoint, this.baseUrl).toString();
   }
 
   /**
