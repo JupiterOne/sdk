@@ -3,11 +3,13 @@ import { IntegrationConfig } from '../config';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
-export class {{titleCase vendorName}}Client extends HttpServiceClient {
+export class APIClient extends HttpServiceClient {
   private authHeaders: Record<string, string>;
+  private baseUrl: string;
 
-  constructor(readonly baseUrl: string, readonly config: IntegrationConfig) {
+  constructor(readonly config: IntegrationConfig) {
     super();
+    this.baseUrl = '{{template.baseUrl}}';
     this.authHeaders = {
       Authorization: `Bearer ${config.apiKey}`
     };
@@ -16,7 +18,7 @@ export class {{titleCase vendorName}}Client extends HttpServiceClient {
 {{#each template.steps}}
     // TODO: need to support POST for both of below
     {{#if response.nextTokenPath}}
-  public async iterate{{titleCase entity.name}}(
+  public async iterate{{titleCase entity.name}}s(
     path: string,
     iteratee: ResourceIteratee<any>
   ) {
@@ -24,7 +26,7 @@ export class {{titleCase vendorName}}Client extends HttpServiceClient {
     let nextToken: string | undefined;
     do {
       const response = await this.get({ url, headers: { ...this.authHeaders } });
-      const resource = response.{{response.dataPath}};
+      const resources = response.{{response.dataPath}};
       for (const resource of resources) {
         await iteratee(resource);
       }
@@ -32,10 +34,20 @@ export class {{titleCase vendorName}}Client extends HttpServiceClient {
     } while (nextToken);
   } 
     {{else}}
-  public async fetch{{titleCase entity.name}}(path: string) {
+  public async get{{titleCase entity.name}}(path: string) {
     const url = `${this.baseUrl}/${path}`;
     return (await this.get({ url, headers: { ...this.authHeaders } })).{{response.dataPath}};
   }       
     {{/if}}
 {{/each}}
+}
+
+let client: APIClient | undefined;
+
+export function createAPIClient(
+  config: IntegrationConfig
+): APIClient {
+  return client
+    ? client
+    : new APIClient(config);
 }

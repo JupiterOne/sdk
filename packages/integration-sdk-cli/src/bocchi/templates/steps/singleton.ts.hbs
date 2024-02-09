@@ -11,7 +11,7 @@ import {
   Relationships,
   {{/if}}
 } from '../constants';
-{{#if apiCall}}import { createAPIClient } from '../../client';{{/if}}
+{{#if request}}import { createAPIClient } from '../../client';{{/if}}
 import { create{{pascalCase entity.name}}Entity } from '../converters';
 
 export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[] = [
@@ -26,7 +26,7 @@ export async function {{camelCase id}}({
   {{#if request}}
   const client = createAPIClient(instance.config, executionConfig);
 
-  const data = await client.get{{camelCase entity.name}}();
+  const data = await client.get{{camelCase entity.name}}('{{ request.urlTemplate }}');
   {{/if}}
   await jobState.addEntity(create{{pascalCase entity.name}}Entity({{#if request}}data{{/if}}));
 }

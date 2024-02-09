@@ -47,6 +47,12 @@ function bocchi(plop: NodePlopAPI) {
       relationship,
     }));
   });
+  plop.setHelper('getParentProperties', (urlTemplate: string): string[] => {
+    const regex = /(?<template>%parent\.(?<property>.+?)%)/g;
+    return (
+      Array.from(urlTemplate.matchAll(regex)).map((match) => match[1]) ?? []
+    );
+  });
 
   for (const partial of fs.readdirSync(
     path.join(__dirname, 'templates/partials'),

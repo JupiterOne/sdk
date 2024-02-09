@@ -15,11 +15,11 @@
       "x-api-token": "%config.token%"
     }
   },
+  "baseUrl": "https://fix.me",
   "steps": [
     {
       "id": "fetch-organizations",
       "name": "Fetch Organizations",
-      "baseUrl": "https://fix.me",
       "entity": {
         "name": "Organization",
         "_type": "signal_sciences_organization",
@@ -112,6 +112,7 @@
       },
       "response": {
         "dataPath": "data",
+        "nextTokenPath": "next",
         "responseType": "LIST"
       },
       "dependsOn": ["fetch-organizations"]
