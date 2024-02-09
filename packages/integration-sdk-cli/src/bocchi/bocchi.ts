@@ -16,6 +16,7 @@ import { stepTemplateHelper } from './actions/steps';
  *     steps/
  *       fetch-users/
  *         - index.ts
+ *         - index.test.ts
  *       fetch-groups/
  *         - index.ts
  *       constants.ts
@@ -26,6 +27,7 @@ import { stepTemplateHelper } from './actions/steps';
  *     index.ts
  *     types.ts
  *   test/
+ *  .gitignore
  */
 
 // ./packages/integration-sdk-cli/src/bocchi/templates/semgrep.json
@@ -116,23 +118,34 @@ function bocchi(plop: NodePlopAPI) {
         path.basename(data.packageName),
       );
 
+      const template: Template = JSON.parse(
+        fs.readFileSync(templateFile, 'utf8'),
+      );
+
       const actions: any[] = [];
+
       actions.push({
         type: 'addMany',
         destination: directoryName,
-        base: path.join(__dirname, '/templates/other'),
-        templateFiles: path.join(__dirname + '/templates/other/**'),
+        base: path.join(__dirname, '/templates/other/top-level'),
+        templateFiles: path.join(__dirname + '/templates/other/top-level/**'),
         globOptions: { dot: true },
         force: true,
         data,
       });
 
-      const template: Template = JSON.parse(
-        fs.readFileSync(templateFile, 'utf8'),
-      );
+      actions.push({
+        type: 'addMany',
+        destination: path.join(directoryName, path.normalize('src')),
+        base: path.join(__dirname, '/templates/other/src'),
+        templateFiles: path.join(__dirname + '/templates/other/src/**'),
+        globOptions: { dot: true },
+        force: true,
+        data: template,
+      });
 
       for (const step of template.steps) {
-        const { stepTemplateData, stepTemplateFile } = stepTemplateHelper(step);
+        const { stepTemplateFile } = stepTemplateHelper(step);
         actions.push({
           type: 'add',
           path: path.join(
@@ -143,7 +156,7 @@ function bocchi(plop: NodePlopAPI) {
             __dirname,
             `templates/steps/${stepTemplateFile}`,
           ),
-          data: stepTemplateData,
+          data: step,
           force: true,
         });
       }

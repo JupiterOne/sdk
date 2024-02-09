@@ -22,7 +22,8 @@
       "entity": {
         "_type": "signal_sciences_organization",
         "_class": ["Organization"],
-        "_keyFormat": "%entity.name%"
+        "_keyPath": "name",
+        "resourceName": "Organization"
       },
       "request": {
         "urlTemplate": "/corps"
@@ -38,7 +39,8 @@
       "entity": {
         "_type": "signal_sciences_user",
         "_class": ["User"],
-        "_keyFormat": "%entity.email%"
+        "_keyFormat": "email",
+        "resourceName": "User"
       },
       "parentAssociation": {
         "parentEntityType": "signal_sciences_organization",
@@ -75,7 +77,8 @@
       "entity": {
         "_type": "signal_sciences_cloudwaf",
         "_class": ["Firewall"],
-        "_keyFormat": "%entity.id%"
+        "_keyPath": "id",
+        "resourceName": "Firewall"
       },
       "parentAssociation": {
         "parentEntityType": "signal_sciences_organization",

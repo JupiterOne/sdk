@@ -2,6 +2,7 @@ import {
   createDirectRelationship,
   IntegrationStep,
   IntegrationStepExecutionContext,
+  RelationshipClass
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationConfig } from '../../config';
@@ -46,7 +47,7 @@ export async function {{camelCase id}}({
             from: parentEntity,
             _class: RelationshipClass.{{ parentAssociation.relationshipClass }},
             to: entity,
-          });
+          }));
         },
       );
     }

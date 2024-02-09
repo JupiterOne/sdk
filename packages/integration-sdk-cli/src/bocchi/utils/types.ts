@@ -50,7 +50,8 @@ export interface Step {
   entity: {
     _type: string;
     _class: string | Array<string>;
-    _keyFormat: string;
+    _keyPath: string;
+    resourceName: string;
     fieldMappings?: {
       [entityProperty: string]: string;
     };
