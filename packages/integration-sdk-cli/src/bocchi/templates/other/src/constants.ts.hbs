@@ -1,0 +1,26 @@
+import {
+  RelationshipClass,
+  StepEntityMetadata,
+  StepRelationshipMetadata,
+} from '@jupiterone/integration-sdk-core';
+
+export const Steps = {
+{{#each steps}}
+  {{constantCase this.id}}: '{{this.id}}',
+{{/each}}
+} satisfies Record<string, string>;
+
+export const Entities = {
+{{#each steps}}
+  {{#with entity}}
+  {{constantCase resourceName}}: {
+    resourceName: '{{resourceName}}',
+    _type: '{{_type}}',
+    _class: ['{{_class}}'],
+  },
+  {{/with}}
+{{/each}}
+} satisfies Record<string, StepEntityMetadata>;
+
+export const Relationships = {
+} satisfies Record<string, StepRelationshipMetadata>;

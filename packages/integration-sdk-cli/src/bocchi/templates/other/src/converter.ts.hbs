@@ -1,3 +1,6 @@
+import { createIntegrationEntity } from '@jupiterone/integration-sdk-core';
+import { Entities } from './constants';
+
 {{#each steps}}
     {{#with entity}}
 export function create{{pascalCase resourceName}}Entity(data: any) {

@@ -1,0 +1,11 @@
+{{#each steps}}
+import { {{camelCase entity.resourceName}}Steps } from './{{this.id}}';
+{{/each}}
+
+const integrationSteps = [
+{{#each steps}}
+  ...{{camelCase entity.resourceName}}Steps,
+{{/each}}
+];
+
+export { integrationSteps };
