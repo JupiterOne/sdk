@@ -108,7 +108,7 @@
         }
       ],
       "request": {
-        "urlTemplate": "/corps/%entity.signal_sciences_organization._key%/users"
+        "urlTemplate": "/corps/%parent._key%/users"
       },
       "response": {
         "dataPath": "data",
@@ -131,7 +131,7 @@
         "relationshipClass": "HAS"
       },
       "request": {
-        "urlTemplate": "/corps/%entity.signal_sciences_organization._key%/cloudwafInstances"
+        "urlTemplate": "/corps/%parent._key%/%parent._otherKey%/cloudwafInstances"
       },
       "response": {
         "dataPath": "data",

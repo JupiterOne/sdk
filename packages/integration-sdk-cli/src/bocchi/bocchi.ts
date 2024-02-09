@@ -30,8 +30,6 @@ import { stepTemplateHelper } from './actions/steps';
  *  .gitignore
  */
 
-// ./packages/integration-sdk-cli/src/bocchi/templates/semgrep.json
-
 function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnFormat', yarnFormat);
   plop.setActionType('yarnInstall', yarnInstall);
@@ -48,7 +46,7 @@ function bocchi(plop: NodePlopAPI) {
     }));
   });
   plop.setHelper('getParentProperties', (urlTemplate: string): string[] => {
-    const regex = /(?<template>%parent\.(?<property>.+?)%)/g;
+    const regex = /%parent\.(.+?)%/g;
     return (
       Array.from(urlTemplate.matchAll(regex)).map((match) => match[1]) ?? []
     );
@@ -196,23 +194,23 @@ function bocchi(plop: NodePlopAPI) {
         });
       }
 
-      // actions.push({
-      //   type: 'yarnInstall',
-      //   path: directoryName,
-      //   verbose: true,
-      // });
+      actions.push({
+        type: 'yarnInstall',
+        path: directoryName,
+        verbose: true,
+      });
 
-      // actions.push({
-      //   type: 'yarnFormat',
-      //   path: directoryName,
-      //   verbose: true,
-      // });
+      actions.push({
+        type: 'yarnFormat',
+        path: directoryName,
+        verbose: true,
+      });
 
-      // actions.push({
-      //   type: 'yarnLint',
-      //   path: directoryName,
-      //   verbose: true,
-      // });
+      actions.push({
+        type: 'yarnLint',
+        path: directoryName,
+        verbose: true,
+      });
 
       return actions;
     },

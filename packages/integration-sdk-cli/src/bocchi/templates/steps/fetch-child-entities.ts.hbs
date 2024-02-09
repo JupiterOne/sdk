@@ -31,15 +31,9 @@ export async function {{camelCase id}}({
   await jobState.iterateEntities(
     { _type: '{{ parentAssociation.parentEntityType }}' },
     async (parentEntity) => {
-      let url = '';
-      {{#with (getParentProperties request.templateUrl) as |parentProperties| }}
-        {{#each parentProperties}}
-      url += parentEntity['{{this}}'];
-        {{/each}}
-      {{/with}}
-      // TODO: look at urlTemplate - get all %% using regex. Those are the props we need to get from parent.
+      const path = `{{#each (getParentProperties request.urlTemplate)}}${parentEntity['{{this}}']}{{#unless @last}}/{{/unless}}{{/each}}`;
       await client.iterate{{pascalCase entity.name}}(
-        url,
+        path,
         async (data) => {
           const entity = await jobState.addEntity(create{{pascalCase entity.name}}Entity(data));
 
