@@ -1,5 +1,5 @@
 {{#each steps}}
-import { {{camelCase entity.resourceName}}Steps } from './{{this.id}}';
+import { {{camelCase entity.resourceName}}Steps } from './steps/{{this.id}}';
 {{/each}}
 
 const integrationSteps = [
