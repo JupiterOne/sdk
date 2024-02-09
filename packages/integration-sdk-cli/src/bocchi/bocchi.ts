@@ -124,6 +124,7 @@ function bocchi(plop: NodePlopAPI) {
 
       const actions: any[] = [];
 
+      // TODO: after this, remove .hbs from files with no extension
       actions.push({
         type: 'addMany',
         destination: directoryName,
