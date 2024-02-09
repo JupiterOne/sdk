@@ -1,3 +1,4 @@
+{{#with step}}
 import {
   IntegrationStep,
   IntegrationStepExecutionContext,
@@ -9,21 +10,10 @@ import {
   Entities,
 } from '../constants';
 import { createAPIClient } from '../../client';
-import { create{{pascalCase entity.resourceName}}Entity } from '../converters';
+import { create{{pascalCase entity.name}}Entity } from '../converters';
 
-export const {{camelCase entity.resourceName}}Steps: IntegrationStep<IntegrationConfig>[] = [
-  {
-    id: Steps.{{constantCase id}},
-    name: '{{name}}',
-    entities: [Entities.{{constantCase entity.resourceName}}],
-    relationships: [],
-    dependsOn: [
-      {{#each dependsOn}}
-        '{{this}}'{{#unless @last}},{{/unless}}
-      {{/each}}
-    ],
-    executionHandler: {{camelCase id}},
-  },
+export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[] = [
+  {{> stepmap }}
 ];
 
 export async function {{camelCase id}}({
@@ -33,9 +23,10 @@ export async function {{camelCase id}}({
 }: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
   const client = createAPIClient(instance.config, executionConfig);
 
-  await client.iterate{{pascalCase entity.resourceName}}(
+  await client.iterate{{pascalCase entity.name}}(
     async (data) => {
-        await jobState.addEntity(create{{pascalCase entity.resourceName}}Entity(data));
+        await jobState.addEntity(create{{pascalCase entity.name}}Entity(data));
     },
   );
 }
+{{/with}}

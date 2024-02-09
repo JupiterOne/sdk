@@ -1,14 +1,6 @@
 import { Step, StepType } from '../utils/types';
 
 export function stepTemplateHelper(step: Step) {
-  const stepTemplateData = {
-    stepId: step.id,
-    stepName: step.name,
-    entityName: 'TEST',
-    apiCall: true,
-    dependsOn: step.dependsOn ?? [],
-  };
-
   let stepTemplateFile: string;
   const typeOfStep = determineTypeOfStep(step);
 
@@ -28,7 +20,6 @@ export function stepTemplateHelper(step: Step) {
 
   return {
     stepTemplateFile,
-    stepTemplateData,
   };
 }
 

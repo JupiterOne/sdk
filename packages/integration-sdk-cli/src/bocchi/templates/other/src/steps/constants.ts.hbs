@@ -13,8 +13,8 @@ export const Steps = {
 export const Entities = {
 {{#each steps}}
   {{#with entity}}
-  {{constantCase resourceName}}: {
-    resourceName: '{{resourceName}}',
+  {{constantCase name}}: {
+    resourceName: '{{name}}',
     _type: '{{_type}}',
     _class: ['{{_class}}'],
   },

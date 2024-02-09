@@ -3,14 +3,14 @@ import { Entities } from './constants';
 
 {{#each steps}}
     {{#with entity}}
-export function create{{pascalCase resourceName}}Entity(data: any) {
+export function create{{pascalCase name}}Entity(data: any) {
     return createIntegrationEntity({
         entityData: {
             source: data,
             assign: {
                 _key: data.{{_keyPath}},
-                _type: Entities.{{constantCase resourceName}}._type,
-                _class: Entities.{{constantCase resourceName}}._class,
+                _type: Entities.{{constantCase name}}._type,
+                _class: Entities.{{constantCase name}}._class,
                 {{#if staticFields}}
                     {{#each staticFields}}
                 {{@key}}: {{this}},

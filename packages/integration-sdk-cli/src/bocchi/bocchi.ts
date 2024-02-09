@@ -37,6 +37,24 @@ function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnInstall', yarnInstall);
   plop.setActionType('yarnLint', yarnLint);
   plop.setPrompt('checkbox-plus', checkboxPlus);
+  plop.setHelper(
+    'entityByType',
+    (stepArray: Template['steps'], type: string) => {
+      return stepArray.find((step) => step.entity._type === type);
+    },
+  );
+
+  for (const partial of fs.readdirSync(
+    path.join(__dirname, 'templates/partials'),
+  )) {
+    plop.setPartial(
+      partial.replace('.hbs', ''),
+      fs.readFileSync(
+        path.join(__dirname, 'templates/partials', partial),
+        'utf8',
+      ),
+    );
+  }
 
   plop.setGenerator('bocchi', {
     description: 'Create a new integration graph project',
@@ -163,7 +181,7 @@ function bocchi(plop: NodePlopAPI) {
             __dirname,
             `templates/steps/${stepTemplateFile}`,
           ),
-          data: step,
+          data: { template, step },
           force: true,
         });
       }

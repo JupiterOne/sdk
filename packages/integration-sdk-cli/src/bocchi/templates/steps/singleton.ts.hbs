@@ -9,21 +9,10 @@ import {
   Entities,
 } from '../constants';
 {{#if apiCall}}import { createAPIClient } from '../../client';{{/if}}
-import { create{{pascalCase entityName}}Entity } from '../converters';
+import { create{{pascalCase entity.name}}Entity } from '../converters';
 
-export const {{camelCase entity.resourceName}}Steps: IntegrationStep<IntegrationConfig>[] = [
-  {
-    id: Steps.{{constantCase id}},
-    name: '{{name}}',
-    entities: [Entities.{{constantCase entity.resourceName}}],
-    relationships: [],
-    dependsOn: [
-      {{#each dependsOn}}
-        '{{this}}'{{#unless @last}},{{/unless}}
-      {{/each}}
-    ],
-    executionHandler: {{camelCase id}},
-  },
+export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[] = [
+  {{> stepmap }}
 ];
 
 export async function {{camelCase id}}({
@@ -34,7 +23,7 @@ export async function {{camelCase id}}({
   {{#if request}}
   const client = createAPIClient(instance.config, executionConfig);
 
-  const data = await client.get{{camelCase entity.resourceName}}();
+  const data = await client.get{{camelCase entity.name}}();
   {{/if}}
-  await jobState.addEntity(create{{pascalCase entity.resourceName}}Entity({{#if request}}data{{/if}}));
+  await jobState.addEntity(create{{pascalCase entity.name}}Entity({{#if request}}data{{/if}}));
 }

@@ -67,7 +67,13 @@
       "response": {
         "dataPath": "data",
         "responseType": "LIST"
-      }
+      },
+      "directRelationships": [{
+        "targetKey": "corps",
+        "targetType": "signal_sciences_organization",
+        "_class": "HAS",
+        "direction": "REVERSE"
+      }]
     },
     {
       "id": "fetch-users",
