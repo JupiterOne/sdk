@@ -70,7 +70,7 @@
       },
       "directRelationships": [{
         "targetKey": "corps",
-        "targetType": "signal_sciences_organization",
+        "targetType": "signal_sciences_user",
         "_class": "HAS",
         "direction": "REVERSE"
       }]

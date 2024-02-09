@@ -1,4 +1,3 @@
-{{log ../../steps this}}
 {
   id: Steps.{{constantCase id}},
   name: '{{name}}',
@@ -12,22 +11,21 @@
   executionHandler: {{camelCase id}},
 },
 {{#if directRelationships}}
-{{#each directRelationships as | relationship |}}
+{{#with (getDirectRelationships this) as |data|}}
+{{#each this}}
 {
-  {{#with (entityByType ..this relationship.targetType) as |targetStep|}}
-  {{log this relationship targetStep}}
-  id: Steps.BUILD_{{constantCase entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS
-  name: 'Build {{entity.name}} {{targetentity.name}} Relationships',
+  id: Steps.BUILD_{{constantCase entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS,
+  name: 'Build {{entity.name}} {{targetStep.entity.name}} Relationships',
   entities: [],
   relationships: [
-    Relationships.{{constantCase entity.name}}_{{constantCase relationship._class}}_{{constantCase targetStep.entity.name}}
+    Relationships.{{constantCase entity.name}}_{{constantCase relationship._class}}_{{constantCase targetStep.entity.name}},
   ],
   dependsOn: [
-    Steps.{{constantCase id}},
+    Steps.{{constantCase step.id}},
     Steps.{{constantCase targetStep.id}},
   ],
   executionHandler: build{{pascalCase entity.name}}{{pascalCase relationship._class}}{{pascalCase targetStep.entity.name}}Relationships,
-  {{/with}}
 }
 {{/each}}
+{{/with}}
 {{/if}}

@@ -1,3 +1,4 @@
+{{#with template}}
 import { createIntegrationEntity } from '@jupiterone/integration-sdk-core';
 import { Entities } from './constants';
 
@@ -28,3 +29,4 @@ export function create{{pascalCase name}}Entity(data: any) {
     {{/with}}
 
 {{/each}}
+{{/with}}

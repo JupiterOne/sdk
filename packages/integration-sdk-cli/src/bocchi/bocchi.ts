@@ -37,12 +37,16 @@ function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnInstall', yarnInstall);
   plop.setActionType('yarnLint', yarnLint);
   plop.setPrompt('checkbox-plus', checkboxPlus);
-  plop.setHelper(
-    'entityByType',
-    (stepArray: Template['steps'], type: string) => {
-      return stepArray.find((step) => step.entity._type === type);
-    },
-  );
+  plop.setHelper('getDirectRelationships', (step, options) => {
+    return step.directRelationships.map((relationship) => ({
+      step,
+      entity: step.entity,
+      targetStep: options.data.root.template.steps.find(
+        (s) => s.entity._type === relationship.targetType,
+      ),
+      relationship,
+    }));
+  });
 
   for (const partial of fs.readdirSync(
     path.join(__dirname, 'templates/partials'),

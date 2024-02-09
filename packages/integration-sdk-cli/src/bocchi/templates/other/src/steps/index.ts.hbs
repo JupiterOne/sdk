@@ -1,3 +1,4 @@
+{{#with template}}
 {{#each steps}}
 import { {{camelCase entity.name}}Steps } from './steps/{{id}}';
 {{/each}}
@@ -9,3 +10,4 @@ const integrationSteps = [
 ];
 
 export { integrationSteps };
+{{/with}}
