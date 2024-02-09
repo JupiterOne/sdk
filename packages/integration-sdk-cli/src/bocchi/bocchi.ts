@@ -141,7 +141,7 @@ function bocchi(plop: NodePlopAPI) {
         templateFiles: path.join(__dirname + '/templates/other/src/**'),
         globOptions: { dot: true },
         force: true,
-        data: template,
+        data: template, // TODO: need to sanitize staticFields
       });
 
       for (const step of template.steps) {

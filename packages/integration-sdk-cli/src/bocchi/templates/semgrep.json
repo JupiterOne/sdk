@@ -23,7 +23,42 @@
         "_type": "signal_sciences_organization",
         "_class": ["Organization"],
         "_keyPath": "name",
-        "resourceName": "Organization"
+        "resourceName": "Organization",
+        "staticFields": {
+          "nick": "ryo"
+        },
+        "fieldMappings": {
+          "name": "title",
+          "displayName": "title",
+          "description": "advisory.description",
+          "ruleId": "advisory.ruleId",
+          "severity": "advisory.severity",
+          "ecosystem": "advisory.ecosystem",
+          "cveIds": "advisory.references.cveIds",
+          "cweIds": "advisory.references.cweIds",
+          "owaspIds": "advisory.references.owaspIds",
+          "urls": "advisory.references.urls",
+          "advisoryCreatedOn": "advisory.announcedAt",
+          "exposureType": "exposureType",
+          "repositoryId": "repositoryId",
+          "subdirectory": "subdirectory",
+          "matchedDependencyName": "matchedDependency.name",
+          "matchedDependencyVersion": "matchedDependency.versionSpecifier",
+          "dependencyFileLocationPath": "dependencyFileLocation.path",
+          "dependencyFileLocationUrl": "dependencyFileLocation.url",
+          "triageStatus": "triage.status",
+          "triageIssueUrl": "triage.issueUrl",
+          "triageDismissReason": "triage.dismissReason",
+          "triagePrUrl": "triage.prUrl",
+          "groupKey": "groupKey",
+          "packageManager": "packageManager",
+          "closestSafeDependencyName": "closestSafeDependency.name",
+          "closestSafeDependencyVersion": "closestSafeDependency.versionSpecifier",
+          "repositoryName": "repositoryName",
+          "createdOn": "openedAt",
+          "firstTriagedAt": "firstTriagedAt",
+          "transitivity": "transitivity"
+        }
       },
       "request": {
         "urlTemplate": "/corps"
@@ -39,8 +74,11 @@
       "entity": {
         "_type": "signal_sciences_user",
         "_class": ["User"],
-        "_keyFormat": "email",
-        "resourceName": "User"
+        "_keyPath": "email",
+        "resourceName": "User",
+        "staticFields": {
+          "jake": "nijika"
+        }
       },
       "parentAssociation": {
         "parentEntityType": "signal_sciences_organization",
