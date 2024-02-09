@@ -58,7 +58,7 @@ const DEFAULT_RATE_LIMIT_HEADERS: { [key in keyof RateLimitHeaders]: string } =
     reset: 'x-rate-limit-reset',
   };
 
-export abstract class APIClient {
+export abstract class BaseAPIClient {
   protected baseUrl: string;
   protected logger: IntegrationLogger;
   protected retryOptions: RetryOptions;
@@ -66,9 +66,9 @@ export abstract class APIClient {
   protected rateLimitThrottling: RateLimitThrottlingOptions | undefined;
 
   /**
-   * The authentication headers for the API requests
+   * The authorization headers for the API requests
    */
-  protected authenticationHeaders: Record<string, string>;
+  protected authorizationHeaders: Record<string, string>;
 
   /**
    * Create a new API client
@@ -119,13 +119,13 @@ export abstract class APIClient {
   }
 
   /**
-   * Get the authentication headers for the API requests.
+   * Get the authorization headers for the API requests.
    *
-   * @return {Promise<Record<string, string>>} - The authentication headers
+   * @return {Promise<Record<string, string>>} - The authorization headers
    *
    * @example
    * ```typescript
-   * async getAuthenticationHeaders(): Record<string, string> {
+   * async getAuthorizationHeaders(): Record<string, string> {
    *   return {
    *     Authorization: `Bearer ${this.config.apiKey}`,
    *   };
@@ -133,14 +133,14 @@ export abstract class APIClient {
    * ```
    * @example
    * ```typescript
-   * async getAuthenticationHeaders(): Promise<Record<string, string>> {
+   * async getAuthorizationHeaders(): Promise<Record<string, string>> {
    *   const response = this.request('/token', {
    *     method: 'POST',
    *     body: {
    *       email: this.config.email,
    *       password: this.config.password,
    *     },
-   *     authenticate: false, // don't try to authenticate this request, it will go into an infinite loop.
+   *     authorize: false, // don't try to do authorization on this request, it will go into an infinite loop.
    *   });
    *   const data = await response.json();
    *   return {
@@ -148,7 +148,7 @@ export abstract class APIClient {
    *   };
    * }
    */
-  abstract getAuthenticationHeaders(): OptionalPromise<Record<string, string>>;
+  abstract getAuthorizationHeaders(): OptionalPromise<Record<string, string>>;
 
   /**
    * Perform a request to the API.
@@ -158,28 +158,23 @@ export abstract class APIClient {
    * @param {string} [options.method=GET] - The HTTP method to use
    * @param {Record<string, unknown>} [options.body] - The body of the request
    * @param {Record<string, string>} [options.headers] - The headers for the request
-   * @param {boolean} [options.authenticate=true] - Whether to include authentication headers
+   * @param {boolean} [options.authorize=true] - Whether to include authorization headers
    * @return {Promise<Response>} - The response from the API
    */
   protected async request(
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
-    const {
-      method = 'GET',
-      body,
-      headers,
-      authenticate = true,
-    } = options ?? {};
-    if (authenticate && !this.authenticationHeaders) {
-      this.authenticationHeaders = await this.getAuthenticationHeaders();
+    const { method = 'GET', body, headers, authorize = true } = options ?? {};
+    if (authorize && !this.authorizationHeaders) {
+      this.authorizationHeaders = await this.getAuthorizationHeaders();
     }
     const response = await fetch(this.withBaseUrl(endpoint), {
       method,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        ...(authenticate && this.authenticationHeaders),
+        ...(authorize && this.authorizationHeaders),
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -195,19 +190,14 @@ export abstract class APIClient {
    * @param {string} [options.method=GET] - The HTTP method to use
    * @param {Record<string, unknown>} [options.body] - The body of the request
    * @param {Record<string, string>} [options.headers] - The headers for the request
-   * @param {boolean} [options.authenticate=true] - Whether to include authentication headers
+   * @param {boolean} [options.authorize=true] - Whether to include authorization headers
    * @return {Promise<Response>} - The response from the API
    */
   protected async retryRequest(
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
-    const {
-      method = 'GET',
-      body,
-      headers,
-      authenticate = true,
-    } = options ?? {};
+    const { method = 'GET', body, headers, authorize = true } = options ?? {};
     return retry(
       async () => {
         return this.withRateLimiting(async () => {
@@ -217,7 +207,7 @@ export abstract class APIClient {
               method,
               body,
               headers,
-              authenticate,
+              authorize,
             });
           } catch (err) {
             this.logger.error(

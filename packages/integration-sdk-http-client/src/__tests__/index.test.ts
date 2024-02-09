@@ -1,4 +1,4 @@
-import { APIClient, defaultErrorHandler } from '../index';
+import { BaseAPIClient, defaultErrorHandler } from '../index';
 import fetch, { Response } from 'node-fetch';
 import { sleep } from '@lifeomic/attempt';
 
@@ -14,8 +14,8 @@ jest.mock('@lifeomic/attempt', () => ({
 
 const authHeadersFn = jest.fn();
 
-class MockAPIClient extends APIClient {
-  getAuthenticationHeaders() {
+class MockAPIClient extends BaseAPIClient {
+  getAuthorizationHeaders() {
     return authHeadersFn();
   }
 }
@@ -92,7 +92,7 @@ describe('APIClient', () => {
   });
 
   describe('request', () => {
-    it('should not try to authenticate', async () => {
+    it('should not try to authorize', async () => {
       const mockResponse = {} as Response;
       (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
 
@@ -103,7 +103,7 @@ describe('APIClient', () => {
 
       const endpoint = '/test';
       await (client as any).request(endpoint, {
-        authenticate: false,
+        authorize: false,
       });
 
       expect(authHeadersFn).toHaveBeenCalledTimes(0);

@@ -7,7 +7,7 @@ export interface RequestOptions {
   method?: 'GET' | 'POST';
   body?: Record<string, unknown>;
   headers?: Record<string, string>;
-  authenticate?: boolean;
+  authorize?: boolean;
 }
 
 export interface RetryOptions {
