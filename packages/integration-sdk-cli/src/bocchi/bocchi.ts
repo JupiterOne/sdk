@@ -170,10 +170,7 @@ function bocchi(plop: NodePlopAPI) {
       actions.push(() => {
         fs.copyFileSync(
           path.join(__dirname, '/service-clients/httpServiceClient.ts'),
-          path.join(
-            directoryName,
-            path.normalize('src/clients/httpServiceClient.ts'),
-          ),
+          path.join(directoryName, path.normalize('src/httpServiceClient.ts')),
         );
       });
 

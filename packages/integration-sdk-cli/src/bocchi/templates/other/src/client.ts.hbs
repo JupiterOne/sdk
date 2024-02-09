@@ -1,5 +1,5 @@
 import { HttpServiceClient } from './httpServiceClient';
-import { IntegrationConfig } from '../config';
+import { IntegrationConfig } from './config';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
