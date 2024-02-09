@@ -104,12 +104,7 @@ function bocchi(plop: NodePlopAPI) {
         return [];
       }
 
-      const {
-        // vendorName,
-        // packageName,
-        // packageDescription,
-        templateFile,
-      } = data;
+      const { templateFile } = data;
 
       // @jupiterone/graph-foo -> graph-foo
       // graph-foo -> graph-foo
@@ -142,7 +137,18 @@ function bocchi(plop: NodePlopAPI) {
         templateFiles: path.join(__dirname + '/templates/other/src/**'),
         globOptions: { dot: true },
         force: true,
-        data: template, // TODO: need to sanitize staticFields
+        data: { ...data, template }, // TODO: need to sanitize staticFields
+      });
+
+      // copy base service-client
+      actions.push(() => {
+        fs.copyFileSync(
+          path.join(__dirname, '/service-clients/httpServiceClient.ts'),
+          path.join(
+            directoryName,
+            path.normalize('src/clients/httpServiceClient.ts'),
+          ),
+        );
       });
 
       for (const step of template.steps) {

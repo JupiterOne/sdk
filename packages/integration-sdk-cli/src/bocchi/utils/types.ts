@@ -48,10 +48,10 @@ export interface Step {
   id: string;
   name: string;
   entity: {
+    name: string;
     _type: string;
     _class: string | Array<string>;
     _keyPath: string;
-    resourceName: string;
     fieldMappings?: {
       [entityProperty: string]: string;
     };
@@ -67,7 +67,7 @@ export interface Step {
   request: {
     urlTemplate: string;
     method?: 'GET' | 'POST';
-    parms?: Record<string, any>;
+    params?: Record<string, any>;
     tokens?: number;
   };
   response: {

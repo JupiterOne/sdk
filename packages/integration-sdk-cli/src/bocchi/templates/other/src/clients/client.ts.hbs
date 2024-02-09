@@ -1,0 +1,41 @@
+import { HttpServiceClient } from './httpServiceClient';
+import { IntegrationConfig } from '../config';
+
+export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
+
+export class {{titleCase vendorName}}Client extends HttpServiceClient {
+  private authHeaders: Record<string, string>;
+
+  constructor(readonly baseUrl: string, readonly config: IntegrationConfig) {
+    super();
+    this.authHeaders = {
+      Authorization: `Bearer ${config.apiKey}`
+    };
+  }
+
+{{#each template.steps}}
+    // TODO: need to support POST for both of below
+    {{#if response.nextTokenPath}}
+  public async iterate{{titleCase entity.name}}(
+    path: string,
+    iteratee: ResourceIteratee<any>
+  ) {
+    const url = `${this.baseUrl}/${path}`;
+    let nextToken: string | undefined;
+    do {
+      const response = await this.get({ url, headers: { ...this.authHeaders } });
+      const resource = response.{{response.dataPath}};
+      for (const resource of resources) {
+        await iteratee(resource);
+      }
+      nextToken = response.{{response.nextTokenPath}};
+    } while (nextToken);
+  } 
+    {{else}}
+  public async fetch{{titleCase entity.name}}(path: string) {
+    const url = `${this.baseUrl}/${path}`;
+    return (await this.get({ url, headers: { ...this.authHeaders } })).{{response.dataPath}};
+  }       
+    {{/if}}
+{{/each}}
+}
