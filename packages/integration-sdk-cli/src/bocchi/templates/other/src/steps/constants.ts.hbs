@@ -6,7 +6,7 @@ import {
 
 export const Steps = {
 {{#each steps}}
-  {{constantCase this.id}}: '{{this.id}}',
+  {{constantCase id}}: '{{id}}',
 {{/each}}
 } satisfies Record<string, string>;
 
