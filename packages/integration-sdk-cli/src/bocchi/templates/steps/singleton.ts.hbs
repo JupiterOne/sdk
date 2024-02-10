@@ -24,7 +24,7 @@ export async function {{camelCase id}}({
   instance,
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
   {{#if request}}
-  const client = createAPIClient(instance.config, executionConfig);
+  const client = createAPIClient(instance.config);
 
   const data = await client.get{{camelCase entity.name}}('{{ request.urlTemplate }}');
   {{/if}}

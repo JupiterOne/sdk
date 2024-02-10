@@ -24,7 +24,7 @@ export async function {{camelCase id}}({
   jobState,
   executionConfig,
 }: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
-  const client = createAPIClient(instance.config, executionConfig);
+  const client = createAPIClient(instance.config);
 
   await client.iterate{{pascalCase entity.name}}s(
     '{{ request.urlTemplate }}',

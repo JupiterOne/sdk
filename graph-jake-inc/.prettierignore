@@ -1,0 +1,6 @@
+dist
+coverage/
+.j1-integration
+.j1-integration-cache
+.gitleaks.yml
+CHANGELOG.md
