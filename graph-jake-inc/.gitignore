@@ -1,8 +1,0 @@
-node_modules/
-dist/
-.j1-integration/
-.j1-integration-cache/
-.env
-.eslintcache
-tsconfig.tsbuildinfo
-.npmrc
