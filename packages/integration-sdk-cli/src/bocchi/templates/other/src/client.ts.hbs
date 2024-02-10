@@ -17,7 +17,7 @@ export class APIClient extends HttpServiceClient {
 
 {{#each template.steps}}
     {{#if response.nextTokenPath}}
-  public async iterate{{titleCase entity.name}}s(
+  public async {{createClientFunctionName (titleCase entity.name) response.responseType}}(
     path: string,
     iteratee: ResourceIteratee<any>
   ) {
@@ -38,7 +38,7 @@ export class APIClient extends HttpServiceClient {
     } while (nextToken);
   } 
     {{else}}
-  public async get{{titleCase entity.name}}(path: string) {
+  public async {{createClientFunctionName (titleCase entity.name) response.responseType}}(path: string) {
     const url = `${this.baseUrl}/${path}`;
     return (await this.request({
       url,

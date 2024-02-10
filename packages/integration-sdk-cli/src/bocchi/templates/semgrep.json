@@ -151,7 +151,7 @@
       },
       "response": {
         "dataPath": "data",
-        "responseType": "LIST"
+        "responseType": "SINGLETON"
       },
       "dependsOn": ["fetch-organizations"]
     }
