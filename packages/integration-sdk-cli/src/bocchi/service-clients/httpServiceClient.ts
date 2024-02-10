@@ -1,34 +1,19 @@
 export class HttpServiceClient {
   constructor() {}
 
-  async get({
+  async request({
     url,
+    method,
     headers,
-  }: {
-    url: string;
-    headers?: Record<string, string>;
-  }) {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        ...headers,
-      },
-    });
-    return response.json();
-  }
-
-  async post({
-    url,
     body,
-    headers,
   }: {
     url: string;
-    body: any;
+    method: 'GET' | 'POST';
     headers?: Record<string, string>;
+    body?: any;
   }) {
     const response = await fetch(url, {
-      method: 'GET',
+      method,
       headers: {
         Accept: 'application/json',
         ...headers,

@@ -16,7 +16,6 @@ export class APIClient extends HttpServiceClient {
   }
 
 {{#each template.steps}}
-    // TODO: need to support POST for both of below
     {{#if response.nextTokenPath}}
   public async iterate{{titleCase entity.name}}s(
     path: string,
@@ -25,7 +24,12 @@ export class APIClient extends HttpServiceClient {
     const url = `${this.baseUrl}/${path}`;
     let nextToken: string | undefined;
     do {
-      const response = await this.get({ url, headers: { ...this.authHeaders } });
+      const response = await this.request({
+        url,
+        headers: { ...this.authHeaders },
+        method: '{{sanitizeHttpMethod request.method}}',
+        body: {{sanitizeHttpBody request.params}}
+      });
       const resources = response.{{response.dataPath}};
       for (const resource of resources) {
         await iteratee(resource);
@@ -36,7 +40,12 @@ export class APIClient extends HttpServiceClient {
     {{else}}
   public async get{{titleCase entity.name}}(path: string) {
     const url = `${this.baseUrl}/${path}`;
-    return (await this.get({ url, headers: { ...this.authHeaders } })).{{response.dataPath}};
+    return (await this.request({
+      url,
+      headers: { ...this.authHeaders },
+      method: '{{sanitizeHttpMethod request.method}}',
+      body: {{sanitizeHttpBody request.params}}
+    })).{{response.dataPath}};
   }       
     {{/if}}
 {{/each}}

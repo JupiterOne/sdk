@@ -65,6 +65,16 @@ function bocchi(plop: NodePlopAPI) {
       return data;
     }
   });
+  plop.setHelper('sanitizeHttpMethod', (method: string = 'GET') => {
+    // if the user puts nothing in request.method, we need to default to GET
+    return method.toUpperCase();
+  });
+  plop.setHelper('sanitizeHttpBody', (body?: Record<string, any>) => {
+    // if the user puts nothing in request.body, we need to default to undefined
+    // additionally, because this is the string the template will use, we should
+    // be literally returning the string "undefined"
+    return body ?? 'undefined';
+  });
 
   for (const partial of fs.readdirSync(
     path.join(__dirname, 'templates/partials'),

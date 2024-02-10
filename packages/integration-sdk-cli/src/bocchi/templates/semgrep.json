@@ -135,7 +135,11 @@
         "relationshipClass": "HAS"
       },
       "request": {
-        "urlTemplate": "/corps/%parent._key%/%parent._otherKey%/cloudwafInstances"
+        "urlTemplate": "/corps/%parent._key%/%parent._otherKey%/cloudwafInstances",
+        "headers": {
+          "x-api-user": "jake"
+        },
+        "method": "POST"
       },
       "response": {
         "dataPath": "data",
