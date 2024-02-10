@@ -1,5 +1,10 @@
 import { HttpServiceClient } from './httpServiceClient';
 import { IntegrationConfig } from './config';
+import { 
+{{#each template.steps}}
+  {{pascalCase entity.name}}, 
+{{/each}}
+} from './steps/types';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
@@ -19,7 +24,7 @@ export class APIClient extends HttpServiceClient {
     {{#if response.nextTokenPath}}
   public async {{createClientFunctionName (titleCase entity.name) response.responseType}}(
     path: string,
-    iteratee: ResourceIteratee<any>
+    iteratee: ResourceIteratee<{{pascalCase entity.name}}>
   ) {
     const url = `${this.baseUrl}/${path}`;
     let nextToken: string | undefined;
@@ -30,7 +35,7 @@ export class APIClient extends HttpServiceClient {
         method: '{{sanitizeHttpMethod request.method}}',
         body: {{sanitizeHttpBody request.params}}
       });
-      const resources = response.{{response.dataPath}};
+      const resources = response.{{response.dataPath}} as {{pascalCase entity.name}}[];
       for (const resource of resources) {
         await iteratee(resource);
       }
@@ -45,7 +50,7 @@ export class APIClient extends HttpServiceClient {
       headers: { ...this.authHeaders },
       method: '{{sanitizeHttpMethod request.method}}',
       body: {{sanitizeHttpBody request.params}}
-    })).{{response.dataPath}};
+    })).{{response.dataPath}} as {{pascalCase entity.name}};
   }       
     {{/if}}
 {{/each}}
