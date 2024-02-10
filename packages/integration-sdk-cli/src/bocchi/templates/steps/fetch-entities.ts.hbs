@@ -22,7 +22,6 @@ export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[
 export async function {{camelCase id}}({
   instance,
   jobState,
-  executionConfig,
 }: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
   const client = createAPIClient(instance.config);
 
