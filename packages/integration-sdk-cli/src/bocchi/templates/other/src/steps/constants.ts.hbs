@@ -15,6 +15,9 @@ export const Steps = {
       {{/each}}
     {{/with}}
   {{/if}}
+  {{#if mappedRelationships}}
+  BUILD_{{constantCase entity.name}}_MAPPED_RELATIONSHIPS: 'build-{{kebabCase entity.name}}-mapped-relationships',
+  {{/if}}
 {{/each}}
 } satisfies Record<string, string>;
 

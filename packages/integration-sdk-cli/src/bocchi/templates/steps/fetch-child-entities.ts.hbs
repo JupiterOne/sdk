@@ -7,6 +7,11 @@ import {
   {{#if directRelationships}}
   createDirectRelationship,
   {{/if}}
+  {{#if mappedRelationships}}
+  PrimitiveEntity,
+  RelationshipDirection,
+  createMappedRelationship,
+  {{/if}}
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationConfig } from '../../config';
@@ -51,4 +56,5 @@ export async function {{camelCase id}}({
 }
 
 {{> directRelationships}}
+{{> mappedRelationships}}
 {{/with}}

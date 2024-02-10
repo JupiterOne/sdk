@@ -1,0 +1,36 @@
+{{#if mappedRelationships}}
+export async function build{{pascalCase entity.name}}MappedRelationships({
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
+  await jobState.iterateEntities(
+    { _type: Entities.{{constantCase entity.name}}._type },
+    async (entity: PrimitiveEntity) => {
+      {{#each mappedRelationships}}
+      await jobState.addRelationship(createMappedRelationship({
+        _class: RelationshipClass.{{constantCase _class}},
+        _mapping: {
+          sourceEntityKey: entity._key,
+          relationshipDirection: RelationshipDirection.{{constantCase direction}},
+          targetFilterKeys: [[
+            {{#each fieldMappings}}
+            '{{targetProperty}}',
+            {{/each}}
+          ]],
+          targetEntity: {
+            {{#each fieldMappings}}
+            {{#if targetValue}}
+            {{targetProperty}}: '{{targetValue}}',
+            {{/if}}
+            {{#if sourceProperty}}
+            {{targetProperty}}: entity.{{sourceProperty}},
+            {{/if}}
+            {{/each}}
+          }
+        }
+      }))
+      {{/each}}
+    },
+  );
+}
+
+{{/if}}

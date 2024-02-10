@@ -29,3 +29,15 @@
 {{/each}}
 {{/with}}
 {{/if}}
+{{#if mappedRelationships}}
+{
+  id: Steps.BUILD_{{constantCase entity.name}}_MAPPED_RELATIONSHIPS,
+  name: 'Build {{entity.name}} Mapped Relationships',
+  entities: [],
+  relationships: [],
+  dependsOn: [
+    Steps.{{constantCase id}},
+  ],
+  executionHandler: build{{pascalCase entity.name}}MappedRelationships,
+},
+{{/if}}
