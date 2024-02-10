@@ -72,12 +72,20 @@
         "dataPath": "data",
         "responseType": "LIST"
       },
-      "directRelationships": [{
-        "targetKey": "corps",
-        "targetType": "signal_sciences_user",
-        "_class": "HAS",
-        "direction": "REVERSE"
-      }]
+      "directRelationships": [
+        {
+          "targetKey": "corps",
+          "targetType": "signal_sciences_user",
+          "_class": "HAS",
+          "direction": "FORWARD"
+        },
+        {
+          "targetKey": "corps",
+          "targetType": "signal_sciences_user",
+          "_class": "HAS",
+          "direction": "REVERSE"
+        }
+      ]
     },
     {
       "id": "fetch-users",

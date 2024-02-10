@@ -1,6 +1,11 @@
+{{#with step}}
 import {
   IntegrationStep,
   IntegrationStepExecutionContext,
+  {{#if directRelationships}}
+  RelationshipClass,
+  createDirectRelationship,
+  {{/if}}
 } from '@jupiterone/integration-sdk-core';
 
 import { IntegrationConfig } from '../../config';
@@ -15,7 +20,7 @@ import {
 import { create{{pascalCase entity.name}}Entity } from '../converters';
 
 export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[] = [
-  {{> stepmap }}
+  {{> stepMap }}
 ];
 
 export async function {{camelCase id}}({
@@ -30,3 +35,6 @@ export async function {{camelCase id}}({
   {{/if}}
   await jobState.addEntity(create{{pascalCase entity.name}}Entity({{#if request}}data{{/if}}));
 }
+
+{{> directRelationships}}
+{{/with}}

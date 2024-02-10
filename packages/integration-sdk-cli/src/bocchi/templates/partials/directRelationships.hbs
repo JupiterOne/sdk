@@ -1,0 +1,26 @@
+{{#if directRelationships}}
+{{#with (getDirectRelationships this)}}
+{{#each this}}
+export async function build{{pascalCase sourceStep.entity.name}}{{pascalCase relationshipClass}}{{pascalCase targetStep.entity.name}}Relationships({
+  jobState,
+}: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
+  await jobState.iterateEntities(
+    { _type: Entities.{{constantCase step.entity.name}}._type },
+    async (entity) => {
+      const relatedEntity = await jobState.findEntity(entity.{{targetKey}} as string);
+      if (!relatedEntity) return;
+
+      await jobState.addRelationship(
+        createDirectRelationship({
+          from: {{#if forward}}entity{{else}}relatedEntity{{/if}},
+          _class: RelationshipClass.{{constantCase relationshipClass}},
+          to: {{#if forward}}relatedEntity{{else}}entity{{/if}},
+        }),
+      );
+    },
+  );
+}
+
+{{/each}}
+{{/with}}
+{{/if}}

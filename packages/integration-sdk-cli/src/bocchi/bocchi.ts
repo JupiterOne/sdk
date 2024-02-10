@@ -6,7 +6,10 @@ import { yarnFormat, yarnInstall, yarnLint } from '../generator/actions';
 import { Template } from './utils/types';
 import * as fs from 'fs';
 import { stepTemplateHelper } from './actions/steps';
-import { generateRelationshipType } from '@jupiterone/integration-sdk-core';
+import {
+  RelationshipDirection,
+  generateRelationshipType,
+} from '@jupiterone/integration-sdk-core';
 
 /**
  * Output folder (output/)
@@ -37,14 +40,25 @@ function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnLint', yarnLint);
   plop.setPrompt('checkbox-plus', checkboxPlus);
   plop.setHelper('getDirectRelationships', (step, options) => {
-    return step.directRelationships.map((relationship) => ({
-      step,
-      entity: step.entity,
-      targetStep: options.data.root.template.steps.find(
+    return step.directRelationships.map((relationship) => {
+      const step2 = options.data.root.template.steps.find(
         (s) => s.entity._type === relationship.targetType,
-      ),
-      relationship,
-    }));
+      );
+      return {
+        step,
+        sourceStep:
+          relationship.direction === RelationshipDirection.FORWARD
+            ? step
+            : step2,
+        targetStep:
+          relationship.direction === RelationshipDirection.FORWARD
+            ? step2
+            : step,
+        relationshipClass: relationship._class,
+        targetKey: relationship.targetKey,
+        forward: relationship.direction === RelationshipDirection.FORWARD,
+      };
+    });
   });
   /**
    * (_class, fromType, toType) => string

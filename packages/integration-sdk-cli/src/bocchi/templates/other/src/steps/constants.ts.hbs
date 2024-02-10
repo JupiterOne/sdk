@@ -9,9 +9,9 @@ export const Steps = {
 {{#each steps}}
   {{constantCase id}}: '{{id}}',
   {{#if directRelationships}}
-    {{#with (getDirectRelationships this) as |data|}}
+    {{#with (getDirectRelationships this)}}
       {{#each this}}
-  BUILD_{{constantCase entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS: 'build-{{kebabCase entity.name}}-{{kebabCase targetStep.entity.name}}-relationships',
+  BUILD_{{constantCase sourceStep.entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS: 'build-{{kebabCase sourceStep.entity.name}}-{{kebabCase targetStep.entity.name}}-relationships',
       {{/each}}
     {{/with}}
   {{/if}}
@@ -33,14 +33,14 @@ export const Entities = {
 export const Relationships = {
 {{#each steps}}
   {{#if directRelationships}}
-    {{#with (getDirectRelationships this) as |data|}}
+    {{#with (getDirectRelationships this)}}
       {{#each this}}
-  {{constantCase entity.name}}_{{constantCase relationship._class}}_{{constantCase targetStep.entity.name}}: {
-    sourceType: Entities.{{constantCase entity.name}}._type,
-    _class: RelationshipClass.{{constantCase relationship._class}},
+  {{constantCase sourceStep.entity.name}}_{{constantCase relationshipClass}}_{{constantCase targetStep.entity.name}}: {
+    sourceType: Entities.{{constantCase sourceStep.entity.name}}._type,
+    _class: RelationshipClass.{{constantCase relationshipClass}},
     targetType: Entities.{{constantCase targetStep.entity.name}}._type,
-    _type: '{{getRelationshipType relationship._class entity._type targetStep.entity._type}}',
-  }
+    _type: '{{getRelationshipType relationshipClass sourceStep.entity._type targetStep.entity._type}}',
+  },
       {{/each}}
     {{/with}}
   {{/if}}

@@ -11,21 +11,21 @@
   executionHandler: {{camelCase id}},
 },
 {{#if directRelationships}}
-{{#with (getDirectRelationships this) as |data|}}
+{{#with (getDirectRelationships this)}}
 {{#each this}}
 {
-  id: Steps.BUILD_{{constantCase entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS,
-  name: 'Build {{entity.name}} {{targetStep.entity.name}} Relationships',
+  id: Steps.BUILD_{{constantCase sourceStep.entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS,
+  name: 'Build {{sourceStep.entity.name}} {{targetStep.entity.name}} Relationships',
   entities: [],
   relationships: [
-    Relationships.{{constantCase entity.name}}_{{constantCase relationship._class}}_{{constantCase targetStep.entity.name}},
+    Relationships.{{constantCase sourceStep.entity.name}}_{{constantCase relationshipClass}}_{{constantCase targetStep.entity.name}},
   ],
   dependsOn: [
-    Steps.{{constantCase step.id}},
+    Steps.{{constantCase sourceStep.id}},
     Steps.{{constantCase targetStep.id}},
   ],
-  executionHandler: build{{pascalCase entity.name}}{{pascalCase relationship._class}}{{pascalCase targetStep.entity.name}}Relationships,
-}
+  executionHandler: build{{pascalCase sourceStep.entity.name}}{{pascalCase relationshipClass}}{{pascalCase targetStep.entity.name}}Relationships,
+},
 {{/each}}
 {{/with}}
 {{/if}}
