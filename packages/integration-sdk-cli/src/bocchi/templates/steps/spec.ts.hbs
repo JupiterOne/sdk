@@ -1,0 +1,68 @@
+{{#with step}}
+import {
+  {{#if directRelationships}}
+  RelationshipClass,
+  {{/if}}
+  StepSpec,
+} from '@jupiterone/integration-sdk-core';
+import { IntegrationConfig } from '../../../src/config';
+
+export const {{camelCase entity.name}}Spec: StepSpec<IntegrationConfig>[] = [
+  {
+    id: '{{kebabCase id}}',
+    name: '{{name}}',
+    entities: [
+      {
+        resourceName: '{{entity.name}}',
+        _type: '{{entity._type}}',
+        _class: '{{entity._class}}',
+      }
+    ],
+    relationships: [],
+    dependsOn: [
+      {{#each dependsOn}}
+      '{{this}}',
+      {{/each}}
+    ],
+    implemented: true,
+  },
+{{#if directRelationships}}
+{{#with (getDirectRelationships this)}}
+{{#each this}}
+  {
+    id: 'build-{{kebabCase sourceStep.entity.name}}-{{kebabCase targetStep.entity.name}}-relationships',
+    name: 'Build {{sourceStep.entity.name}} {{targetStep.entity.name}} Relationships',
+    entities: [],
+    relationships: [
+      {
+        sourceType: '{{sourceStep.entity._type}}',
+        _class: RelationshipClass.{{constantCase relationshipClass}},
+        targetType: '{{targetStep.entity._type}}',
+        _type: '{{getRelationshipType relationshipClass sourceStep.entity._type targetStep.entity._type}}',
+      }
+    ],
+    dependsOn: [
+      {{#each dependsOn}}
+      '{{this}}',
+      {{/each}}
+    ],
+    implemented: true,
+  },
+{{/each}}
+{{/with}}
+{{/if}}
+{{#if mappedRelationships}}
+  {
+    id: 'build-{{kebabCase entity.name}}-mapped-relationships',
+    name: 'Build {{entity.name}} Mapped Relationships',
+    entities: [],
+    relationships: [],
+    mappedRelationships: [],
+    dependsOn: [
+      '{{id}}',
+    ],
+    implemented: true,
+  },
+{{/if}}
+];
+{{/with}}

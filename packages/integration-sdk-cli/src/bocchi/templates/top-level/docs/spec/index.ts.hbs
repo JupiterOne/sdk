@@ -1,0 +1,14 @@
+import { IntegrationSpecConfig } from '@jupiterone/integration-sdk-core';
+import { IntegrationConfig } from '../../../src/config';
+{{#each template.steps}}
+import { {{camelCase entity.name}}Spec } from './{{kebabCase id}}';
+{{/each}}
+
+export const invocationConfig: IntegrationSpecConfig<IntegrationConfig> =
+  {
+    integrationSteps: [
+    {{#each template.steps}}
+      ...{{camelCase entity.name}}Spec,
+    {{/each}}
+    ],
+  };

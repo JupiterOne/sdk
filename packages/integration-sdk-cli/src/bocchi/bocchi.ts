@@ -218,6 +218,7 @@ function bocchi(plop: NodePlopAPI) {
           data: { template, step },
           force: true,
         });
+
         actions.push({
           type: 'add',
           path: path.join(
@@ -228,6 +229,17 @@ function bocchi(plop: NodePlopAPI) {
             __dirname,
             `templates/steps/index.test.ts.hbs`,
           ),
+          data: { template, step },
+          force: true,
+        });
+
+        actions.push({
+          type: 'add',
+          path: path.join(
+            directoryName,
+            path.normalize(`docs/spec/${kebabCase(step.id)}/index.ts`),
+          ),
+          templateFile: path.join(__dirname, `templates/steps/spec.ts.hbs`),
           data: { template, step },
           force: true,
         });
