@@ -8,6 +8,13 @@ import {
 export const Steps = {
 {{#each steps}}
   {{constantCase id}}: '{{id}}',
+  {{#if directRelationships}}
+    {{#with (getDirectRelationships this) as |data|}}
+      {{#each this}}
+  BUILD_{{constantCase entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS: 'build-{{kebabCase entity.name}}-{{kebabCase targetStep.entity.name}}-relationships',
+      {{/each}}
+    {{/with}}
+  {{/if}}
 {{/each}}
 } satisfies Record<string, string>;
 
@@ -24,5 +31,19 @@ export const Entities = {
 } satisfies Record<string, StepEntityMetadata>;
 
 export const Relationships = {
+{{#each steps}}
+  {{#if directRelationships}}
+    {{#with (getDirectRelationships this) as |data|}}
+      {{#each this}}
+  {{constantCase entity.name}}_{{constantCase relationship._class}}_{{constantCase targetStep.entity.name}}: {
+    sourceType: Entities.{{constantCase entity.name}}._type,
+    _class: RelationshipClass.{{constantCase relationship._class}},
+    targetType: Entities.{{constantCase targetStep.entity.name}}._type,
+    _type: '{{getRelationshipType relationship._class entity._type targetStep.entity._type}}',
+  }
+      {{/each}}
+    {{/with}}
+  {{/if}}
+{{/each}}
 } satisfies Record<string, StepRelationshipMetadata>;
 {{/with}}

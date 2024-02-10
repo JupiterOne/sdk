@@ -26,7 +26,11 @@
         "_class": ["Organization"],
         "_keyPath": "name",
         "staticFields": {
-          "nick": "ryo"
+          "nick": "ryo",
+          "a": false,
+          "b": true,
+          "c": 0,
+          "d": [1, "2", false]
         },
         "fieldMappings": {
           "name": "title",

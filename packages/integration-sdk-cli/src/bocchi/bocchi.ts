@@ -6,6 +6,7 @@ import { yarnFormat, yarnInstall, yarnLint } from '../generator/actions';
 import { Template } from './utils/types';
 import * as fs from 'fs';
 import { stepTemplateHelper } from './actions/steps';
+import { generateRelationshipType } from '@jupiterone/integration-sdk-core';
 
 /**
  * Output folder (output/)
@@ -45,11 +46,24 @@ function bocchi(plop: NodePlopAPI) {
       relationship,
     }));
   });
+  /**
+   * (_class, fromType, toType) => string
+   */
+  plop.setHelper('getRelationshipType', generateRelationshipType);
   plop.setHelper('getParentProperties', (urlTemplate: string): string[] => {
     const regex = /%parent\.(.+?)%/g;
     return (
       Array.from(urlTemplate.matchAll(regex)).map((match) => match[1]) ?? []
     );
+  });
+  plop.setHelper('escape', (data) => {
+    if (typeof data === 'string') {
+      return "'data'";
+    } else if (Array.isArray(data)) {
+      return '[' + data.toString() + ']';
+    } else {
+      return data;
+    }
   });
 
   for (const partial of fs.readdirSync(

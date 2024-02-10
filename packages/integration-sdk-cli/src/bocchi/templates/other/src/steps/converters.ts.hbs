@@ -14,7 +14,7 @@ export function create{{pascalCase name}}Entity(data: any) {
                 _class: Entities.{{constantCase name}}._class,
                 {{#if staticFields}}
                     {{#each staticFields}}
-                {{@key}}: {{this}},
+                {{@key}}: {{{escape this}}},
                     {{/each}}
                 {{/if}}
                 {{#if fieldMappings}}
