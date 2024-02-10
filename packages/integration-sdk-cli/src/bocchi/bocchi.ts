@@ -218,6 +218,19 @@ function bocchi(plop: NodePlopAPI) {
           data: { template, step },
           force: true,
         });
+        actions.push({
+          type: 'add',
+          path: path.join(
+            directoryName,
+            path.normalize(`src/steps/${kebabCase(step.id)}/index.test.ts`),
+          ),
+          templateFile: path.join(
+            __dirname,
+            `templates/steps/index.test.ts.hbs`,
+          ),
+          data: { template, step },
+          force: true,
+        });
       }
 
       actions.push({
