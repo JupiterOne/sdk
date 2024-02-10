@@ -196,29 +196,11 @@ function bocchi(plop: NodePlopAPI) {
       actions.push({
         type: 'addMany',
         destination: directoryName,
-        base: path.join(__dirname, '/templates/other/top-level'),
-        templateFiles: path.join(__dirname + '/templates/other/top-level/**'),
+        base: path.join(__dirname, '/templates/top-level'),
+        templateFiles: path.join(__dirname + '/templates/top-level/**'),
         globOptions: { dot: true },
         force: true,
-        data,
-      });
-
-      actions.push({
-        type: 'addMany',
-        destination: path.join(directoryName, path.normalize('src')),
-        base: path.join(__dirname, '/templates/other/src'),
-        templateFiles: path.join(__dirname + '/templates/other/src/**'),
-        globOptions: { dot: true },
-        force: true,
-        data: { ...data, template }, // TODO: need to sanitize staticFields
-      });
-
-      // copy base service-client
-      actions.push(() => {
-        fs.copyFileSync(
-          path.join(__dirname, '/service-clients/httpServiceClient.ts'),
-          path.join(directoryName, path.normalize('src/httpServiceClient.ts')),
-        );
+        data: { ...data, template },
       });
 
       for (const step of template.steps) {

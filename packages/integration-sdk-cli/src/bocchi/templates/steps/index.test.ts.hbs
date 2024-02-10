@@ -1,0 +1,21 @@
+import { executeStepWithDependencies } from '@jupiterone/integration-sdk-testing';
+
+import { buildStepTestConfigForStep } from '../../../test/config';
+import { Recording, setupRecording } from '../../../test/recording';
+import { Steps } from '../../constants';
+
+let recording: Recording;
+afterEach(async () => {
+  await recording.stop();
+});
+
+test('fetch-applications', async () => {
+  recording = setupLaceworkRecording({
+    directory: __dirname,
+    name: 'fetch-applications',
+  });
+
+  const stepConfig = buildStepTestConfigForStep(Steps.APPLICATIONS.id);
+  const stepResult = await executeStepWithDependencies(stepConfig);
+  expect(stepResult).toMatchStepMetadata(stepConfig);
+});
