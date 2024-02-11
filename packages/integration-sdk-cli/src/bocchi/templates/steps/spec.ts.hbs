@@ -15,7 +15,7 @@ export const {{camelCase entity.name}}Spec: StepSpec<IntegrationConfig>[] = [
       {
         resourceName: '{{entity.name}}',
         _type: '{{entity._type}}',
-        _class: '{{entity._class}}',
+        _class: ['{{entity._class}}'],
       }
     ],
     relationships: [],
@@ -42,9 +42,8 @@ export const {{camelCase entity.name}}Spec: StepSpec<IntegrationConfig>[] = [
       }
     ],
     dependsOn: [
-      {{#each dependsOn}}
-      '{{this}}',
-      {{/each}}
+      '{{sourceStep.id}}',
+      '{{targetStep.id}}',
     ],
     implemented: true,
   },
@@ -57,7 +56,6 @@ export const {{camelCase entity.name}}Spec: StepSpec<IntegrationConfig>[] = [
     name: 'Build {{entity.name}} Mapped Relationships',
     entities: [],
     relationships: [],
-    mappedRelationships: [],
     dependsOn: [
       '{{id}}',
     ],

@@ -149,14 +149,12 @@
         "urlTemplate": "/corps/%parent._key%/test/%parent._otherKey%/cloudwafInstances",
         "method": "POST",
         "params": {
-          "test": "test",
-          "n": "%nextToken%"
+          "test": "test"
         }
       },
       "response": {
         "dataPath": "data",
-        "responseType": "SINGLETON",
-        "nextTokenPath": "next"
+        "responseType": "SINGLETON"
       },
       "dependsOn": ["fetch-organizations"]
     }
