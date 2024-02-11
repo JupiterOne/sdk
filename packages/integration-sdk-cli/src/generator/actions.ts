@@ -34,4 +34,8 @@ async function yarnLint(_answers, config, _plop) {
   return spawnCommand(config, 'yarn', ['lint']);
 }
 
-export { yarnInstall, yarnFormat, yarnLint };
+async function j1Document(_answers, config, _plop) {
+  return spawnCommand(config, 'yarn', ['j1-integration', 'document']);
+}
+
+export { yarnInstall, yarnFormat, yarnLint, j1Document };

@@ -34,14 +34,17 @@ interface EndpointAuthentication {
     path: string;
     method: 'GET' | 'POST';
     body?: Record<string, any>;
-    headers?: Record<string, string>;
+    headers?: Record<string, string>; //sanitizeAuthCallHeaders
   };
-  // TODO: outputHeaders
+  repsonsePath: string;
+  // TODO: authHeaders
 }
 
 interface ConfigFieldAuthentication {
   strategy: 'configField';
-  // TODO: outputHeaders
+  configFieldName: string;
+  // TODO: authHeaders
+  // sanitize
 }
 
 export interface Step {

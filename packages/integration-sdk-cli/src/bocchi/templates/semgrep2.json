@@ -12,10 +12,22 @@
     }
   },
   "authentication": {
-    "strategy": "configField",
+    "strategy": "endpoint",
+    "params": {
+      "path": "/auth",
+      "method": "POST",
+      "headers": {
+        "user-agent": "JupiterOne",
+        "tenant": "%config.tenant%"
+      },
+      "body": {
+        "exampleBody": "%config.exampleConfigValue%"
+      }
+    },
     "authHeaders": {
-      "x-api-user": "%config.email%",
-      "x-api-token": "%config.token%"
+      "user-agent": "JupiterOne",
+      "tenant": "%config.tenant%",
+      "Authorization": "bearer %response.auth.token%"
     }
   },
   "baseUrl": "https://fix.me",
@@ -150,12 +162,13 @@
         "method": "POST",
         "params": {
           "test": "test",
-          "n": "%nextToken%"
+          "n": "%nextToken%",
+          "x-lmao": "x-lmao"
         }
       },
       "response": {
         "dataPath": "data",
-        "responseType": "SINGLETON",
+        "responseType": "LIST",
         "nextTokenPath": "next"
       },
       "dependsOn": ["fetch-organizations"]

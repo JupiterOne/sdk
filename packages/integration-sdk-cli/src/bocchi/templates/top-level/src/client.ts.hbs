@@ -16,9 +16,26 @@ export class APIClient extends HttpServiceClient {
   constructor(readonly config: IntegrationConfig) {
     super();
     this.baseUrl = '{{template.baseUrl}}';
-    this.authHeaders = {
-      Authorization: `Bearer ${config.apiKey}`
-    };
+    {{#if (isNotEndpointAuth template.authentication.strategy)}}
+    this.authHeaders = { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} };
+    {{/if}}
+  }
+
+  public async verifyAuthentication(): Promise<void> {
+    {{#if (isNotEndpointAuth template.authentication.strategy)}}
+    // TODO: implement
+    throw new Error('Unimplemented: Pick an API call to use for validation!');
+    {{else}}
+    const response = await this.request({
+      url: `${this.baseUrl}{{template.authentication.params.path}}`,
+      headers: { {{#each (sanitizeAuthObject template.authentication.params.headers)}}'{{@key}}': `{{this}}`,{{/each}} },
+      method: '{{sanitizeHttpMethod template.authentication.params.method}}',
+      {{#if request.params}}
+      body: { {{#each (sanitizeAuthObject template.authentication.params.body)}}{{@key}}: {{this}},{{/each}} }
+      {{/if}}
+    });
+    this.authHeaders = { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} }
+    {{/if}}
   }
 {{#each template.steps}}
 
@@ -43,13 +60,13 @@ export class APIClient extends HttpServiceClient {
     let nextToken: string | undefined;
     do {
     {{/if}}
-      const url = `${this.baseUrl}{{sanitizeUrlPath request.urlTemplate}}`;
+      const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
       const response = await this.request({
         url,
         headers: { ...this.authHeaders },
         method: '{{sanitizeHttpMethod request.method}}',
         {{#if request.params}}
-        body: { {{#each (sanitizeHttpBody request.params)}}{{@key}}: {{this}},{{/each}} }
+        body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
         {{/if}}
       });
       const resources = response.{{response.dataPath}} as {{pascalCase entity.name}}[];

@@ -2,7 +2,12 @@ import { NodePlopAPI } from 'plop';
 import checkboxPlus from 'inquirer-checkbox-plus-prompt';
 import path from 'path';
 import { kebabCase } from 'lodash';
-import { yarnFormat, yarnInstall, yarnLint } from '../generator/actions';
+import {
+  yarnFormat,
+  yarnInstall,
+  yarnLint,
+  j1Document,
+} from '../generator/actions';
 import { Template } from './utils/types';
 import * as fs from 'fs';
 import { stepTemplateHelper } from './actions/steps';
@@ -39,6 +44,7 @@ function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnFormat', yarnFormat);
   plop.setActionType('yarnInstall', yarnInstall);
   plop.setActionType('yarnLint', yarnLint);
+  plop.setActionType('j1Document', j1Document);
   plop.setPrompt('checkbox-plus', checkboxPlus);
   plop.setHelper('getDirectRelationships', (step, options) => {
     return step.directRelationships.map((relationship) => {
@@ -97,7 +103,7 @@ function bocchi(plop: NodePlopAPI) {
       // "nextToken" since that is the var in the client file that references the nextToken.
       for (const key in body) {
         if (typeof body[key] === 'string') {
-          body[key] = body[key].replace('%nextToken%', 'nextToken');
+          body[key] = body[key].replace('%nextToken%', '${nextToken}');
         }
       }
       return body;
@@ -118,6 +124,31 @@ function bocchi(plop: NodePlopAPI) {
       return Object.entries(configFields)
         .filter(([_, value]) => !value.optional)
         .map(([key, _]) => key);
+    },
+  );
+  plop.setHelper('isNotEndpointAuth', (authStrategy: string): boolean => {
+    return authStrategy !== 'endpoint';
+  });
+  plop.setHelper(
+    'sanitizeAuthObject',
+    (authObj: Record<string, any>): Record<string, any> => {
+      const regex = /%(response|config)\.(.+?)%/g;
+      for (const key in authObj) {
+        if (typeof authObj[key] === 'string') {
+          for (const match of authObj[key].matchAll(regex)) {
+            authObj[key] = authObj[key].replace(
+              match[0],
+              '${' +
+                (match[1] === 'config' ? 'this.' : '') +
+                match[1] +
+                '.' +
+                match[2] +
+                '}',
+            );
+          }
+        }
+      }
+      return authObj;
     },
   );
 
@@ -214,7 +245,6 @@ function bocchi(plop: NodePlopAPI) {
 
       const actions: any[] = [];
 
-      // TODO: after this, remove .hbs from files with no extension
       actions.push({
         type: 'addMany',
         destination: directoryName,
@@ -269,6 +299,12 @@ function bocchi(plop: NodePlopAPI) {
 
       actions.push({
         type: 'yarnInstall',
+        path: directoryName,
+        verbose: true,
+      });
+
+      actions.push({
+        type: 'j1Document',
         path: directoryName,
         verbose: true,
       });
