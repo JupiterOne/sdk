@@ -67,6 +67,11 @@ function bocchi(plop: NodePlopAPI) {
       };
     });
   });
+  plop.setHelper('getStepByType', (type, options) => {
+    return options.data.root.template.steps.find(
+      (s) => s.entity._type === type,
+    );
+  });
   /**
    * (_class, fromType, toType) => string
    */

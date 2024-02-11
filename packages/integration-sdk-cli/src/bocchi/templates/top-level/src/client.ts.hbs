@@ -40,7 +40,7 @@ export class APIClient extends HttpServiceClient {
 {{#each template.steps}}
 
   {{#if (isSingletonRequest response.responseType)}}
-  public async get{{titleCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<any> {
+  public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<any> {
     const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
     return (await this.request({
       url,
@@ -50,7 +50,7 @@ export class APIClient extends HttpServiceClient {
     })).{{response.dataPath}} as {{pascalCase entity.name}};
   }
   {{else}}
-  public async iterate{{titleCase entity.name}}s(
+  public async iterate{{pascalCase entity.name}}s(
     {{#if parentAssociation}}
     parentEntity: Entity,
     {{/if}}

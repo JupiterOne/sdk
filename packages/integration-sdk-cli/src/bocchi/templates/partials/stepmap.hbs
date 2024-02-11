@@ -2,7 +2,11 @@
   id: Steps.{{constantCase id}},
   name: '{{name}}',
   entities: [Entities.{{constantCase entity.name}}],
-  relationships: [],
+  relationships: [
+  {{#if parentAssociation}}
+    Relationships.{{#with (getStepByType parentAssociation.parentEntityType)}}{{constantCase entity.name}}{{/with}}_{{constantCase parentAssociation.relationshipClass}}_{{constantCase entity.name}},
+  {{/if}}
+  ],
   dependsOn: [
     {{#each dependsOn}}
     Steps.{{constantCase this}},

@@ -2,8 +2,8 @@
 import {
   IntegrationStep,
   IntegrationStepExecutionContext,
-  {{#if directRelationships}}
   RelationshipClass,
+  {{#if directRelationships}}
   createDirectRelationship,
   {{/if}}
   {{#if mappedRelationships}}
@@ -17,9 +17,7 @@ import { IntegrationConfig } from '../../config';
 import {
   Steps,
   Entities,
-  {{#if directRelationships}}
   Relationships,
-  {{/if}}
 } from '../constants';
 {{#if request}}import { createAPIClient } from '../../client';{{/if}}
 import { create{{pascalCase entity.name}}Entity } from '../converters';

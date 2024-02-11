@@ -18,9 +18,7 @@ import { IntegrationConfig } from '../../config';
 import {
   Steps,
   Entities,
-  {{#if directRelationships}}
   Relationships,
-  {{/if}}
 } from '../constants';
 import { createAPIClient } from '../../client';
 import { create{{pascalCase entity.name}}Entity } from '../converters';

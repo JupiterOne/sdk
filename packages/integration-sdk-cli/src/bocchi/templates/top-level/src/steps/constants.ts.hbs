@@ -35,6 +35,14 @@ export const Entities = {
 
 export const Relationships = {
 {{#each steps}}
+  {{#if parentAssociation}}
+    {{#with (getStepByType parentAssociation.parentEntityType)}}{{constantCase entity.name}}{{/with}}_{{constantCase parentAssociation.relationshipClass}}_{{constantCase entity.name}}: {
+      sourceType: Entities.{{#with (getStepByType parentAssociation.parentEntityType)}}{{constantCase entity.name}}{{/with}}._type,
+      _class: RelationshipClass.{{constantCase parentAssociation.relationshipClass}},
+      targetType: Entities.{{constantCase entity.name}}._type,
+      _type: '{{getRelationshipType parentAssociation.relationshipClass parentAssociation.parentEntityType entity._type}}',
+    },
+  {{/if}}
   {{#if directRelationships}}
     {{#with (getDirectRelationships this)}}
       {{#each this}}

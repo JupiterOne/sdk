@@ -1,8 +1,6 @@
 {{#with step}}
 import {
-  {{#if directRelationships}}
   RelationshipClass,
-  {{/if}}
   StepSpec,
 } from '@jupiterone/integration-sdk-core';
 import { IntegrationConfig } from '../../../src/config';
@@ -18,7 +16,16 @@ export const {{camelCase entity.name}}Spec: StepSpec<IntegrationConfig>[] = [
         _class: ['{{entity._class}}'],
       }
     ],
-    relationships: [],
+    relationships: [
+      {{#if parentAssociation}}
+      {
+        sourceType: '{{parentAssociation.parentEntityType}}',
+        _class: RelationshipClass.{{constantCase parentAssociation.relationshipClass}},
+        targetType: '{{entity._type}}',
+        _type: '{{getRelationshipType parentAssociation.relationshipClass parentAssociation.parentEntityType entity._type}}',
+      },
+      {{/if}}
+    ],
     dependsOn: [
       {{#each dependsOn}}
       '{{this}}',
