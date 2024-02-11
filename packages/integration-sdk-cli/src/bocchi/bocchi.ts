@@ -89,15 +89,9 @@ function bocchi(plop: NodePlopAPI) {
     // be literally returning the string "undefined"
     return body ?? 'undefined';
   });
-  plop.setHelper(
-    'createClientFunctionName',
-    (entityName: string, responseType: string) => {
-      if (responseType === 'SINGLETON') {
-        return `get${entityName}`;
-      }
-      return `iterate${entityName}s`;
-    },
-  );
+  plop.setHelper('isSingletonRequest', (responseType: string) => {
+    return responseType === 'SINGLETON';
+  });
 
   for (const partial of fs.readdirSync(
     path.join(__dirname, 'templates/partials'),

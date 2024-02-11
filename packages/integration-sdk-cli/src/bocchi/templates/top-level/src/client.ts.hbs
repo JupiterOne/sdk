@@ -19,13 +19,24 @@ export class APIClient extends HttpServiceClient {
       Authorization: `Bearer ${config.apiKey}`
     };
   }
-
 {{#each template.steps}}
+
+  {{#if (isSingletonRequest response.responseType)}}
+  public async get{{titleCase entity.name}}(path: string): Promise<any> {
+    const url = `${this.baseUrl}/${path}`;
+    return (await this.request({
+      url,
+      headers: { ...this.authHeaders },
+      method: '{{sanitizeHttpMethod request.method}}',
+      body: {{sanitizeHttpBody request.params}}
+    })).{{response.dataPath}} as {{pascalCase entity.name}};
+  }
+  {{else}}
     {{#if response.nextTokenPath}}
-  public async {{createClientFunctionName (titleCase entity.name) response.responseType}}(
+  public async iterate{{titleCase entity.name}}s(
     path: string,
     iteratee: ResourceIteratee<{{pascalCase entity.name}}>
-  ) {
+  ): Promise<void> {
     const url = `${this.baseUrl}/${path}`;
     let nextToken: string | undefined;
     do {
@@ -41,18 +52,26 @@ export class APIClient extends HttpServiceClient {
       }
       nextToken = response.{{response.nextTokenPath}};
     } while (nextToken);
-  } 
+  }
     {{else}}
-  public async {{createClientFunctionName (titleCase entity.name) response.responseType}}(path: string) {
+  public async iterate{{titleCase entity.name}}s(
+    path: string,
+    iteratee: ResourceIteratee<{{pascalCase entity.name}}>
+  ): Promise<void> {
     const url = `${this.baseUrl}/${path}`;
-    return (await this.request({
+    const response = await this.request({
       url,
       headers: { ...this.authHeaders },
       method: '{{sanitizeHttpMethod request.method}}',
       body: {{sanitizeHttpBody request.params}}
-    })).{{response.dataPath}} as {{pascalCase entity.name}};
-  }       
+    });
+    const resources = response.{{response.dataPath}} as {{pascalCase entity.name}}[];
+    for (const resource of resources) {
+      await iteratee(resource);
+    }
+  }
     {{/if}}
+  {{/if}}
 {{/each}}
 }
 
