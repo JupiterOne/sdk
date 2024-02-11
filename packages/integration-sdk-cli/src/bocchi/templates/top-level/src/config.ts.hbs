@@ -1,0 +1,41 @@
+{{#with template}}
+import {
+  IntegrationExecutionContext,
+  IntegrationValidationError,
+  IntegrationInstanceConfigFieldMap,
+} from '@jupiterone/integration-sdk-core';
+import { createAPIClient } from './client';
+
+export const instanceConfigFields = {
+{{#each instanceConfigFields}}
+    {{@key}}: {
+      {{#if type}}type: '{{type}}',{{/if}}
+      {{#if mask}}mask: {{mask}},{{/if}}
+      {{#if optional}}optional: {{optional}},{{/if}}
+    },
+{{/each}}
+} satisfies IntegrationInstanceConfigFieldMap;
+
+export interface IntegrationConfig {
+{{#each instanceConfigFields}}
+  {{@key}}: {{configTypeToType type}};
+{{/each}}
+}
+
+export async function validateInvocation(
+  context: IntegrationExecutionContext<IntegrationConfig>,
+) {
+  const { config } = context.instance;
+
+  {{#with (requiredConfig instanceConfigFields)}}
+  {{#if this.length}}
+  if ({{#each this}}!config.{{this}}{{#unless @last}} || {{/unless}}{{/each}}) {
+    throw new IntegrationValidationError('Config requires all of{{#each this}} {{this}}{{/each}}');
+  }
+  {{/if}}
+  {{/with}}
+
+  const apiClient = createAPIClient(config);
+  await apiClient.verifyAuthentication();
+}
+{{/with}}

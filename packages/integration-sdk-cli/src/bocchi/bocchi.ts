@@ -7,6 +7,7 @@ import { Template } from './utils/types';
 import * as fs from 'fs';
 import { stepTemplateHelper } from './actions/steps';
 import {
+  IntegrationInstanceConfigFieldMap,
   RelationshipDirection,
   generateRelationshipType,
 } from '@jupiterone/integration-sdk-core';
@@ -92,6 +93,20 @@ function bocchi(plop: NodePlopAPI) {
   plop.setHelper('isSingletonRequest', (responseType: string) => {
     return responseType === 'SINGLETON';
   });
+  plop.setHelper('configTypeToType', (type: string) => {
+    if (type.toLowerCase() === 'json') {
+      return 'Record<string, any>';
+    }
+    return type;
+  });
+  plop.setHelper(
+    'requiredConfig',
+    (configFields: IntegrationInstanceConfigFieldMap) => {
+      return Object.entries(configFields)
+        .filter(([_, value]) => !value.optional)
+        .map(([key, _]) => key);
+    },
+  );
 
   for (const partial of fs.readdirSync(
     path.join(__dirname, 'templates/partials'),
