@@ -120,7 +120,7 @@
         }
       ],
       "request": {
-        "urlTemplate": "/corps/%parent._key%/users"
+        "urlTemplate": "/corps/%parent._key%/users?nextPage=%nextToken%"
       },
       "response": {
         "dataPath": "data",
@@ -143,15 +143,17 @@
         "relationshipClass": "HAS"
       },
       "request": {
-        "urlTemplate": "/corps/%parent._key%/%parent._otherKey%/cloudwafInstances",
-        "headers": {
-          "x-api-user": "jake"
-        },
-        "method": "POST"
+        "urlTemplate": "/corps/%parent._key%/test/%parent._otherKey%/cloudwafInstances",
+        "method": "POST",
+        "params": {
+          "test": "test",
+          "n": "%nextToken%"
+        }
       },
       "response": {
         "dataPath": "data",
-        "responseType": "SINGLETON"
+        "responseType": "LIST",
+        "nextTokenPath": "next"
       },
       "dependsOn": ["fetch-organizations"]
     }

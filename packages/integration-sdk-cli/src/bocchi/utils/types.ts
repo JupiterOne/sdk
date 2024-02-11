@@ -63,7 +63,6 @@ export interface Step {
     parentEntityType: string;
     relationshipClass: string;
   };
-  // TODO: api client needs to be able to do GETs and POSTs based on this
   request: {
     urlTemplate: string;
     method?: 'GET' | 'POST';

@@ -65,11 +65,17 @@ function bocchi(plop: NodePlopAPI) {
    * (_class, fromType, toType) => string
    */
   plop.setHelper('getRelationshipType', generateRelationshipType);
-  plop.setHelper('getParentProperties', (urlTemplate: string): string[] => {
+  plop.setHelper('sanitizeUrlPath', (urlTemplate: string): string => {
     const regex = /%parent\.(.+?)%/g;
-    return (
-      Array.from(urlTemplate.matchAll(regex)).map((match) => match[1]) ?? []
-    );
+    for (const match of urlTemplate.matchAll(regex)) {
+      urlTemplate = urlTemplate.replace(
+        match[0],
+        '${parentEntity.' + match[1] + '}',
+      );
+    }
+    // looks at the urlTemplate provided and replaces "%nextToken%" with "${nextToken}",
+    // which is the string the client file will use to reference the nextToken
+    return urlTemplate.replace('%nextToken%', '${nextToken}');
   });
   plop.setHelper('escape', (data) => {
     if (typeof data === 'string') {
@@ -80,17 +86,24 @@ function bocchi(plop: NodePlopAPI) {
       return data;
     }
   });
-  plop.setHelper('sanitizeHttpMethod', (method: string = 'GET') => {
+  plop.setHelper('sanitizeHttpMethod', (method: string = 'GET'): string => {
     // if the user puts nothing in request.method, we need to default to GET
     return method.toUpperCase();
   });
-  plop.setHelper('sanitizeHttpBody', (body?: Record<string, any>) => {
-    // if the user puts nothing in request.body, we need to default to undefined
-    // additionally, because this is the string the template will use, we should
-    // be literally returning the string "undefined"
-    return body ?? 'undefined';
-  });
-  plop.setHelper('isSingletonRequest', (responseType: string) => {
+  plop.setHelper(
+    'sanitizeHttpBody',
+    (body: Record<string, any>): Record<string, any> => {
+      // Also, we need to check if the body contains "%nextToken%" and replace it with
+      // "nextToken" since that is the var in the client file that references the nextToken.
+      for (const key in body) {
+        if (typeof body[key] === 'string') {
+          body[key] = body[key].replace('%nextToken%', 'nextToken');
+        }
+      }
+      return body;
+    },
+  );
+  plop.setHelper('isSingletonRequest', (responseType: string): boolean => {
     return responseType === 'SINGLETON';
   });
   plop.setHelper('configTypeToType', (type: string) => {
