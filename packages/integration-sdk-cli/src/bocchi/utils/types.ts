@@ -2,9 +2,9 @@ import { RelationshipClass } from '@jupiterone/integration-sdk-core';
 
 export const StepType = {
   SINGLETON: 'singleton',
+  CHILD_SINGLETON: 'child-singleton',
   FETCH_ENTITIES: 'fetch-entities',
   FETCH_CHILD_ENTITIES: 'fetch-child-entities',
-  BUILD_RELATIONSHIPS: 'build-relationships',
 };
 
 export interface Template {

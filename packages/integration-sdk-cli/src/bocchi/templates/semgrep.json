@@ -152,7 +152,7 @@
       },
       "response": {
         "dataPath": "data",
-        "responseType": "LIST",
+        "responseType": "SINGLETON",
         "nextTokenPath": "next"
       },
       "dependsOn": ["fetch-organizations"]

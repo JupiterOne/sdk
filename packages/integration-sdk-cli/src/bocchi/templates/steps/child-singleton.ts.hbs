@@ -32,12 +32,15 @@ export async function {{camelCase id}}({
   jobState,
   instance,
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
-  {{#if request}}
   const client = createAPIClient(instance.config);
 
-  const data = await client.get{{camelCase entity.name}}();
-  {{/if}}
-  await jobState.addEntity(create{{pascalCase entity.name}}Entity({{#if request}}data{{/if}}));
+  await jobState.iterateEntities(
+    { _type: '{{ parentAssociation.parentEntityType }}' },
+    async (parentEntity) => {
+      const data = await client.get{{pascalCase entity.name}}(parentEntity);
+      await jobState.addEntity(create{{pascalCase entity.name}}Entity(data));
+    }
+  );
 }
 
 {{> directRelationships}}

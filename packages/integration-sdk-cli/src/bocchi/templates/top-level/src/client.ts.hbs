@@ -5,6 +5,7 @@ import {
   {{pascalCase entity.name}}, 
 {{/each}}
 } from './steps/types';
+import { Entity } from '@jupiterone/integration-sdk-core';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
@@ -22,19 +23,19 @@ export class APIClient extends HttpServiceClient {
 {{#each template.steps}}
 
   {{#if (isSingletonRequest response.responseType)}}
-  public async get{{titleCase entity.name}}(): Promise<any> {
+  public async get{{titleCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<any> {
     const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
     return (await this.request({
       url,
       headers: { ...this.authHeaders },
       method: '{{sanitizeHttpMethod request.method}}',
-      body: {{sanitizeHttpBody request.params}}
+      body: { {{#each (sanitizeHttpBody request.params)}}{{@key}}: {{this}},{{/each}} }
     })).{{response.dataPath}} as {{pascalCase entity.name}};
   }
   {{else}}
   public async iterate{{titleCase entity.name}}s(
     {{#if parentAssociation}}
-    parentEntity,
+    parentEntity: Entity,
     {{/if}}
     iteratee: ResourceIteratee<{{pascalCase entity.name}}>
   ): Promise<void> {
