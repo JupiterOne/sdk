@@ -1,7 +1,7 @@
 export class HttpServiceClient {
   constructor() {}
 
-  async request({
+  async request<T = any>({
     url,
     method,
     headers,
@@ -11,7 +11,7 @@ export class HttpServiceClient {
     method: 'GET' | 'POST';
     headers?: Record<string, string>;
     body?: any;
-  }) {
+  }): Promise<T> {
     const response = await fetch(url, {
       method,
       headers: {
@@ -20,6 +20,6 @@ export class HttpServiceClient {
       },
       body: body ? JSON.stringify(body) : undefined,
     });
-    return response.json();
+    return response.json() as T;
   }
 }
