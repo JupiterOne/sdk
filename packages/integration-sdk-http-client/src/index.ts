@@ -252,7 +252,6 @@ export abstract class BaseAPIClient {
    * Iteratively performs API requests based on the initial request and subsequent requests defined by a callback function.
    * This method is designed to facilitate paginated API requests where each request's response determines the parameters of the next request.
    *
-   * @typeparam T - The expected type of the response object used in the iteration callback.
    *
    * @param cb - A callback function that is called after each API request. It receives the API response (`iterationResources`) of type `T` and returns an object containing `nextRequestOptions` and `nextRequestQuery` for the next iteration, along with a `hasNext` boolean indicating whether to continue iterating.
    *   @param iterationResources - The response object from the current API request.
@@ -311,7 +310,9 @@ export abstract class BaseAPIClient {
         nextRequestOptions ? nextRequestOptions : initialRequest.options,
       );
 
-      const cbOptions = cb(response);
+      const data = await response.json();
+
+      const cbOptions = cb(data);
 
       hasNext = cbOptions.hasNext;
 
