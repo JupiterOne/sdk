@@ -286,8 +286,8 @@ export abstract class BaseAPIClient {
    *
    */
 
-  protected async iterateApi<T>(
-    cb: (iterationResources: T) => {
+  protected async iterateApi(
+    cb: (iterationResources: Response) => {
       nextRequestOptions?: RequestOptions;
       nextRequestQuery?: { [key: string]: string };
       hasNext: boolean;
@@ -311,7 +311,7 @@ export abstract class BaseAPIClient {
         nextRequestOptions ? nextRequestOptions : initialRequest.options,
       );
 
-      const cbOptions = cb(response as T);
+      const cbOptions = cb(response);
 
       hasNext = cbOptions.hasNext;
 
