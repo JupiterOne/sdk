@@ -173,7 +173,7 @@ describe('APIClient', () => {
       rateLimitHeaders.set('x-rate-limit-remaining', '40'); // 40 remaining, 60 consumed
       rateLimitHeaders.set(
         'x-rate-limit-reset',
-        Math.floor(Date.now() / 1000 + 60).toString()
+        Math.floor(Date.now() / 1000 + 60).toString(),
       ); // Reset in 60 seconds
 
       (mockResponse as any).headers = rateLimitHeaders;
@@ -237,12 +237,12 @@ describe('APIClient', () => {
       expect((client as any).request).toHaveBeenNthCalledWith(
         1,
         '/test',
-        undefined
+        undefined,
       );
       expect((client as any).request).toHaveBeenNthCalledWith(
         2,
         '/test?page=2',
-        undefined
+        undefined,
       );
     });
   });

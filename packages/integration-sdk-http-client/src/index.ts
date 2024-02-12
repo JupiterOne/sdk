@@ -21,7 +21,7 @@ import {
 export const defaultErrorHandler = async (
   err: any,
   context: AttemptContext,
-  logger: IntegrationLogger
+  logger: IntegrationLogger,
 ) => {
   if (err.code === 'ECONNRESET' || err.message.includes('ECONNRESET')) {
     return;
@@ -37,7 +37,7 @@ export const defaultErrorHandler = async (
     const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5_000;
     logger.warn(
       { retryAfter },
-      'Received a rate limit error. Waiting before retrying.'
+      'Received a rate limit error. Waiting before retrying.',
     );
     await sleep(retryAfter);
   }
@@ -163,7 +163,7 @@ export abstract class BaseAPIClient {
    */
   protected async request(
     endpoint: string,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): Promise<Response> {
     const { method = 'GET', body, headers, authorize = true } = options ?? {};
     if (authorize && !this.authorizationHeaders) {
@@ -195,7 +195,7 @@ export abstract class BaseAPIClient {
    */
   protected async retryRequest(
     endpoint: string,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): Promise<Response> {
     const { method = 'GET', body, headers, authorize = true } = options ?? {};
     return retry(
@@ -212,7 +212,7 @@ export abstract class BaseAPIClient {
           } catch (err) {
             this.logger.error(
               { code: err.code, err, endpoint },
-              'Error sending request'
+              'Error sending request',
             );
             throw err;
           }
@@ -244,7 +244,7 @@ export abstract class BaseAPIClient {
         handleError: async (err, context) => {
           await this.retryOptions.handleError(err, context, this.logger);
         },
-      }
+      },
     );
   }
 
@@ -295,7 +295,7 @@ export abstract class BaseAPIClient {
     initialRequest: {
       endpoint: string;
       options?: RequestOptions;
-    }
+    },
   ): Promise<void> {
     let hasNext = false;
     let nextRequestQuery: { [key: string]: string } | undefined;
@@ -305,10 +305,10 @@ export abstract class BaseAPIClient {
       const response = await this.request(
         nextRequestQuery
           ? `${initialRequest.endpoint}${this.buildQueryParams(
-              nextRequestQuery
+              nextRequestQuery,
             )}`
           : initialRequest.endpoint,
-        nextRequestOptions ? nextRequestOptions : initialRequest.options
+        nextRequestOptions ? nextRequestOptions : initialRequest.options,
       );
 
       const cbOptions = cb(response as T);
@@ -330,14 +330,14 @@ export abstract class BaseAPIClient {
    * @return {Promise<Response>}
    */
   protected async withRateLimiting(
-    fn: () => Promise<Response>
+    fn: () => Promise<Response>,
   ): Promise<Response> {
     const response = await fn();
     if (!this.rateLimitThrottling) {
       return response;
     }
     const { rateLimitLimit, rateLimitRemaining } = this.parseRateLimitHeaders(
-      response.headers
+      response.headers,
     );
     if (
       this.shouldThrottleNextRequest({
@@ -354,7 +354,7 @@ export abstract class BaseAPIClient {
 
       this.logger.warn(
         { rateLimitLimit, rateLimitRemaining, timeToSleepInMs },
-        `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`
+        `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`,
       );
       await sleep(timeToSleepInMs);
     }
@@ -368,7 +368,7 @@ export abstract class BaseAPIClient {
     const strRateLimitLimit = this.getRateLimitHeaderValue(headers, 'limit');
     const strRateLimitRemaining = this.getRateLimitHeaderValue(
       headers,
-      'remaining'
+      'remaining',
     );
     return {
       rateLimitLimit: strRateLimitLimit
@@ -419,11 +419,11 @@ export abstract class BaseAPIClient {
 
   private getRateLimitHeaderValue(
     headers: Headers,
-    header: keyof RateLimitHeaders
+    header: keyof RateLimitHeaders,
   ) {
     return headers.get(
       this.rateLimitThrottling?.rateLimitHeaders?.[header] ??
-        DEFAULT_RATE_LIMIT_HEADERS[header]
+        DEFAULT_RATE_LIMIT_HEADERS[header],
     );
   }
 
