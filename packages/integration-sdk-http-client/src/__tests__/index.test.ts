@@ -173,7 +173,7 @@ describe('APIClient', () => {
       rateLimitHeaders.set('x-rate-limit-remaining', '40'); // 40 remaining, 60 consumed
       rateLimitHeaders.set(
         'x-rate-limit-reset',
-        Math.floor(Date.now() / 1000 + 60).toString(),
+        Math.floor(Date.now() / 1000 + 60).toString()
       ); // Reset in 60 seconds
 
       (mockResponse as any).headers = rateLimitHeaders;
@@ -194,6 +194,56 @@ describe('APIClient', () => {
       expect(sleep).toHaveBeenCalledWith(expect.any(Number));
       const sleepArg = (sleep as jest.Mock).mock.calls[0][0];
       expect(sleepArg).toBeGreaterThan(60_000); // Sleep for 60 + 1 seconds
+    });
+  });
+
+  describe('iterateApi', () => {
+    it('should handle pagination correctly', async () => {
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+      });
+
+      const mockResponses = [
+        { data: ['item1', 'item2'], nextPage: 2 },
+        { data: ['item3'], nextPage: null }, // Indicate the end of pagination
+      ];
+
+      let requestCallIndex = 0;
+
+      jest.spyOn(client as any, 'request').mockImplementation(() => {
+        const response = mockResponses[requestCallIndex++];
+        return Promise.resolve(response);
+      });
+
+      const callbackMock = jest.fn().mockImplementation((response) => {
+        return {
+          hasNext: response.nextPage !== null,
+          nextRequestQuery: response.nextPage
+            ? { page: response.nextPage }
+            : undefined,
+        };
+      });
+
+      await (client as any).iterateApi(callbackMock, {
+        endpoint: '/test',
+      });
+
+      expect(callbackMock).toHaveBeenCalledTimes(2);
+      expect(callbackMock.mock.calls[0][0]).toEqual(mockResponses[0]);
+      expect(callbackMock.mock.calls[1][0]).toEqual(mockResponses[1]);
+
+      expect((client as any).request).toHaveBeenCalledTimes(2);
+      expect((client as any).request).toHaveBeenNthCalledWith(
+        1,
+        '/test',
+        undefined
+      );
+      expect((client as any).request).toHaveBeenNthCalledWith(
+        2,
+        '/test?page=2',
+        undefined
+      );
     });
   });
 

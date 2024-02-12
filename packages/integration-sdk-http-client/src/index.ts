@@ -21,7 +21,7 @@ import {
 export const defaultErrorHandler = async (
   err: any,
   context: AttemptContext,
-  logger: IntegrationLogger,
+  logger: IntegrationLogger
 ) => {
   if (err.code === 'ECONNRESET' || err.message.includes('ECONNRESET')) {
     return;
@@ -37,7 +37,7 @@ export const defaultErrorHandler = async (
     const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5_000;
     logger.warn(
       { retryAfter },
-      'Received a rate limit error. Waiting before retrying.',
+      'Received a rate limit error. Waiting before retrying.'
     );
     await sleep(retryAfter);
   }
@@ -163,7 +163,7 @@ export abstract class BaseAPIClient {
    */
   protected async request(
     endpoint: string,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<Response> {
     const { method = 'GET', body, headers, authorize = true } = options ?? {};
     if (authorize && !this.authorizationHeaders) {
@@ -195,7 +195,7 @@ export abstract class BaseAPIClient {
    */
   protected async retryRequest(
     endpoint: string,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<Response> {
     const { method = 'GET', body, headers, authorize = true } = options ?? {};
     return retry(
@@ -212,7 +212,7 @@ export abstract class BaseAPIClient {
           } catch (err) {
             this.logger.error(
               { code: err.code, err, endpoint },
-              'Error sending request',
+              'Error sending request'
             );
             throw err;
           }
@@ -244,8 +244,82 @@ export abstract class BaseAPIClient {
         handleError: async (err, context) => {
           await this.retryOptions.handleError(err, context, this.logger);
         },
-      },
+      }
     );
+  }
+
+  /**
+   * Iteratively performs API requests based on the initial request and subsequent requests defined by a callback function.
+   * This method is designed to facilitate paginated API requests where each request's response determines the parameters of the next request.
+   *
+   * @typeparam T - The expected type of the response object used in the iteration callback.
+   *
+   * @param cb - A callback function that is called after each API request. It receives the API response (`iterationResources`) of type `T` and returns an object containing `nextRequestOptions` and `nextRequestQuery` for the next iteration, along with a `hasNext` boolean indicating whether to continue iterating.
+   *   @param iterationResources - The response object from the current API request.
+   *   @returns An object with:
+   *     - `nextRequestOptions`: Optional RequestOptions for the next API request.
+   *     - `nextRequestQuery`: An optional object representing the query parameters for the next API request.
+   *     - `hasNext`: A boolean indicating whether there are more requests to be made.
+   *
+   * @param initialRequest - An object containing the initial API request details.
+   *   @param endpoint - The endpoint URL of the initial API request.
+   *   @param options - Optional RequestOptions for the initial API request.
+   *
+   * @returns A promise that resolves when all iterations are complete. The promise does not resolve with a specific value, indicating the primary purpose of this method is to perform side effects (e.g., accumulating data, side effects in `cb`, etc.).
+   *
+   * @example
+   * // Assuming an API where we fetch paginated data
+   * const fetchPaginatedData = async () => {
+   *   await iterateApi<MyResponseType>(async (response) => {
+   *     const hasNextPage = response.page < response.totalPages;
+   *     const nextQuery = hasNextPage ? { page: response.page + 1 } : undefined;
+   *
+   *     return {
+   *       hasNext: hasNextPage,
+   *       nextRequestQuery: nextQuery,
+   *     };
+   *   }, {
+   *     endpoint: 'https://api.example.com/data',
+   *     options: { method: 'GET' },
+   *   });
+   * };
+   *
+   */
+
+  protected async iterateApi<T>(
+    cb: (iterationResources: T) => {
+      nextRequestOptions?: RequestOptions;
+      nextRequestQuery?: { [key: string]: string };
+      hasNext: boolean;
+    },
+    initialRequest: {
+      endpoint: string;
+      options?: RequestOptions;
+    }
+  ): Promise<void> {
+    let hasNext = false;
+    let nextRequestQuery: { [key: string]: string } | undefined;
+    let nextRequestOptions: RequestOptions | undefined;
+
+    do {
+      const response = await this.request(
+        nextRequestQuery
+          ? `${initialRequest.endpoint}${this.buildQueryParams(
+              nextRequestQuery
+            )}`
+          : initialRequest.endpoint,
+        nextRequestOptions ? nextRequestOptions : initialRequest.options
+      );
+
+      const cbOptions = cb(response as T);
+
+      hasNext = cbOptions.hasNext;
+
+      if (hasNext) {
+        nextRequestQuery = cbOptions.nextRequestQuery;
+        nextRequestOptions = cbOptions.nextRequestOptions;
+      }
+    } while (hasNext);
   }
 
   /**
@@ -256,14 +330,14 @@ export abstract class BaseAPIClient {
    * @return {Promise<Response>}
    */
   protected async withRateLimiting(
-    fn: () => Promise<Response>,
+    fn: () => Promise<Response>
   ): Promise<Response> {
     const response = await fn();
     if (!this.rateLimitThrottling) {
       return response;
     }
     const { rateLimitLimit, rateLimitRemaining } = this.parseRateLimitHeaders(
-      response.headers,
+      response.headers
     );
     if (
       this.shouldThrottleNextRequest({
@@ -280,7 +354,7 @@ export abstract class BaseAPIClient {
 
       this.logger.warn(
         { rateLimitLimit, rateLimitRemaining, timeToSleepInMs },
-        `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`,
+        `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`
       );
       await sleep(timeToSleepInMs);
     }
@@ -294,7 +368,7 @@ export abstract class BaseAPIClient {
     const strRateLimitLimit = this.getRateLimitHeaderValue(headers, 'limit');
     const strRateLimitRemaining = this.getRateLimitHeaderValue(
       headers,
-      'remaining',
+      'remaining'
     );
     return {
       rateLimitLimit: strRateLimitLimit
@@ -345,11 +419,15 @@ export abstract class BaseAPIClient {
 
   private getRateLimitHeaderValue(
     headers: Headers,
-    header: keyof RateLimitHeaders,
+    header: keyof RateLimitHeaders
   ) {
     return headers.get(
       this.rateLimitThrottling?.rateLimitHeaders?.[header] ??
-        DEFAULT_RATE_LIMIT_HEADERS[header],
+        DEFAULT_RATE_LIMIT_HEADERS[header]
     );
+  }
+
+  private buildQueryParams(params: { [key: string]: string }) {
+    return `?${new URLSearchParams(params)}`;
   }
 }
