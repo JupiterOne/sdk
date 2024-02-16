@@ -2499,27 +2499,6 @@
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
 
-"@jupiterone/integration-sdk-runtime@^12.0.0":
-  version "12.0.0"
-  resolved "https://registry.yarnpkg.com/@jupiterone/integration-sdk-runtime/-/integration-sdk-runtime-12.0.0.tgz#f83e8b433942808139e5ce46dba582495ee8f720"
-  integrity sha512-9kobCG1xv43oHXHF9M4qa3ka0cfmd8NIcymdfq2PrjXs6SaNWpJHRyU76jASQgwsPwLlSxI+aktvnSAx80oEhw==
-  dependencies:
-    "@jupiterone/integration-sdk-core" "^12.0.0"
-    "@lifeomic/alpha" "^5.2.0"
-    "@lifeomic/attempt" "^3.0.3"
-    async-sema "^3.1.0"
-    bunyan "^1.8.12"
-    bunyan-format "^0.2.1"
-    dependency-graph "^0.9.0"
-    dotenv "^8.2.0"
-    dotenv-expand "^5.1.0"
-    get-folder-size "^2.0.1"
-    globby "^11.0.0"
-    lodash "^4.17.15"
-    p-map "^4.0.0"
-    p-queue "^6.3.0"
-    rimraf "^3.0.2"
-
 "@lerna/child-process@7.1.4":
   version "7.1.4"
   resolved "https://registry.yarnpkg.com/@lerna/child-process/-/child-process-7.1.4.tgz#5ab64540b01a339ecc6787f4f06d29aee99d71d5"

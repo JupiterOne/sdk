@@ -33,4 +33,4 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
           yarn --frozen-lock-file
-          yarn lerna publish from-package --canary --no-verify-access --yes
+          yarn lerna publish --canary --no-verify-access --yes
