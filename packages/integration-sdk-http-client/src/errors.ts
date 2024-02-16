@@ -32,7 +32,7 @@ export class RateLimitError extends IntegrationProviderAPIError {
   retryable = true;
 }
 
-class HTTPResponseError extends Error {
+export class HTTPResponseError extends Error {
   response: Response;
   constructor(response: Response) {
     super(`HTTP Error Response: ${response.status} ${response.statusText}`);

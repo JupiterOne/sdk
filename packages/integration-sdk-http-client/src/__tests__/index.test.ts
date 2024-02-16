@@ -1,16 +1,19 @@
 import { BaseAPIClient, defaultErrorHandler } from '../index';
-import fetch, { Response } from 'node-fetch';
 import { sleep } from '@lifeomic/attempt';
 
-jest.mock('node-fetch', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+jest.mock('node-fetch');
+import fetch from 'node-fetch';
+const { Response } = jest.requireActual('node-fetch');
 
-jest.mock('@lifeomic/attempt', () => ({
-  __esModule: true,
-  sleep: jest.fn().mockResolvedValue(undefined),
-}));
+jest.mock('@lifeomic/attempt', () => {
+  const originalModule = jest.requireActual('@lifeomic/attempt');
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    sleep: jest.fn().mockResolvedValue(undefined),
+  };
+});
 
 const authHeadersFn = jest.fn();
 
@@ -197,7 +200,7 @@ describe('APIClient', () => {
     });
   });
 
-  describe('iterateApi', () => {
+  describe('paginate', () => {
     it('should handle pagination correctly', async () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
@@ -205,44 +208,62 @@ describe('APIClient', () => {
       });
 
       const mockResponses = [
-        { data: ['item1', 'item2'], nextPage: 2 },
-        { data: ['item3'], nextPage: null }, // Indicate the end of pagination
+        new Response(
+          JSON.stringify({ items: [{ id: '1' }, { id: '2' }], nextPage: 2 }),
+        ),
+        new Response(JSON.stringify({ items: [{ id: '3' }], nextPage: null })), // Indicate the end of pagination
       ];
 
-      let requestCallIndex = 0;
+      (fetch as unknown as jest.Mock)
+        .mockResolvedValueOnce(mockResponses[0])
+        .mockResolvedValueOnce(mockResponses[1]);
+      // Define test data
+      const initialRequest = { endpoint: 'https://example.com/api' };
+      const dataPath = 'items';
+      const nextPageCallback = jest
+        .fn()
+        .mockImplementation(async (response) => {
+          const data = await response.json();
+          if (!data.nextPage) {
+            return;
+          }
+          return {
+            nextUrl: `https://example.com/api?page=${data.nextPage}`,
+          };
+        });
 
-      jest.spyOn(client as any, 'request').mockImplementation(() => {
-        const response = mockResponses[requestCallIndex++];
-        return Promise.resolve(response);
-      });
-
-      const callbackMock = jest.fn().mockImplementation((response) => {
-        return {
-          hasNext: response.nextPage !== null,
-          nextRequestQuery: response.nextPage
-            ? { page: response.nextPage }
-            : undefined,
-        };
-      });
-
-      await (client as any).iterateApi(callbackMock, {
-        endpoint: '/test',
-      });
-
-      expect(callbackMock).toHaveBeenCalledTimes(2);
-      expect(callbackMock.mock.calls[0][0]).toEqual(mockResponses[0]);
-      expect(callbackMock.mock.calls[1][0]).toEqual(mockResponses[1]);
-
-      expect((client as any).request).toHaveBeenCalledTimes(2);
-      expect((client as any).request).toHaveBeenNthCalledWith(
-        1,
-        '/test',
-        undefined,
+      // Initialize the generator
+      const generator = (client as any).paginate(
+        initialRequest,
+        dataPath,
+        nextPageCallback,
       );
-      expect((client as any).request).toHaveBeenNthCalledWith(
+
+      // Fetch the first page
+      let result = await generator.next();
+      expect(result.value).toEqual({ id: '1' });
+      result = await generator.next();
+      expect(result.value).toEqual({ id: '2' });
+
+      // Fetch the second page
+      result = await generator.next();
+      expect(result.value).toEqual({ id: '3' });
+
+      // Ensure the generator completes
+      result = await generator.next();
+      expect(result.done).toBeTruthy();
+
+      // Verify mock calls
+      expect(fetch).toHaveBeenCalledTimes(2); // Assuming two fetch calls, one for each page
+      expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/api',
+        expect.any(Object),
+      );
+      expect(fetch).toHaveBeenNthCalledWith(
         2,
-        '/test?page=2',
-        undefined,
+        'https://example.com/api?page=2',
+        expect.any(Object),
       );
     });
   });
