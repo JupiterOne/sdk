@@ -40,3 +40,8 @@ export interface ClientConfig {
   logErrorBody?: boolean;
   rateLimitThrottling?: RateLimitThrottlingOptions;
 }
+
+export interface IterateCallbackResult {
+  nextUrl?: string;
+  nextRequestOptions?: RequestOptions;
+}

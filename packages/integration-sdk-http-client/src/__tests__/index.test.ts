@@ -1,16 +1,19 @@
 import { BaseAPIClient, defaultErrorHandler } from '../index';
-import fetch, { Response } from 'node-fetch';
 import { sleep } from '@lifeomic/attempt';
 
-jest.mock('node-fetch', () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
+jest.mock('node-fetch');
+import fetch from 'node-fetch';
+const { Response } = jest.requireActual('node-fetch');
 
-jest.mock('@lifeomic/attempt', () => ({
-  __esModule: true,
-  sleep: jest.fn().mockResolvedValue(undefined),
-}));
+jest.mock('@lifeomic/attempt', () => {
+  const originalModule = jest.requireActual('@lifeomic/attempt');
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    sleep: jest.fn().mockResolvedValue(undefined),
+  };
+});
 
 const authHeadersFn = jest.fn();
 
@@ -194,6 +197,74 @@ describe('APIClient', () => {
       expect(sleep).toHaveBeenCalledWith(expect.any(Number));
       const sleepArg = (sleep as jest.Mock).mock.calls[0][0];
       expect(sleepArg).toBeGreaterThan(60_000); // Sleep for 60 + 1 seconds
+    });
+  });
+
+  describe('paginate', () => {
+    it('should handle pagination correctly', async () => {
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+      });
+
+      const mockResponses = [
+        new Response(
+          JSON.stringify({ items: [{ id: '1' }, { id: '2' }], nextPage: 2 }),
+        ),
+        new Response(JSON.stringify({ items: [{ id: '3' }], nextPage: null })), // Indicate the end of pagination
+      ];
+
+      (fetch as unknown as jest.Mock)
+        .mockResolvedValueOnce(mockResponses[0])
+        .mockResolvedValueOnce(mockResponses[1]);
+      // Define test data
+      const initialRequest = { endpoint: 'https://example.com/api' };
+      const dataPath = 'items';
+      const nextPageCallback = jest
+        .fn()
+        .mockImplementation(async (response) => {
+          const data = await response.json();
+          if (!data.nextPage) {
+            return;
+          }
+          return {
+            nextUrl: `https://example.com/api?page=${data.nextPage}`,
+          };
+        });
+
+      // Initialize the generator
+      const generator = (client as any).paginate(
+        initialRequest,
+        dataPath,
+        nextPageCallback,
+      );
+
+      // Fetch the first page
+      let result = await generator.next();
+      expect(result.value).toEqual({ id: '1' });
+      result = await generator.next();
+      expect(result.value).toEqual({ id: '2' });
+
+      // Fetch the second page
+      result = await generator.next();
+      expect(result.value).toEqual({ id: '3' });
+
+      // Ensure the generator completes
+      result = await generator.next();
+      expect(result.done).toBeTruthy();
+
+      // Verify mock calls
+      expect(fetch).toHaveBeenCalledTimes(2); // Assuming two fetch calls, one for each page
+      expect(fetch).toHaveBeenNthCalledWith(
+        1,
+        'https://example.com/api',
+        expect.any(Object),
+      );
+      expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        'https://example.com/api?page=2',
+        expect.any(Object),
+      );
     });
   });
 

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@lifeomic/attempt": "^3.0.3",
+    "lodash": "^4.17.21",
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
