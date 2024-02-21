@@ -9,11 +9,13 @@ describe('processDeclaredTypesDiff', () => {
         name: 'first',
         declaredTypes: ['a', 'b', 'c'],
         encounteredTypes: ['d', 'b', 'c'],
+        encounteredTypeCounts: expect.any(Object),
       },
       {
         name: 'second',
         declaredTypes: ['b', 'c', 'e'],
         encounteredTypes: ['b', 'c'],
+        encounteredTypeCounts: expect.any(Object),
       },
     ];
 
