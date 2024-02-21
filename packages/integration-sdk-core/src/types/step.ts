@@ -95,6 +95,11 @@ export type IntegrationStepResult = Omit<
   encounteredTypes: string[];
 
   /**
+   *
+   */
+  encounteredTypeCounts: { [type: string]: number };
+
+  /**
    * Start time of the step in milliseconds since the Unix epoch.
    */
   startTime?: number;
