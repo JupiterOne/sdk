@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 12.1.0 - 2024-02-21
+
+- Enhanced step summaries to include `encounteredTypeCounts` property.
+
 ## 12.0.0 - 2024-02-01
 
 - Added in `collectEncounteredKeys` to invocation config. This will allow keys
