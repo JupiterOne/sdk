@@ -154,6 +154,11 @@ export function executeStepDependencyGraph<
         ...existingResult,
         status,
         encounteredTypes: typeTracker.getEncounteredTypesForStep(stepId),
+        encounteredTypeCounts: Object.fromEntries(
+          Object.entries(typeTracker.summarizeStep(stepId)).map(
+            ([key, value]) => [key, value.total],
+          ),
+        ),
         startTime,
         endTime,
         duration,
@@ -606,6 +611,7 @@ function buildStepResultsMap<
         declaredTypes,
         partialTypes,
         encounteredTypes: [],
+        encounteredTypeCounts: {},
         status:
           stepStartStates[step.id].disabled || hasDisabledDependencies
             ? StepResultStatus.DISABLED
