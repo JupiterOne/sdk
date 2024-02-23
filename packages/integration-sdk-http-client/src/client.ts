@@ -19,6 +19,7 @@ import {
   IterateCallbackResult,
 } from './types';
 import get from 'lodash/get';
+import { HierarchicalTokenBucket } from '@jupiterone/hierarchical-token-bucket';
 
 export const defaultErrorHandler = async (
   err: any,
@@ -66,6 +67,8 @@ export abstract class BaseAPIClient {
   protected retryOptions: RetryOptions;
   protected logErrorBody: boolean;
   protected rateLimitThrottling: RateLimitThrottlingOptions | undefined;
+  protected baseTokenBucket?: HierarchicalTokenBucket;
+  protected endpointTokenBuckets: Record<string, HierarchicalTokenBucket> = {};
 
   /**
    * The authorization headers for the API requests
@@ -89,6 +92,9 @@ export abstract class BaseAPIClient {
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.limit='x-rate-limit-limit'] - The header for the rate limit limit
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.remaining='x-rate-limit-remaining'] - The header for the rate limit remaining
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='x-rate-limit-reset'] - The header for the rate limit reset
+   * @param {TokenBucketOptions} [config.tokenBucket] - The token bucket options,
+   *    if not provided, token bucket will not be enabled
+   *
    * @example
    * ```typescript
    * const client = new APIClient({
@@ -114,6 +120,12 @@ export abstract class BaseAPIClient {
     };
     this.logErrorBody = config.logErrorBody ?? false;
     this.rateLimitThrottling = config.rateLimitThrottling;
+    if (config.tokenBucket) {
+      this.baseTokenBucket = new HierarchicalTokenBucket({
+        maximumCapacity: config.tokenBucket.maximumCapacity,
+        refillRate: config.tokenBucket.refillRate,
+      });
+    }
   }
 
   protected withBaseUrl(endpoint: string): string {
@@ -167,6 +179,12 @@ export abstract class BaseAPIClient {
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
+    const tokenBucket = this.getTokenBucket(endpoint, options?.bucketTokens);
+    if (tokenBucket) {
+      const timeToWaitInMs = tokenBucket.take();
+      await sleep(timeToWaitInMs);
+    }
+
     const { method = 'GET', body, headers, authorize = true } = options ?? {};
     if (authorize && !this.authorizationHeaders) {
       this.authorizationHeaders = await this.getAuthorizationHeaders();
@@ -202,7 +220,7 @@ export abstract class BaseAPIClient {
    * @param {boolean} [options.authorize=true] - Whether to include authorization headers
    * @return {Promise<Response>} - The response from the API
    */
-  protected async retryRequest(
+  protected async retryableRequest(
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
@@ -311,7 +329,7 @@ export abstract class BaseAPIClient {
     let nextRequestOptions: RequestOptions | undefined;
 
     do {
-      const response = await this.retryRequest(
+      const response = await this.retryableRequest(
         nextUrl ?? initialRequest.endpoint,
         nextRequestOptions ?? initialRequest.options,
       );
@@ -332,6 +350,31 @@ export abstract class BaseAPIClient {
         nextRequestOptions = cbOptions?.nextRequestOptions;
       }
     } while (nextUrl);
+  }
+
+  /**
+   * Get the token bucket for the given endpoint
+   *
+   * @param {string} endpoint - The endpoint to get the token bucket for
+   * @param {number} [tokens] - The number of tokens to use for the token bucket
+   */
+  private getTokenBucket(
+    endpoint: string,
+    tokens?: number,
+  ): HierarchicalTokenBucket | undefined {
+    if (!this.baseTokenBucket) {
+      return;
+    }
+    if (this.endpointTokenBuckets[endpoint]) {
+      return this.endpointTokenBuckets[endpoint];
+    }
+    this.endpointTokenBuckets[endpoint] = new HierarchicalTokenBucket({
+      parent: this.baseTokenBucket,
+      maximumCapacity:
+        tokens ?? this.baseTokenBucket.metadata.options.maximumCapacity,
+      refillRate: tokens ?? this.baseTokenBucket.metadata.options.refillRate,
+    });
+    return this.endpointTokenBuckets[endpoint];
   }
 
   /**

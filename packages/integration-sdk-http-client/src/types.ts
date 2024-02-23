@@ -8,6 +8,7 @@ export interface RequestOptions {
   body?: Record<string, unknown>;
   headers?: Record<string, string>;
   authorize?: boolean;
+  bucketTokens?: number;
 }
 
 export interface RetryOptions {
@@ -33,12 +34,18 @@ export interface RateLimitThrottlingOptions {
   rateLimitHeaders?: RateLimitHeaders;
 }
 
+export interface TokenBucketOptions {
+  maximumCapacity: number;
+  refillRate: number;
+}
+
 export interface ClientConfig {
   baseUrl: string;
   logger: IntegrationLogger;
   retryOptions?: Partial<RetryOptions>;
   logErrorBody?: boolean;
   rateLimitThrottling?: RateLimitThrottlingOptions;
+  tokenBucket?: TokenBucketOptions;
 }
 
 export interface IterateCallbackResult {

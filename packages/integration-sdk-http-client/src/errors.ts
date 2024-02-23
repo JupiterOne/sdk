@@ -6,7 +6,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 import { Response } from 'node-fetch';
 
-export type RateLimitErrorParams = ConstructorParameters<
+type RateLimitErrorParams = ConstructorParameters<
   typeof IntegrationProviderAPIError
 >[0] & {
   retryAfter: number;
@@ -23,13 +23,12 @@ export class RetryableIntegrationProviderApiError extends IntegrationProviderAPI
   retryable = true;
 }
 
-export class RateLimitError extends IntegrationProviderAPIError {
+export class RateLimitError extends RetryableIntegrationProviderApiError {
   constructor(options: RateLimitErrorParams) {
     super(options);
     this.retryAfter = options.retryAfter;
   }
   retryAfter: number;
-  retryable = true;
 }
 
 export class HTTPResponseError extends Error {
@@ -40,24 +39,33 @@ export class HTTPResponseError extends Error {
   }
 }
 
+async function handleLogErrorBody(
+  response: Response,
+  logger: IntegrationLogger,
+  logErrorBody: boolean,
+) {
+  if (!logErrorBody) {
+    return;
+  }
+  let errorBody: any;
+  try {
+    errorBody = await response.json();
+    logger.error(
+      { errBody: JSON.stringify(errorBody) },
+      'Encountered error from API',
+    );
+  } catch (e) {
+    // pass
+  }
+}
+
 export async function retryableRequestError({
   endpoint,
   response,
   logger,
   logErrorBody,
 }: RequestErrorParams): Promise<RetryableIntegrationProviderApiError> {
-  if (logErrorBody) {
-    let errorBody: any;
-    try {
-      errorBody = await response.json();
-      logger.error(
-        { errBody: JSON.stringify(errorBody) },
-        'Encountered error from API',
-      );
-    } catch (e) {
-      // pass
-    }
-  }
+  await handleLogErrorBody(response, logger, logErrorBody);
 
   if (response.status === 429) {
     return new RateLimitError({
@@ -73,7 +81,7 @@ export async function retryableRequestError({
     cause: new HTTPResponseError(response),
     endpoint,
     status: response.status,
-    statusText: response.statusText ?? response.status,
+    statusText: response.statusText,
   });
 }
 
@@ -83,24 +91,13 @@ export async function fatalRequestError({
   logger,
   logErrorBody,
 }: RequestErrorParams): Promise<IntegrationProviderAPIError> {
-  if (logErrorBody) {
-    let errorBody: any;
-    try {
-      errorBody = await response.json();
-      logger.error(
-        { errBody: JSON.stringify(errorBody) },
-        'Encountered error from API',
-      );
-    } catch (e) {
-      // pass
-    }
-  }
+  await handleLogErrorBody(response, logger, logErrorBody);
 
   const apiErrorOptions = {
     cause: new HTTPResponseError(response),
     endpoint,
     status: response.status,
-    statusText: response.statusText ?? response.status,
+    statusText: response.statusText,
   };
   if (response.status === 401) {
     return new IntegrationProviderAuthenticationError(apiErrorOptions);

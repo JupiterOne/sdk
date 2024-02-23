@@ -2405,6 +2405,11 @@
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
 
+"@jupiterone/hierarchical-token-bucket@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@jupiterone/hierarchical-token-bucket/-/hierarchical-token-bucket-0.3.1.tgz#b4bda4b5b1eed2fde3db776ce7241162c83b9b01"
+  integrity sha512-iD8Dqaggb3yuhx457OUNyDUspnLBhkT6dgFzwHzqFLGwa4a5CCev44+sYVOQ9SbAwOR+Yv5URJH3IXHKh1yxPg==
+
 "@lerna/child-process@7.1.4":
   version "7.1.4"
   resolved "https://registry.yarnpkg.com/@lerna/child-process/-/child-process-7.1.4.tgz#5ab64540b01a339ecc6787f4f06d29aee99d71d5"
@@ -3088,15 +3093,10 @@
     "@types/node" "*"
     form-data "^4.0.0"
 
-"@types/node@*", "@types/node@^18":
+"@types/node@*", "@types/node@^14.14.19", "@types/node@^18":
   version "18.15.11"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-18.15.11.tgz#b3b790f09cb1696cffcec605de025b088fa4225f"
   integrity sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==
-
-"@types/node@^14.14.19":
-  version "14.18.63"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.18.63.tgz#1788fa8da838dbb5f9ea994b834278205db6ca2b"
-  integrity sha512-fAtCfv4jJg+ExtXhvCkCqUKZ+4ok/JQk01qDKhL5BDDoS3AxKXhV5/MAVUZyQnSEd2GT92fkgZl0pz0Q0AzcIQ==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
