@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-http-client",
-  "version": "12.2.0",
+  "version": "12.2.1",
   "description": "The HTTP client for use in JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -29,8 +29,8 @@
     "node-fetch": "^2.6.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-dev-tools": "^12.2.0",
-    "@jupiterone/integration-sdk-private-test-utils": "^12.2.0",
+    "@jupiterone/integration-sdk-dev-tools": "^12.2.1",
+    "@jupiterone/integration-sdk-private-test-utils": "^12.2.1",
     "@types/node-fetch": "^2.6.11"
   },
   "bugs": {
