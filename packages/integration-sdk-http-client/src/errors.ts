@@ -31,32 +31,31 @@ export class RateLimitError extends RetryableIntegrationProviderApiError {
   retryAfter: number;
 }
 
-export class HTTPResponseError extends Error {
-  response: Response;
-  constructor(response: Response) {
-    super(`HTTP Error Response: ${response.status} ${response.statusText}`);
-    this.response = response;
+export class ResponseBodyError extends Error {
+  bodyError: string;
+  constructor(bodyError: string) {
+    super(`Error Response: ${bodyError}`);
+    this.name = 'ResponseBodyError';
+    this.bodyError = bodyError;
   }
 }
 
-async function handleLogErrorBody(
+async function getErrorBody(
   response: Response,
   logger: IntegrationLogger,
   logErrorBody: boolean,
 ) {
-  if (!logErrorBody) {
-    return;
-  }
-  let errorBody: any;
+  let errorBody: string | undefined;
   try {
-    errorBody = await response.json();
-    logger.error(
-      { errBody: JSON.stringify(errorBody) },
-      'Encountered error from API',
-    );
+    const clonedResponse = response.clone();
+    errorBody = await clonedResponse.text();
+    if (logErrorBody) {
+      logger.error({ errBody: errorBody }, 'Encountered error from API');
+    }
   } catch (e) {
     // pass
   }
+  return errorBody;
 }
 
 export async function retryableRequestError({
@@ -65,11 +64,11 @@ export async function retryableRequestError({
   logger,
   logErrorBody,
 }: RequestErrorParams): Promise<RetryableIntegrationProviderApiError> {
-  await handleLogErrorBody(response, logger, logErrorBody);
+  const errorBody = await getErrorBody(response, logger, logErrorBody);
 
   if (response.status === 429) {
     return new RateLimitError({
-      cause: new HTTPResponseError(response),
+      cause: errorBody ? new ResponseBodyError(errorBody) : undefined,
       status: response.status,
       statusText: response.statusText,
       endpoint,
@@ -78,7 +77,7 @@ export async function retryableRequestError({
   }
 
   return new RetryableIntegrationProviderApiError({
-    cause: new HTTPResponseError(response),
+    cause: errorBody ? new ResponseBodyError(errorBody) : undefined,
     endpoint,
     status: response.status,
     statusText: response.statusText,
@@ -91,10 +90,10 @@ export async function fatalRequestError({
   logger,
   logErrorBody,
 }: RequestErrorParams): Promise<IntegrationProviderAPIError> {
-  await handleLogErrorBody(response, logger, logErrorBody);
+  const errorBody = await getErrorBody(response, logger, logErrorBody);
 
   const apiErrorOptions = {
-    cause: new HTTPResponseError(response),
+    cause: errorBody ? new ResponseBodyError(errorBody) : undefined,
     endpoint,
     status: response.status,
     statusText: response.statusText,
@@ -112,7 +111,7 @@ export async function fatalRequestError({
  * Function for determining if a request is retryable
  * based on the returned status.
  */
-export function isRetryableRequest({ status }: Response): boolean {
+export function isRetryableRequest(status: number): boolean {
   return (
     // 5xx error from provider (their fault, might be retryable)
     // 429 === too many requests, we got rate limited so safe to try again

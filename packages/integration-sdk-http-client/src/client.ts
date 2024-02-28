@@ -255,10 +255,14 @@ export abstract class BaseAPIClient {
             logger: this.logger,
             logErrorBody: this.logErrorBody,
           };
-          if (isRetryableRequest(response)) {
+          if (isRetryableRequest(response.status)) {
             error = await retryableRequestError(requestErrorParams);
           } else {
             error = await fatalRequestError(requestErrorParams);
+          }
+          for await (const _chunk of response.body) {
+            // force consumption of body to avoid memory leaks
+            // https://github.com/node-fetch/node-fetch/issues/83
           }
           throw error;
         });
