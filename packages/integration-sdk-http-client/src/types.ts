@@ -52,3 +52,8 @@ export interface IterateCallbackResult {
   nextUrl?: string;
   nextRequestOptions?: RequestOptions;
 }
+
+export interface NextPageData {
+  body: Record<string, any>;
+  headers: Record<string, string[]>;
+}

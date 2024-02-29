@@ -220,17 +220,15 @@ describe('APIClient', () => {
       // Define test data
       const initialRequest = { endpoint: 'https://example.com/api' };
       const dataPath = 'items';
-      const nextPageCallback = jest
-        .fn()
-        .mockImplementation(async (response) => {
-          const data = await response.json();
-          if (!data.nextPage) {
-            return;
-          }
-          return {
-            nextUrl: `https://example.com/api?page=${data.nextPage}`,
-          };
-        });
+      const nextPageCallback = jest.fn().mockImplementation((data) => {
+        const { body } = data;
+        if (!body.nextPage) {
+          return;
+        }
+        return {
+          nextUrl: `https://example.com/api?page=${body.nextPage}`,
+        };
+      });
 
       // Initialize the generator
       const generator = (client as any).paginate(
