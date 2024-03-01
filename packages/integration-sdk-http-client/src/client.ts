@@ -17,6 +17,8 @@ import {
   RateLimitThrottlingOptions,
   RateLimitHeaders,
   IterateCallbackResult,
+  TokenBucketOptions,
+  NextPageData,
 } from './types';
 import get from 'lodash/get';
 import { HierarchicalTokenBucket } from '@jupiterone/hierarchical-token-bucket';
@@ -68,6 +70,7 @@ export abstract class BaseAPIClient {
   protected logErrorBody: boolean;
   protected rateLimitThrottling: RateLimitThrottlingOptions | undefined;
   protected baseTokenBucket?: HierarchicalTokenBucket;
+  protected tokenBucketInitialConfig?: TokenBucketOptions | undefined;
   protected endpointTokenBuckets: Record<string, HierarchicalTokenBucket> = {};
 
   /**
@@ -121,6 +124,7 @@ export abstract class BaseAPIClient {
     this.logErrorBody = config.logErrorBody ?? false;
     this.rateLimitThrottling = config.rateLimitThrottling;
     if (config.tokenBucket) {
+      this.tokenBucketInitialConfig = config.tokenBucket;
       this.baseTokenBucket = new HierarchicalTokenBucket({
         maximumCapacity: config.tokenBucket.maximumCapacity,
         refillRate: config.tokenBucket.refillRate,
@@ -147,8 +151,8 @@ export abstract class BaseAPIClient {
    * ```
    * @example
    * ```typescript
-   * async getAuthorizationHeaders(): Promise<Record<string, string>> {
-   *   const response = this.request('/token', {
+   * protected async getAuthorizationHeaders(): Promise<Record<string, string>> {
+   *   const response = await this.request('/token', {
    *     method: 'POST',
    *     body: {
    *       email: this.config.email,
@@ -162,7 +166,9 @@ export abstract class BaseAPIClient {
    *   };
    * }
    */
-  abstract getAuthorizationHeaders(): OptionalPromise<Record<string, string>>;
+  protected abstract getAuthorizationHeaders(): OptionalPromise<
+    Record<string, string>
+  >;
 
   /**
    * Perform a request to the API.
@@ -294,8 +300,8 @@ export abstract class BaseAPIClient {
    * @example
    * ```typescript
    * async iterateUsers(iteratee: (user: User) => Promise<void>): Promise<void>{
-   * const baseEndpoint = '/users?limit=100';
-   *   const iterator = await paginate({
+   *   const baseEndpoint = '/users?limit=100';
+   *   const iterator = this.paginate({
    *     endpoint: baseEndpoint,
    *   }, 'users', this.getNextPageCallback(baseEndpoint));
    *
@@ -304,10 +310,10 @@ export abstract class BaseAPIClient {
    *   }
    * };
    *
-   * async getNextPageCallback(baseEndpoint: string) {
-   *   return async (response: Response): Promise<IterateCallbackResult | undefined> => {
-   *     const data = await response.json();
-   *     const nextCursor = data.metadata?.cursor;
+   * private getNextPageCallback(baseEndpoint: string) {
+   *   return (data: NextPageData): IterateCallbackResult | undefined => {
+   *     const { body } = data;
+   *     const nextCursor = body.metadata?.cursor;
    *     if (!nextCursor) {
    *       return;
    *     }
@@ -325,19 +331,21 @@ export abstract class BaseAPIClient {
       options?: RequestOptions;
     },
     dataPath: string | string[] | undefined,
-    nextPageCallback: (
-      response: Response,
-    ) => OptionalPromise<IterateCallbackResult | undefined>,
+    nextPageCallback: (data: NextPageData) => IterateCallbackResult | undefined,
   ): AsyncGenerator<T, void, unknown> {
     let nextUrl: string | undefined;
     let nextRequestOptions: RequestOptions | undefined;
+    let isInitialRequest = true;
 
     do {
       const response = await this.retryableRequest(
-        nextUrl ?? initialRequest.endpoint,
-        nextRequestOptions ?? initialRequest.options,
+        isInitialRequest ? initialRequest.endpoint : (nextUrl as string),
+        isInitialRequest ? initialRequest.options : nextRequestOptions,
       );
-      const responseClone = response.clone(); // Clone the response to allow for multiple reads, we need it in the nextPageCallback
+      if (response.status === 204) {
+        break;
+      }
+
       const data = await response.json();
 
       let items = dataPath ? get(data, dataPath) : data;
@@ -346,13 +354,14 @@ export abstract class BaseAPIClient {
         yield item as T;
       }
 
-      const cbOptions = await nextPageCallback(responseClone);
+      const cbOptions = nextPageCallback({
+        body: data,
+        headers: response.headers.raw(),
+      });
 
       nextUrl = cbOptions?.nextUrl;
-
-      if (nextUrl) {
-        nextRequestOptions = cbOptions?.nextRequestOptions;
-      }
+      nextRequestOptions = cbOptions?.nextRequestOptions;
+      isInitialRequest = false;
     } while (nextUrl);
   }
 
@@ -369,16 +378,17 @@ export abstract class BaseAPIClient {
     if (!this.baseTokenBucket) {
       return;
     }
-    if (this.endpointTokenBuckets[endpoint]) {
-      return this.endpointTokenBuckets[endpoint];
+    const path = endpoint.split('?')[0];
+    if (this.endpointTokenBuckets[path]) {
+      return this.endpointTokenBuckets[path];
     }
-    this.endpointTokenBuckets[endpoint] = new HierarchicalTokenBucket({
+    this.endpointTokenBuckets[path] = new HierarchicalTokenBucket({
       parent: this.baseTokenBucket,
       maximumCapacity:
-        tokens ?? this.baseTokenBucket.metadata.options.maximumCapacity,
-      refillRate: tokens ?? this.baseTokenBucket.metadata.options.refillRate,
+        tokens ?? this.tokenBucketInitialConfig?.maximumCapacity ?? 10_000,
+      refillRate: tokens ?? this.tokenBucketInitialConfig?.refillRate ?? 10_000,
     });
-    return this.endpointTokenBuckets[endpoint];
+    return this.endpointTokenBuckets[path];
   }
 
   /**
