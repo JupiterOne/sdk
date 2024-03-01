@@ -1,4 +1,4 @@
-import { BaseAPIClient, defaultErrorHandler } from '../index';
+import { BaseAPIClient, defaultErrorHandler } from '../client';
 import { sleep } from '@lifeomic/attempt';
 
 jest.mock('node-fetch');
@@ -172,12 +172,9 @@ describe('APIClient', () => {
       const fn = jest.fn().mockResolvedValueOnce(mockResponse);
 
       const rateLimitHeaders = new Headers();
-      rateLimitHeaders.set('x-rate-limit-limit', '100');
-      rateLimitHeaders.set('x-rate-limit-remaining', '40'); // 40 remaining, 60 consumed
-      rateLimitHeaders.set(
-        'x-rate-limit-reset',
-        Math.floor(Date.now() / 1000 + 60).toString(),
-      ); // Reset in 60 seconds
+      rateLimitHeaders.set('ratelimit-limit', '100');
+      rateLimitHeaders.set('ratelimit-remaining', '40'); // 40 remaining, 60 consumed
+      rateLimitHeaders.set('ratelimit-reset', '60'); // Reset in 60 seconds
 
       (mockResponse as any).headers = rateLimitHeaders;
 

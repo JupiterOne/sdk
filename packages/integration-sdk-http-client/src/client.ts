@@ -1,5 +1,6 @@
 import fetch, { Headers, Response } from 'node-fetch';
 import {
+  IntegrationError,
   IntegrationLogger,
   IntegrationProviderAPIError,
 } from '@jupiterone/integration-sdk-core';
@@ -58,9 +59,9 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 
 const DEFAULT_RATE_LIMIT_HEADERS: { [key in keyof RateLimitHeaders]: string } =
   {
-    limit: 'x-rate-limit-limit',
-    remaining: 'x-rate-limit-remaining',
-    reset: 'x-rate-limit-reset',
+    limit: 'ratelimit-limit',
+    remaining: 'ratelimit-remaining',
+    reset: 'ratelimit-reset',
   };
 
 export abstract class BaseAPIClient {
@@ -91,10 +92,14 @@ export abstract class BaseAPIClient {
    * @param {RateLimitThrottlingOptions} [config.rateLimitThrottling] - The rate limit throttling options,
    *     if not provided, rate limit throttling will not be enabled
    * @param {number} [config.rateLimitThrottling.threshold] - The threshold at which to throttle requests
+   *   It uses the Rate Limit header fields standard by default: https://www.ietf.org/archive/id/draft-ietf-httpapi-ratelimit-headers-07.html
+   * @param {string} [config.rateLimitThrottling.resetMode='remaining_epoch_s'] - The mode to use for rate limit reset,
+   *    - 'remaining_epoch_s' - Use when reset header has the remaining window before the rate limit resets, in UTC epoch seconds.
+   *    - 'datetime_epoch_s' - Use when reset header has the time at which the current rate limit window resets in UTC epoch seconds.
    * @param {RateLimitHeaders} [config.rateLimitThrottling.rateLimitHeaders] - The headers to use for rate limiting
-   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.limit='x-rate-limit-limit'] - The header for the rate limit limit
-   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.remaining='x-rate-limit-remaining'] - The header for the rate limit remaining
-   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='x-rate-limit-reset'] - The header for the rate limit reset
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.limit='=ratelimit-limit'] - The header for the rate limit limit
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.remaining='ratelimit-remaining'] - The header for the rate limit remaining
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='ratelimit-reset'] - The header for the rate limit reset
    * @param {TokenBucketOptions} [config.tokenBucket] - The token bucket options,
    *    if not provided, token bucket will not be enabled
    *
@@ -123,6 +128,10 @@ export abstract class BaseAPIClient {
     };
     this.logErrorBody = config.logErrorBody ?? false;
     this.rateLimitThrottling = config.rateLimitThrottling;
+    if (this.rateLimitThrottling && !this.rateLimitThrottling.resetMode) {
+      // Set default resetMode
+      this.rateLimitThrottling.resetMode = 'remaining_epoch_s';
+    }
     if (config.tokenBucket) {
       this.tokenBucketInitialConfig = config.tokenBucket;
       this.baseTokenBucket = new HierarchicalTokenBucket({
@@ -481,9 +490,18 @@ export abstract class BaseAPIClient {
       // If the header is not present, we can't determine the wait time, so we'll just wait 60 seconds
       return 60_000;
     }
-    const nowDate = new Date(headers.get('date') ?? Date.now());
-    const retryDate = new Date(parseInt(resetValue, 10) * 1000);
-    return retryDate.getTime() - nowDate.getTime() + 1000;
+    if (this.rateLimitThrottling?.resetMode === 'remaining_epoch_s') {
+      return parseInt(resetValue, 10) * 1000 + 1000; // add one second to make sure the reset time has passed
+    } else if (this.rateLimitThrottling?.resetMode === 'datetime_epoch_s') {
+      const nowDate = new Date(headers.get('date') ?? Date.now());
+      const retryDate = new Date(parseInt(resetValue, 10) * 1000);
+      return retryDate.getTime() - nowDate.getTime() + 1000; // add one second to make sure the reset time has passed
+    } else {
+      throw new IntegrationError({
+        code: 'INVALID_RATE_LIMIT_RESET_MODE',
+        message: 'Invalid rate limit reset mode',
+      });
+    }
   }
 
   private getRateLimitHeaderValue(
