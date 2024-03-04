@@ -31,6 +31,7 @@ export interface RateLimitHeaders {
 
 export interface RateLimitThrottlingOptions {
   threshold: number;
+  resetMode?: 'remaining_epoch_s' | 'datetime_epoch_s';
   rateLimitHeaders?: RateLimitHeaders;
 }
 
