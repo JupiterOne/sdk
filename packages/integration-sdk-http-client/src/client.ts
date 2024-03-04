@@ -97,7 +97,7 @@ export abstract class BaseAPIClient {
    *    - 'remaining_epoch_s' - Use when reset header has the remaining window before the rate limit resets, in UTC epoch seconds.
    *    - 'datetime_epoch_s' - Use when reset header has the time at which the current rate limit window resets in UTC epoch seconds.
    * @param {RateLimitHeaders} [config.rateLimitThrottling.rateLimitHeaders] - The headers to use for rate limiting
-   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.limit='=ratelimit-limit'] - The header for the rate limit limit
+   * @param {string} [config.rateLimitThrottling.rateLimitHeaders.limit='ratelimit-limit'] - The header for the rate limit limit
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.remaining='ratelimit-remaining'] - The header for the rate limit remaining
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='ratelimit-reset'] - The header for the rate limit reset
    * @param {TokenBucketOptions} [config.tokenBucket] - The token bucket options,
