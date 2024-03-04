@@ -9,6 +9,18 @@ and this project adheres to
 
 # Unreleased
 
+## 12.2.0 - 2024-03-04
+
+- Handle standard and non-standard rate limits in BaseAPIClient.
+
+## 12.2.1 - 2024-03-01
+
+- Fix issues related to pagination and token bucket in BaseAPIClient.
+
+## 12.2.0 - 2024-02-23
+
+- Implement BaseAPIClient in http-client package.
+
 ## 12.1.0 - 2024-02-21
 
 - Enhanced step summaries to include `encounteredTypeCounts` property.
