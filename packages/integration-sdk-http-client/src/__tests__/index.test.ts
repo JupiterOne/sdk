@@ -92,6 +92,20 @@ describe('APIClient', () => {
 
       expect(result).toBe('https://api.example.com/test');
     });
+
+    it('should handle base url with base path', () => {
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com/api/v1',
+        logger: mockLogger,
+      });
+      const endpoint = 'test/1';
+      const result = (client as any).withBaseUrl(endpoint);
+      expect(result).toBe('https://api.example.com/api/v1/test/1');
+
+      const endpoint2 = '/test/1';
+      const result2 = (client as any).withBaseUrl(endpoint2);
+      expect(result2).toBe('https://api.example.com/api/v1/test/1');
+    });
   });
 
   describe('request', () => {
