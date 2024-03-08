@@ -31,6 +31,7 @@ export interface GraphObjectStore {
   iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: { concurrency: number },
   ): Promise<void>;
 
   iterateRelationships<T extends Relationship = Relationship>(
