@@ -82,13 +82,13 @@ export function createLogger<
     serializers: {
       err: function (err) {
         if (!err || !err.stack) return err;
-        return {
+        return JSON.stringify({
           message: err.message,
           name: err.name,
           stack: inspect(err, false, 10),
           code: err.code,
           signal: err.signal,
-        };
+        });
       },
     },
   };

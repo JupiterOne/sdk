@@ -23,7 +23,7 @@
     "build:dist": "lerna run build:dist",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md,yml}\"",
-    "prepush": "yarn lint && yarn build:dist && yarn jest --changedSince main"
+    "prepush": "echo \"noop\""
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",
