@@ -9,7 +9,13 @@ and this project adheres to
 
 # Unreleased
 
-## 12.2.0 - 2024-03-04
+## 12.2.3 - 2024-03-08
+
+- fix withBaseUrl method on http-client
+- add bodyType option to handle both multipart/form-data and application/json on
+  http-client
+
+## 12.2.2 - 2024-03-04
 
 - Handle standard and non-standard rate limits in BaseAPIClient.
 
