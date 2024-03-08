@@ -1,3 +1,4 @@
+import { join as joinPath } from 'node:path/posix';
 import fetch, { Headers, Response } from 'node-fetch';
 import {
   IntegrationError,
@@ -23,6 +24,7 @@ import {
 } from './types';
 import get from 'lodash/get';
 import { HierarchicalTokenBucket } from '@jupiterone/hierarchical-token-bucket';
+import FormData from 'form-data';
 
 export const defaultErrorHandler = async (
   err: any,
@@ -142,7 +144,9 @@ export abstract class BaseAPIClient {
   }
 
   protected withBaseUrl(endpoint: string): string {
-    return new URL(endpoint, this.baseUrl).toString();
+    const url = new URL(this.baseUrl);
+    url.pathname = joinPath(url.pathname, endpoint);
+    return url.toString();
   }
 
   /**
@@ -185,6 +189,7 @@ export abstract class BaseAPIClient {
    * @param {string} endpoint - The endpoint to request
    * @param {RequestOptions} options - The options for the request
    * @param {string} [options.method=GET] - The HTTP method to use
+   * @param {'json' | 'form'} [options.bodyType='json'] - Specify how the body object should be sent to the server
    * @param {Record<string, unknown>} [options.body] - The body of the request
    * @param {Record<string, string>} [options.headers] - The headers for the request
    * @param {boolean} [options.authorize=true] - Whether to include authorization headers
@@ -200,7 +205,13 @@ export abstract class BaseAPIClient {
       await sleep(timeToWaitInMs);
     }
 
-    const { method = 'GET', body, headers, authorize = true } = options ?? {};
+    const {
+      method = 'GET',
+      body,
+      bodyType = 'json',
+      headers,
+      authorize = true,
+    } = options ?? {};
     if (authorize && !this.authorizationHeaders) {
       this.authorizationHeaders = await this.getAuthorizationHeaders();
     }
@@ -211,15 +222,34 @@ export abstract class BaseAPIClient {
       // If the path is not a valid URL, assume it's a path and prepend the base URL
       url = this.withBaseUrl(endpoint);
     }
+
+    let fmtBody: string | FormData | undefined;
+    if (body) {
+      if (bodyType === 'form') {
+        fmtBody = new FormData();
+        Object.entries(body).forEach(([key, value]) => {
+          if (typeof value !== 'string') {
+            throw new IntegrationError({
+              code: 'INVALID_FORM_DATA',
+              message: 'Form data values must be strings',
+            });
+          }
+          (fmtBody as FormData).append(key, value);
+        });
+      } else {
+        fmtBody = JSON.stringify(body);
+      }
+    }
     const response = await fetch(url, {
       method,
       headers: {
-        'Content-Type': 'application/json',
+        ...(bodyType === 'json' && { 'Content-Type': 'application/json' }),
+        ...(bodyType === 'form' && (fmtBody as FormData).getHeaders()),
         Accept: 'application/json',
         ...(authorize && this.authorizationHeaders),
         ...headers,
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body: fmtBody,
     });
     return response;
   }
@@ -239,18 +269,12 @@ export abstract class BaseAPIClient {
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
-    const { method = 'GET', body, headers, authorize = true } = options ?? {};
     return retry(
       async () => {
         return this.withRateLimiting(async () => {
           let response: Response | undefined;
           try {
-            response = await this.request(endpoint, {
-              method,
-              body,
-              headers,
-              authorize,
-            });
+            response = await this.request(endpoint, options);
           } catch (err) {
             this.logger.error(
               { code: err.code, err, endpoint },
