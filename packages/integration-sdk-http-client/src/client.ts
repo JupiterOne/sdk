@@ -146,7 +146,7 @@ export abstract class BaseAPIClient {
   protected withBaseUrl(endpoint: string): string {
     const url = new URL(this.baseUrl);
     url.pathname = joinPath(url.pathname, endpoint);
-    return url.toString();
+    return decodeURIComponent(url.toString());
   }
 
   /**
