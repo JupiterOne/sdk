@@ -106,6 +106,20 @@ describe('APIClient', () => {
       const result2 = (client as any).withBaseUrl(endpoint2);
       expect(result2).toBe('https://api.example.com/api/v1/test/1');
     });
+
+    it('should not encode characters', () => {
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com/api/v1',
+        logger: mockLogger,
+      });
+
+      const endpoint = '/test?param1=1&param2=2';
+      const result = (client as any).withBaseUrl(endpoint);
+
+      expect(result).toBe(
+        'https://api.example.com/api/v1/test?param1=1&param2=2',
+      );
+    });
   });
 
   describe('request', () => {

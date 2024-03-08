@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 12.2.4 - 2024-03-08
+
+- http-client: fix withBaseUrl method to not encode urls
+
 ## 12.2.3 - 2024-03-08
 
 - fix withBaseUrl method on http-client
