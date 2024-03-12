@@ -451,8 +451,7 @@ export abstract class BaseAPIClient {
       const timeToSleepInMs = this.getRetryDelayMs(response.headers);
       const thresholdPercentage = this.rateLimitThrottling.threshold * 100;
       const resetHeaderName =
-        this.rateLimitThrottling.rateLimitHeaders?.reset ??
-        'x-rate-limit-reset';
+        this.rateLimitThrottling.rateLimitHeaders?.reset ?? 'ratelimit-reset';
 
       this.logger.warn(
         { rateLimitLimit, rateLimitRemaining, timeToSleepInMs },
