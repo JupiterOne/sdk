@@ -399,7 +399,7 @@ export abstract class BaseAPIClient {
   }
 
   protected async parseResponseInPaginate(response: Response): Promise<any> {
-    return await response.json();
+    return response.json();
   }
 
   /**
