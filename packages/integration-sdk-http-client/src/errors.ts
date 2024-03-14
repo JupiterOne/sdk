@@ -4,7 +4,7 @@ import {
   IntegrationProviderAuthenticationError,
   IntegrationProviderAuthorizationError,
 } from '@jupiterone/integration-sdk-core';
-import { Response } from 'node-fetch';
+import { Headers, Response } from 'node-fetch';
 
 type RateLimitErrorParams = ConstructorParameters<
   typeof IntegrationProviderAPIError
@@ -33,10 +33,12 @@ export class RateLimitError extends RetryableIntegrationProviderApiError {
 
 export class ResponseBodyError extends Error {
   bodyError: string;
-  constructor(bodyError: string) {
+  headers: Record<string, string>;
+  constructor(bodyError: string, headers: Record<string, string>) {
     super(`Error Response: ${bodyError}`);
     this.name = 'ResponseBodyError';
     this.bodyError = bodyError;
+    this.headers = headers;
   }
 }
 
@@ -58,6 +60,14 @@ async function getErrorBody(
   return errorBody;
 }
 
+function headersToRecord(headers: Headers): Record<string, string> {
+  const headersRecord: Record<string, string> = {};
+  for (const [key, value] of headers.entries()) {
+    headersRecord[key] = value;
+  }
+  return headersRecord;
+}
+
 export async function retryableRequestError({
   endpoint,
   response,
@@ -65,10 +75,11 @@ export async function retryableRequestError({
   logErrorBody,
 }: RequestErrorParams): Promise<RetryableIntegrationProviderApiError> {
   const errorBody = await getErrorBody(response, logger, logErrorBody);
+  const headers = headersToRecord(response.headers);
 
   if (response.status === 429) {
     return new RateLimitError({
-      cause: errorBody ? new ResponseBodyError(errorBody) : undefined,
+      cause: errorBody ? new ResponseBodyError(errorBody, headers) : undefined,
       status: response.status,
       statusText: response.statusText,
       endpoint,
@@ -77,7 +88,7 @@ export async function retryableRequestError({
   }
 
   return new RetryableIntegrationProviderApiError({
-    cause: errorBody ? new ResponseBodyError(errorBody) : undefined,
+    cause: errorBody ? new ResponseBodyError(errorBody, headers) : undefined,
     endpoint,
     status: response.status,
     statusText: response.statusText,
@@ -91,9 +102,10 @@ export async function fatalRequestError({
   logErrorBody,
 }: RequestErrorParams): Promise<IntegrationProviderAPIError> {
   const errorBody = await getErrorBody(response, logger, logErrorBody);
+  const headers = headersToRecord(response.headers);
 
   const apiErrorOptions = {
-    cause: errorBody ? new ResponseBodyError(errorBody) : undefined,
+    cause: errorBody ? new ResponseBodyError(errorBody, headers) : undefined,
     endpoint,
     status: response.status,
     statusText: response.statusText,

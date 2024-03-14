@@ -9,6 +9,12 @@ and this project adheres to
 
 # Unreleased
 
+## 12.2.5 - 2024-03-14
+
+- update http-client README.md
+- http-client: add method to override default response parse in paginate
+- http-client: pass headers to error cause
+
 ## 12.2.4 - 2024-03-08
 
 - http-client: fix withBaseUrl method to not encode urls

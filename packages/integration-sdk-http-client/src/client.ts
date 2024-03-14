@@ -379,7 +379,7 @@ export abstract class BaseAPIClient {
         break;
       }
 
-      const data = await response.json();
+      const data = await this.parseResponseInPaginate(response);
 
       let items = dataPath ? get(data, dataPath) : data;
       items = Array.isArray(items) ? items : [];
@@ -396,6 +396,10 @@ export abstract class BaseAPIClient {
       nextRequestOptions = cbOptions?.nextRequestOptions;
       isInitialRequest = false;
     } while (nextUrl);
+  }
+
+  protected async parseResponseInPaginate(response: Response): Promise<any> {
+    return response.json();
   }
 
   /**
