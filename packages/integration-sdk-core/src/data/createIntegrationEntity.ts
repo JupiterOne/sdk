@@ -10,7 +10,7 @@ import { parseTimePropertyValue } from './converters';
 import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
-const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
+const SUPPORTED_TYPES = ['string', 'number', 'boolean', 'array', 'undefined'];
 
 /**
  * Properties to be assigned to a generated entity which are declared in code
@@ -125,7 +125,7 @@ function generateEntity({
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
   const entity: GeneratedEntity = {
-    ...(source ? whitelistedProviderData(source, _class) : {}),
+    ...(source ? allowedProviderData(source, _class) : {}),
     ...assign,
     _class,
     _rawData,
@@ -180,27 +180,79 @@ function generateEntity({
 }
 
 /**
- * Answers a form of the provider data with only the properties supported by the
+ * Validates that the provided value conforms to the supported types.
+ * If the value is an array, this function is called recursively on each element
+ * to ensure nested arrays are also validated. This function throws an error
+ * if it encounters a value type that is not supported.
+ *
+ * @param value The value to be validated. It can be a single value or an array.
+ *              For arrays, each element is validated recursively.
+ * @param path The path to the current property being validated, used for error messaging.
+ *             This is updated with each recursive call to reflect the current context.
+ * @param currentValueDepth The current depth of recursion for array validation. It starts at 1
+ *             and increments with each recursive call into deeper array levels.
+ *             This parameter is used to prevent validation of nested arrays beyond the first level.
+ */
+export function validateValueType(
+  value: any,
+  path: string,
+  currentValueDepth: number = 1,
+): void {
+  // Explicitly allow null values
+  if (value === null) {
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    // If the depth is > 1 then we won't allow arrays inside arrays.
+    if (currentValueDepth > 1) {
+      throw new IntegrationError({
+        code: 'UNSUPPORTED_TYPE',
+        message: `Unsupported type found at "${path}": Nested arrays are not supported.`,
+      });
+    }
+
+    // If the value is an array, validate each element
+    value.forEach((item, index) => {
+      validateValueType(item, `${path}[${index}]`, ++currentValueDepth);
+    });
+  } else {
+    // For non-array values, check if the type is supported
+    const valueType = typeof value;
+    if (!SUPPORTED_TYPES.includes(valueType)) {
+      throw new IntegrationError({
+        code: 'UNSUPPORTED_TYPE',
+        message: `Unsupported type found at "${path}": ${valueType}`,
+      });
+    }
+  }
+}
+
+/**
+ * Filters the provider data to include only the properties allowed by the
  * data model schema.
  *
- * @param source resource data from the resource provider/external system
- * @param _class entity `_class: string[]` value
+ * @param {ProviderSourceData} source - The resource data from the provider or external system.
+ * @param {string[]} _class - An array representing the entity's class for schema validation.
+ * @returns {Omit<ProviderSourceData, 'tags'>} - The filtered provider data with only allowed properties.
  */
-function whitelistedProviderData(
+function allowedProviderData(
   source: ProviderSourceData,
   _class: string[],
 ): Omit<ProviderSourceData, 'tags'> {
-  const whitelistedProviderData: ProviderSourceData = {};
+  const filteredProviderData: ProviderSourceData = {};
   const schemaProperties = schemaWhitelistedPropertyNames(_class);
+
   for (const [key, value] of Object.entries(source)) {
+    // Ensure the property is part of the schema and not null
     if (value != null && schemaProperties.includes(key)) {
-      const valueType = Array.isArray(value) ? typeof value[0] : typeof value;
-      if (SUPPORTED_TYPES.includes(valueType)) {
-        whitelistedProviderData[key] = value;
-      }
+      if (key != 'tags') validateValueType(value, key);
+
+      // If validation passes, assign the value to the filtered data
+      filteredProviderData[key] = value;
     }
   }
-  return whitelistedProviderData;
+  return filteredProviderData;
 }
 
 /**
