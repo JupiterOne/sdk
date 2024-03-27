@@ -11,16 +11,16 @@ import {
   RelationshipClass,
   RelationshipDirection,
 } from '@jupiterone/integration-sdk-core';
-import {
-  toMatchGraphObjectSchema,
-  toMatchDirectRelationshipSchema,
-  toTargetEntities,
-  registerMatchers,
-  toImplementSpec,
-} from '../jest';
+import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 import { randomUUID as uuid } from 'crypto';
 import { toMatchStepMetadata } from '..';
-import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
+import {
+  registerMatchers,
+  toImplementSpec,
+  toMatchDirectRelationshipSchema,
+  toMatchGraphObjectSchema,
+  toTargetEntities,
+} from '../jest';
 
 describe('#toMatchGraphObjectSchema', () => {
   function generateCollectedEntity(partial?: Partial<Entity>): Entity {
@@ -489,6 +489,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
       platform: 'darwin',
       specialProp: 'abc',
       deviceId: 'udid of device',
+      lastSeenOn: 923618340000,
     };
 
     const result = toMatchGraphObjectSchema(entity, {

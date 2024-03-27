@@ -23,7 +23,7 @@
     "prepack": "yarn build:dist"
   },
   "dependencies": {
-    "@jupiterone/data-model": "^0.54.0",
+    "@jupiterone/data-model": "^0.55.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
