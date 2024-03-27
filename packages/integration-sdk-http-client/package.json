@@ -28,7 +28,7 @@
     "@lifeomic/attempt": "^3.0.3",
     "form-data": "^4.0.0",
     "lodash": "^4.17.21",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@jupiterone/integration-sdk-dev-tools": "^12.2.5",
