@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 12.3.0 - 2024-03-28
+
+- update @jupiterone/data-model
+- @jupiterone/data-model has new restrictions on some classes such as Host
+
 ## 12.2.7 - 2024-03-27
 
 - update yarn.lock
