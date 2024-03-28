@@ -9,6 +9,14 @@ and this project adheres to
 
 # Unreleased
 
+## 12.2.7 - 2024-03-27
+
+- update yarn.lock
+
+## 12.2.6 - 2024-03-27
+
+- http-client: upgrade node-fetch to latest 2.x version (2.7.0)
+
 ## 12.2.5 - 2024-03-14
 
 - update http-client README.md
