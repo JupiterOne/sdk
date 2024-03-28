@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 12.3.1 - 2024-03-28
+
+- http-client: consume body when paginate's response status is 204 to avoid
+  memory leaks
+
 ## 12.3.0 - 2024-03-28
 
 - update @jupiterone/data-model
