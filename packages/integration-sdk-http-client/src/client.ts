@@ -376,6 +376,9 @@ export abstract class BaseAPIClient {
         isInitialRequest ? initialRequest.options : nextRequestOptions,
       );
       if (response.status === 204) {
+        for await (const _chunk of response.body) {
+          // force consumption of body to avoid memory leaks
+        }
         break;
       }
 
