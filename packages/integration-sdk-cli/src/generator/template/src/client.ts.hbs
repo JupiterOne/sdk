@@ -1,4 +1,6 @@
+import { BaseAPIClient } from '@jupiterone/integration-sdk-http-client';
 import { IntegrationConfig } from './config';
+import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
@@ -10,14 +12,25 @@ export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
  * place to handle error responses and implement common patterns for iterating
  * resources.
  */
-export class APIClient {
-  constructor(readonly config: IntegrationConfig) { }
+export class APIClient extends BaseAPIClient {
+  constructor(readonly config: IntegrationConfig, readonly logger: IntegrationLogger) {
+    super({
+      baseUrl: 'https://example.com/api',
+      logger,
+    });
+  }
+
+  getAuthorizationHeaders() {
+    return {
+      Authorization: `Bearer ${this.config.apiKey}`,
+    };
+  }
 
   public async verifyAuthentication(): Promise<void> {
     return Promise.resolve();
   }
 }
 
-export function createAPIClient(config: IntegrationConfig): APIClient {
-  return new APIClient(config);
+export function createAPIClient(config: IntegrationConfig, logger: IntegrationLogger): APIClient {
+  return new APIClient(config, logger);
 }

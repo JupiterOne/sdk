@@ -9,6 +9,56 @@ and this project adheres to
 
 # Unreleased
 
+## 12.3.1 - 2024-03-28
+
+- http-client: consume body when paginate's response status is 204 to avoid
+  memory leaks
+
+## 12.3.0 - 2024-03-28
+
+- update @jupiterone/data-model
+- @jupiterone/data-model has new restrictions on some classes such as Host
+
+## 12.2.7 - 2024-03-27
+
+- update yarn.lock
+
+## 12.2.6 - 2024-03-27
+
+- http-client: upgrade node-fetch to latest 2.x version (2.7.0)
+
+## 12.2.5 - 2024-03-14
+
+- update http-client README.md
+- http-client: add method to override default response parse in paginate
+- http-client: pass headers to error cause
+
+## 12.2.4 - 2024-03-08
+
+- http-client: fix withBaseUrl method to not encode urls
+
+## 12.2.3 - 2024-03-08
+
+- fix withBaseUrl method on http-client
+- add bodyType option to handle both multipart/form-data and application/json on
+  http-client
+
+## 12.2.2 - 2024-03-04
+
+- Handle standard and non-standard rate limits in BaseAPIClient.
+
+## 12.2.1 - 2024-03-01
+
+- Fix issues related to pagination and token bucket in BaseAPIClient.
+
+## 12.2.0 - 2024-02-23
+
+- Implement BaseAPIClient in http-client package.
+
+## 12.1.0 - 2024-02-21
+
+- Enhanced step summaries to include `encounteredTypeCounts` property.
+
 ## 12.0.0 - 2024-02-01
 
 - Added in `collectEncounteredKeys` to invocation config. This will allow keys
