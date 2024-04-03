@@ -87,7 +87,9 @@ let client: APIClient | undefined;
 export function createAPIClient(
   config: IntegrationConfig
 ): APIClient {
-  return client
-    ? client
-    : new APIClient(config);
+  if (!client) {
+    client = new APIClient(config);
+  }
+
+  return client;
 }
