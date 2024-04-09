@@ -17,6 +17,7 @@ export interface RetryOptions {
   delay: number;
   factor: number;
   timeout: number;
+  timeoutMaxAttempts: number;
   handleError: (
     err: any,
     context: AttemptContext,

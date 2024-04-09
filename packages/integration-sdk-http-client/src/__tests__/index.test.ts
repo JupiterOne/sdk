@@ -46,6 +46,7 @@ describe('APIClient', () => {
         delay: 30_000,
         timeout: 180_000,
         factor: 2,
+        timeoutMaxAttempts: 3,
         handleError: defaultErrorHandler,
       });
     });
@@ -56,6 +57,7 @@ describe('APIClient', () => {
         delay: 60_000,
         timeout: 30_000,
         factor: 1.5,
+        timeoutMaxAttempts: 2,
         handleError: jest.fn(),
       };
       const client = new MockAPIClient({
