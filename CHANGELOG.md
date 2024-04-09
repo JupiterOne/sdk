@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 12.4.0 - 2024-04-09
+
+- http-client: add default timeout handler
+
 ## 12.3.1 - 2024-03-28
 
 - http-client: consume body when paginate's response status is 204 to avoid
@@ -396,7 +400,7 @@ const invocationConfig: IntegrationInvocationConfig = {
           { severities },
           async (vuln) => {
             await jobState.addEntity(createVulnEntity(vuln));
-          },
+          }
         );
       },
     },
@@ -1091,7 +1095,7 @@ RETURN account, repo, user
   ```ts
   expect(collectedEntities).toMatchGraphObjectSchema(Entities.USER);
   expect(collectedRelationships).toMatchDirectRelationshipSchema(
-    Relationships.ACCOUNT_HAS_USER,
+    Relationships.ACCOUNT_HAS_USER
   );
   ```
 
@@ -1256,7 +1260,7 @@ of the support.jupiterone.io site.
   ```ts
   // without allowing `undefined`, we often need to assert values as `string`
   const virtualMachineId = await jobState.findEntity(
-    nic.virtualMachine?.id as string,
+    nic.virtualMachine?.id as string
   );
 
   // by allowing `undefined`, we can more safely use these methods without type assertions
@@ -1637,13 +1641,13 @@ of the support.jupiterone.io site.
 Old:
 
 ```ts
-getData: <T,>(key: string) => Promise<T>;
+getData: <T>(key: string) => Promise<T>;
 ```
 
 New:
 
 ```ts
-getData: <T,>(key: string) => Promise<T | undefined>;
+getData: <T>(key: string) => Promise<T | undefined>;
 ```
 
 ## 5.8.0 - 2021-02-26
