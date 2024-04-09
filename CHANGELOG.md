@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+## 12.4.0 - 2024-04-09
+
+- http-client: add default timeout handler
+
 ## 12.3.1 - 2024-03-28
 
 - http-client: consume body when paginate's response status is 204 to avoid
