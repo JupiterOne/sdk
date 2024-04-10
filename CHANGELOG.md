@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+- entity-validator: first release
+
 ## 12.4.0 - 2024-04-09
 
 - http-client: add default timeout handler
