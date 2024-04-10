@@ -56,9 +56,7 @@ describe('validator', () => {
   });
 
   beforeEach(() => {
-    entityValidator = new EntityValidator({
-      classSchemas: [],
-    });
+    entityValidator = new EntityValidator({});
   });
 
   test('Should throw on validate if class and type schemas are not loaded', async () => {

@@ -5,7 +5,7 @@ import { addJ1Formats } from './j1Formats';
 export class EntityValidator {
   private ajvInstance: Ajv;
 
-  constructor({ classSchemas }: { classSchemas: AnySchema[] }) {
+  constructor({ schemas }: { schemas?: AnySchema[] }) {
     this.ajvInstance = addJ1Formats(
       addFormats(
         new Ajv({
@@ -15,7 +15,9 @@ export class EntityValidator {
       ),
     );
 
-    this.addSchemas(classSchemas);
+    if (schemas) {
+      this.addSchemas(schemas);
+    }
   }
 
   addSchemas(schema: AnySchema | AnySchema[]) {
