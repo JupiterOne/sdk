@@ -1,6 +1,7 @@
 import Ajv, { AnySchema, ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import { addJ1Formats } from './j1Formats';
+import { ajvErrorToEntityValidationError } from './entityValidationError';
 
 export class EntityValidator {
   private ajvInstance: Ajv;
@@ -25,9 +26,9 @@ export class EntityValidator {
     return this;
   }
 
-  async validateEntity<
-    Entity extends { _class: string[] | string; _type: string },
-  >(entity: Entity) {
+  validateEntity<Entity extends { _class: string[] | string; _type: string }>(
+    entity: Entity,
+  ) {
     const classArray = Array.isArray(entity._class)
       ? entity._class
       : [entity._class];
@@ -36,7 +37,7 @@ export class EntityValidator {
     const typeValidator = this.ajvInstance.getSchema(`#${entity._type}`);
 
     if (typeValidator) {
-      const isValid = await typeValidator(entity);
+      const isValid = typeValidator(entity);
 
       if (!isValid) {
         errors = [...errors, ...(typeValidator.errors ?? [])];
@@ -49,7 +50,7 @@ export class EntityValidator {
           throw new Error(`Schema not found for class "${className}"`);
         }
 
-        const isValid = await validator(entity);
+        const isValid = validator(entity);
 
         if (!isValid) {
           errors = [...errors, ...(validator.errors ?? [])];
@@ -59,7 +60,9 @@ export class EntityValidator {
 
     return {
       isValid: errors.length === 0,
-      errors: errors.length ? errors : null,
+      errors: errors.length
+        ? errors.map(ajvErrorToEntityValidationError)
+        : null,
       validationType: typeValidator ? 'type' : 'class',
     };
   }
