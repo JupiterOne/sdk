@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+## 12.4.1 - 2024-04-11
+
+- updated `json-diff` dependency
+- removed redudant `??` from `hasCachePath` function
+
 ## 12.4.0 - 2024-04-09
 
 - http-client: add default timeout handler
