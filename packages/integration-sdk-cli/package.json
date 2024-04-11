@@ -33,7 +33,7 @@
     "globby": "^11.0.0",
     "inquirer-checkbox-plus-prompt": "^1.4.2",
     "js-yaml": "^4.1.0",
-    "json-diff": "^0.5.4",
+    "json-diff": "^1.0.6",
     "lodash": "^4.17.19",
     "markdown-table": "^2.0.0",
     "neo4j-driver": "^4.3.3",
