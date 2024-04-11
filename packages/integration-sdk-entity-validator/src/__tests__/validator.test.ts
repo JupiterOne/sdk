@@ -34,6 +34,16 @@ const ENTITY_SCHEMA = {
       type: 'string',
       minLength: 3,
     },
+    ip: {
+      description: 'An IPv4 or IPv6 address',
+      type: 'string',
+      format: 'ip',
+    },
+    ipCidr: {
+      description: 'An IPv4 or IPv6 CIDR',
+      type: 'string',
+      format: 'ipCidr',
+    },
   },
   patternProperties: {
     '^tag\\.': {
@@ -79,7 +89,7 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      validationType: 'class',
+      type: 'class',
     });
   });
 
@@ -94,7 +104,7 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      validationType: 'type',
+      type: 'type',
     });
   });
 
@@ -113,7 +123,7 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      validationType: 'type',
+      type: 'type',
     });
   });
 
@@ -133,7 +143,7 @@ describe('validator', () => {
           property: '_key',
         },
       ],
-      validationType: 'type',
+      type: 'type',
     });
   });
 
@@ -154,7 +164,77 @@ describe('validator', () => {
           property: '_key',
         },
       ],
-      validationType: 'type',
+      type: 'type',
+    });
+  });
+
+  test('should validate IPV4 using ip format', () => {
+    entityValidator.addSchemas(ENTITY_SCHEMA);
+    expect(
+      entityValidator.validateEntity({
+        _class: ['GraphObject'],
+        _type: 'type',
+        _key: '0123456789',
+        ip: '10.10.10.10',
+      }),
+    ).toEqual({
+      isValid: true,
+      errors: null,
+      type: 'type',
+    });
+  });
+
+  test('should validate IPV6 using ip format', () => {
+    entityValidator.addSchemas(ENTITY_SCHEMA);
+    expect(
+      entityValidator.validateEntity({
+        _class: ['GraphObject'],
+        _type: 'type',
+        _key: '0123456789',
+        ip: 'FE80:0000:0000:0000:0202:B3FF:FE1E:8329',
+      }),
+    ).toEqual({
+      isValid: true,
+      errors: null,
+      type: 'type',
+    });
+  });
+
+  test('should validate IPV4 CIDR using ipCidr format', () => {
+    entityValidator.addSchemas(ENTITY_SCHEMA);
+    expect(
+      entityValidator.validateEntity({
+        _class: ['GraphObject'],
+        _type: 'type',
+        _key: '0123456789',
+        ipCidr: '10.10.10.10/32',
+      }),
+    ).toEqual({
+      isValid: true,
+      errors: null,
+      type: 'type',
+    });
+  });
+
+  test('should not validate IPV4 CIDR using ip format', () => {
+    entityValidator.addSchemas(ENTITY_SCHEMA);
+    expect(
+      entityValidator.validateEntity({
+        _class: ['GraphObject'],
+        _type: 'type',
+        _key: '0123456789',
+        ip: '10.10.10.10/32',
+      }),
+    ).toEqual({
+      isValid: false,
+      errors: [
+        {
+          property: 'ip',
+          message: 'must match format "ip"',
+          validation: 'format',
+        },
+      ],
+      type: 'type',
     });
   });
 });

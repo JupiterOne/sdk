@@ -63,7 +63,7 @@ export class EntityValidator {
       errors: errors.length
         ? errors.map(ajvErrorToEntityValidationError)
         : null,
-      validationType: typeValidator ? 'type' : 'class',
+      type: typeValidator ? 'type' : 'class',
     };
   }
 }
