@@ -69,10 +69,25 @@ describe('validator', () => {
     entityValidator = new EntityValidator({});
   });
 
-  test('should throw on validate if class and type schemas are not loaded', () => {
-    expect(() =>
+  test('should skip class and type validation if class and type schemas are not loaded', () => {
+    expect(
       entityValidator.validateEntity({ _class: ['class'], _type: 'type' }),
-    ).toThrow(Error);
+    ).toEqual({
+      isValid: true,
+      errors: null,
+      skippedSchemas: [
+        {
+          schemaId: '#type',
+          reason: 'not-found',
+          type: 'type',
+        },
+        {
+          schemaId: '#class',
+          reason: 'not-found',
+          type: 'class',
+        },
+      ],
+    });
   });
 
   test('should validate if entity class schema is loaded', () => {
@@ -89,7 +104,43 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      type: 'class',
+      skippedSchemas: [
+        {
+          schemaId: '#type',
+          reason: 'not-found',
+          type: 'type',
+        },
+      ],
+    });
+  });
+
+  test('should validate with error if entity class schema is loaded and missing key', () => {
+    const graphObjectSchema = classSchemas.find(
+      (s) => typeof s === 'object' && s.$id === '#GraphObject',
+    );
+    entityValidator.addSchemas(graphObjectSchema!);
+    expect(
+      entityValidator.validateEntity({
+        _class: ['GraphObject'],
+        _type: 'type',
+      }),
+    ).toEqual({
+      isValid: false,
+      errors: [
+        {
+          schemaId: '#GraphObject',
+          validation: 'required',
+          message: "must have required property '_key'",
+          property: '_key',
+        },
+      ],
+      skippedSchemas: [
+        {
+          schemaId: '#type',
+          reason: 'not-found',
+          type: 'type',
+        },
+      ],
     });
   });
 
@@ -104,7 +155,13 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 
@@ -123,7 +180,35 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
+    });
+  });
+
+  test('should validate both type and class if schemas are loaded and forceClassValidationWithValidatedType config is set', () => {
+    const graphObjectSchema = classSchemas.find(
+      (s) => typeof s === 'object' && s.$id === '#GraphObject',
+    );
+    entityValidator.addSchemas(graphObjectSchema!);
+    entityValidator.addSchemas(ENTITY_SCHEMA);
+    expect(
+      entityValidator.validateEntity(
+        {
+          _class: ['GraphObject'],
+          _type: 'type',
+          _key: '0123456789',
+        },
+        { forceClassValidationWithValidatedType: true },
+      ),
+    ).toEqual({
+      isValid: true,
+      errors: null,
+      skippedSchemas: null,
     });
   });
 
@@ -138,12 +223,19 @@ describe('validator', () => {
       isValid: false,
       errors: [
         {
+          schemaId: '#type',
           validation: 'required',
           message: "must have required property '_key'",
           property: '_key',
         },
       ],
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 
@@ -159,12 +251,19 @@ describe('validator', () => {
       isValid: false,
       errors: [
         {
+          schemaId: '#type',
           validation: 'minLength',
           message: 'must NOT have fewer than 10 characters',
           property: '_key',
         },
       ],
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 
@@ -180,7 +279,13 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 
@@ -196,7 +301,13 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 
@@ -212,7 +323,13 @@ describe('validator', () => {
     ).toEqual({
       isValid: true,
       errors: null,
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 
@@ -229,12 +346,19 @@ describe('validator', () => {
       isValid: false,
       errors: [
         {
+          schemaId: '#type',
           property: 'ip',
           message: 'must match format "ip"',
           validation: 'format',
         },
       ],
-      type: 'type',
+      skippedSchemas: [
+        {
+          schemaId: '#GraphObject',
+          reason: 'type-already-validated',
+          type: 'class',
+        },
+      ],
     });
   });
 });

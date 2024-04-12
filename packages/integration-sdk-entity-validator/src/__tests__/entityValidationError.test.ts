@@ -3,7 +3,7 @@ import { ajvErrorToEntityValidationError } from '../entityValidationError';
 describe('entityValidationError', () => {
   test('should return property key with required keyword', () => {
     expect(
-      ajvErrorToEntityValidationError({
+      ajvErrorToEntityValidationError('#type', {
         instancePath: '',
         schemaPath: '#/required',
         keyword: 'required',
@@ -11,6 +11,7 @@ describe('entityValidationError', () => {
         message: "must have required property '_key'",
       }),
     ).toEqual({
+      schemaId: '#type',
       property: '_key',
       message: "must have required property '_key'",
       validation: 'required',
@@ -19,7 +20,7 @@ describe('entityValidationError', () => {
 
   test('should return property key with required keyword', () => {
     expect(
-      ajvErrorToEntityValidationError({
+      ajvErrorToEntityValidationError('#type', {
         instancePath: '/_key',
         schemaPath: '#/properties/_key/minLength',
         keyword: 'minLength',
@@ -27,6 +28,7 @@ describe('entityValidationError', () => {
         message: 'must NOT have fewer than 10 characters',
       }),
     ).toEqual({
+      schemaId: '#type',
       property: '_key',
       message: 'must NOT have fewer than 10 characters',
       validation: 'minLength',

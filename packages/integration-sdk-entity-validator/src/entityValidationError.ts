@@ -3,9 +3,22 @@ import { ErrorObject } from 'ajv';
 export const unknownPropertySymbol = Symbol('_unknown_');
 
 export type EntityValidationError = {
+  schemaId: string | null;
   property: string | typeof unknownPropertySymbol;
   message: string;
   validation: string;
+};
+
+export const isEntityValidationError = (
+  property: unknown,
+): property is EntityValidationError => {
+  return (
+    typeof property === 'object' &&
+    property !== null &&
+    'property' in property &&
+    'message' in property &&
+    'validation' in property
+  );
 };
 
 const getPropertyNameFromAjvError = (
@@ -17,11 +30,13 @@ const getPropertyNameFromAjvError = (
 };
 
 export const ajvErrorToEntityValidationError = (
+  schemaId: string,
   error: ErrorObject,
 ): EntityValidationError => {
   switch (error.keyword) {
     case 'required':
       return {
+        schemaId,
         property: error.params.missingProperty,
         message:
           error.message ??
@@ -30,6 +45,7 @@ export const ajvErrorToEntityValidationError = (
       };
     default:
       return {
+        schemaId,
         property: getPropertyNameFromAjvError(error),
         message: error.message ?? 'Invalid value',
         validation: error.keyword,
