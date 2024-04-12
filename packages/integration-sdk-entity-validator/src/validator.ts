@@ -88,62 +88,57 @@ export class EntityValidator {
         ? entity._class
         : [entity._class];
 
-      const typeSchemaId = `#${entity._type}`;
-      const typeValidator = this.ajvInstance.getSchema(typeSchemaId);
+      const schemasToValidate: Array<{
+        schemaId: string;
+        type: 'class' | 'type';
+      }> = [
+        {
+          schemaId: `#${entity._type}`,
+          type: 'type' as const,
+        },
+        ...classArray.map((c) => ({
+          schemaId: `#${c}`,
+          type: 'class' as const,
+        })),
+      ];
 
-      if (typeValidator) {
-        const isValid = typeValidator(entity);
+      for (const i in schemasToValidate) {
+        const { schemaId, type } = schemasToValidate[i];
+        const validator = this.ajvInstance.getSchema(schemaId);
+
+        if (!validator) {
+          skippedSchemas.push({
+            schemaId,
+            reason: 'not-found',
+            type,
+          });
+          continue;
+        }
+
+        const isValid = validator(entity);
 
         if (!isValid) {
           errors.push(
-            ...(typeValidator.errors?.map((error) =>
-              ajvErrorToEntityValidationError(typeSchemaId, error),
+            ...(validator.errors?.map((error) =>
+              ajvErrorToEntityValidationError(schemaId, error),
             ) ?? []),
           );
         }
-      } else {
-        skippedSchemas.push({
-          schemaId: typeSchemaId,
-          reason: 'not-found',
-          type: 'type',
-        });
-      }
 
-      if (!typeValidator || forceClassValidationWithValidatedType) {
-        for (const className of classArray) {
-          const classSchemaId = `#${className}`;
-          const validator = this.ajvInstance.getSchema(classSchemaId);
-
-          if (!validator) {
-            skippedSchemas.push({
-              schemaId: classSchemaId,
-              reason: 'not-found',
-              type: 'class',
-            });
-            continue;
-          }
-
-          const isValid = validator(entity);
-
-          if (!isValid) {
-            errors.push(
-              ...(validator.errors?.map((error) =>
-                ajvErrorToEntityValidationError(classSchemaId, error),
-              ) ?? []),
-            );
-          }
+        if (type === 'type' && !forceClassValidationWithValidatedType) {
+          skippedSchemas.push(
+            // Skip each other schema as the type should already have class properties injected
+            ...schemasToValidate.slice(Number(i) + 1).map(
+              ({ schemaId, type }) =>
+                ({
+                  schemaId,
+                  reason: 'type-already-validated',
+                  type,
+                }) satisfies SkippedSchema,
+            ),
+          );
+          break;
         }
-      } else {
-        skippedSchemas.push(
-          ...classArray.map(
-            (className) =>
-              ({
-                schemaId: `#${className}`,
-                reason: 'type-already-validated',
-                type: 'class',
-              }) satisfies SkippedSchema,
-          ),
-        );
       }
     } catch (error) {
       errors.push(convertUnknownErrorToEntityValidationError(error));
