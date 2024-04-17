@@ -16,6 +16,7 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
+  DependencyGraphStepResultMap,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -85,6 +86,7 @@ export function executeStepDependencyGraph<
   stepConcurrency,
   duplicateKeyTracker,
   graphObjectStore,
+  stepResults,
   dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
@@ -99,6 +101,7 @@ export function executeStepDependencyGraph<
   stepConcurrency?: number;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  stepResults: DependencyGraphStepResultMap;
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
@@ -123,7 +126,11 @@ export function executeStepDependencyGraph<
   const promiseQueue = new PromiseQueue(promiseQueueOptions);
 
   const typeTracker = new TypeTracker();
-  const stepResultsMap = buildStepResultsMap(inputGraph, stepStartStates);
+  const stepResultsMap = buildStepResultsMap(
+    inputGraph,
+    stepStartStates,
+    stepResults,
+  );
 
   const skippedStepTracker = new Set<string>();
 
@@ -148,9 +155,9 @@ export function executeStepDependencyGraph<
   }) {
     const { stepId, status, typeTracker, startTime, endTime, duration } =
       params;
-    const existingResult = stepResultsMap.get(stepId);
+    const existingResult = stepResultsMap[stepId];
     if (existingResult) {
-      stepResultsMap.set(stepId, {
+      stepResultsMap[stepId] = {
         ...existingResult,
         status,
         encounteredTypes: typeTracker.getEncounteredTypesForStep(stepId),
@@ -162,7 +169,7 @@ export function executeStepDependencyGraph<
         startTime,
         endTime,
         duration,
-      });
+      };
     }
   }
 
@@ -176,7 +183,7 @@ export function executeStepDependencyGraph<
   function stepHasDependencyFailure(stepId: string) {
     return inputGraph
       .dependenciesOf(stepId)
-      .map((id) => stepResultsMap.get(id))
+      .map((id) => stepResultsMap[id])
       .find((result) => {
         const status = result?.status;
         return (
@@ -206,7 +213,7 @@ export function executeStepDependencyGraph<
   function stepDependenciesAreComplete(stepId: string) {
     const executingDependencies = inputGraph
       .dependenciesOf(stepId)
-      .map((id) => stepResultsMap.get(id))
+      .map((id) => stepResultsMap[id])
       .filter(
         (stepResult) =>
           stepResult?.status === StepResultStatus.PENDING_EVALUATION,
@@ -491,7 +498,7 @@ export function executeStepDependencyGraph<
 
     void promiseQueue
       .onIdle()
-      .then(() => resolve([...stepResultsMap.values()]))
+      .then(() => resolve([...Object.values(stepResultsMap)]))
       .catch(reject);
   });
 }
@@ -591,6 +598,7 @@ function buildStepResultsMap<
 >(
   dependencyGraph: DepGraph<Step<TStepExecutionContext>>,
   stepStartStates: StepStartStates,
+  stepResults: DependencyGraphStepResultMap,
 ) {
   const stepResultMapEntries = dependencyGraph
     .overallOrder()
@@ -620,7 +628,9 @@ function buildStepResultsMap<
     })
     .map((result): [string, IntegrationStepResult] => [result.id, result]);
 
-  return new Map<string, IntegrationStepResult>(stepResultMapEntries);
+  Object.assign(stepResults, Object.fromEntries(stepResultMapEntries));
+
+  return stepResults;
 }
 
 export function getDeclaredTypesInStep<

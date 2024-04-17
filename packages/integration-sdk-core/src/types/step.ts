@@ -72,6 +72,14 @@ export type Step<T extends StepExecutionContext> = StepMetadata & {
   executionHandler: ExecutionHandlerFunction<T>;
 };
 
+export type DependencyGraphStepResultMap = {
+  [stepId: string]: IntegrationStepResult;
+};
+
+export type IntegrationStepResultMap = {
+  [dependencyGraphId: string]: DependencyGraphStepResultMap;
+};
+
 export type IntegrationStepResult = Omit<
   StepMetadata,
   'entities' | 'relationships'

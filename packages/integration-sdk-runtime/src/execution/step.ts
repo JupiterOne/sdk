@@ -18,6 +18,7 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
+  IntegrationStepResultMap,
 } from '@jupiterone/integration-sdk-core';
 
 import { GraphObjectStore } from '../storage';
@@ -42,6 +43,7 @@ export async function executeSteps<
   stepStartStates,
   duplicateKeyTracker,
   graphObjectStore,
+  stepResults,
   dataStore,
   createStepGraphObjectDataUploader,
   beforeAddEntity,
@@ -57,6 +59,7 @@ export async function executeSteps<
   stepStartStates: StepStartStates;
   duplicateKeyTracker: DuplicateKeyTracker;
   graphObjectStore: GraphObjectStore;
+  stepResults: IntegrationStepResultMap;
   dataStore: MemoryDataStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
   beforeAddEntity?: BeforeAddEntityHookFunction<TExecutionContext>;
@@ -68,12 +71,12 @@ export async function executeSteps<
   executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
 }): Promise<IntegrationStepResult[]> {
   const stepsByGraphId = seperateStepsByDependencyGraph(integrationSteps);
-  let allStepResults: IntegrationStepResult[] = [];
 
-  for (const graphId of [
+  const completeDependencyGraphOrder = [
     DEFAULT_DEPENDENCY_GRAPH_IDENTIFIER,
     ...(dependencyGraphOrder ?? []),
-  ]) {
+  ];
+  for (const graphId of completeDependencyGraphOrder) {
     const steps = stepsByGraphId[graphId];
 
     if (!steps) {
@@ -85,26 +88,30 @@ export async function executeSteps<
     }
 
     const stepIds = steps.map((s) => s.id);
-    allStepResults = allStepResults.concat(
-      await executeStepDependencyGraph({
-        executionContext,
-        inputGraph: buildStepDependencyGraph(steps),
-        stepStartStates: pick(stepStartStates, stepIds),
-        stepConcurrency,
-        duplicateKeyTracker,
-        graphObjectStore,
-        dataStore,
-        createStepGraphObjectDataUploader,
-        beforeAddEntity,
-        beforeAddRelationship,
-        afterAddEntity,
-        afterAddRelationship,
-        executionHandlerWrapper,
-      }),
-    );
+    stepResults[graphId] = {};
+    await executeStepDependencyGraph({
+      executionContext,
+      inputGraph: buildStepDependencyGraph(steps),
+      stepStartStates: pick(stepStartStates, stepIds),
+      stepConcurrency,
+      duplicateKeyTracker,
+      graphObjectStore,
+      stepResults: stepResults[graphId],
+      dataStore,
+      createStepGraphObjectDataUploader,
+      beforeAddEntity,
+      beforeAddRelationship,
+      afterAddEntity,
+      afterAddRelationship,
+      executionHandlerWrapper,
+    });
   }
 
-  return allStepResults;
+  return completeDependencyGraphOrder.reduce(
+    (acc, dependencyGraphId) =>
+      acc.concat(...Object.values(stepResults[dependencyGraphId])),
+    [] as IntegrationStepResult[],
+  );
 }
 
 export function getDefaultStepStartStates<

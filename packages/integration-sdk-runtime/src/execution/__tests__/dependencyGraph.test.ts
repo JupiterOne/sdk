@@ -151,6 +151,7 @@ describe('executeStepDependencyGraph', () => {
       stepStartStates,
       duplicateKeyTracker: new DuplicateKeyTracker(),
       graphObjectStore,
+      stepResults: {},
       dataStore: new MemoryDataStore(),
       createStepGraphObjectDataUploader,
     });

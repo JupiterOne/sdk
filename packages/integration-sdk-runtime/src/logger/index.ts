@@ -312,17 +312,13 @@ export class IntegrationLogger
   }
 
   stepStart(step: StepMetadata) {
-    const name = 'step_start';
     const description = `Starting step "${step.name}"...`;
     this.debug(description);
-    this.publishEvent({ name, description });
   }
 
   stepSuccess(step: StepMetadata) {
-    const name = 'step_end';
     const description = `Completed step "${step.name}".`;
     this.debug(description);
-    this.publishEvent({ name, description });
   }
 
   stepSkip(
@@ -334,7 +330,6 @@ export class IntegrationLogger
       return;
     }
 
-    const name = 'step_skip';
     let description = `Skipped step "${step.name}". `;
 
     switch (reason) {
@@ -371,7 +366,6 @@ export class IntegrationLogger
     }
 
     this.info(description);
-    this.publishEvent({ name, description });
   }
 
   stepFailure(step: StepMetadata, err: Error) {

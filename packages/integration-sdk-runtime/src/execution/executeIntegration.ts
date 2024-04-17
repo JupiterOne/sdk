@@ -10,6 +10,7 @@ import {
   IntegrationInvocationConfig,
   IntegrationLogger,
   IntegrationStepResult,
+  IntegrationStepResultMap,
   InvocationConfig,
   PartialDatasets,
   Relationship,
@@ -50,6 +51,7 @@ import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
 import { DuplicateKeyTracker } from './duplicateKeyTracker';
 import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
+import { JobStatusUploader } from './utils/jobStatusUploader';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
@@ -63,13 +65,17 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  jobStatusUploadHook?: (jobStatus: IntegrationStepResultMap) => Promise<void>;
   resultsCallback?: (results: ExecuteIntegrationResult) => Promise<void>;
   pretty?: boolean;
 }
 
 type ExecuteWithContextOptions = Pick<
   ExecuteIntegrationOptions,
-  'graphObjectStore' | 'resultsCallback' | 'createStepGraphObjectDataUploader'
+  | 'graphObjectStore'
+  | 'resultsCallback'
+  | 'createStepGraphObjectDataUploader'
+  | 'jobStatusUploadHook'
 >;
 
 const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
@@ -254,11 +260,26 @@ export async function executeWithContext<
         graphObjectStore = new FileSystemGraphObjectStore(),
         createStepGraphObjectDataUploader,
         resultsCallback,
+        jobStatusUploadHook,
       } = options;
 
       const duplicateKeyTracker = new DuplicateKeyTracker(
         config.normalizeGraphObjectKey,
       );
+
+      const stepResults: IntegrationStepResultMap = {};
+
+      let jobStatusUploader: JobStatusUploader | undefined;
+      if (jobStatusUploadHook) {
+        jobStatusUploader = new JobStatusUploader(
+          {
+            jobStatus: stepResults,
+          },
+          jobStatusUploadHook,
+        );
+
+        jobStatusUploader.start();
+      }
 
       const integrationStepResults = await executeSteps({
         executionContext: context,
@@ -267,6 +288,7 @@ export async function executeWithContext<
         stepConcurrency: config.stepConcurrency,
         duplicateKeyTracker,
         graphObjectStore,
+        stepResults,
         dataStore: new MemoryDataStore(),
         createStepGraphObjectDataUploader,
         beforeAddEntity: config.beforeAddEntity,
@@ -276,6 +298,8 @@ export async function executeWithContext<
         dependencyGraphOrder: config.dependencyGraphOrder,
         executionHandlerWrapper: config.executionHandlerWrapper,
       });
+
+      await jobStatusUploader?.stop();
 
       const partialDatasets = determinePartialDatasetsFromStepExecutionResults(
         integrationStepResults,
