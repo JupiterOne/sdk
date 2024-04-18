@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+- entity-validator: first release
+
 ## 12.4.1 - 2024-04-11
 
 - updated `json-diff` dependency
