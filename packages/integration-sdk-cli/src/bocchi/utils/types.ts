@@ -17,8 +17,6 @@ export interface Template {
     maximumCapacity: number;
     refillRate: number;
   };
-  // Unimplemented
-  // paginationTokenStrategy:
   steps: Step[];
 }
 
@@ -34,17 +32,14 @@ interface EndpointAuthentication {
     path: string;
     method: 'GET' | 'POST';
     body?: Record<string, any>;
-    headers?: Record<string, string>; //sanitizeAuthCallHeaders
+    headers?: Record<string, string>;
   };
   repsonsePath: string;
-  // TODO: authHeaders
 }
 
 interface ConfigFieldAuthentication {
   strategy: 'configField';
   configFieldName: string;
-  // TODO: authHeaders
-  // sanitize
 }
 
 export interface Step {

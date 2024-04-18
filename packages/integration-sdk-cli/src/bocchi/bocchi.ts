@@ -17,29 +17,6 @@ import {
   generateRelationshipType,
 } from '@jupiterone/integration-sdk-core';
 
-/**
- * Output folder (output/)
- * graph-<NAME>/
- *   docs/
- *   jupiterone/
- *   src/
- *     steps/
- *       fetch-users/
- *         - index.ts
- *         - index.test.ts
- *       fetch-groups/
- *         - index.ts
- *       constants.ts
- *       converters.ts
- *       index.ts
- *     client.ts
- *     config.ts
- *     index.ts
- *     types.ts
- *   test/
- *  .gitignore
- */
-
 function bocchi(plop: NodePlopAPI) {
   plop.setActionType('yarnFormat', yarnFormat);
   plop.setActionType('yarnInstall', yarnInstall);
