@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 12.6.0 - 2024-04-24
+
+- http-client: add option to pass body as plain text
+
 # 12.5.1 - 2024-04-24
 
 - entity-validator: republish
