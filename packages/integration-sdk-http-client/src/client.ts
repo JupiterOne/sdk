@@ -241,6 +241,8 @@ export abstract class BaseAPIClient {
           }
           (fmtBody as FormData).append(key, value);
         });
+      } else if (bodyType === 'text' && typeof body === 'string') {
+        fmtBody = body;
       } else {
         fmtBody = JSON.stringify(body);
       }
@@ -250,6 +252,7 @@ export abstract class BaseAPIClient {
       headers: {
         ...(bodyType === 'json' && { 'Content-Type': 'application/json' }),
         ...(bodyType === 'form' && (fmtBody as FormData).getHeaders()),
+        ...(bodyType === 'text' && { 'Content-Type': 'text/plain' }),
         Accept: 'application/json',
         ...(authorize && this.authorizationHeaders),
         ...headers,
@@ -497,7 +500,12 @@ export abstract class BaseAPIClient {
         this.rateLimitThrottling.rateLimitHeaders?.reset ?? 'ratelimit-reset';
 
       this.logger.warn(
-        { rateLimitLimit, rateLimitRemaining, timeToSleepInMs },
+        {
+          endpoint: response.url,
+          rateLimitLimit,
+          rateLimitRemaining,
+          timeToSleepInMs,
+        },
         `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`,
       );
       await sleep(timeToSleepInMs);
