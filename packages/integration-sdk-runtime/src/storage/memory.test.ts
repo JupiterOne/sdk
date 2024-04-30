@@ -225,4 +225,28 @@ describe('#InMemoryGraphObjectStore', () => {
     expect(await collectRelationshipsByType(store, r2._type)).toEqual([r2]);
     expect(store.getTotalRelationshipItemCount()).toEqual(1);
   });
+
+  test('should allow testing if hasKey', async () => {
+    const store = new InMemoryGraphObjectStore();
+    const e1 = createTestEntity();
+
+    await store.addEntities('test', [e1]);
+    expect(store.hasKey(e1._key)).toBe(true);
+    expect(store.hasKey('not-real')).toBe(false);
+
+    const r1 = createTestRelationship();
+    await store.addRelationships('test', [r1]);
+
+    expect(store.hasKey(e1._key)).toBe(true);
+    expect(store.hasKey(r1._key)).toBe(true);
+    expect(store.hasKey('not-real')).toBe(false);
+
+    // after flushing then test that they are not there
+    store.flushEntities([e1], 'test');
+    store.flushRelationships([r1], 'test');
+
+    expect(store.hasKey(e1._key)).toBe(false);
+    expect(store.hasKey(r1._key)).toBe(false);
+    expect(store.hasKey('not-real')).toBe(false);
+  });
 });
