@@ -12,12 +12,16 @@ import {
 import { randomUUID as uuid } from 'crypto';
 import { FileSystemGraphObjectStore } from '../../storage';
 import { vol } from 'memfs';
-import { Entity } from '@jupiterone/integration-sdk-core';
+import {
+  Entity,
+  IntegrationDuplicateKeyError,
+} from '@jupiterone/integration-sdk-core';
 import {
   createTestEntity,
   createTestRelationship,
   sleep,
   createTestEntities,
+  InMemoryGraphObjectStoreWithHasKeyImpl,
 } from '@jupiterone/integration-sdk-private-test-utils';
 import {
   createQueuedStepGraphObjectDataUploader,
@@ -218,6 +222,89 @@ describe('#hasKey', () => {
     for (const entity of entities) {
       expect(entityKeySet.has(entity._key)).toEqual(true);
     }
+  });
+
+  test('should prefer graph-object store hasKey implementation if available', async () => {
+    const gos = new InMemoryGraphObjectStoreWithHasKeyImpl();
+    const hasKeySpy = jest.spyOn(gos, 'hasKey');
+    const jobState = createTestStepJobState({ graphObjectStore: gos });
+    await jobState.addRelationship(createTestRelationship({ _key: 'a' }));
+    expect(jobState.hasKey('a')).toBeTrue();
+
+    expect(hasKeySpy).toHaveBeenCalled();
+  });
+
+  test('should prefer graph-object store hasKey implementation for entities if available', async () => {
+    const gos = new InMemoryGraphObjectStoreWithHasKeyImpl();
+    const hasKeySpy = jest.spyOn(gos, 'hasKey');
+    const jobState = createTestStepJobState({ graphObjectStore: gos });
+    await jobState.addEntity(createTestEntity({ _key: 'a' }));
+    expect(jobState.hasKey('a')).toBeTrue();
+
+    expect(hasKeySpy).toHaveBeenCalled();
+  });
+
+  test('if using graph-object store hasKey does not allow duplicates', async () => {
+    const gos = new InMemoryGraphObjectStoreWithHasKeyImpl();
+    const hasKeySpy = jest.spyOn(gos, 'hasKey');
+    const jobState = createTestStepJobState({ graphObjectStore: gos });
+    await jobState.addEntity(createTestEntity({ _key: 'a' }));
+    let err: Error | undefined = undefined;
+    try {
+      await jobState.addEntity(createTestEntity({ _key: 'a' }));
+    } catch (e) {
+      err = e;
+    }
+
+    expect(err).toBeInstanceOf(IntegrationDuplicateKeyError);
+    expect(jobState.hasKey('a')).toBeTrue();
+    expect(hasKeySpy).toHaveBeenCalled();
+  });
+
+  test('if using graph-object store hasKey does not allow duplicates in the same payload of entities', async () => {
+    const gos = new InMemoryGraphObjectStoreWithHasKeyImpl();
+    const hasKeySpy = jest.spyOn(gos, 'hasKey');
+    const jobState = createTestStepJobState({ graphObjectStore: gos });
+
+    let err: Error | undefined = undefined;
+    try {
+      await jobState.addEntities([
+        createTestEntity({ _key: 'a' }),
+        createTestEntity({ _key: 'a' }),
+      ]);
+    } catch (e) {
+      err = e;
+    }
+
+    expect(err).toBeInstanceOf(IntegrationDuplicateKeyError);
+    // in this case we add neither of them and generally fail the whole batch
+    // we could try to not fail the whole batch but generally consumers should
+    // just check for duplicate keys to avoid errors entirely.
+    expect(jobState.hasKey('a')).toBeFalse();
+    expect(hasKeySpy).toHaveBeenCalled();
+  });
+
+  test('if using graph-object store hasKey does not allow duplicates in the same payload of relationships', async () => {
+    const gos = new InMemoryGraphObjectStoreWithHasKeyImpl();
+    const hasKeySpy = jest.spyOn(gos, 'hasKey');
+    const jobState = createTestStepJobState({ graphObjectStore: gos });
+
+    let err: Error | undefined = undefined;
+    try {
+      await jobState.addRelationships([
+        createTestRelationship({ _key: 'a' }),
+        createTestRelationship({ _key: 'a' }),
+      ]);
+    } catch (e) {
+      err = e;
+    }
+
+    expect(err).toBeInstanceOf(IntegrationDuplicateKeyError);
+    // in this case we add neither of them and generally fail the whole batch
+    // we could try to not fail the whole batch but generally consumers should
+    // just check for duplicate keys to avoid errors entirely.
+    expect(jobState.hasKey('a')).toBeFalse();
+    expect(hasKeySpy).toHaveBeenCalled();
   });
 });
 

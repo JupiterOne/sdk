@@ -1,5 +1,6 @@
 import {
   Entity,
+  IntegrationDuplicateKeyError,
   JobState,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
@@ -149,14 +150,36 @@ export function createStepJobState({
   uploader,
   onDuplicateEntityKey,
 }: CreateStepJobStateParams): JobState {
+  const hasHasKeyFn = typeof graphObjectStore.hasKey === 'function';
+
   const addEntities = async (entities: Entity[]): Promise<Entity[]> => {
     if (beforeAddEntity) {
       entities = entities.map(beforeAddEntity);
     }
 
+    const set = hasHasKeyFn && entities.length > 1 ? new Set() : undefined;
+
     for (const [index, entity] of entities.entries()) {
       try {
-        duplicateKeyTracker.registerKey(entity._key);
+        if (hasHasKeyFn) {
+          if (graphObjectStore.hasKey!(entity._key)) {
+            throw new IntegrationDuplicateKeyError(
+              `Duplicate _key detected (_key=${entity._key})`,
+            );
+            // if this add entities contains multiple entities we need to verify it doesn't contain any duplicates within
+            // the set we haven't placed in our object store yet
+          } else if (set) {
+            if (set.has(entity._key)) {
+              throw new IntegrationDuplicateKeyError(
+                `Duplicate _key detected (_key=${entity._key})`,
+              );
+            } else {
+              set.add(entity._key);
+            }
+          }
+        } else {
+          duplicateKeyTracker.registerKey(entity._key);
+        }
       } catch (err) {
         const duplicateEntityReport = await createDuplicateEntityReport({
           duplicateEntity: entity,
@@ -202,28 +225,43 @@ export function createStepJobState({
     });
   }
 
-  const addRelationships = async (relationshipsToAdd: Relationship[]) => {
-    let relationships: Relationship[];
+  const addRelationships = async (relationships: Relationship[]) => {
+    const set = hasHasKeyFn && relationships.length > 1 ? new Set() : undefined;
 
-    if (beforeAddRelationship) {
-      relationships = [];
+    const alteredRelationships: Relationship[] | undefined =
+      beforeAddRelationship ? [] : undefined;
 
-      for (const relationship of relationshipsToAdd) {
-        const newRelationship = await beforeAddRelationship(relationship);
-        relationships.push(newRelationship);
-
-        // Avoid iterating the entire set of relationships again later by
-        // registering now.
-        registerRelationshipInTrackers(newRelationship);
+    for (let relationship of relationships) {
+      if (beforeAddRelationship) {
+        relationship = await beforeAddRelationship(relationship);
+        // line 229 only creates the array if beforeAddRelationship will be called
+        alteredRelationships!.push(relationship);
       }
-    } else {
-      relationships = relationshipsToAdd;
-      relationships.forEach(registerRelationshipInTrackers);
+
+      if (hasHasKeyFn) {
+        if (graphObjectStore.hasKey!(relationship._key)) {
+          throw new IntegrationDuplicateKeyError(
+            `Duplicate _key detected (_key=${relationship._key})`,
+          );
+        } else if (set) {
+          if (set.has(relationship._key)) {
+            throw new IntegrationDuplicateKeyError(
+              `Duplicate _key detected (_key=${relationship._key})`,
+            );
+          } else {
+            set.add(relationship._key);
+          }
+        }
+      } else {
+        registerRelationshipInTrackers(relationship);
+      }
     }
 
     await graphObjectStore.addRelationships(
       stepId,
-      relationships,
+      // if we altered the relationships above with beforeAddRelationship
+      // then we pass that otherwise pass relationships
+      alteredRelationships ?? relationships,
       async (relationships) =>
         uploader?.enqueue({
           entities: [],
@@ -275,7 +313,11 @@ export function createStepJobState({
 
     hasKey: (_key: string | undefined) => {
       if (!_key) return false;
-      return duplicateKeyTracker.hasKey(_key);
+      if (hasHasKeyFn) {
+        return graphObjectStore.hasKey!(_key);
+      } else {
+        return duplicateKeyTracker.hasKey(_key);
+      }
     },
 
     iterateEntities: (filter, iteratee) =>
