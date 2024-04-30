@@ -131,6 +131,16 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
     return Promise.resolve(entity);
   }
 
+  hasKey(_key: string | undefined): boolean {
+    if (!_key) {
+      return false;
+    }
+    return (
+      this.entityKeyToEntityMap.has(_key) ||
+      this.relationshipKeyToRelationshipMap.has(_key)
+    );
+  }
+
   /**
    * @notImplemented
    */
