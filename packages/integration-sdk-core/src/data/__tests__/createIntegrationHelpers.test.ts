@@ -1,0 +1,116 @@
+import { Type } from '@sinclair/typebox';
+import { SchemaMap } from '../../../tools/schemas';
+import { createIntegrationHelpers } from '../createIntegrationHelpers';
+import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
+import { entitySchemas } from '@jupiterone/data-model';
+
+describe('createIntegrationHelpers', () => {
+  const { createEntityType, createIntegrationEntity } =
+    createIntegrationHelpers({
+      integrationName: 'test',
+      classSchemaMap: SchemaMap,
+    });
+
+  test('createEntityType', () => {
+    expect(createEntityType('entity')).toBe('test_entity');
+  });
+
+  test('createIntegrationEntity createEntity', () => {
+    const [, createEntity] = createIntegrationEntity({
+      resourceName: 'Entity',
+      _class: ['Entity'],
+      _type: 'entity',
+      description: 'Entity description',
+      schema: Type.Object({
+        id: Type.String(),
+        name: Type.String(),
+      }),
+    });
+
+    expect(
+      createEntity({
+        id: '1',
+        name: 'entity',
+        _key: 'id:123456',
+        displayName: 'Entity',
+      }),
+    ).toEqual({
+      id: '1',
+      name: 'entity',
+      _key: 'id:123456',
+      displayName: 'Entity',
+      _class: ['Entity'],
+      _type: 'entity',
+    });
+  });
+
+  test('createIntegrationEntity schema', () => {
+    const [{ schema }] = createIntegrationEntity({
+      resourceName: 'Entity',
+      _class: ['Entity'],
+      _type: 'entity',
+      description: 'Entity description',
+      schema: Type.Object({
+        id: Type.String(),
+        name: Type.String(),
+      }),
+    });
+
+    expect(schema).toEqual({
+      $id: '#entity',
+      description: 'Entity description',
+      allOf: [
+        { $ref: '#Entity' },
+        {
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            _class: {
+              type: 'array',
+              items: [
+                {
+                  const: 'Entity',
+                  type: 'string',
+                },
+              ],
+              additionalItems: false,
+              maxItems: 1,
+              minItems: 1,
+            },
+            _type: { const: 'entity', type: 'string' },
+          },
+          required: ['_class', '_type', 'id', 'name'],
+          type: 'object',
+        },
+      ],
+    });
+  });
+
+  test('createIntegrationEntity schema should validate createEntity return', () => {
+    const validator = new EntityValidator({
+      schemas: Object.values(entitySchemas),
+    });
+    const [{ schema }, createEntity] = createIntegrationEntity({
+      resourceName: 'Type',
+      _class: ['Entity'],
+      _type: 'type',
+      description: 'Type description',
+      schema: Type.Object({
+        id: Type.String(),
+        name: Type.String(),
+      }),
+    });
+    validator.addSchemas(schema);
+
+    const { errors } = validator.validateEntity(
+      createEntity({
+        id: '1',
+        name: 'type',
+        _key: 'id:123456789',
+        displayName: 'Type',
+      }),
+    );
+
+    expect(errors).toEqual(null);
+  });
+});
