@@ -26,7 +26,11 @@ An object containing the following properties:
 #### Example
 
 ```typescript
-import { createIntegrationHelpers } from '@jupiterone/integration-sdk-core';
+import {
+  createIntegrationHelpers,
+  createEntityType,
+  SchemaType,
+} from '@jupiterone/integration-sdk-core';
 import { classSchemaTypeboxMap } from '@jupiterone/data-model';
 
 const { createEntityType, createIntegrationEntity } = createIntegrationHelpers({
@@ -39,8 +43,8 @@ const [USER_ENTITY, createUserAssignEntity] = createIntegrationEntity({
   _class: ['User'],
   _type: createEntityType('user'), // This will generate "my_awesome_integration_user", but you are free to not use the createEntityType helper
   description: 'Entity description', // This will be used in the json schema
-  schema: Type.Object({
-    name: Type.String(),
+  schema: SchemaType.Object({
+    name: SchemaType.String(),
   }),
 });
 
@@ -72,7 +76,11 @@ export const { createEntityType, createIntegrationEntity } =
    all entities as the following EXAMPLE code:
 
 ```typescript
-import { createEntityType, createIntegrationEntity } from './helpers';
+import {
+  createEntityType,
+  createIntegrationEntity,
+  Type,
+} from '@jupiterone/integration-sdk-core';
 
 export const [UserEntityMetadata, createUserAssignEntity] =
   createIntegrationEntity({
@@ -80,8 +88,8 @@ export const [UserEntityMetadata, createUserAssignEntity] =
     _class: ['User'],
     _type: createEntityType('user'), // This will generate `${INTEGRATION_NAME}_user`, but you are free to not use the createEntityType helper
     description: 'Entity description', // This will be used in the json schema
-    schema: Type.Object({
-      name: Type.String(),
+    schema: SchemaType.Object({
+      name: SchemaType.String(),
     }),
   });
 ```
