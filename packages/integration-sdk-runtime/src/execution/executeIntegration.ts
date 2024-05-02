@@ -18,6 +18,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import {
+  DEFAULT_STORAGE_DIRECTORY_NAME,
   getRootStorageDirectorySize,
   isCompressionEnabled,
   isRootStorageDirectoryPresent,
@@ -36,6 +37,7 @@ import {
   timeOperation,
 } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
+import path from 'path';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 import { MemoryDataStore } from './jobState';
 import {
@@ -48,7 +50,10 @@ import { getMaskedFields } from './utils/getMaskedFields';
 import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
-import { DuplicateKeyTracker } from './duplicateKeyTracker';
+import {
+  DuplicateKeyTracker,
+  InMemoryDuplicateKeyTracker,
+} from './duplicateKeyTracker';
 import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
 
 export interface ExecuteIntegrationResult {
@@ -256,9 +261,18 @@ export async function executeWithContext<
         resultsCallback,
       } = options;
 
-      const duplicateKeyTracker = new DuplicateKeyTracker(
-        config.normalizeGraphObjectKey,
-      );
+      let duplicateKeyTracker: DuplicateKeyTracker =
+        new InMemoryDuplicateKeyTracker(config.normalizeGraphObjectKey);
+
+      if (process.env.USE_ON_DISK_DKT) {
+        // conditionally require so the dependency can remain optional
+        const {
+          OnDiskDuplicateKeyTracker,
+        } = require('./onDiskDuplicateKeyTracker');
+        duplicateKeyTracker = new OnDiskDuplicateKeyTracker({
+          filepath: path.join(process.cwd(), DEFAULT_STORAGE_DIRECTORY_NAME),
+        });
+      }
 
       const integrationStepResults = await executeSteps({
         executionContext: context,

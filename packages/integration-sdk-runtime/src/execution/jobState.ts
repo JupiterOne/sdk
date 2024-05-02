@@ -136,6 +136,7 @@ export interface CreateStepJobStateParams {
    */
   onDuplicateEntityKey: (duplicateEntityReport: DuplicateEntityReport) => void;
 }
+
 export function createStepJobState({
   stepId,
   duplicateKeyTracker,
@@ -194,7 +195,6 @@ export function createStepJobState({
 
   function registerRelationshipInTrackers(r: Relationship) {
     duplicateKeyTracker.registerKey(r._key);
-
     typeTracker.addStepGraphObjectType({
       stepId,
       _type: r._type,

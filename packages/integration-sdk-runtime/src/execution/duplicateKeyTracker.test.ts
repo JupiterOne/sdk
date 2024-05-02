@@ -4,7 +4,6 @@ import {
 } from './duplicateKeyTracker';
 import { InMemoryGraphObjectStore } from '../storage';
 import { Entity } from '@jupiterone/integration-sdk-core';
-
 describe('DuplicateKeyTracker', () => {
   test('has key returns true when key is present', () => {
     const duplicateKeyTracker = new DuplicateKeyTracker();
