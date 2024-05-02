@@ -5,18 +5,17 @@ import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 import { entitySchemas } from '@jupiterone/data-model';
 
 describe('createIntegrationHelpers', () => {
-  const { createEntityType, createIntegrationEntity } =
-    createIntegrationHelpers({
-      integrationName: 'test',
-      classSchemaMap: SchemaMap,
-    });
+  const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
+    integrationName: 'test',
+    classSchemaMap: SchemaMap,
+  });
 
   test('createEntityType', () => {
     expect(createEntityType('entity')).toBe('test_entity');
   });
 
   test('createIntegrationEntity createEntity', () => {
-    const [, createEntity] = createIntegrationEntity({
+    const [, createEntity] = createEntityMetadata({
       resourceName: 'Entity',
       _class: ['Entity'],
       _type: 'entity',
@@ -45,7 +44,7 @@ describe('createIntegrationHelpers', () => {
   });
 
   test('createIntegrationEntity schema', () => {
-    const [{ schema }] = createIntegrationEntity({
+    const [{ schema }] = createEntityMetadata({
       resourceName: 'Entity',
       _class: ['Entity'],
       _type: 'entity',
@@ -90,7 +89,7 @@ describe('createIntegrationHelpers', () => {
     const validator = new EntityValidator({
       schemas: Object.values(entitySchemas),
     });
-    const [{ schema }, createEntity] = createIntegrationEntity({
+    const [{ schema }, createEntity] = createEntityMetadata({
       resourceName: 'Type',
       _class: ['Entity'],
       _type: 'type',

@@ -26,7 +26,7 @@ export const createIntegrationHelpers = <
     entityName: EntityName,
   ) => `${integrationName}_${entityName}` as const;
 
-  const createIntegrationEntity = <
+  const createEntityMetadata = <
     ResourceName extends string,
     Class extends keyof ClassSchemaMap & string,
     EntityType extends string,
@@ -61,12 +61,18 @@ export const createIntegrationHelpers = <
       $id: `#${_type}`,
       description: description,
     });
-    type EntitySchemaType = Static<typeof entitySchema>;
+    type EntitySchemaType = Omit<Static<typeof entitySchema>, 'displayName'> & {
+      displayName?: string | undefined;
+    };
 
-    const createEntity = (
+    const createEntityData = (
       entityData: Omit<EntitySchemaType, '_class' | '_type'>,
     ): EntitySchemaType => {
-      return { ...entityData, _class: _class, _type: _type };
+      return {
+        ...entityData,
+        _class: _class,
+        _type: _type,
+      } as EntitySchemaType;
     };
 
     const stepEntityMetadata = {
@@ -77,8 +83,8 @@ export const createIntegrationHelpers = <
       ...entityMetadata,
     } satisfies StepEntityMetadata;
 
-    return [stepEntityMetadata, createEntity] as const;
+    return [stepEntityMetadata, createEntityData] as const;
   };
 
-  return { createEntityType, createIntegrationEntity };
+  return { createEntityType, createEntityMetadata };
 };
