@@ -114,13 +114,6 @@ export interface InvocationConfig<
    * If not provided, the handler will run normally.
    */
   executionHandlerWrapper?: StepExecutionHandlerWrapperFunction<TStepExecutionContext>;
-  /**
-   * @expiremental
-   * Expiremental feature to enable the on-disk duplicate key tracker
-   * Requires the optional dependency `lmdb` and a valid `lmdb` build
-   * This field may be removed in future releases with no major version change!
-   */
-  useOnDiskDuplicateKeyTracker?: boolean;
 }
 
 export interface IntegrationInvocationConfig<

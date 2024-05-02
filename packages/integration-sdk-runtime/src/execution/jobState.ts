@@ -3,7 +3,6 @@ import {
   JobState,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
-
 import { GraphObjectStore } from '../storage';
 import {
   createDuplicateEntityReport,

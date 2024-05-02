@@ -14,7 +14,7 @@ describe('ondiskduplicatekeystore', () => {
         internalBufferSize: 500,
       });
       for (const key of keys) {
-        await dt.registerKey(key);
+        dt.registerKey(key);
         expect(dt.hasKey(key)).toBeTrue();
       }
 
@@ -39,7 +39,7 @@ describe('ondiskduplicatekeystore', () => {
         internalBufferSize: 500,
       });
       for (const key of keys) {
-        await dt.registerKey(key);
+        dt.registerKey(key);
         expect(dt.hasKey(key)).toBeTrue();
       }
 
@@ -65,7 +65,7 @@ describe('ondiskduplicatekeystore', () => {
       });
 
       for (const key of keys) {
-        await dt.registerKey(key);
+        dt.registerKey(key);
       }
 
       const keySet = new Set(keys);
