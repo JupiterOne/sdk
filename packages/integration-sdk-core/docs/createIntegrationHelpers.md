@@ -109,6 +109,8 @@ export const Entities: Record<
    following EXAMPLE code:
 
 ```diff
++ import { createUserAssignEntity } from '../../entities';
+
 export function createUserEntity(name: string): Entity {
   return createIntegrationEntity({
     entityData: {
