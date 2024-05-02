@@ -20,7 +20,7 @@ An object containing the following properties:
 
 - `createEntityType`: A function to generate entity types with
   `${integrationName}_${entityName}` pattern.
-- `createIntegrationEntity`: A function to create a entity metadata and a typed
+- `createEntityMetadata`: A function to create a entity metadata and a typed
   create entity function.
 
 #### Example
@@ -28,17 +28,16 @@ An object containing the following properties:
 ```typescript
 import {
   createIntegrationHelpers,
-  createEntityType,
   SchemaType,
 } from '@jupiterone/integration-sdk-core';
 import { classSchemaTypeboxMap } from '@jupiterone/data-model';
 
-const { createEntityType, createIntegrationEntity } = createIntegrationHelpers({
+const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
   integrationName: 'my_awesome_integration',
   schemaMap: classSchemaTypeboxMap,
 });
 
-const [USER_ENTITY, createUserAssignEntity] = createIntegrationEntity({
+const [USER_ENTITY, createUserAssignEntity] = createEntityMetadata({
   resourceName: 'User',
   _class: ['User'],
   _type: createEntityType('user'), // This will generate "my_awesome_integration_user", but you are free to not use the createEntityType helper
@@ -64,7 +63,7 @@ createUserAssignEntity({
 import { createIntegrationHelpers } from '@jupiterone/integration-sdk-core';
 import { classSchemaTypeboxMap } from '@jupiterone/data-model';
 
-export const { createEntityType, createIntegrationEntity } =
+export const { createEntityType, createEntityMetadata } =
   createIntegrationHelpers({
     integrationName: INTEGRATION_NAME,
     schemaMap: classSchemaTypeboxMap,
@@ -76,14 +75,11 @@ export const { createEntityType, createIntegrationEntity } =
    all entities as the following EXAMPLE code:
 
 ```typescript
-import {
-  createEntityType,
-  createIntegrationEntity,
-  Type,
-} from '@jupiterone/integration-sdk-core';
+import { SchemaType } from '@jupiterone/integration-sdk-core';
+import { createEntityType, createEntityMetadata } from './helpers';
 
 export const [UserEntityMetadata, createUserAssignEntity] =
-  createIntegrationEntity({
+  createEntityMetadata({
     resourceName: 'User',
     _class: ['User'],
     _type: createEntityType('user'), // This will generate `${INTEGRATION_NAME}_user`, but you are free to not use the createEntityType helper
