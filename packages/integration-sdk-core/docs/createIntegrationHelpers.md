@@ -30,11 +30,11 @@ import {
   createIntegrationHelpers,
   SchemaType,
 } from '@jupiterone/integration-sdk-core';
-import { classSchemaTypeboxMap } from '@jupiterone/data-model';
+import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 
 const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
   integrationName: 'my_awesome_integration',
-  schemaMap: classSchemaTypeboxMap,
+  schemaMap: typeboxClassSchemaMap,
 });
 
 const [USER_ENTITY, createUserAssignEntity] = createEntityMetadata({
@@ -61,12 +61,12 @@ createUserAssignEntity({
 
 ```typescript
 import { createIntegrationHelpers } from '@jupiterone/integration-sdk-core';
-import { classSchemaTypeboxMap } from '@jupiterone/data-model';
+import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 
 export const { createEntityType, createEntityMetadata } =
   createIntegrationHelpers({
     integrationName: INTEGRATION_NAME,
-    schemaMap: classSchemaTypeboxMap,
+    schemaMap: typeboxClassSchemaMap,
   });
 ```
 
