@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+- Add expiremental `OnDiskDuplicateKeyTracker`
+
 # 12.6.0 - 2024-04-24
 
 - http-client: add option to pass body as plain text
