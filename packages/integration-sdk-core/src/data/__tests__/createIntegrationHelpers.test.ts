@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { SchemaMap } from '../../../tools/schemas';
+import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 import { createIntegrationHelpers } from '../createIntegrationHelpers';
 import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 import { entitySchemas } from '@jupiterone/data-model';
@@ -7,7 +7,7 @@ import { entitySchemas } from '@jupiterone/data-model';
 describe('createIntegrationHelpers', () => {
   const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
     integrationName: 'test',
-    classSchemaMap: SchemaMap,
+    classSchemaMap: typeboxClassSchemaMap,
   });
 
   test('createEntityType', () => {
