@@ -9,7 +9,7 @@ const DEFAULT_IN_MEMORY_BUFFER_SIZE = 10_000;
  */
 export class OnDiskDuplicateKeyTracker {
   private lmdb: RootDatabase;
-  private readonly interalBuffer: Map<string, string>;
+  private readonly internalBuffer: Map<string, string>;
   private readonly internalBufferSize: number;
   private readonly normalizationFunction: KeyNormalizationFunction;
 
@@ -24,13 +24,13 @@ export class OnDiskDuplicateKeyTracker {
     this.lmdb = open(params?.filepath ?? 'key-tracker.db', {
       encoding: 'string',
     });
-    this.interalBuffer = params?.internalBuffer ?? new Map<string, string>();
+    this.internalBuffer = params?.internalBuffer ?? new Map<string, string>();
     this.internalBufferSize =
       params?.internalBufferSize ?? DEFAULT_IN_MEMORY_BUFFER_SIZE;
   }
 
   getGraphObjectMetadata(_key: string): string | undefined {
-    return this.interalBuffer.get(_key) ?? this.lmdb.get(_key);
+    return this.internalBuffer.get(_key) ?? this.lmdb.get(_key);
   }
 
   getEncounteredKeys(): string[][] {
@@ -38,7 +38,7 @@ export class OnDiskDuplicateKeyTracker {
     for (const key of this.lmdb.getKeys()) {
       keys.push(key as string);
     }
-    for (const key of this.interalBuffer.keys()) {
+    for (const key of this.internalBuffer.keys()) {
       keys.push(key);
     }
     return [keys];
@@ -46,16 +46,19 @@ export class OnDiskDuplicateKeyTracker {
 
   registerKey(_key: string) {
     const normalizedKey = this.normalizationFunction(_key);
-    if (this.interalBuffer.has(normalizedKey) || this.lmdb.get(normalizedKey)) {
+    if (
+      this.internalBuffer.has(normalizedKey) ||
+      this.lmdb.get(normalizedKey)
+    ) {
       throw new Error(`Duplicate _key detected (_key=${_key})`);
     }
 
-    this.interalBuffer.set(normalizedKey, _key);
+    this.internalBuffer.set(normalizedKey, _key);
 
-    if (this.interalBuffer.size > this.internalBufferSize) {
+    if (this.internalBuffer.size > this.internalBufferSize) {
       const keys: string[] = [];
       this.lmdb.transactionSync(() => {
-        for (const [key, value] of this.interalBuffer.entries()) {
+        for (const [key, value] of this.internalBuffer.entries()) {
           this.lmdb.put(key, value).catch((e) => {
             throw e;
           });
@@ -64,7 +67,7 @@ export class OnDiskDuplicateKeyTracker {
       });
 
       for (const key of keys) {
-        this.interalBuffer.delete(key);
+        this.internalBuffer.delete(key);
       }
     }
   }
@@ -72,7 +75,7 @@ export class OnDiskDuplicateKeyTracker {
   hasKey(_key: string) {
     const normalizedKey = this.normalizationFunction(_key);
     return (
-      !!this.lmdb.get(normalizedKey) || this.interalBuffer.has(normalizedKey)
+      !!this.lmdb.get(normalizedKey) || this.internalBuffer.has(normalizedKey)
     );
   }
 }

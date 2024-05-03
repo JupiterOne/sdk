@@ -270,7 +270,11 @@ export async function executeWithContext<
           OnDiskDuplicateKeyTracker,
         } = require('./onDiskDuplicateKeyTracker');
         duplicateKeyTracker = new OnDiskDuplicateKeyTracker({
-          filepath: path.join(process.cwd(), DEFAULT_STORAGE_DIRECTORY_NAME),
+          filepath: path.join(
+            process.cwd(),
+            DEFAULT_STORAGE_DIRECTORY_NAME,
+            'key-tracker.db',
+          ),
         });
       }
 
