@@ -2,6 +2,7 @@ import { KeyNormalizationFunction } from '@jupiterone/integration-sdk-core';
 import type { RootDatabase } from 'lmdb';
 
 let open: any;
+/* eslint-disable no-useless-catch */
 try {
   const lmdb = require('lmdb');
   open = lmdb.open;
