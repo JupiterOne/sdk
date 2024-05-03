@@ -266,16 +266,23 @@ export async function executeWithContext<
 
       if (process.env.USE_ON_DISK_DKT) {
         // conditionally require so the dependency can remain optional
-        const {
-          OnDiskDuplicateKeyTracker,
-        } = require('./onDiskDuplicateKeyTracker');
-        duplicateKeyTracker = new OnDiskDuplicateKeyTracker({
-          filepath: path.join(
-            process.cwd(),
-            DEFAULT_STORAGE_DIRECTORY_NAME,
-            'key-tracker.db',
-          ),
-        });
+        try {
+          const {
+            OnDiskDuplicateKeyTracker,
+          } = require('./onDiskDuplicateKeyTracker');
+          duplicateKeyTracker = new OnDiskDuplicateKeyTracker({
+            filepath: path.join(
+              process.cwd(),
+              DEFAULT_STORAGE_DIRECTORY_NAME,
+              'key-tracker.db',
+            ),
+          });
+        } catch (err) {
+          logger.warn(
+            { err },
+            'Tried to require OnDiskDuplicateKeyTracker, but failed. Falling back to InMemoryDuplicateKeyTracker',
+          );
+        }
       }
 
       const integrationStepResults = await executeSteps({

@@ -1,5 +1,13 @@
 import { KeyNormalizationFunction } from '@jupiterone/integration-sdk-core';
-import { open, RootDatabase } from 'lmdb';
+import type { RootDatabase } from 'lmdb';
+
+let open: any;
+try {
+  const lmdb = require('lmdb');
+  open = lmdb.open;
+} catch (err) {
+  throw err;
+}
 
 const DEFAULT_IN_MEMORY_BUFFER_SIZE = 10_000;
 
