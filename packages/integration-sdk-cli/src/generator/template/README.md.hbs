@@ -34,9 +34,15 @@ with JupiterOne in the [integration documentation](docs/jupiterone.md).
 
 #### Running directly
 
+{{#if_eq packageManager 'yarn'}}
 1. `yarn start` to collect data
 2. `yarn graph` to show a visualization of the collected data
 3. `yarn j1-integration -h` for additional commands
+{{else}}
+1. `npm run start` to collect data
+2. `npm run graph` to show a visualization of the collected data
+3. `npm run j1-integration -h` for additional commands
+{{/if_eq}}
 
 #### Running with Docker
 
@@ -65,11 +71,19 @@ developing this integration.
 
 ## Testing the integration
 
+{{#if_eq packageManager 'yarn'}}
 Ideally, all major calls to the API and converter functions would be tested. You
-can run the tests with `yarn test`, and you can run the tests as they execute in
-the CI/CD environment with `yarn test:ci` (adds linting and type-checking to
-`yarn test`). If you have a valid runtime configuration, you can run the tests
-with your credentials using `yarn test:env`.
+can run the tests with `npm run test`, and you can run the tests as they execute in
+the CI/CD environment with `npm run test:ci` (adds linting and type-checking to
+`npm run test`). If you have a valid runtime configuration, you can run the tests
+with your credentials using `npm run test:env`.
+{{else}}
+Ideally, all major calls to the API and converter functions would be tested. You
+can run the tests with `npm run test`, and you can run the tests as they execute in
+the CI/CD environment with `npm run test:ci` (adds linting and type-checking to
+`npm run test`). If you have a valid runtime configuration, you can run the tests
+with your credentials using `npm run test:env`.
+{{/if_eq}}
 
 For more details on setting up tests, and specifically on using recordings to
 simulate API responses, see `test/README.md`.

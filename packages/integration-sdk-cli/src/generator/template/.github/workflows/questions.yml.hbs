@@ -24,9 +24,13 @@ jobs:
         with:
           node-version: 18.x
 
+      {{#if_eq packageManager 'yarn'}}
       - name: Install dependencies for `main` branch
         run: yarn install --cwd source --frozen-lockfile
-
+      {{else}}
+      - name: Install dependencies for `main` branch
+        run: npm install --cwd source --frozen-lockfile
+      {{/if_eq}}
       - name: Validate questions on target branch
         env:
           MANAGED_QUESTIONS_JUPITERONE_ACCOUNT_ID:
@@ -34,7 +38,14 @@ jobs:
           MANAGED_QUESTIONS_JUPITERONE_API_KEY:
             $\{{ secrets.MANAGED_QUESTIONS_JUPITERONE_API_KEY }}
         run:
+          {{#if_eq packageManager 'yarn'}}
           yarn --cwd source j1-integration validate-question-file -a
           --frozen-lockfile $MANAGED_QUESTIONS_JUPITERONE_ACCOUNT_ID -k
           $MANAGED_QUESTIONS_JUPITERONE_API_KEY -p
           ../target/jupiterone/questions/questions.yaml
+          {{else}}
+          npm run --cwd source j1-integration validate-question-file -a
+          --frozen-lockfile $MANAGED_QUESTIONS_JUPITERONE_ACCOUNT_ID -k
+          $MANAGED_QUESTIONS_JUPITERONE_API_KEY -p
+          ../target/jupiterone/questions/questions.yaml
+          {{/if_eq}}

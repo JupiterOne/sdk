@@ -12,6 +12,7 @@ jobs:
       - name: Check out code repository source code
         uses: actions/checkout@v3
 
+      {{#if_eq packageManager 'yarn'}}
       - id: setup-node
         name: Setup Node
         uses: actions/setup-node@v3
@@ -27,3 +28,20 @@ jobs:
 
       - name: Run build
         run: yarn build
+      {{else}}
+      - id: setup-node
+        name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: npm
+
+      - name: Install dependencies
+        run: npm run --frozen-lockfile
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Run build
+        run: npm run build
+      {{/if_eq}}

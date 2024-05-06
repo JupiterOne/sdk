@@ -28,11 +28,17 @@
     "format:check": "prettier --check \"**/*.{ts,js,json,css,md,yml}\"",
     "type-check": "tsc",
     "test": "jest",
+    {{#if_eq packageManager 'yarn'}}
     "test:env": "LOAD_ENV=1 yarn test",
     "test:ci": "yarn format:check && yarn lint && yarn type-check && yarn test",
+    "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main",
+    {{else}}
+    "test:env": "LOAD_ENV=1 npm run test",
+    "test:ci": "npm run format:check && npm run lint && npm run type-check && npm run test",
+    "prepush": "npm run format:check && npm run lint && npm run type-check && jest --changedSince main",
+    {{/if_eq}}
     "build": "tsc -p tsconfig.dist.json --declaration && cp README.md dist/README.md && cp -r jupiterone/ dist/jupiterone/",
     "build:docker": "tsc --declaration false --emitDeclarationOnly false -p tsconfig.dist.json",
-    "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main",
     "postversion": "cp package.json ./dist/package.json"
   },
   "dependencies": {
