@@ -10,6 +10,7 @@ and this project adheres to
 # Unreleased
 
 - Add expiremental `OnDiskDuplicateKeyTracker`
+- Replace validateEntityWithSchema
 
 # 12.6.0 - 2024-04-24
 

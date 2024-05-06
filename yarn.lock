@@ -2427,6 +2427,14 @@
     ajv "^8.0.0"
     ajv-formats "^2.0.0"
 
+"@jupiterone/data-model@^0.57.0":
+  version "0.57.0"
+  resolved "https://registry.yarnpkg.com/@jupiterone/data-model/-/data-model-0.57.0.tgz#f543ba0bfad34ef5820ec6155fd3d77cb6e9ee08"
+  integrity sha512-AK/F8TQ7QVdz9ULujaHNYcBPiktAoq/MUVTdEEjSBe8ycDNPC5AskwZVKJtBD69XzdZ80jHum3YdrhKnoU0y9Q==
+  dependencies:
+    ajv "^8.0.0"
+    ajv-formats "^2.0.0"
+
 "@jupiterone/hierarchical-token-bucket@^0.3.1":
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/@jupiterone/hierarchical-token-bucket/-/hierarchical-token-bucket-0.3.1.tgz#b4bda4b5b1eed2fde3db776ce7241162c83b9b01"
