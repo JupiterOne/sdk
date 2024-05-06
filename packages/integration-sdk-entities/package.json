@@ -20,10 +20,10 @@
     "test": "jest",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
-    "prepack": "yarn build:dist",
+    "prepack": "npm run build:dist",
     "copy-schemas": "node tools/copy-schemas/index.js ../../node_modules/@jupiterone/data-model/dist/schemas",
     "create-barrel": "node tools/create-barrel/index.js src",
-    "generate-ts-classes": "yarn run copy-schemas && rm -rf src && mkdir src && json2ts -i 'tools/copy-schemas/_schemas/*.json' -o src  --cwd=tools/copy-schemas/_schemas --declareExternallyReferenced=false && ts-dedupe --duplicatesFile=src/Base.ts && yarn run create-barrel"
+    "generate-ts-classes": "npm run copy-schemas && rm -rf src && mkdir src && json2ts -i 'tools/copy-schemas/_schemas/*.json' -o src  --cwd=tools/copy-schemas/_schemas --declareExternallyReferenced=false && ts-dedupe --duplicatesFile=src/Base.ts && npm run create-barrel"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.55.0",

@@ -1560,7 +1560,7 @@ If provided this option specifies which base URL to use for synchronization.
 Cannot be used with the `--development` flag.
 
 ex:
-`yarn j1-integration sync --integrationInstanceId <integration instance id> --api-base-url <api base url>`
+`npm run j1-integration sync --integrationInstanceId <integration instance id> --api-base-url <api base url>`
 
 ###### Option `--noPretty`
 
@@ -1575,7 +1575,7 @@ commands for additional options.
 Example usage:
 
 ```shell
-yarn j1-integration run --integrationInstanceId 7ad16b51-e4d6-4e74-afbd-2fac6185f398
+npm run j1-integration run --integrationInstanceId 7ad16b51-e4d6-4e74-afbd-2fac6185f398
 ```
 
 ###### Option `--skip-finalize`

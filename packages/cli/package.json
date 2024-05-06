@@ -19,8 +19,8 @@
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
-    "build": "yarn build:dist",
-    "prepack": "yarn build:dist",
+    "build": "npm run build:dist",
+    "prepack": "npm run build:dist",
     "test": "jest"
   },
   "dependencies": {

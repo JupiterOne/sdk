@@ -13,5 +13,5 @@ npm install @jupiterone/integration-sdk-core
 
 # or
 
-yarn add @jupiterone/integration-sdk-core
+npm install @jupiterone/integration-sdk-core
 ```

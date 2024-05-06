@@ -22,7 +22,7 @@ npm install -D @jupiterone/integration-sdk-dev-tools
 
 # or
 
-yarn add -D @jupiterone/integration-sdk-dev-tools
+npm install -D @jupiterone/integration-sdk-dev-tools
 ```
 
 ## Usage

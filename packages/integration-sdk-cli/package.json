@@ -18,8 +18,8 @@
   },
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
-    "build:dist": "tsc -p tsconfig.dist.json --declaration && yarn copy-files",
-    "prepack": "yarn build:dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration && npm run copy-files",
+    "prepack": "npm run build:dist",
     "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate",
     "plop": "plop --plopfile dist/src/generator/newIntegration.js"
   },
