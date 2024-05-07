@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "lerna": "lerna",
+    "jest": "jest",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --cache .",
     "test": "jest && npm run format:check",
     "test:ci": "npm run lint && npm run build --force && npm run test",
