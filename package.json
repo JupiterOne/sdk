@@ -13,9 +13,9 @@
   ],
   "scripts": {
     "lerna": "lerna",
-    "jest": "jest",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --cache .",
     "test": "jest && npm run format:check",
+    "test:changed": "jest --changedSince main",
     "test:ci": "npm run lint && npm run build --force && npm run test",
     "clean": "npmx run lerna clean --yes && npm run clean:build && rm -r node_modules",
     "clean:build": "npm run lerna exec \"rm -rf ./dist tsconfig.tsbuildinfo\"",
@@ -25,7 +25,7 @@
     "build:dist": "lerna run build:dist",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md,yml}\"",
-    "prepush": "npm run lint && npm run build:dist && npm run jest --changedSince main"
+    "prepush": "npm run lint && npm run build:dist && npm run test:changed"
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",
