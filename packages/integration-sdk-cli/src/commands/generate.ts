@@ -8,15 +8,9 @@ export function generate() {
     .option('--useYarn', 'use yarn for package management')
     .action(async (cmdOpts) => {
       const Plop = await dynamicImport('plop');
-      let configPath = path.resolve(
+      const configPath = path.resolve(
         path.join(__dirname, '../generator/newIntegration.js'),
       );
-
-      if (cmdOpts.useYarn) {
-        configPath = path.resolve(
-          path.join(__dirname, '../generator/newIntegrationYarn.js'),
-        );
-      }
 
       Plop.Plop.prepare(
         {
