@@ -3,5 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "exclude": ["**/dist/*"]
+  "exclude": ["**/dist/*"],
+  "references": [{ "path": "../integration-sdk-entity-validator" }]
 }

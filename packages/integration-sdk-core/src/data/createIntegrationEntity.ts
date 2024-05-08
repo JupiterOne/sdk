@@ -1,8 +1,9 @@
 import {
   getSchema,
   IntegrationEntitySchema,
-  validateEntityWithSchema,
+  entitySchemas,
 } from '@jupiterone/data-model';
+import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 
 import { IntegrationError } from '../errors';
 import { Entity, EntityRawData } from '../types';
@@ -11,6 +12,9 @@ import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
 const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
+const VALIDATOR = new EntityValidator({
+  schemas: Object.values(entitySchemas),
+});
 
 /**
  * Properties to be assigned to a generated entity which are declared in code
@@ -90,6 +94,40 @@ export type IntegrationEntityBuilderInput = {
   // transfer process further, placing transformations that are common to the
   // integration in one place, and allowing transformation reuse across
   // integrations.
+};
+
+const validateEntityWithSchema = (entity: GeneratedEntity) => {
+  const { isValid, errors, skippedSchemas } = VALIDATOR.validateEntity(entity);
+
+  const classNotFound = skippedSchemas?.find(
+    (skippedSchema) =>
+      skippedSchema.reason === 'not-found' && skippedSchema.type === 'class',
+  );
+
+  if (classNotFound) {
+    throw new Error(
+      `Could not find schema for class ${classNotFound.schemaId.replace(
+        '#',
+        '',
+      )}!`,
+    );
+  }
+
+  const validationType = skippedSchemas?.find(
+    (skippedSchema) =>
+      skippedSchema.type === 'class' &&
+      skippedSchema.reason === 'type-already-validated',
+  )
+    ? 'type'
+    : 'class';
+
+  if (!isValid) {
+    throw new Error(
+      `Entity fails to validate as ${validationType} '${
+        validationType === 'type' ? entity._type : entity._class
+      }':\n\n${JSON.stringify(errors, null, 2)}`,
+    );
+  }
 };
 
 /**
