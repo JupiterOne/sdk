@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+# 12.7.0 - 2024-05-08
+
 - Add expiremental `OnDiskDuplicateKeyTracker`
 - Add asn validator to j1Formats
 - Replace validateEntityWithSchema
