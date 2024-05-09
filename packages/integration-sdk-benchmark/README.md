@@ -7,7 +7,7 @@ have.
 ## Usage
 
 ```
-yarn benchmark
+npm run benchmark
 ```
 
 ## Results

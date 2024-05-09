@@ -30,7 +30,8 @@ of pushing to an external Neo4j database.
 
 ## Usage
 
-Data is still collected in the same way as before with a call to `yarn start`.
+Data is still collected in the same way as before with a call to
+`npm run start`.
 
 Once data has been collected, you can run `j1-integration neo4j push`. This will
 push data to the Neo4j server listed in the NEO4J_URI .env parameter. If running

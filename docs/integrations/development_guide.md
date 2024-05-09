@@ -41,11 +41,6 @@ You'll need:
     [fnm](https://github.com/Schniz/fnm) and
     [nvm](https://github.com/nvm-sh/nvm) are great choices.
 
-- yarn
-  ```sh
-    npm install --global yarn
-  ```
-
 ### **Setup**
 
 **Through the GitHub CLI**
@@ -55,7 +50,7 @@ gh repo create graph-$INTEGRATION_NAME --public \
   --clone \
   --template=https://github.com/jupiterone/integration-template
 cd graph-$INTEGRATION_NAME
-yarn install
+npm install
 ```
 
 **Through the GitHub UI**
@@ -63,12 +58,12 @@ yarn install
 1. Use the
    [**integration-template**](https://github.com/JupiterOne/integration-template)
    to create a new repository
-2. Clone your repository and run `yarn install`
+2. Clone your repository and run `npm install`
 
 ```sh
 git clone https://github.com/$USERNAME/$REPO_NAME`
 cd $REPO_NAME
-yarn install
+npm install
 ```
 
 That's it! Your project is ready for development!
@@ -362,7 +357,7 @@ We'll also need to add an HTTP client to make requests. I'll use `node-fetch`,
 but the choice of client is up to you.
 
 ```sh
-yarn add node-fetch
+npm install node-fetch
 ```
 
 Now we can add the `getAccount` method to our client.
@@ -706,7 +701,7 @@ And that's it! We have a working `executionHandler`.
 We've now:
 
 - ✅ Created a new integration project
-- ✅ Installed dependencies with `yarn install`
+- ✅ Installed dependencies with `npm install`
 - ✅ Created our `instanceConfigFields`
 - ✅ Setup a `.env` file
 - ✅ Created our `validateInvocation`
@@ -716,10 +711,10 @@ We've now:
 We are now ready to run our integration! We can collect data using:
 
 ```sh
-yarn start
+npm run start
 ```
 
 You can see the collected data in the `.j1-integration` and you can visualize
-the results with `yarn graph`.
+the results with `npm run graph`.
 
 [//]: # 'TODO add references to other more advanced docs'
