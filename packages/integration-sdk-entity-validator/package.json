@@ -20,7 +20,7 @@
     "test": "jest",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
-    "prepack": "yarn build:dist"
+    "prepack": "npm run build:dist"
   },
   "devDependencies": {
     "@types/node": "^18.17.0",

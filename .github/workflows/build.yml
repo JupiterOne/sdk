@@ -27,19 +27,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: yarn
+          cache: npm
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: npm ci
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: Run tests
-        run: yarn test:ci
+        run: npm run test:ci
 
       - name: Run build
-        run: yarn build:dist
+        run: npm run build:dist
 
   # Publishing is done in a separate job to allow
   # for all matrix builds to complete.
@@ -60,7 +60,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-          cache: yarn
+          cache: npm
           registry-url: https://registry.npmjs.org
 
       # Fetch tags and describe the commit before the merge commit
@@ -83,5 +83,5 @@ jobs:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
-          yarn --frozen-lock-file
-          yarn lerna publish from-package --no-verify-access --yes
+          npm ci
+          npm run lerna publish from-package --no-verify-access --yes
