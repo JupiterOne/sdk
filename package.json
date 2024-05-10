@@ -11,6 +11,9 @@
   "workspaces": [
     "packages/*"
   ],
+  "engines": {
+    "yarn": "PLEASE USE NPM"
+  },
   "scripts": {
     "lerna": "lerna",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --cache .",
