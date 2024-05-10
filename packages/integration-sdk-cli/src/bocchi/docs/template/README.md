@@ -1,22 +1,31 @@
-# Template Format
+# The Template File
+
+In order to generate the graph project code, Bocchi interprets a
+developer-provided JSON template file. This JSON template defines key components
+of the integration, such as instance configuration fields, the authentication
+method, as well as what steps the integration should have.
+
+Contents:
+
+- [Format](#format)
+- [Fields](#fields)
+  - [Instance Config Fields](#instance-config-fields)
+  - [Base URL](#base-url)
+  - [Token Bucket](#token-bucket)
+  - [Authentication](#authentication)
+  - [Steps](#steps)
+
+## Format
 
 ```ts
 {
     instanceConfigFields: Object,
     baseUrl: string,
-    authentication: Object,
     tokenBucket: Object
+    authentication: Object,
     steps: Array<Object>
 }
 ```
-
-- [Template Format](#template-format)
-  - [Fields](#fields)
-    - [Instance Config Fields](#instance-config-fields)
-    - [Base URL](#base-url)
-    - [Authentication](#authentication)
-    - [Token Bucket](#token-bucket)
-    - [Steps](#steps)
 
 ## Fields
 
@@ -34,7 +43,7 @@ Schema:
 
 ```ts
 {
-    [configName]: {
+    [configFieldName]: {
         type?: 'string' | 'json' | 'boolean',
         mask?: Boolean,
         optional?: Boolean
@@ -80,10 +89,6 @@ Examples:
 
 `https://%config.tenant%.example.com`
 
-### Authentication
-
-[Authentication](./authentication.md)
-
 ### Token Bucket
 
 Allows you to define a rate limit across all steps. Useful for an API where the
@@ -93,12 +98,11 @@ Can be used in combination with step-level token buckets.
 
 Schema:
 
-|                     |               |
-| ------------------- | ------------- |
-| Property            | `tokenBucket` |
-| Type                | `Object`      |
-| Required            | `false`       |
-| Available templates |               |
+|          |               |
+| -------- | ------------- |
+| Property | `tokenBucket` |
+| Type     | `Object`      |
+| Required | `false`       |
 
 ```ts
 {
@@ -126,6 +130,10 @@ Examples:
   "refillRate": 10
 }
 ```
+
+### Authentication
+
+[Authentication](./authentication.md)
 
 ### Steps
 

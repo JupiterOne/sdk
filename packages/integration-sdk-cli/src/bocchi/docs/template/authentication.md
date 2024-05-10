@@ -1,10 +1,11 @@
 # Authentication
 
-Defines the authentication type for the API.
+Defines the authentication method to use for the API. The template currently
+supports two options for Authentication.
 
-## Schema 1 - Endpoint:
+## Option 1 - Endpoint:
 
-Use this method if you must hit an endpoint to get authentication headers.
+Use this method if you need to hit an endpoint to get authentication headers.
 
 |                     |                     |
 | ------------------- | ------------------- |
@@ -15,16 +16,21 @@ Use this method if you must hit an endpoint to get authentication headers.
 
 ```ts
 {
-    strategy: 'endpoint',
-    params: {
-        path: String,
-        method: 'GET' | 'POST',
-        body?: Object,
-        headers?: Object
-    }
-    outputHeaders: Object
+  strategy: 'endpoint',
+  params: {
+      path: String,
+      method: 'GET' | 'POST',
+      body?: Object,
+      headers?: Object
+  }
+  authHeaders: Object
 }
 ```
+
+Note: `authHeaders` represents the authentication headers that will be present
+on all API requests the client makes, aside from the initial
+`verifyAuthentication` request. The `authHeaders` object should contain at least
+the `Authorization` property, which is typically a bearer token or API key.
 
 Example:
 
@@ -42,7 +48,7 @@ Example:
       "exampleBody": "%config.exampleConfigValue%"
     }
   },
-  "outputHeaders": {
+  "authHeaders": {
     "user-agent": "JupiterOne",
     "tenant": "%config.tenant%",
     "Authorization": "bearer %response.auth.token%"
@@ -55,7 +61,10 @@ function in the generated client that is ready-to-use; that is, the function
 requires no manual updates, and when your integration runs, it will hit the
 provided endpoint to verify authentication.
 
-## Schema 2 - Config Fields:
+## Option 2 - Config Fields:
+
+Use this method if the authentication headers will be provided in the instance
+config.
 
 |                     |                  |
 | ------------------- | ---------------- |
@@ -66,8 +75,8 @@ provided endpoint to verify authentication.
 
 ```ts
 {
-    strategy: 'configField',
-    outputHeaders: Object
+  strategy: 'configField',
+  authHeaders: Object
 }
 ```
 
@@ -76,9 +85,9 @@ Example:
 ```json
 {
   "strategy": "configField",
-  "outputHeaders": {
-    "user-agent": "JupiterOne",
-    "Authorization": "bearer %config.apiKey%"
+  "authHeaders": {
+    "x-api-user": "%config.email%",
+    "x-api-token": "%config.token%"
   }
 }
 ```
