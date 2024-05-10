@@ -5,8 +5,8 @@ export type OptionalPromise<T> = T | Promise<T>;
 
 export interface RequestOptions {
   method?: 'GET' | 'POST';
-  body?: Record<string, unknown>;
-  bodyType?: 'json' | 'form';
+  body?: Record<string, unknown> | string;
+  bodyType?: 'json' | 'form' | 'text';
   headers?: Record<string, string>;
   authorize?: boolean;
   bucketTokens?: number;
@@ -17,6 +17,7 @@ export interface RetryOptions {
   delay: number;
   factor: number;
   timeout: number;
+  timeoutMaxAttempts: number;
   handleError: (
     err: any,
     context: AttemptContext,

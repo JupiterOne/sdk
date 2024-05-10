@@ -1,20 +1,19 @@
 import {
-  DuplicateKeyTracker,
+  InMemoryDuplicateKeyTracker,
   createDuplicateEntityReport,
 } from './duplicateKeyTracker';
 import { InMemoryGraphObjectStore } from '../storage';
 import { Entity } from '@jupiterone/integration-sdk-core';
-
-describe('DuplicateKeyTracker', () => {
+describe('InMemoryDuplicateKeyTracker', () => {
   test('has key returns true when key is present', () => {
-    const duplicateKeyTracker = new DuplicateKeyTracker();
+    const duplicateKeyTracker = new InMemoryDuplicateKeyTracker();
     const _key = 'test-key-1';
     duplicateKeyTracker.registerKey(_key);
     expect(duplicateKeyTracker.hasKey(_key)).toBeTrue();
   });
 
   test('has key returns false when key is not present', () => {
-    const duplicateKeyTracker = new DuplicateKeyTracker();
+    const duplicateKeyTracker = new InMemoryDuplicateKeyTracker();
     const _key = 'test-key-1';
     duplicateKeyTracker.registerKey(_key);
     expect(duplicateKeyTracker.hasKey('not-found')).toBeFalse();

@@ -132,7 +132,7 @@ export function executeStepDependencyGraph<
   }
 
   function hasCachePath(stepId: string) {
-    return !!stepStartStates[stepId].stepCachePath ?? false;
+    return !!stepStartStates[stepId].stepCachePath;
   }
 
   /**

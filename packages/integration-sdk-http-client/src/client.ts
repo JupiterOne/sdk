@@ -31,7 +31,11 @@ export const defaultErrorHandler = async (
   context: AttemptContext,
   logger: IntegrationLogger,
 ) => {
-  if (err.code === 'ECONNRESET' || err.message.includes('ECONNRESET')) {
+  if (
+    ['ECONNRESET', 'ETIMEDOUT'].some(
+      (code) => err.code === code || err.message.includes(code),
+    )
+  ) {
     return;
   }
 
@@ -55,6 +59,7 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 3,
   delay: 30_000,
   timeout: 180_000,
+  timeoutMaxAttempts: 3,
   factor: 2, // exponential backoff factor. with 30 sec start and 3 attempts, longest wait is 2 min
   handleError: defaultErrorHandler,
 };
@@ -236,6 +241,8 @@ export abstract class BaseAPIClient {
           }
           (fmtBody as FormData).append(key, value);
         });
+      } else if (bodyType === 'text' && typeof body === 'string') {
+        fmtBody = body;
       } else {
         fmtBody = JSON.stringify(body);
       }
@@ -245,6 +252,7 @@ export abstract class BaseAPIClient {
       headers: {
         ...(bodyType === 'json' && { 'Content-Type': 'application/json' }),
         ...(bodyType === 'form' && (fmtBody as FormData).getHeaders()),
+        ...(bodyType === 'text' && { 'Content-Type': 'text/plain' }),
         Accept: 'application/json',
         ...(authorize && this.authorizationHeaders),
         ...headers,
@@ -269,53 +277,84 @@ export abstract class BaseAPIClient {
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
-    return retry(
-      async () => {
-        return this.withRateLimiting(async () => {
-          let response: Response | undefined;
-          try {
-            response = await this.request(endpoint, options);
-          } catch (err) {
-            this.logger.error(
-              { code: err.code, err, endpoint },
-              'Error sending request',
-            );
-            throw err;
-          }
+    const doRequest = async (timeoutRetryAttempt = 0) => {
+      return retry(
+        async () => {
+          return this.withRateLimiting(async () => {
+            let response: Response | undefined;
+            try {
+              response = await this.request(endpoint, options);
+            } catch (err) {
+              this.logger.error(
+                { code: err.code, err, endpoint },
+                'Error sending request',
+              );
+              throw err;
+            }
 
-          if (response.ok) {
-            return response;
-          }
+            if (response.ok) {
+              return response;
+            }
 
-          let error: IntegrationProviderAPIError | undefined;
-          const requestErrorParams = {
-            endpoint,
-            response,
-            logger: this.logger,
-            logErrorBody: this.logErrorBody,
-          };
-          if (isRetryableRequest(response.status)) {
-            error = await retryableRequestError(requestErrorParams);
-          } else {
-            error = await fatalRequestError(requestErrorParams);
-          }
-          for await (const _chunk of response.body) {
-            // force consumption of body to avoid memory leaks
-            // https://github.com/node-fetch/node-fetch/issues/83
-          }
-          throw error;
-        });
-      },
-      {
-        maxAttempts: this.retryOptions.maxAttempts,
-        delay: this.retryOptions.delay,
-        timeout: this.retryOptions.timeout,
-        factor: this.retryOptions.factor,
-        handleError: async (err, context) => {
-          await this.retryOptions.handleError(err, context, this.logger);
+            let error: IntegrationProviderAPIError | undefined;
+            const requestErrorParams = {
+              endpoint,
+              response,
+              logger: this.logger,
+              logErrorBody: this.logErrorBody,
+            };
+            if (isRetryableRequest(response.status)) {
+              error = await retryableRequestError(requestErrorParams);
+            } else {
+              error = await fatalRequestError(requestErrorParams);
+            }
+            for await (const _chunk of response.body) {
+              // force consumption of body to avoid memory leaks
+              // https://github.com/node-fetch/node-fetch/issues/83
+            }
+            throw error;
+          });
         },
-      },
-    );
+        {
+          maxAttempts: this.retryOptions.maxAttempts,
+          delay: this.retryOptions.delay,
+          timeout: this.retryOptions.timeout,
+          factor: this.retryOptions.factor,
+          handleError: async (err, context) => {
+            await this.retryOptions.handleError(err, context, this.logger);
+          },
+          handleTimeout: async (attemptContext, options) => {
+            if (timeoutRetryAttempt < this.retryOptions.timeoutMaxAttempts) {
+              this.logger.warn(
+                {
+                  attemptContext,
+                  timeoutRetryAttempt,
+                  link: endpoint,
+                },
+                'Hit a timeout, restarting request retry cycle.',
+              );
+
+              return await doRequest(++timeoutRetryAttempt);
+            } else {
+              this.logger.warn(
+                {
+                  attemptContext,
+                  timeoutRetryAttempt,
+                  link: endpoint,
+                },
+                'Hit a timeout during the final attempt. Unable to collect data for this query.',
+              );
+              const err: any = new Error(
+                `Retry timeout (attemptNum: ${attemptContext.attemptNum}, timeout: ${options.timeout})`,
+              );
+              err.code = 'ATTEMPT_TIMEOUT';
+              throw err;
+            }
+          },
+        },
+      );
+    };
+    return await doRequest();
   }
 
   /**
@@ -461,7 +500,12 @@ export abstract class BaseAPIClient {
         this.rateLimitThrottling.rateLimitHeaders?.reset ?? 'ratelimit-reset';
 
       this.logger.warn(
-        { rateLimitLimit, rateLimitRemaining, timeToSleepInMs },
+        {
+          endpoint: response.url,
+          rateLimitLimit,
+          rateLimitRemaining,
+          timeToSleepInMs,
+        },
         `Exceeded ${thresholdPercentage}% of rate limit. Sleeping until ${resetHeaderName}`,
       );
       await sleep(timeToSleepInMs);

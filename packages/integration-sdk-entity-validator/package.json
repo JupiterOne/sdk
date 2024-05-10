@@ -1,7 +1,7 @@
 {
-  "name": "@jupiterone/integration-sdk-core",
+  "name": "@jupiterone/integration-sdk-entity-validator",
   "version": "12.7.0",
-  "description": "The SDK for developing JupiterOne integrations",
+  "description": "Validator for JupiterOne integration entities",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "repository": "git@github.com:JupiterOne/sdk.git",
@@ -22,12 +22,14 @@
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "yarn build:dist"
   },
-  "dependencies": {
-    "@jupiterone/data-model": "^0.57.0",
-    "@jupiterone/integration-sdk-entity-validator": "^12.7.0",
-    "lodash": "^4.17.21"
-  },
   "devDependencies": {
-    "@types/lodash": "^4.14.168"
+    "@types/node": "^18.17.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.4.3"
+  },
+  "dependencies": {
+    "ajv": "^8.12.0",
+    "ajv-formats": "^3.0.1",
+    "prettier": "^3.2.5"
   }
 }

@@ -9,6 +9,33 @@ and this project adheres to
 
 # Unreleased
 
+# 12.7.0 - 2024-05-08
+
+- Add expiremental `OnDiskDuplicateKeyTracker`
+- Add asn validator to j1Formats
+- Replace validateEntityWithSchema
+
+# 12.6.0 - 2024-04-24
+
+- http-client: add option to pass body as plain text
+
+# 12.5.1 - 2024-04-24
+
+- entity-validator: republish
+
+# 12.5.0 - 2024-04-18
+
+- entity-validator: first release
+
+## 12.4.1 - 2024-04-11
+
+- updated `json-diff` dependency
+- removed redudant `??` from `hasCachePath` function
+
+## 12.4.0 - 2024-04-09
+
+- http-client: add default timeout handler
+
 ## 12.3.1 - 2024-03-28
 
 - http-client: consume body when paginate's response status is 204 to avoid

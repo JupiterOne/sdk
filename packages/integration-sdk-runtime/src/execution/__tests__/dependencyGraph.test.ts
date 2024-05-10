@@ -31,7 +31,7 @@ import {
 } from '../dependencyGraph';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import { MemoryDataStore } from '../jobState';
-import { DuplicateKeyTracker } from '../duplicateKeyTracker';
+import { InMemoryDuplicateKeyTracker } from '../duplicateKeyTracker';
 import { getDefaultStepStartStates } from '../step';
 import {
   CreateStepGraphObjectDataUploaderFunction,
@@ -149,7 +149,7 @@ describe('executeStepDependencyGraph', () => {
       executionContext,
       inputGraph: buildStepDependencyGraph(steps),
       stepStartStates,
-      duplicateKeyTracker: new DuplicateKeyTracker(),
+      duplicateKeyTracker: new InMemoryDuplicateKeyTracker(),
       graphObjectStore,
       dataStore: new MemoryDataStore(),
       createStepGraphObjectDataUploader,

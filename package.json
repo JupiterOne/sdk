@@ -18,7 +18,7 @@
     "clean": "yarn lerna clean --yes && yarn clean:build && rm -r node_modules",
     "clean:build": "yarn lerna exec \"rm -rf ./dist tsconfig.tsbuildinfo\"",
     "prebuild": "yarn clean:build",
-    "build": "tsc -b packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing packages/integration-sdk-http-client packages/integration-sdk-entities",
+    "build": "tsc -b packages/integration-sdk-entity-validator packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing packages/integration-sdk-http-client packages/integration-sdk-entities",
     "prebuild:dist": "yarn clean:build",
     "build:dist": "lerna run build:dist",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml}\"",
