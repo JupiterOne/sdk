@@ -51,8 +51,8 @@ To get started with development:
 
 This project utilizes TypeScript project references for incremental builds. To
 prepare all of the packages, run `npm run build`. If you are making a changes
-across multiple packages, it is recommended you run `npm run build --watch` to
-automatically compile changes as you work.
+across multiple packages, it is recommended you run `npm run build -- --watch`
+to automatically compile changes as you work.
 
 ### Linking packages
 
@@ -65,10 +65,10 @@ Steps to automatically build and link:
 - Run `npm run build` or `npm run build --watch` in _this_ project from a
   terminal and wait for initial build to complete.
 
-- Run `npm run link` in the package that you want to link.
+- Run `npm link` in the package that you want to link.
 
-- In a separate terminal, run `npm run link @jupiterone/<package to link>` in
-  the integration project. You can now use the integration SDK CLI in the other
+- In a separate terminal, run `npm link @jupiterone/<package to link>` in the
+  integration project. You can now use the integration SDK CLI in the other
   project and it will use the latest code on your filesystem.
 
 ### Versioning this project

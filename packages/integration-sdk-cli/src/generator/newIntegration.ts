@@ -34,6 +34,7 @@ function newIntegration(plop: NodePlopAPI) {
   plop.setActionType('yarnFormat', yarnFormat);
   plop.setActionType('yarnInstall', yarnInstall);
   plop.setActionType('yarnLint', yarnLint);
+
   plop.setPrompt('checkbox-plus', checkboxPlus);
 
   plop.setGenerator('new:integration', {
