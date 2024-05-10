@@ -35,12 +35,15 @@
     "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main",
     "postversion": "cp package.json ./dist/package.json"
   },
+  "dependencies": {
+    "@jupiterone/integration-sdk-http-client": "^12.7.0"
+  },
   "peerDependencies": {
-    "@jupiterone/integration-sdk-core": "^12.0.0"
+    "@jupiterone/integration-sdk-core": "^12.7.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-core": "^12.0.0",
-    "@jupiterone/integration-sdk-dev-tools": "^12.0.0",
-    "@jupiterone/integration-sdk-testing": "^12.0.0"
+    "@jupiterone/integration-sdk-core": "^12.7.0",
+    "@jupiterone/integration-sdk-dev-tools": "^12.7.0",
+    "@jupiterone/integration-sdk-testing": "^12.7.0"
   }
 }

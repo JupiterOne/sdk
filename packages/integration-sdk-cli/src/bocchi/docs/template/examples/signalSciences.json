@@ -73,7 +73,7 @@
         {
           "_class": "IS",
           "direction": "REVERSE",
-          "fieldMappings": [
+          "mappings": [
             {
               "targetValue": "google_user",
               "targetProperty": "_type"

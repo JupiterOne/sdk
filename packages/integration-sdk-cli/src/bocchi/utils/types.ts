@@ -17,8 +17,6 @@ export interface Template {
     maximumCapacity: number;
     refillRate: number;
   };
-  // Unimplemented
-  // paginationTokenStrategy:
   steps: Step[];
 }
 
@@ -34,17 +32,26 @@ interface EndpointAuthentication {
     path: string;
     method: 'GET' | 'POST';
     body?: Record<string, any>;
-    headers?: Record<string, string>; //sanitizeAuthCallHeaders
+    headers?: Record<string, string>;
   };
-  repsonsePath: string;
-  // TODO: authHeaders
+  authHeaders: AuthenticationHeaders;
+}
+
+/**
+ * Authentication headers to be used in API requests.
+ * The `Authorization` header is required, and is typically
+ * a bearer token or API key.
+ */
+interface AuthenticationHeaders {
+  Authorization: string;
+  [headerName: string]: string;
 }
 
 interface ConfigFieldAuthentication {
   strategy: 'configField';
-  configFieldName: string;
-  // TODO: authHeaders
-  // sanitize
+  authHeaders: {
+    [headerName: string]: string;
+  };
 }
 
 export interface Step {
@@ -70,7 +77,6 @@ export interface Step {
     urlTemplate: string;
     method?: 'GET' | 'POST';
     params?: Record<string, any>;
-    tokens?: number;
   };
   response: {
     dataPath: string;
@@ -86,7 +92,7 @@ export interface Step {
   mappedRelationships?: {
     _class: RelationshipClass;
     direction: 'FORWARD' | 'REVERSE';
-    fieldMappings:
+    mappings:
       | {
           sourceProperty: string;
           targetProperty: string;

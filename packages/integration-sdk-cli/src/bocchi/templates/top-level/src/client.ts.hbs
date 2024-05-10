@@ -1,53 +1,74 @@
-import { HttpServiceClient } from './httpServiceClient';
+import { BaseAPIClient } from '@jupiterone/integration-sdk-http-client';
 import { IntegrationConfig } from './config';
 import { 
 {{#each template.steps}}
   {{pascalCase entity.name}}, 
 {{/each}}
 } from './steps/types';
-import { Entity } from '@jupiterone/integration-sdk-core';
+import { Entity, IntegrationLogger } from '@jupiterone/integration-sdk-core';
 
 export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
 
-export class APIClient extends HttpServiceClient {
+export class APIClient extends BaseAPIClient {
   private authHeaders: Record<string, string>;
-  private baseUrl: string;
 
-  constructor(readonly config: IntegrationConfig) {
-    super();
-    this.baseUrl = '{{template.baseUrl}}';
-    {{#if (isNotEndpointAuth template.authentication.strategy)}}
-    this.authHeaders = { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} };
-    {{/if}}
+  constructor(readonly config: IntegrationConfig, logger: IntegrationLogger) {
+    super({
+      baseUrl: '{{template.baseUrl}}',
+      logger,
+      {{#if template.tokenBucket}}
+      tokenBucket: {
+        maximumCapacity: {{template.tokenBucket.maximumCapacity}},
+        refillRate: {{template.tokenBucket.refillRate}}
+      }
+      {{/if}}
+    });
   }
+
+  {{#if (isNotEndpointAuth template.authentication.strategy)}}
+  protected getAuthorizationHeaders(): Record<string, string> {
+    return { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} };
+  }  
+  {{else}}
+  protected async getAuthorizationHeaders(): Promise<Record<string, string>> {
+    const response = await this.retryableRequest(
+      `${this.baseUrl}{{template.authentication.params.path}}`,
+      {
+        headers: { {{#each (sanitizeAuthObject template.authentication.params.headers)}}'{{@key}}': `{{this}}`,{{/each}} },
+        method: '{{sanitizeHttpMethod template.authentication.params.method}}',
+      {{#if request.params}}
+        body: { {{#each (sanitizeAuthObject template.authentication.params.body)}}{{@key}}: {{this}},{{/each}} }
+      {{/if}}
+      }
+    );
+    return { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} }
+  }
+  {{/if}}
 
   public async verifyAuthentication(): Promise<void> {
     {{#if (isNotEndpointAuth template.authentication.strategy)}}
     // TODO: implement
     await new Promise(() => { throw new Error('Unimplemented: Pick an API call to use for validation!') });
     {{else}}
-    const response = await this.request({
-      url: `${this.baseUrl}{{template.authentication.params.path}}`,
-      headers: { {{#each (sanitizeAuthObject template.authentication.params.headers)}}'{{@key}}': `{{this}}`,{{/each}} },
-      method: '{{sanitizeHttpMethod template.authentication.params.method}}',
-      {{#if request.params}}
-      body: { {{#each (sanitizeAuthObject template.authentication.params.body)}}{{@key}}: {{this}},{{/each}} }
-      {{/if}}
-    });
-    this.authHeaders = { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} }
+    await this.getAuthorizationHeaders();
     {{/if}}
   }
 {{#each template.steps}}
 
   {{#if (isSingletonRequest response.responseType)}}
-  public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<any> {
+  public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<{{pascalCase entity.name}}> {
     const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
-    return (await this.request({
+    const response = await this.retryableRequest(
       url,
-      headers: { ...this.authHeaders },
-      method: '{{sanitizeHttpMethod request.method}}',
-      body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
-    })).{{response.dataPath}} as {{pascalCase entity.name}};
+      {
+        headers: { ...this.authHeaders },
+        method: '{{sanitizeHttpMethod request.method}}',
+      {{#if request.params}}
+        body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
+      {{/if}}
+      }
+    );
+    return (await response.json() as any).{{response.dataPath}} as {{pascalCase entity.name}};
   }
   {{else}}
   public async iterate{{pascalCase entity.name}}s(
@@ -61,15 +82,17 @@ export class APIClient extends HttpServiceClient {
     do {
     {{/if}}
       const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
-      const response = await this.request({
+      const response = await this.retryableRequest(
         url,
-        headers: { ...this.authHeaders },
-        method: '{{sanitizeHttpMethod request.method}}',
+        {
+          headers: { ...this.authHeaders },
+          method: '{{sanitizeHttpMethod request.method}}',
         {{#if request.params}}
-        body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
+          body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
         {{/if}}
-      });
-      const resources = response.{{response.dataPath}} as {{pascalCase entity.name}}[];
+        }
+      );
+      const resources = (await response.json() as any).{{response.dataPath}} as {{pascalCase entity.name}}[];
       for (const resource of resources) {
         await iteratee(resource);
       }
@@ -85,9 +108,10 @@ export class APIClient extends HttpServiceClient {
 let client: APIClient | undefined;
 
 export function createAPIClient(
-  config: IntegrationConfig
+  config: IntegrationConfig,
+  logger: IntegrationLogger
 ): APIClient {
   return client
     ? client
-    : new APIClient(config);
+    : new APIClient(config, logger);
 }

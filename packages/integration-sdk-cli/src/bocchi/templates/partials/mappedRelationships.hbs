@@ -12,12 +12,12 @@ export async function build{{pascalCase entity.name}}MappedRelationships({
           sourceEntityKey: entity._key,
           relationshipDirection: RelationshipDirection.{{constantCase direction}},
           targetFilterKeys: [[
-            {{#each fieldMappings}}
+            {{#each mappings}}
             '{{targetProperty}}',
             {{/each}}
           ]],
           targetEntity: {
-            {{#each fieldMappings}}
+            {{#each mappings}}
             {{#if targetValue}}
             {{targetProperty}}: '{{targetValue}}',
             {{/if}}
