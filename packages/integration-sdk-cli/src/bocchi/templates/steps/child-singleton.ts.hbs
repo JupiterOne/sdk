@@ -29,8 +29,9 @@ export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[
 export async function {{camelCase id}}({
   jobState,
   instance,
+  logger
 }: IntegrationStepExecutionContext<IntegrationConfig>) {
-  const client = createAPIClient(instance.config);
+  const client = createAPIClient(instance.config, logger);
 
   await jobState.iterateEntities(
     { _type: '{{ parentAssociation.parentEntityType }}' },
