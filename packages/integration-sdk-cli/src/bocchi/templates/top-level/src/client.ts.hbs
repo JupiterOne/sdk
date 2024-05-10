@@ -56,7 +56,7 @@ export class APIClient extends BaseAPIClient {
 {{#each template.steps}}
 
   {{#if (isSingletonRequest response.responseType)}}
-  public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<any> {
+  public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<{{pascalCase entity.name}}> {
     const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
     const response = await this.retryableRequest(
       url,

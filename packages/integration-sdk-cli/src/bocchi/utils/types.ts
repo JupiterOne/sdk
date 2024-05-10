@@ -92,7 +92,7 @@ export interface Step {
   mappedRelationships?: {
     _class: RelationshipClass;
     direction: 'FORWARD' | 'REVERSE';
-    fieldMappings?:
+    mappings:
       | {
           sourceProperty: string;
           targetProperty: string;

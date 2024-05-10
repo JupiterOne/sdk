@@ -37,7 +37,7 @@ Contents:
   - [mappedRelationships](#mappedrelationships)
     - [\_class](#_class-2)
     - [direction](#direction-1)
-    - [fieldMappings](#fieldMappings-1)
+    - [mappings](#mappings)
   - [dependsOn](#dependson)
 
 # Format
@@ -615,13 +615,13 @@ The direction of the mapped relationship. `FORWARD` to build the relationship
 FROM entity TO target. `REVERSE` to build the relationship TO target FROM
 reverse.
 
-### fieldMappings
+### mappings
 
-|          |                 |
-| -------- | --------------- |
-| Property | `fieldMappings` |
-| Type     | `Object`        |
-| Required | `false`         |
+|          |            |
+| -------- | ---------- |
+| Property | `mappings` |
+| Type     | `Object`   |
+| Required | `true`     |
 
 `targetProperty` are the `targetFilterKeys` of the mapped relationship.
 
