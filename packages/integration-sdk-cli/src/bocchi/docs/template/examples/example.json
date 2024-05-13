@@ -1,0 +1,127 @@
+{
+  "instanceConfigFields": {
+    "email": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string",
+      "mask": true
+    },
+    "tenant": {
+      "type": "string"
+    }
+  },
+  "authentication": {
+    "strategy": "endpoint",
+    "params": {
+      "path": "/auth",
+      "method": "POST",
+      "headers": {
+        "user-agent": "JupiterOne",
+        "tenant": "%config.tenant%"
+      },
+      "body": {
+        "exampleBody": "%config.exampleConfigValue%"
+      }
+    },
+    "authHeaders": {
+      "user-agent": "JupiterOne",
+      "tenant": "%config.tenant%",
+      "Authorization": "bearer %response.auth.token%"
+    }
+  },
+  "baseUrl": "https://example.com",
+  "steps": [
+    {
+      "id": "fetch-organizations",
+      "name": "Fetch Organizations",
+      "entity": {
+        "name": "Organization",
+        "_type": "example_organization",
+        "_class": ["Organization"],
+        "_keyPath": "name",
+        "staticFields": {
+          "a": false,
+          "b": true
+        },
+        "fieldMappings": {
+          "name": "title",
+          "displayName": "title",
+          "description": "advisory.description",
+          "ruleId": "advisory.ruleId",
+          "severity": "advisory.severity",
+          "ecosystem": "advisory.ecosystem",
+          "urls": "advisory.references.urls",
+          "exposureType": "exposureType",
+          "repositoryId": "repositoryId",
+          "subdirectory": "subdirectory",
+          "createdOn": "openedAt"
+        }
+      },
+      "request": {
+        "urlTemplate": "/organizations"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
+      },
+      "directRelationships": [
+        {
+          "targetKey": "directory",
+          "targetType": "example_directory",
+          "_class": "HAS",
+          "direction": "FORWARD"
+        }
+      ]
+    },
+    {
+      "id": "fetch-directory",
+      "name": "Fetch Directory",
+      "entity": {
+        "name": "Directory",
+        "_type": "example_directory",
+        "_class": ["Directory"],
+        "_keyPath": "id"
+      },
+      "fieldMappings": {
+        "name": "title",
+        "orgId": "organizationId"
+      },
+      "parentAssociation": {
+        "parentEntityType": "example_organization",
+        "relationshipClass": "HAS"
+      },
+      "request": {
+        "urlTemplate": "/organizations/%parent._key%/directory"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "SINGLETON"
+      },
+      "dependsOn": ["fetch-organizations"]
+    },
+    {
+      "id": "fetch-users",
+      "name": "Fetch Users",
+      "entity": {
+        "name": "User",
+        "_type": "example_user",
+        "_class": ["User"],
+        "_keyPath": "email"
+      },
+      "parentAssociation": {
+        "parentEntityType": "example_directory",
+        "relationshipClass": "HAS"
+      },
+      "request": {
+        "urlTemplate": "/organizations/%parent._key%/directory/%parent.orgId%/users?nextPage=%nextToken%"
+      },
+      "response": {
+        "dataPath": "data",
+        "nextTokenPath": "next",
+        "responseType": "LIST"
+      },
+      "dependsOn": ["fetch-directory"]
+    }
+  ]
+}

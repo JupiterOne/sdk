@@ -31,7 +31,7 @@ export class APIClient extends BaseAPIClient {
   }  
   {{else}}
   protected async getAuthorizationHeaders(): Promise<Record<string, string>> {
-    const response = await this.retryableRequest(
+    const response = await (await this.retryableRequest(
       `${this.baseUrl}{{template.authentication.params.path}}`,
       {
         headers: { {{#each (sanitizeAuthObject template.authentication.params.headers)}}'{{@key}}': `{{this}}`,{{/each}} },
@@ -40,7 +40,7 @@ export class APIClient extends BaseAPIClient {
         body: { {{#each (sanitizeAuthObject template.authentication.params.body)}}{{@key}}: {{this}},{{/each}} }
       {{/if}}
       }
-    );
+    )).json();
     return { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} }
   }
   {{/if}}
@@ -58,17 +58,16 @@ export class APIClient extends BaseAPIClient {
   {{#if (isSingletonRequest response.responseType)}}
   public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<{{pascalCase entity.name}}> {
     const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
-    const response = await this.retryableRequest(
+    const response = await (await this.retryableRequest(
       url,
       {
-        headers: { ...this.authHeaders },
         method: '{{sanitizeHttpMethod request.method}}',
       {{#if request.params}}
         body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
       {{/if}}
       }
-    );
-    return (await response.json() as any).{{response.dataPath}} as {{pascalCase entity.name}};
+    )).json();
+    return response.{{response.dataPath}} as {{pascalCase entity.name}};
   }
   {{else}}
   public async iterate{{pascalCase entity.name}}s(
@@ -82,17 +81,16 @@ export class APIClient extends BaseAPIClient {
     do {
     {{/if}}
       const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
-      const response = await this.retryableRequest(
+      const response = await (await this.retryableRequest(
         url,
         {
-          headers: { ...this.authHeaders },
           method: '{{sanitizeHttpMethod request.method}}',
         {{#if request.params}}
           body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
         {{/if}}
         }
-      );
-      const resources = (await response.json() as any).{{response.dataPath}} as {{pascalCase entity.name}}[];
+      )).json();
+      const resources = response.{{response.dataPath}} as {{pascalCase entity.name}}[];
       for (const resource of resources) {
         await iteratee(resource);
       }
