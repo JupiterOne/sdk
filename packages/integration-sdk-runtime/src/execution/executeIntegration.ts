@@ -285,6 +285,10 @@ export async function executeWithContext<
         }
       }
 
+      if (process.env.NO_COLLECTION_METRICS) {
+        logger.info('Disabling collection metrics');
+      }
+
       const integrationStepResults = await executeSteps({
         executionContext: context,
         integrationSteps: config.integrationSteps,
@@ -296,8 +300,12 @@ export async function executeWithContext<
         createStepGraphObjectDataUploader,
         beforeAddEntity: config.beforeAddEntity,
         beforeAddRelationship: config.beforeAddRelationship,
-        afterAddEntity: createAfterAddEntityInternalHook(logger),
-        afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
+        afterAddEntity: process.env.NO_COLLECTION_METRICS
+          ? undefined
+          : createAfterAddEntityInternalHook(logger),
+        afterAddRelationship: process.env.NO_COLLECTION_METRICS
+          ? undefined
+          : createAfterAddRelationshipInternalHook(logger),
         dependencyGraphOrder: config.dependencyGraphOrder,
         executionHandlerWrapper: config.executionHandlerWrapper,
       });
