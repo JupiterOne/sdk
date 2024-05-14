@@ -766,7 +766,7 @@ export function toImplementSpec<
       .sort();
 
     try {
-      expect(integrationStepIds).toEqual(specStepIds);
+      expect(specStepIds).toEqual(integrationStepIds);
     } catch (err) {
       return {
         message: () =>
