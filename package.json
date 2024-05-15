@@ -20,7 +20,7 @@
     "test:changed": "jest --changedSince main",
     "test:ci": "npm run lint && npm run build --force && npm run test",
     "clean": "npm run lerna clean --yes && npm run clean:build && rm -r node_modules",
-    "clean:build": "npm run lerna exec \"rm -rf ./dist tsconfig.tsbuildinfo\"",
+    "clean:build": "npm exec lerna exec \"rm -rf ./dist tsconfig.tsbuildinfo\"",
     "prebuild": "npm run clean:build",
     "build": "tsc -b packages/integration-sdk-entity-validator packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing packages/integration-sdk-http-client packages/integration-sdk-entities",
     "prebuild:dist": "npm run clean:build",
