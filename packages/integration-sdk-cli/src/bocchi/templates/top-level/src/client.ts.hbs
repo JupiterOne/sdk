@@ -34,6 +34,7 @@ export class APIClient extends BaseAPIClient {
     const response = await (await this.retryableRequest(
       `${this.baseUrl}{{template.authentication.params.path}}`,
       {
+        authorize: false, // needed only for authentication call
         headers: { {{#each (sanitizeAuthObject template.authentication.params.headers)}}'{{@key}}': `{{this}}`,{{/each}} },
         method: '{{sanitizeHttpMethod template.authentication.params.method}}',
       {{#if request.params}}
