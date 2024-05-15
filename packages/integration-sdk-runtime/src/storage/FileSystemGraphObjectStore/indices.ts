@@ -8,10 +8,13 @@ import { readJsonFromPath, WalkDirectoryIterateeInput } from '../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
 import { iterateParsedGraphFiles } from '../..';
+import PQueue from 'p-queue';
+import { onQueueSizeIsLessThanLimit } from '../queue';
 
 interface BaseIterateCollectionIndexParams<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
+  options?: { concurrency: number };
 }
 
 interface IterateCollectionIndexParams<GraphObject>
@@ -23,27 +26,39 @@ async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
   type,
   collectionType,
   iteratee,
+  options,
 }: IterateCollectionIndexParams<T>) {
   const path = buildIndexDirectoryPath({
     collectionType,
     type,
   });
 
+  const queue = new PQueue({});
+  const concurrency = options?.concurrency ?? 1;
+
   await iterateParsedGraphFiles(async (data) => {
     for (const graphObj of (data[collectionType] as T[]) || []) {
-      await iteratee(graphObj);
+      // We mark this as void because we want to fire the task away and not wait for it to resolve
+      // that is handled by the combination of onQueueSizeIsLessThanLimit and onIdle
+      void queue.add(() => iteratee(graphObj));
+      await onQueueSizeIsLessThanLimit(queue, concurrency);
     }
   }, path);
+
+  // Wait for all tasks to complete
+  await queue.onIdle();
 }
 
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
+  options,
 }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,
     iteratee,
     collectionType: 'entities',
+    options,
   });
 }
 

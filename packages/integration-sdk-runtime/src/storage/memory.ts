@@ -8,6 +8,8 @@ import {
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import { getSizeOfObject } from '../synchronization/batchBySize';
+import PQueue from 'p-queue';
+import { onQueueSizeIsLessThanLimit } from './queue';
 
 export interface GraphObjectMetadata {
   stepId: string;
@@ -155,8 +157,11 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: { concurrency: number },
   ): Promise<void> {
     const entityTypeKeysMap = this.entityTypeToKeysMap.get(filter._type);
+    const concurrency = options?.concurrency ?? 1;
+    const queue = new PQueue({ concurrency });
 
     if (!entityTypeKeysMap) {
       return;
@@ -173,8 +178,16 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
         );
       }
 
-      await iteratee(graphObjectData.entity as T);
+      // We mark this as void because we want to fire the task away and not wait for it to resolve
+      // that is handled by the combination of onQueueSizeIsLessThanLimit and onIdle
+      void queue.add(() => iteratee(graphObjectData.entity as T));
+      // Don't flood the queue with promises. If we get to twice our concurrency we wait
+      // This is queued tasks, not tasks that running we could have up to
+      // concurrency-tasks (running) + concurrency-tasks (queued)
+      await onQueueSizeIsLessThanLimit(queue, concurrency);
     }
+    // wait for everything to finish
+    await queue.onIdle();
   }
 
   async iterateRelationships<T extends Relationship = Relationship>(
