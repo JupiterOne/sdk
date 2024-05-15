@@ -80,7 +80,7 @@ to move to). Don't forget to update the `CHANGELOG.md` file!
 ```shell
 git checkout -b release-<major>.<minor>.<patch>
 git push -u origin release-<major>.<minor>.<patch>
-npm run lerna version <major>.<minor>.<patch>
+npm exec lerna version <major>.<minor>.<patch>
 ```
 
 Note the `git checkout`/`git push` is required because Lerna will expect that
@@ -88,7 +88,7 @@ you've already created a remote branch before bumping, tagging, and pushing the
 local changes to remote.
 
 ❕Make sure to have committed all your changes before running
-`npm run lerna version` since it will commit the version update and tag that
+`npm exec lerna version` since it will commit the version update and tag that
 commit. Rebasing or amending lerna's commit will cause the tag to point to a
 different commit.
 

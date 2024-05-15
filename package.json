@@ -15,7 +15,6 @@
     "yarn": "PLEASE USE NPM"
   },
   "scripts": {
-    "lerna": "lerna",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx --cache .",
     "test": "jest && npm run format:check",
     "test:changed": "jest --changedSince main",
