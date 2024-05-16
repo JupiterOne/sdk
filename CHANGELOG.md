@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+- integration-sdk-cli: Export entity schema to graph schema
+
 # 12.7.1 - 2024-05-14
 
 - Add `NO_COLLECTION_METRICS` for disabling data collection metrics
