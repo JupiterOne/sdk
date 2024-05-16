@@ -25,7 +25,7 @@ services.
 ## Installation
 
 ```bash
-yarn add node-fetch @jupiterone/integration-sdk-http-client
+npm install node-fetch @jupiterone/integration-sdk-http-client
 ```
 
 ## Usage

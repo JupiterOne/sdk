@@ -22,6 +22,7 @@ async function spawnCommand(config, command, args): Promise<string> {
   });
 }
 
+// Yarn commands
 async function yarnInstall(_answers, config, _plop) {
   return spawnCommand(config, 'yarn', ['install']);
 }
@@ -34,4 +35,18 @@ async function yarnLint(_answers, config, _plop) {
   return spawnCommand(config, 'yarn', ['lint']);
 }
 
-export { yarnInstall, yarnFormat, yarnLint };
+// NPM commands
+
+async function npmInstall(_answers, config, _plop) {
+  return spawnCommand(config, 'npm', ['install']);
+}
+
+async function npmFormat(_answers, config, _plop): Promise<string> {
+  return spawnCommand(config, 'npm', [`run format`]);
+}
+
+async function npmLint(_answers, config, _plop) {
+  return spawnCommand(config, 'npm', ['run lint']);
+}
+
+export { yarnInstall, yarnFormat, yarnLint, npmInstall, npmFormat, npmLint };

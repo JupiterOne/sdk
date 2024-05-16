@@ -4,7 +4,14 @@ import { configFieldsFlow } from './configFieldsFlow';
 import { stepsFlow } from './stepsFlow';
 import { generateRelationshipName } from './helpers';
 import { generateRelationshipType } from '@jupiterone/integration-sdk-core';
-import { yarnFormat, yarnInstall, yarnLint } from './actions';
+import {
+  npmFormat,
+  npmInstall,
+  npmLint,
+  yarnFormat,
+  yarnInstall,
+  yarnLint,
+} from './actions';
 import { kebabCase } from 'lodash';
 import checkboxPlus from 'inquirer-checkbox-plus-prompt';
 import path from 'path';
@@ -19,9 +26,15 @@ function newIntegration(plop: NodePlopAPI) {
   });
 
   plop.setHelper('generateRelationshipName', generateRelationshipName);
+  // NPM
+  plop.setActionType('npmFormat', npmFormat);
+  plop.setActionType('npmInstall', npmInstall);
+  plop.setActionType('npmLint', npmLint);
+  // Yarn
   plop.setActionType('yarnFormat', yarnFormat);
   plop.setActionType('yarnInstall', yarnInstall);
   plop.setActionType('yarnLint', yarnLint);
+
   plop.setPrompt('checkbox-plus', checkboxPlus);
 
   plop.setGenerator('new:integration', {
@@ -66,6 +79,14 @@ function newIntegration(plop: NodePlopAPI) {
         },
       });
 
+      const { packageManager } = await inquirer.prompt({
+        type: 'list',
+        name: 'packageManager',
+        message: 'Which package manager do you want to use?',
+        choices: ['npm', 'yarn'],
+        default: 'npm',
+      });
+
       const configFields = await configFieldsFlow(inquirer);
       const entities = await entitiesFlow(inquirer, vendorName);
       let relationships: Relationship[] = [];
@@ -83,12 +104,15 @@ function newIntegration(plop: NodePlopAPI) {
         entities,
         relationships,
         steps,
+        packageManager,
       };
     },
     actions: function (data) {
       if (!data) {
         return [];
       }
+
+      const { packageManager } = data;
 
       // @jupiterone/graph-foo -> graph-foo
       // graph-foo -> graph-foo
@@ -122,19 +146,19 @@ function newIntegration(plop: NodePlopAPI) {
       }
 
       actions.push({
-        type: 'yarnInstall',
+        type: packageManager === 'yarn' ? 'yarnInstall' : 'npmInstall',
         path: directoryName,
         verbose: true,
       });
 
       actions.push({
-        type: 'yarnFormat',
+        type: packageManager === 'yarn' ? 'yarnFormat' : 'npmFormat',
         path: directoryName,
         verbose: true,
       });
 
       actions.push({
-        type: 'yarnLint',
+        type: packageManager === 'yarn' ? 'yarnLint' : 'npmLint',
         path: directoryName,
         verbose: true,
       });

@@ -12,7 +12,7 @@
   },
   "scripts": {
     "prebenchmark": "rm -rf .j1-integration",
-    "benchmark": "for file in ./src/benchmarks/*; do yarn prebenchmark && node $file; done"
+    "benchmark": "for file in ./src/benchmarks/*; do npm run prebenchmark && node $file; done"
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^12.7.1",
