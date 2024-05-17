@@ -18,7 +18,7 @@ written for the developer. After using Bocchi to generate a new graph project,
 the only code the developer (may) need to write is the more involved,
 vendor-specific logic.
 
-To try Bocchi out with, you can use the example template
+To try Bocchi out, you can use the example template
 [here](./docs/template/examples/signalSciences.json).
 
 ## The Template
@@ -51,13 +51,20 @@ yarn j1-integration bocchi
 ### Authentication
 
 Bocchi currently supports two different methods of authentication for
-integrations: Endpoint authentication and Config Value authentication. If the
-developer decides that Config Value authentication should be used for the
-integration - that is, authentication information is provided in the instance
-config - then the graph project Bocchi generates will have an incomplete
-`verifyAuthentication()` function in the client. This is because the
-graph-project generator does not know what endpoint to use for verifying
-authentication.
+integrations: Endpoint authentication and Config Value authentication.
+
+Endpoint authentication is used when the product we're integrating with requires
+an API request to a special endpoint to receive authentication headers that will
+be used in all future requests. However, if the product does not require a
+special authentication endpoint to be hit and instead something like a pre-made
+API token can be sent on all API requests, then Config Value authentication can
+be used.
+
+Note that if Config Value authentication is used for the integration - that is,
+authentication information is provided in the instance config - then the graph
+project Bocchi generates will have an incomplete `verifyAuthentication()`
+function in the client. This is because the graph-project generator does not
+know what endpoint to use for verifying authentication.
 
 <b>The developer will need to manually update the generated
 verifyAuthentication() function and choose what endpoint should be used for
