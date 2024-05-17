@@ -15,3 +15,7 @@ npm install @jupiterone/integration-sdk-core
 
 yarn add @jupiterone/integration-sdk-core
 ```
+
+## Docs
+
+- [createIntegrationHelpers](docs/createIntegrationHelpers.md)
