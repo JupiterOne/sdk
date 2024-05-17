@@ -4,7 +4,7 @@ const dynamicImport = new Function('specifier', 'return import(specifier)');
 
 export function bocchi() {
   return createCommand('bocchi')
-    .description('bocchi byebye')
+    .description('New graph project generator')
     .action(async (cmdOpts) => {
       const Plop = await dynamicImport('plop');
       const configPath = path.resolve(

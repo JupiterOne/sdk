@@ -38,7 +38,7 @@ async function yarnLint(_answers, config, _plop) {
 // NPM commands
 
 async function j1Document(_answers, config, _plop) {
-  return spawnCommand(config, 'npm', ['j1-integration', 'document']);
+  return spawnCommand(config, 'npm exec', ['j1-integration', 'document']);
 }
 
 async function npmInstall(_answers, config, _plop) {
