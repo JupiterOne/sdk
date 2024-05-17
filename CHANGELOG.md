@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 12.8.1 - 2024-05-17
+
+- Fix publish workflow (republish 12.8.0)
+
 # 12.8.0 - 2024-05-17
 
 - integration-sdk-cli: Export entity schema to graph schema

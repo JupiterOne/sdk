@@ -84,4 +84,4 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
           npm ci
-          npm exec lerna publish from-package --no-verify-access --yes
+          npm exec -c "lerna publish from-package --no-verify-access --yes"
