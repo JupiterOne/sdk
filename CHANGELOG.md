@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+- integration-sdk-core: Add createIntegrationHelpers
+
 # 12.7.1 - 2024-05-14
 
 - Add `NO_COLLECTION_METRICS` for disabling data collection metrics
