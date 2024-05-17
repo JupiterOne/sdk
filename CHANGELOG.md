@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 12.7.1 - 2024-05-14
+
+- Add `NO_COLLECTION_METRICS` for disabling data collection metrics
+
 # 12.7.0 - 2024-05-08
 
 - Add expiremental `OnDiskDuplicateKeyTracker`

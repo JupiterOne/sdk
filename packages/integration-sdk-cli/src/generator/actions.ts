@@ -22,6 +22,7 @@ async function spawnCommand(config, command, args): Promise<string> {
   });
 }
 
+// Yarn commands
 async function yarnInstall(_answers, config, _plop) {
   return spawnCommand(config, 'yarn', ['install']);
 }
@@ -34,8 +35,30 @@ async function yarnLint(_answers, config, _plop) {
   return spawnCommand(config, 'yarn', ['lint']);
 }
 
+// NPM commands
+
 async function j1Document(_answers, config, _plop) {
-  return spawnCommand(config, 'yarn', ['j1-integration', 'document']);
+  return spawnCommand(config, 'npm', ['j1-integration', 'document']);
 }
 
-export { yarnInstall, yarnFormat, yarnLint, j1Document };
+async function npmInstall(_answers, config, _plop) {
+  return spawnCommand(config, 'npm', ['install']);
+}
+
+async function npmFormat(_answers, config, _plop): Promise<string> {
+  return spawnCommand(config, 'npm', [`run format`]);
+}
+
+async function npmLint(_answers, config, _plop) {
+  return spawnCommand(config, 'npm', ['run lint']);
+}
+
+export {
+  yarnInstall,
+  yarnFormat,
+  yarnLint,
+  npmInstall,
+  npmFormat,
+  npmLint,
+  j1Document,
+};

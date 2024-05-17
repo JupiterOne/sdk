@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-cli",
-  "version": "12.7.0",
+  "version": "12.7.1",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -18,15 +18,15 @@
   },
   "scripts": {
     "prebuild:dist": "rm -rf dist && mkdir dist",
-    "build:dist": "tsc -p tsconfig.dist.json --declaration && yarn copy-files",
-    "prepack": "yarn build:dist",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration && npm run copy-files",
+    "prepack": "npm run build:dist",
     "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate && cp -r src/bocchi/templates dist/src/bocchi/templates",
     "plop": "plop --plopfile dist/src/generator/newIntegration.js"
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.55.0",
-    "@jupiterone/integration-sdk-core": "^12.7.0",
-    "@jupiterone/integration-sdk-runtime": "^12.7.0",
+    "@jupiterone/integration-sdk-core": "^12.7.1",
+    "@jupiterone/integration-sdk-runtime": "^12.7.1",
     "chalk": "^4",
     "commander": "^9.4.0",
     "ejs": "^3.1.9",
@@ -44,7 +44,7 @@
     "url-exists": "^1.0.3"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^12.7.0",
+    "@jupiterone/integration-sdk-private-test-utils": "^12.7.1",
     "@pollyjs/adapter-node-http": "^6.0.5",
     "@pollyjs/core": "^6.0.5",
     "@pollyjs/persister-fs": "^6.0.5",

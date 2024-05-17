@@ -17,7 +17,7 @@ to manually install them to get this working.
 ```
 
 To generate the types after these are installed simply run
-`yarn run generate-ts-classes`
+`npm run generate-ts-classes`
 
 It reads directly from node_modules to get the schemas so ensure that you have
 the proper version of the data model installed before trying to execute this
