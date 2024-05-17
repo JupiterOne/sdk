@@ -1,0 +1,47 @@
+{{#with step}}
+import {
+  IntegrationStep,
+  IntegrationStepExecutionContext,
+  {{#if directRelationships}}
+  RelationshipClass,
+  createDirectRelationship,
+  {{/if}}
+  {{#if mappedRelationships}}
+  PrimitiveEntity,
+  RelationshipDirection,
+  createMappedRelationship,
+  {{/if}}
+} from '@jupiterone/integration-sdk-core';
+
+import { IntegrationConfig } from '../../config';
+import {
+  Steps,
+  Entities,
+  {{#if directRelationships}}
+  Relationships,
+  {{/if}}
+} from '../constants';
+import { createAPIClient } from '../../client';
+import { create{{pascalCase entity.name}}Entity } from '../converters';
+
+export const {{camelCase entity.name}}Steps: IntegrationStep<IntegrationConfig>[] = [
+  {{> stepMap }}
+];
+
+export async function {{camelCase id}}({
+  instance,
+  jobState,
+  logger
+}: IntegrationStepExecutionContext<IntegrationConfig>): Promise<void> {
+  const client = createAPIClient(instance.config, logger);
+
+  await client.iterate{{pascalCase entity.name}}s(
+    async (data) => {
+        await jobState.addEntity(create{{pascalCase entity.name}}Entity(data));
+    },
+  );
+}
+
+{{> directRelationships}}
+{{> mappedRelationships}}
+{{/with}}

@@ -1,0 +1,60 @@
+{{#with template}}
+import {
+  RelationshipClass,
+  StepEntityMetadata,
+  StepRelationshipMetadata,
+} from '@jupiterone/integration-sdk-core';
+
+export const Steps = {
+{{#each steps}}
+  {{constantCase id}}: '{{id}}',
+  {{#if directRelationships}}
+    {{#with (getDirectRelationships this)}}
+      {{#each this}}
+  BUILD_{{constantCase sourceStep.entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS: 'build-{{kebabCase sourceStep.entity.name}}-{{kebabCase targetStep.entity.name}}-relationships',
+      {{/each}}
+    {{/with}}
+  {{/if}}
+  {{#if mappedRelationships}}
+  BUILD_{{constantCase entity.name}}_MAPPED_RELATIONSHIPS: 'build-{{kebabCase entity.name}}-mapped-relationships',
+  {{/if}}
+{{/each}}
+} satisfies Record<string, string>;
+
+export const Entities = {
+{{#each steps}}
+  {{#with entity}}
+  {{constantCase name}}: {
+    resourceName: '{{name}}',
+    _type: '{{_type}}',
+    _class: ['{{_class}}'],
+  },
+  {{/with}}
+{{/each}}
+} satisfies Record<string, StepEntityMetadata>;
+
+export const Relationships = {
+{{#each steps}}
+  {{#if parentAssociation}}
+    {{#with (getStepByType parentAssociation.parentEntityType)}}{{constantCase entity.name}}{{/with}}_{{constantCase parentAssociation.relationshipClass}}_{{constantCase entity.name}}: {
+      sourceType: Entities.{{#with (getStepByType parentAssociation.parentEntityType)}}{{constantCase entity.name}}{{/with}}._type,
+      _class: RelationshipClass.{{constantCase parentAssociation.relationshipClass}},
+      targetType: Entities.{{constantCase entity.name}}._type,
+      _type: '{{getRelationshipType parentAssociation.relationshipClass parentAssociation.parentEntityType entity._type}}',
+    },
+  {{/if}}
+  {{#if directRelationships}}
+    {{#with (getDirectRelationships this)}}
+      {{#each this}}
+  {{constantCase sourceStep.entity.name}}_{{constantCase relationshipClass}}_{{constantCase targetStep.entity.name}}: {
+    sourceType: Entities.{{constantCase sourceStep.entity.name}}._type,
+    _class: RelationshipClass.{{constantCase relationshipClass}},
+    targetType: Entities.{{constantCase targetStep.entity.name}}._type,
+    _type: '{{getRelationshipType relationshipClass sourceStep.entity._type targetStep.entity._type}}',
+  },
+      {{/each}}
+    {{/with}}
+  {{/if}}
+{{/each}}
+} satisfies Record<string, StepRelationshipMetadata>;
+{{/with}}

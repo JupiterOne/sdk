@@ -845,9 +845,8 @@ describe('flush callbacks', () => {
     // disk
     expect(flushedEntitiesCollected).toEqual(entities);
 
-    const allWrittenStepData = await getStorageDirectoryDataForStep(
-      integrationStepId,
-    );
+    const allWrittenStepData =
+      await getStorageDirectoryDataForStep(integrationStepId);
     expect(allWrittenStepData.entities.length).toEqual(3);
     expect(allWrittenStepData.relationships.length).toEqual(0);
 
@@ -952,9 +951,8 @@ describe('flush callbacks', () => {
     // disk
     expect(flushedRelationshipsCollected).toEqual(relationships);
 
-    const allWrittenStepData = await getStorageDirectoryDataForStep(
-      integrationStepId,
-    );
+    const allWrittenStepData =
+      await getStorageDirectoryDataForStep(integrationStepId);
     expect(allWrittenStepData.relationships.length).toEqual(3);
     expect(allWrittenStepData.entities.length).toEqual(0);
 

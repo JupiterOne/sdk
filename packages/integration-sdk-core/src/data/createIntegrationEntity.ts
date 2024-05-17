@@ -189,8 +189,8 @@ function generateEntity({
     entity.active = isActive
       ? true // if
       : isInactive
-      ? false // else if
-      : undefined; // else
+        ? false // else if
+        : undefined; // else
   }
 
   // Remove transferred `source.tags` property from the entity. `tags` is in the
