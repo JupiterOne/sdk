@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+# 12.8.0 - 2024-05-17
+
+- integration-sdk-cli: Export entity schema to graph schema
+- integration-sdk-core: Add createIntegrationHelpers
+
 # 12.7.1 - 2024-05-14
 
 - Add `NO_COLLECTION_METRICS` for disabling data collection metrics
@@ -1668,13 +1673,13 @@ of the support.jupiterone.io site.
 Old:
 
 ```ts
-getData: <T,>(key: string) => Promise<T>;
+getData: <T>(key: string) => Promise<T>;
 ```
 
 New:
 
 ```ts
-getData: <T,>(key: string) => Promise<T | undefined>;
+getData: <T>(key: string) => Promise<T | undefined>;
 ```
 
 ## 5.8.0 - 2021-02-26

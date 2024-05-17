@@ -1,4 +1,5 @@
 import {
+  GraphObjectSchema,
   IntegrationInstanceConfig,
   IntegrationStepExecutionContext,
   Step,
@@ -63,6 +64,7 @@ type IntegrationGraphSchemaEntityMetadata = {
   resourceName: string;
   _class: string | string[];
   _type: string;
+  schema?: GraphObjectSchema;
 };
 
 type IntegrationGraphSchemaRelationshipMetadata = {
@@ -210,6 +212,7 @@ function toIntegrationGraphSchemaEntityMetadata(
     resourceName: stepEntityMetadata.resourceName,
     _class: stepEntityMetadata._class,
     _type: stepEntityMetadata._type,
+    schema: stepEntityMetadata.schema,
   };
 }
 
