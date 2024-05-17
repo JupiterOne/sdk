@@ -12,6 +12,6 @@ function determineTypeOfStep(step: Step): string {
       ? StepType.CHILD_SINGLETON
       : StepType.SINGLETON
     : step.parentAssociation
-    ? StepType.FETCH_CHILD_ENTITIES
-    : StepType.FETCH_ENTITIES;
+      ? StepType.FETCH_CHILD_ENTITIES
+      : StepType.FETCH_ENTITIES;
 }
