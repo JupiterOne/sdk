@@ -128,6 +128,62 @@ describe('#generateIntegrationGraphSchema', () => {
     });
   });
 
+  test('should dedup entity metadata with schema', () => {
+    const steps: IntegrationStep<IntegrationInstanceConfig>[] = [
+      getMockIntegrationStep({
+        entities: [
+          {
+            _class: 'User',
+            _type: 'my_user',
+            resourceName: 'The user',
+            schema: {
+              $id: 'id',
+            },
+          },
+          {
+            _class: 'User',
+            _type: 'my_user',
+            resourceName: 'The user',
+            schema: {
+              $id: 'id',
+            },
+          },
+        ],
+        relationships: [],
+        mappedRelationships: [],
+      }),
+      getMockIntegrationStep({
+        entities: [
+          {
+            _class: 'User',
+            _type: 'my_user',
+            resourceName: 'The user',
+            schema: {
+              $id: 'id',
+            },
+          },
+        ],
+        relationships: [],
+        mappedRelationships: [],
+      }),
+    ];
+
+    expect(generateIntegrationGraphSchema(steps)).toEqual({
+      entities: [
+        {
+          _class: 'User',
+          _type: 'my_user',
+          resourceName: 'The user',
+          schema: {
+            $id: 'id',
+          },
+        },
+      ],
+      relationships: [],
+      mappedRelationships: [],
+    });
+  });
+
   test('should dedup relationship metadata', () => {
     const steps: IntegrationStep<IntegrationInstanceConfig>[] = [
       getMockIntegrationStep({

@@ -9,6 +9,7 @@ and this project adheres to
 
 # Unreleased
 
+- integration-sdk-cli: Export entity schema to graph schema
 - integration-sdk-core: Add createIntegrationHelpers
 
 # 12.7.1 - 2024-05-14
