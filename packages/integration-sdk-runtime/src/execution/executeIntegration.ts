@@ -1,7 +1,4 @@
 import {
-  AfterAddEntityHookFunction,
-  AfterAddRelationshipHookFunction,
-  Entity,
   ExecutionContext,
   ExecutionHistory,
   IntegrationInstance,
@@ -12,7 +9,6 @@ import {
   IntegrationStepResult,
   InvocationConfig,
   PartialDatasets,
-  Relationship,
   StepExecutionContext,
   StepResultStatus,
 } from '@jupiterone/integration-sdk-core';
@@ -30,12 +26,7 @@ import {
   registerIntegrationLoggerEventHandlers,
   unregisterIntegrationLoggerEventHandlers,
 } from '../logger';
-import {
-  publishEntitiesCollectedMetric,
-  publishMappedRelationshipsCollectedMetric,
-  publishRelationshipsCollectedMetric,
-  timeOperation,
-} from '../metrics';
+import { timeOperation } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
 import path from 'path';
 import { createIntegrationInstanceForLocalExecution } from './instance';
@@ -285,10 +276,6 @@ export async function executeWithContext<
         }
       }
 
-      if (process.env.NO_COLLECTION_METRICS) {
-        logger.info('Disabling collection metrics');
-      }
-
       const integrationStepResults = await executeSteps({
         executionContext: context,
         integrationSteps: config.integrationSteps,
@@ -300,12 +287,8 @@ export async function executeWithContext<
         createStepGraphObjectDataUploader,
         beforeAddEntity: config.beforeAddEntity,
         beforeAddRelationship: config.beforeAddRelationship,
-        afterAddEntity: process.env.NO_COLLECTION_METRICS
-          ? undefined
-          : createAfterAddEntityInternalHook(logger),
-        afterAddRelationship: process.env.NO_COLLECTION_METRICS
-          ? undefined
-          : createAfterAddRelationshipInternalHook(logger),
+        afterAddEntity: undefined,
+        afterAddRelationship: undefined,
         dependencyGraphOrder: config.dependencyGraphOrder,
         executionHandlerWrapper: config.executionHandlerWrapper,
       });
@@ -377,47 +360,4 @@ export async function executeWithContext<
       }
     }
   }
-}
-
-/**
- * Internal hook called after an entity has been fully added to the job state.
- * This hook publishes a count custom metric for the entity added.
- */
-function createAfterAddEntityInternalHook<
-  TExecutionContext extends ExecutionContext,
->(logger: IntegrationLogger): AfterAddEntityHookFunction<TExecutionContext> {
-  return (_: TExecutionContext, e: Entity) => {
-    publishEntitiesCollectedMetric({
-      logger,
-      entityType: e._type,
-    });
-
-    return e;
-  };
-}
-
-/**
- * Internal hook called after a relationship has been fully added to the job
- * state. This hook publishes a count custom metric for the relationship added.
- */
-function createAfterAddRelationshipInternalHook<
-  TExecutionContext extends ExecutionContext,
->(
-  logger: IntegrationLogger,
-): AfterAddRelationshipHookFunction<TExecutionContext> {
-  return (_: TExecutionContext, r: Relationship) => {
-    if (r._mapping) {
-      publishMappedRelationshipsCollectedMetric({
-        logger,
-        relationshipType: r._type,
-      });
-    } else {
-      publishRelationshipsCollectedMetric({
-        logger,
-        relationshipType: r._type,
-      });
-    }
-
-    return r;
-  };
 }
