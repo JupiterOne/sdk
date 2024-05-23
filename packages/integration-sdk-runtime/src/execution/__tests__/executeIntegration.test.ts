@@ -6,7 +6,6 @@ import * as zlib from 'zlib';
 
 import {
   createDirectRelationship,
-  createMappedRelationship,
   Entity,
   IntegrationExecutionContext,
   IntegrationInstance,
@@ -15,10 +14,8 @@ import {
   IntegrationInvocationValidationFunction,
   IntegrationLogger,
   IntegrationValidationError,
-  JobState,
   Relationship,
   RelationshipClass,
-  RelationshipDirection,
   StepResultStatus,
 } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
@@ -34,7 +31,6 @@ import {
 } from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import { createInstanceConfiguration } from './utils/createIntegrationConfig';
-import { IntegrationRuntimeMetric } from '../../metrics';
 
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
