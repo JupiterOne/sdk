@@ -52,6 +52,8 @@ describe('createIntegrationHelpers', () => {
       schema: Type.Object({
         id: Type.String(),
         name: Type.String(),
+        someNewProperty: Type.String(),
+        thisOneIsNotRequired: Type.Optional(Type.String()),
       }),
     });
 
@@ -77,8 +79,14 @@ describe('createIntegrationHelpers', () => {
               minItems: 1,
             },
             _type: { const: 'entity', type: 'string' },
+            someNewProperty: {
+              type: 'string',
+            },
+            thisOneIsNotRequired: {
+              type: 'string',
+            },
           },
-          required: ['_class', '_type', 'id', 'name'],
+          required: ['_class', '_type', 'id', 'name', 'someNewProperty'],
           type: 'object',
         },
       ],
@@ -89,6 +97,7 @@ describe('createIntegrationHelpers', () => {
     const validator = new EntityValidator({
       schemas: Object.values(entitySchemas),
     });
+
     const [{ schema }, createEntity] = createEntityMetadata({
       resourceName: 'Type',
       _class: ['Entity'],
@@ -97,6 +106,7 @@ describe('createIntegrationHelpers', () => {
       schema: Type.Object({
         id: Type.String(),
         name: Type.String(),
+        aNewProperty: Type.Number(),
       }),
     });
     validator.addSchemas(schema);
@@ -107,6 +117,7 @@ describe('createIntegrationHelpers', () => {
         name: 'type',
         _key: 'id:123456789',
         displayName: 'Type',
+        aNewProperty: 22,
       }),
     );
 

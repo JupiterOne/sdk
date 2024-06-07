@@ -61,12 +61,18 @@ export const createIntegrationHelpers = <
       $id: `#${_type}`,
       description: description,
     });
+
     type EntitySchemaType = Omit<Static<typeof entitySchema>, 'displayName'> & {
       displayName?: string | undefined;
     };
 
+    type BaseSchemaType = Omit<Static<typeof baseSchema>, 'displayName'> & {
+      displayName?: string | undefined;
+    };
+
     const createEntityData = (
-      entityData: Omit<EntitySchemaType, '_class' | '_type'>,
+      entityData: Omit<EntitySchemaType, '_class' | '_type'> &
+        Omit<BaseSchemaType, '_class' | '_type'>,
     ): EntitySchemaType => {
       return {
         ...entityData,
