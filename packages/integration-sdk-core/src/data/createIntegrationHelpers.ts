@@ -49,7 +49,7 @@ export const createIntegrationHelpers = <
       Type.Ref(classSchemaMap[className]),
     ) as [TRef<ClassSchemaMap[Class]>, ...TRef<ClassSchemaMap[Class]>[]];
 
-    const baseSchema = Type.Composite([
+    const baseSchema = Type.Intersect([
       Type.Object({
         _class: Type.Tuple(_class.map((className) => Type.Literal(className))),
         _type: Type.Literal(_type),
