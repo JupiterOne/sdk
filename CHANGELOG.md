@@ -9,8 +9,6 @@ and this project adheres to
 
 # Unreleased
 
-# 12.8.2 - 2024-06-10
-
 - integration-sdk-core: Fix typing in createIntegrationHelpers
 
 # 12.8.1 - 2024-05-17
