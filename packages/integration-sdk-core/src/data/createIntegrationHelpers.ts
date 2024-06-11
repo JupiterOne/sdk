@@ -49,7 +49,7 @@ export const createIntegrationHelpers = <
       Type.Ref(classSchemaMap[className]),
     ) as [TRef<ClassSchemaMap[Class]>, ...TRef<ClassSchemaMap[Class]>[]];
 
-    const baseSchema = Type.Composite([
+    const baseSchema = Type.Intersect([
       Type.Object({
         _class: Type.Tuple(_class.map((className) => Type.Literal(className))),
         _type: Type.Literal(_type),
@@ -61,12 +61,18 @@ export const createIntegrationHelpers = <
       $id: `#${_type}`,
       description: description,
     });
+
     type EntitySchemaType = Omit<Static<typeof entitySchema>, 'displayName'> & {
       displayName?: string | undefined;
     };
 
+    type BaseSchemaType = Omit<Static<typeof baseSchema>, 'displayName'> & {
+      displayName?: string | undefined;
+    };
+
     const createEntityData = (
-      entityData: Omit<EntitySchemaType, '_class' | '_type'>,
+      entityData: Omit<EntitySchemaType, '_class' | '_type'> &
+        Omit<BaseSchemaType, '_class' | '_type'>,
     ): EntitySchemaType => {
       return {
         ...entityData,
