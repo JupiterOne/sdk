@@ -117,30 +117,41 @@ describe('createIntegrationHelpers', () => {
         allOf: [
           { $ref: '#Entity' },
           {
-            properties: {
-              id: { type: 'string' },
-              name: { type: 'string' },
-              _class: {
-                type: 'array',
-                items: [
-                  {
-                    const: 'Entity',
+            allOf: [
+              {
+                properties: {
+                  _class: {
+                    type: 'array',
+                    items: [
+                      {
+                        const: 'Entity',
+                        type: 'string',
+                      },
+                    ],
+                    additionalItems: false,
+                    maxItems: 1,
+                    minItems: 1,
+                  },
+                  _type: { const: 'entity', type: 'string' },
+                },
+                type: 'object',
+                required: ['_class', '_type'],
+              },
+              {
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  someNewProperty: {
                     type: 'string',
                   },
-                ],
-                additionalItems: false,
-                maxItems: 1,
-                minItems: 1,
+                  thisOneIsNotRequired: {
+                    type: 'string',
+                  },
+                },
+                required: ['id', 'name', 'someNewProperty'],
+                type: 'object',
               },
-              _type: { const: 'entity', type: 'string' },
-              someNewProperty: {
-                type: 'string',
-              },
-              thisOneIsNotRequired: {
-                type: 'string',
-              },
-            },
-            required: ['_class', '_type', 'id', 'name', 'someNewProperty'],
+            ],
             type: 'object',
           },
         ],
