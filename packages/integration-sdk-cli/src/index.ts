@@ -9,6 +9,7 @@ import {
   visualize,
   visualizeTypes,
   validateQuestionFile,
+  memgraph,
   neo4j,
   visualizeDependencies,
   generateIntegrationGraphSchemaCommand,
@@ -28,6 +29,7 @@ export function createCli() {
     .addCommand(visualizeTypes())
     .addCommand(document())
     .addCommand(validateQuestionFile())
+    .addCommand(memgraph())
     .addCommand(neo4j())
     .addCommand(visualizeDependencies())
     .addCommand(generateIntegrationGraphSchemaCommand())
