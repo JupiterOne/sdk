@@ -93,6 +93,26 @@ export type IntegrationStepResult = Omit<
    * Entity or relationship types encountered during step execution.
    */
   encounteredTypes: string[];
+
+  /**
+   * Counts of each type encountered during step execution.
+   */
+  encounteredTypeCounts: { [type: string]: number };
+
+  /**
+   * Start time of the step in milliseconds since the Unix epoch.
+   */
+  startTime?: number;
+
+  /**
+   * End time of the step in milliseconds since the Unix epoch.
+   */
+  endTime?: number;
+
+  /**
+   * Duration of the step in milliseconds, calculated as endTime - startTime.
+   */
+  duration?: number;
 };
 
 export type IntegrationStep<

@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-benchmark",
-  "version": "11.3.1",
+  "version": "12.8.3",
   "private": true,
   "description": "SDK benchmarking scripts",
   "main": "./src/index.js",
@@ -12,11 +12,11 @@
   },
   "scripts": {
     "prebenchmark": "rm -rf .j1-integration",
-    "benchmark": "for file in ./src/benchmarks/*; do yarn prebenchmark && node $file; done"
+    "benchmark": "for file in ./src/benchmarks/*; do npm run prebenchmark && node $file; done"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^11.3.1",
-    "@jupiterone/integration-sdk-runtime": "^11.3.1",
+    "@jupiterone/integration-sdk-core": "^12.8.3",
+    "@jupiterone/integration-sdk-runtime": "^12.8.3",
     "benchmark": "^2.1.4"
   }
 }

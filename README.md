@@ -46,13 +46,13 @@ details about how to develop integrations with this SDK.
 
 To get started with development:
 
-1. Install dependencies using `yarn`
-1. Run `yarn build`
+1. Install dependencies using `npm install`
+1. Run `npm run build`
 
 This project utilizes TypeScript project references for incremental builds. To
-prepare all of the packages, run `yarn build`. If you are making a changes
-across multiple packages, it is recommended you run `yarn build --watch` to
-automatically compile changes as you work.
+prepare all of the packages, run `npm run build`. If you are making a changes
+across multiple packages, it is recommended you run `npm run build -- --watch`
+to automatically compile changes as you work.
 
 ### Linking packages
 
@@ -62,12 +62,12 @@ when changes are made.
 
 Steps to automatically build and link:
 
-- Run `yarn build` or `yarn build --watch` in _this_ project from a terminal and
-  wait for initial build to complete.
+- Run `npm run build` or `npm run build --watch` in _this_ project from a
+  terminal and wait for initial build to complete.
 
-- Run `yarn link` in the package that you want to link.
+- Run `npm link` in the package that you want to link.
 
-- In a separate terminal, run `yarn link @jupiterone/<package to link>` in the
+- In a separate terminal, run `npm link @jupiterone/<package to link>` in the
   integration project. You can now use the integration SDK CLI in the other
   project and it will use the latest code on your filesystem.
 
@@ -80,12 +80,17 @@ to move to). Don't forget to update the `CHANGELOG.md` file!
 ```shell
 git checkout -b release-<major>.<minor>.<patch>
 git push -u origin release-<major>.<minor>.<patch>
-yarn lerna version {major, minor, patch}
+npm exec lerna version <major>.<minor>.<patch>
 ```
 
 Note the `git checkout`/`git push` is required because Lerna will expect that
 you've already created a remote branch before bumping, tagging, and pushing the
 local changes to remote.
+
+❕Make sure to have committed all your changes before running
+`npm exec lerna version` since it will commit the version update and tag that
+commit. Rebasing or amending lerna's commit will cause the tag to point to a
+different commit.
 
 [1]:
   https://support.jupiterone.io/hc/en-us/articles/360022722094-JupiterOne-Platform-API

@@ -11,16 +11,16 @@ import {
   RelationshipClass,
   RelationshipDirection,
 } from '@jupiterone/integration-sdk-core';
-import {
-  toMatchGraphObjectSchema,
-  toMatchDirectRelationshipSchema,
-  toTargetEntities,
-  registerMatchers,
-  toImplementSpec,
-} from '../jest';
+import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 import { randomUUID as uuid } from 'crypto';
 import { toMatchStepMetadata } from '..';
-import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
+import {
+  registerMatchers,
+  toImplementSpec,
+  toMatchDirectRelationshipSchema,
+  toMatchGraphObjectSchema,
+  toTargetEntities,
+} from '../jest';
 
 describe('#toMatchGraphObjectSchema', () => {
   function generateCollectedEntity(partial?: Partial<Entity>): Entity {
@@ -296,6 +296,80 @@ describe('#toMatchGraphObjectSchema', () => {
     });
   });
 
+  test('should remove properties marked for deletion from schema', () => {
+    const standardEntity = {
+      _key: 'arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0',
+      _type: 'aws_securityhub_standard',
+      _class: ['Standard'],
+      name: 'AWS Foundational Security Best Practices v1.0.0',
+      displayName: 'AWS Foundational Security Best Practices v1.0.0',
+      enabledByDefault: true,
+      managingCompany: 'AWS',
+      managingProduct: 'Security Hub',
+      region: 'us-east-1',
+      _rawData: [
+        {
+          name: 'default',
+          rawData: {
+            EnabledByDefault: true,
+            Name: 'AWS Foundational Security Best Practices v1.0.0',
+            StandardsArn:
+              'arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0',
+            StandardsManagedBy: {
+              Company: 'AWS',
+              Product: 'Security Hub',
+            },
+          },
+        },
+      ],
+    };
+
+    const failedResult = toMatchGraphObjectSchema(standardEntity, {
+      _class: ['Standard'],
+      schema: {
+        additionalProperties: true,
+        properties: {
+          _type: { const: 'aws_securityhub_standard' },
+          _rawData: {
+            type: 'array',
+            items: { type: 'object' },
+          },
+          displayName: { type: 'string' },
+        },
+      },
+    });
+
+    expect(failedResult.message()).toContain(
+      'Error validating graph object against schema',
+    );
+    expect(failedResult).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    const succeededResult = toMatchGraphObjectSchema(standardEntity, {
+      _class: ['Standard'],
+      schema: {
+        additionalProperties: true,
+        properties: {
+          _type: { const: 'aws_securityhub_standard' },
+          _rawData: {
+            type: 'array',
+            items: { type: 'object' },
+          },
+          displayName: { type: 'string' },
+          version: { exclude: true },
+        },
+      },
+    });
+
+    expect(succeededResult.message()).toContain('Success!');
+    expect(succeededResult).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+  });
+
   test('should match array of custom entities using schema', () => {
     const result = toMatchGraphObjectSchema(
       [
@@ -415,6 +489,7 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
       platform: 'darwin',
       specialProp: 'abc',
       deviceId: 'udid of device',
+      lastSeenOn: 923618340000,
     };
 
     const result = toMatchGraphObjectSchema(entity, {
@@ -434,6 +509,50 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
     });
 
     expect(result.message()).toEqual('Success!');
+  });
+
+  test('Should allow an entity with _rawData', () => {
+    const entity: Entity = generateCollectedEntity();
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: ['Service'],
+      schema: generateGraphObjectSchema(),
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: true,
+    });
+
+    expect(result.message()).toEqual('Success!');
+  });
+
+  test('Should not allow an entity with _rawData if excluded', () => {
+    const entity: Entity = generateCollectedEntity();
+
+    const result = toMatchGraphObjectSchema(entity, {
+      _class: ['Service'],
+      schema: generateGraphObjectSchema({
+        _rawData: { exclude: true },
+      }),
+    });
+
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+
+    expect(result.message()).toContain(
+      `{
+    "instancePath": "",
+    "schemaPath": "#/additionalProperties",
+    "keyword": "additionalProperties",
+    "params": {
+      "additionalProperty": "_rawData"
+    },
+    "message": "must NOT have additional properties"
+  }`,
+    );
   });
 });
 
@@ -1060,6 +1179,76 @@ describe('#toImplementSpec', () => {
     };
     const result = toImplementSpec(implementation, spec);
 
+    expect(result).toEqual({
+      message: expect.any(Function),
+      pass: false,
+    });
+  });
+
+  test('should fail if spec is missing and requireSpec is true', () => {
+    const implementation: IntegrationInvocationConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          executionHandler,
+        },
+      ],
+    };
+
+    const spec: IntegrationSpecConfig = {
+      integrationSteps: [
+        {
+          id: 'step-1',
+          name: 'Step 1',
+          entities: [
+            {
+              resourceName: 'resource-1',
+              _type: 'resource_1',
+              _class: 'Record',
+            },
+          ],
+          relationships: [],
+          dependsOn: [],
+          implemented: true,
+        },
+        {
+          id: 'step-2',
+          name: 'Step 2',
+          entities: [
+            {
+              resourceName: 'RESOURCE-3',
+              _type: 'resource_3',
+              _class: 'Record',
+            },
+          ],
+          relationships: [
+            {
+              _type: 'resource_1_has_resource_3',
+              sourceType: 'resource_1',
+              _class: RelationshipClass.HAS,
+              targetType: 'resource_3',
+            },
+          ],
+          dependsOn: ['step-1'],
+          implemented: true,
+        },
+      ],
+    };
+    const result = toImplementSpec(implementation, spec, { requireSpec: true });
+
+    expect(result.message()).toContain(
+      'toImplementSpec.requireSpec is true but at least 1 step is missing from spec.',
+    );
     expect(result).toEqual({
       message: expect.any(Function),
       pass: false,

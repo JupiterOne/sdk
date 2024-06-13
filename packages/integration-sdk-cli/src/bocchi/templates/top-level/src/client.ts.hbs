@@ -1,0 +1,116 @@
+import { BaseAPIClient } from '@jupiterone/integration-sdk-http-client';
+import { IntegrationConfig } from './config';
+import { 
+{{#each template.steps}}
+  {{pascalCase entity.name}}, 
+{{/each}}
+} from './steps/types';
+import { Entity, IntegrationLogger } from '@jupiterone/integration-sdk-core';
+
+export type ResourceIteratee<T> = (each: T) => Promise<void> | void;
+
+export class APIClient extends BaseAPIClient {
+  private authHeaders: Record<string, string>;
+
+  constructor(readonly config: IntegrationConfig, logger: IntegrationLogger) {
+    super({
+      baseUrl: '{{template.baseUrl}}',
+      logger,
+      {{#if template.tokenBucket}}
+      tokenBucket: {
+        maximumCapacity: {{template.tokenBucket.maximumCapacity}},
+        refillRate: {{template.tokenBucket.refillRate}}
+      }
+      {{/if}}
+    });
+  }
+
+  {{#if (isNotEndpointAuth template.authentication.strategy)}}
+  protected getAuthorizationHeaders(): Record<string, string> {
+    return { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} };
+  }  
+  {{else}}
+  protected async getAuthorizationHeaders(): Promise<Record<string, string>> {
+    const response = await (await this.retryableRequest(
+      `${this.baseUrl}{{template.authentication.params.path}}`,
+      {
+        authorize: false, // needed only for authentication call
+        headers: { {{#each (sanitizeAuthObject template.authentication.params.headers)}}'{{@key}}': `{{this}}`,{{/each}} },
+        method: '{{sanitizeHttpMethod template.authentication.params.method}}',
+      {{#if request.params}}
+        body: { {{#each (sanitizeAuthObject template.authentication.params.body)}}{{@key}}: {{this}},{{/each}} }
+      {{/if}}
+      }
+    )).json();
+    return { {{#each (sanitizeAuthObject template.authentication.authHeaders)}}'{{@key}}': `{{this}}`,{{/each}} }
+  }
+  {{/if}}
+
+  public async verifyAuthentication(): Promise<void> {
+    {{#if (isNotEndpointAuth template.authentication.strategy)}}
+    // TODO: implement
+    await new Promise(() => { throw new Error('Unimplemented: Pick an API call to use for validation!') });
+    {{else}}
+    await this.getAuthorizationHeaders();
+    {{/if}}
+  }
+{{#each template.steps}}
+
+  {{#if (isSingletonRequest response.responseType)}}
+  public async get{{pascalCase entity.name}}({{#if parentAssociation}}parentEntity: Entity{{/if}}): Promise<{{pascalCase entity.name}}> {
+    const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
+    const response = await (await this.retryableRequest(
+      url,
+      {
+        method: '{{sanitizeHttpMethod request.method}}',
+      {{#if request.params}}
+        body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
+      {{/if}}
+      }
+    )).json();
+    return response.{{response.dataPath}} as {{pascalCase entity.name}};
+  }
+  {{else}}
+  public async iterate{{pascalCase entity.name}}s(
+    {{#if parentAssociation}}
+    parentEntity: Entity,
+    {{/if}}
+    iteratee: ResourceIteratee<{{pascalCase entity.name}}>
+  ): Promise<void> {
+    {{#if response.nextTokenPath}}
+    let nextToken: string | undefined;
+    do {
+    {{/if}}
+      const url = `${this.baseUrl}{{{sanitizeUrlPath request.urlTemplate}}}`;
+      const response = await (await this.retryableRequest(
+        url,
+        {
+          method: '{{sanitizeHttpMethod request.method}}',
+        {{#if request.params}}
+          body: { {{#each (sanitizeHttpBody request.params)}}'{{@key}}': `{{this}}`,{{/each}} }
+        {{/if}}
+        }
+      )).json();
+      const resources = response.{{response.dataPath}} as {{pascalCase entity.name}}[];
+      for (const resource of resources) {
+        await iteratee(resource);
+      }
+    {{#if response.nextTokenPath}}
+      nextToken = response.{{response.nextTokenPath}};
+    } while (nextToken);
+    {{/if}}
+  }
+  {{/if}}
+{{/each}}
+}
+
+let client: APIClient | undefined;
+
+export function createAPIClient(
+  config: IntegrationConfig,
+  logger: IntegrationLogger
+): APIClient {
+  return client
+    ? client
+    : new APIClient(config, logger);
+}

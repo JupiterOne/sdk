@@ -578,6 +578,52 @@ describe('uploadDataChunk', () => {
     expect(uploadDataChunkErr).not.toBe(undefined);
     expect(postSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('should clean errors before throwing', async () => {
+    const context = createTestContext();
+    const job = generateSynchronizationJob();
+
+    const type = 'entities';
+    const batch = [];
+
+    const mockLogger = {
+      trace: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      fatal: jest.fn(),
+    };
+
+    jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
+      const err = new Error('thing went bad');
+      Object.assign(err, {
+        config: {
+          data: 'Stuff',
+          headers: {
+            Authroization: 'some fake token',
+            'content-type': 'application/json',
+          },
+        },
+      });
+      throw err;
+    });
+
+    await expect(
+      uploadDataChunk({
+        logger: mockLogger as any,
+        apiClient: context.apiClient,
+        jobId: job.id,
+        type,
+        batch,
+      }),
+    ).rejects.toBeInstanceOf(Error);
+    const firstInfoCall = mockLogger.info.mock.calls[0];
+    const args = firstInfoCall[0];
+    const axiosError = args['err'];
+    expect(axiosError.config.data).toBeUndefined();
+    expect(axiosError.config.headers.Authorization).toBeUndefined();
+  });
 });
 
 function createTestContext(
@@ -586,6 +632,7 @@ function createTestContext(
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
+    accessToken: 'fake-token',
   });
 
   const logger = createIntegrationLogger({

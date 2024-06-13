@@ -5,7 +5,7 @@ import {
   KeyNormalizationFunction,
 } from '@jupiterone/integration-sdk-core';
 import {
-  DuplicateKeyTracker,
+  InMemoryDuplicateKeyTracker,
   MemoryDataStore,
   TypeTracker,
 } from '@jupiterone/integration-sdk-runtime';
@@ -47,7 +47,9 @@ export function createMockJobState({
   let collectedRelationships: Relationship[] = [];
   const collectedData: { [key: string]: any } = {};
 
-  const duplicateKeyTracker = new DuplicateKeyTracker(normalizeGraphObjectKey);
+  const duplicateKeyTracker = new InMemoryDuplicateKeyTracker(
+    normalizeGraphObjectKey,
+  );
   const typeTracker = new TypeTracker();
   const dataStore = new MemoryDataStore();
   const mockStepId = `mock-step-${uuid()}`;

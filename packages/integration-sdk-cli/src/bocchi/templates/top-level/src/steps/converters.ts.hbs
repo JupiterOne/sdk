@@ -1,0 +1,37 @@
+{{#with template}}
+import { createIntegrationEntity } from '@jupiterone/integration-sdk-core';
+import { Entities } from './constants';
+import { 
+{{#each steps}}
+  {{pascalCase entity.name}}, 
+{{/each}}
+} from './types';
+
+{{#each steps}}
+    {{#with entity}}
+export function create{{pascalCase name}}Entity(data: {{pascalCase name}}) {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        _key: data.{{_keyPath}},
+        _type: Entities.{{constantCase name}}._type,
+        _class: Entities.{{constantCase name}}._class,
+        {{#if staticFields}}
+          {{#each staticFields}}
+        {{@key}}: {{{escape this}}},
+          {{/each}}
+        {{/if}}
+        {{#if fieldMappings}}
+          {{#each fieldMappings}}
+        {{@key}}: data.{{this}},
+          {{/each}}
+        {{/if}}
+      },
+    },
+  });
+}
+  {{/with}}
+
+{{/each}}
+{{/with}}

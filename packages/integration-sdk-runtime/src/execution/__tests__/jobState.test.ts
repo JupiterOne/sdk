@@ -7,7 +7,7 @@ import {
 } from '../jobState';
 import {
   DuplicateEntityReport,
-  DuplicateKeyTracker,
+  InMemoryDuplicateKeyTracker,
 } from '../duplicateKeyTracker';
 import { randomUUID as uuid } from 'crypto';
 import { FileSystemGraphObjectStore } from '../../storage';
@@ -67,7 +67,7 @@ function getMockCreateStepJobStateParams(
   return {
     stepId: uuid(),
     graphObjectStore: new FileSystemGraphObjectStore(),
-    duplicateKeyTracker: new DuplicateKeyTracker(),
+    duplicateKeyTracker: new InMemoryDuplicateKeyTracker(),
     typeTracker: new TypeTracker(),
     dataStore: new MemoryDataStore(),
     onDuplicateEntityKey,
@@ -135,7 +135,7 @@ describe('#findEntity', () => {
 
   test('should find entity by _key with key normalization', async () => {
     const jobState = createTestStepJobState({
-      duplicateKeyTracker: new DuplicateKeyTracker((_key) =>
+      duplicateKeyTracker: new InMemoryDuplicateKeyTracker((_key) =>
         _key.toLowerCase(),
       ),
     });
@@ -182,7 +182,7 @@ describe('#hasKey', () => {
 
   test('key normalization', async () => {
     const jobState = createTestStepJobState({
-      duplicateKeyTracker: new DuplicateKeyTracker((_key) =>
+      duplicateKeyTracker: new InMemoryDuplicateKeyTracker((_key) =>
         _key.toLowerCase(),
       ),
     });

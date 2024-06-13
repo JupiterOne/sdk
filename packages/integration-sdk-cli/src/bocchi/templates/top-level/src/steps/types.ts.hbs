@@ -1,0 +1,6 @@
+{{#with template}}
+{{#each steps}}
+export type {{pascalCase entity.name}} = any;
+
+{{/each}}
+{{/with}}

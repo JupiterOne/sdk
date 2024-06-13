@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-cli",
-  "version": "11.3.1",
+  "version": "12.8.3",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -17,23 +17,25 @@
     "access": "public"
   },
   "scripts": {
+    "test": "jest",
     "prebuild:dist": "rm -rf dist && mkdir dist",
-    "build:dist": "tsc -p tsconfig.dist.json --declaration && yarn copy-files",
-    "prepack": "yarn build:dist",
-    "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate",
+    "build:dist": "tsc -p tsconfig.dist.json --declaration && npm run copy-files",
+    "prepack": "npm run build:dist",
+    "copy-files": "cp -r src/generator/template dist/src/generator/template && cp -r src/generator/stepTemplate dist/src/generator/stepTemplate && cp -r src/bocchi/templates dist/src/bocchi/templates",
     "plop": "plop --plopfile dist/src/generator/newIntegration.js"
   },
   "dependencies": {
-    "@jupiterone/data-model": "^0.54.0",
-    "@jupiterone/integration-sdk-core": "^11.3.1",
-    "@jupiterone/integration-sdk-runtime": "^11.3.1",
+    "@jupiterone/data-model": "^0.61.3",
+    "@jupiterone/integration-sdk-core": "^12.8.3",
+    "@jupiterone/integration-sdk-runtime": "^12.8.3",
     "chalk": "^4",
     "commander": "^9.4.0",
+    "ejs": "^3.1.9",
     "fs-extra": "^10.1.0",
     "globby": "^11.0.0",
     "inquirer-checkbox-plus-prompt": "^1.4.2",
     "js-yaml": "^4.1.0",
-    "json-diff": "^0.5.4",
+    "json-diff": "^1.0.6",
     "lodash": "^4.17.19",
     "markdown-table": "^2.0.0",
     "neo4j-driver": "^4.3.3",
@@ -43,7 +45,7 @@
     "url-exists": "^1.0.3"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-private-test-utils": "^11.3.1",
+    "@jupiterone/integration-sdk-private-test-utils": "^12.8.3",
     "@pollyjs/adapter-node-http": "^6.0.5",
     "@pollyjs/core": "^6.0.5",
     "@pollyjs/persister-fs": "^6.0.5",

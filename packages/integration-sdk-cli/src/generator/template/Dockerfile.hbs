@@ -1,25 +1,27 @@
-FROM node:18-bullseye-slim as builder
+{{#if_eq packageManager 'yarn'}}
+FROM node:18-alpine
 
 ENV JUPITERONE_INTEGRATION_DIR=/opt/jupiterone/integration
 
-COPY package.json yarn.lock tsconfig.dist.json tsconfig.json LICENSE ${JUPITERONE_INTEGRATION_DIR}/
+COPY package.json yarn.lock tsconfig.json LICENSE ${JUPITERONE_INTEGRATION_DIR}/
 COPY src/ ${JUPITERONE_INTEGRATION_DIR}/src
-WORKDIR  ${JUPITERONE_INTEGRATION_DIR}
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/api/lists/*
-RUN yarn install
-RUN yarn build:docker
 
-
-FROM node:18-bullseye-slim
-ENV JUPITERONE_INTEGRATION_DIR=/opt/jupiterone/integration
-COPY --from=builder --chown=node:node ${JUPITERONE_INTEGRATION_DIR}/dist ${JUPITERONE_INTEGRATION_DIR}
-COPY --from=builder --chown=node:node ${JUPITERONE_INTEGRATION_DIR}/yarn.lock ${JUPITERONE_INTEGRATION_DIR}
-COPY scripts/ ${JUPITERONE_INTEGRATION_DIR}/scripts
 WORKDIR ${JUPITERONE_INTEGRATION_DIR}
-RUN apt-get update && apt-get install -y python3
-RUN yarn install --production --fronzen-lockfile --cache-folder ./ycache && yarn global add --cache-folder ./ycache @jupiterone/integration-sdk-cli && rm -rf ./ycache  && chown -R node:node /opt/jupiterone
-RUN export PATH="$(yarn global bin):$PATH"
+RUN yarn install
 
-USER node
+ENTRYPOINT /usr/local/bin/yarn --silent j1-integration run -i ${INTEGRATION_INSTANCE_ID} --disable-schema-validation --api-base-url ${JUPITERONE_API_BASE_URL:-https://api.us.jupiterone.io} --account ${JUPITERONE_ACCOUNT} --api-key ${JUPITERONE_API_KEY}
 
-CMD ["sh", "scripts/execute.sh"]
+{{else}}
+
+FROM node:18-alpine
+
+ENV JUPITERONE_INTEGRATION_DIR=/opt/jupiterone/integration
+
+COPY package.json package-lock.json tsconfig.json LICENSE ${JUPITERONE_INTEGRATION_DIR}/
+COPY src/ ${JUPITERONE_INTEGRATION_DIR}/src
+
+WORKDIR ${JUPITERONE_INTEGRATION_DIR}
+RUN npm install
+
+ENTRYPOINT /usr/local/bin/npm --silent run j1-integration -- -i ${INTEGRATION_INSTANCE_ID} --disable-schema-validation --api-base-url ${JUPITERONE_API_BASE_URL:-https://api.us.jupiterone.io} --account ${JUPITERONE_ACCOUNT} --api-key ${JUPITERONE_API_KEY}
+{{/if_eq}}

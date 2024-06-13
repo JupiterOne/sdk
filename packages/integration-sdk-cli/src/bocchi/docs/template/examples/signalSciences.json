@@ -1,0 +1,128 @@
+{
+  "instanceConfigFields": {
+    "email": {
+      "type": "string"
+    },
+    "token": {
+      "type": "string",
+      "mask": true
+    }
+  },
+  "authentication": {
+    "strategy": "configField",
+    "authHeaders": {
+      "x-api-user": "%config.email%",
+      "x-api-token": "%config.token%"
+    }
+  },
+  "baseUrl": "https://dashboard.signalsciences.net/api/v0",
+  "steps": [
+    {
+      "id": "fetch-organizations",
+      "name": "Fetch Organizations",
+      "entity": {
+        "name": "Organization",
+        "_type": "signal_sciences_organization",
+        "_class": ["Organization"],
+        "_keyPath": "name",
+        "fieldMappings": {
+          "name": "name",
+          "displayName": "displayName",
+          "smallIconURI": "smallIconURI",
+          "createdAt": "created",
+          "siteLimit": "siteLimit",
+          "authType": "authType",
+          "sessionMaxAgeDashboard": "sessionMaxAgeDashboard"
+        },
+        "staticFields": {
+          "external": false
+        }
+      },
+      "request": {
+        "urlTemplate": "/corps"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
+      }
+    },
+    {
+      "id": "fetch-users",
+      "name": "Fetch Users",
+      "entity": {
+        "name": "User",
+        "_type": "signal_sciences_user",
+        "_class": ["User"],
+        "_keyPath": "email",
+        "fieldMappings": {
+          "name": "name",
+          "displayName": "name",
+          "email": "email",
+          "role": "role",
+          "status": "status",
+          "mfaEnabled": "mfaEnabled",
+          "authStatus": "authStatus",
+          "createdAt": "created"
+        }
+      },
+      "parentAssociation": {
+        "parentEntityType": "signal_sciences_organization",
+        "relationshipClass": "HAS"
+      },
+      "mappedRelationships": [
+        {
+          "_class": "IS",
+          "direction": "REVERSE",
+          "mappings": [
+            {
+              "targetValue": "google_user",
+              "targetProperty": "_type"
+            },
+            {
+              "sourceProperty": "email",
+              "targetProperty": "email"
+            }
+          ]
+        }
+      ],
+      "request": {
+        "urlTemplate": "/corps/%parent._key%/users"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
+      },
+      "dependsOn": ["fetch-organizations"]
+    },
+    {
+      "id": "fetch-cloudwaf-instances",
+      "name": "Fetch Cloud WAF Instances",
+      "entity": {
+        "name": "Cloud WAF Instance",
+        "_type": "signal_sciences_cloudwaf",
+        "_class": ["Firewall"],
+        "_keyPath": "id",
+        "fieldMappings": {
+          "id": "id",
+          "name": "name",
+          "displayName": "name",
+          "description": "description",
+          "region": "region",
+          "tlsMinVersion": "tlsMinVersion"
+        }
+      },
+      "parentAssociation": {
+        "parentEntityType": "signal_sciences_organization",
+        "relationshipClass": "HAS"
+      },
+      "request": {
+        "urlTemplate": "/corps/%parent._key%/cloudwafInstances"
+      },
+      "response": {
+        "dataPath": "data",
+        "responseType": "LIST"
+      },
+      "dependsOn": ["fetch-organizations"]
+    }
+  ]
+}

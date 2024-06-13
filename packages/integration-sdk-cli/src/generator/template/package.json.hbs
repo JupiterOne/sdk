@@ -1,10 +1,10 @@
 {
   "name": "{{packageName}}",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "{{packageDescription}}",
   "license": "MPL-2.0",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "src",
     "jupiterone"
@@ -13,7 +13,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18.0.0 <19.x"
+    "node": ">=18.0.0 <20.x"
   },
   "scripts": {
     "start": "j1-integration collect",
@@ -28,36 +28,28 @@
     "format:check": "prettier --check \"**/*.{ts,js,json,css,md,yml}\"",
     "type-check": "tsc",
     "test": "jest",
+    {{#if_eq packageManager 'yarn'}}
     "test:env": "LOAD_ENV=1 yarn test",
     "test:ci": "yarn format:check && yarn lint && yarn type-check && yarn test",
+    "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main",
+    {{else}}
+    "test:env": "LOAD_ENV=1 npm run test",
+    "test:ci": "npm run format:check && npm run lint && npm run type-check && npm run test",
+    "prepush": "npm run format:check && npm run lint && npm run type-check && jest --changedSince main",
+    {{/if_eq}}
     "build": "tsc -p tsconfig.dist.json --declaration && cp README.md dist/README.md && cp -r jupiterone/ dist/jupiterone/",
     "build:docker": "tsc --declaration false --emitDeclarationOnly false -p tsconfig.dist.json",
-    "prepush": "yarn format:check && yarn lint && yarn type-check && jest --changedSince main",
     "postversion": "cp package.json ./dist/package.json"
   },
+  "dependencies": {
+    "@jupiterone/integration-sdk-http-client": "^12.0.0"
+  },
   "peerDependencies": {
-    "@jupiterone/integration-sdk-core": "^10.5.0"
+    "@jupiterone/integration-sdk-core": "^12.0.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-core": "^10.5.0",
-    "@jupiterone/integration-sdk-dev-tools": "^10.5.0",
-    "@jupiterone/integration-sdk-testing": "^10.5.0",
-    "auto": "^10.36.5"
-  },
-  "auto": {
-    "plugins": [
-      [
-        "npm",
-        {
-          "setRcToken": false,
-          "publishFolder": "./dist"
-        }
-      ],
-      "released"
-    ],
-    "onlyPublishWithReleaseLabel": true,
-    "shipit": {
-      "prerelease": false
-    }
+    "@jupiterone/integration-sdk-core": "^12.0.0",
+    "@jupiterone/integration-sdk-dev-tools": "^12.0.0",
+    "@jupiterone/integration-sdk-testing": "^12.0.0"
   }
 }

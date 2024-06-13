@@ -9,6 +9,146 @@ and this project adheres to
 
 # Unreleased
 
+# 12.8.3 - 2024-06-11
+
+- integration-sdk-core: Fix typing in createIntegrationHelpers
+
+# 12.8.1 - 2024-05-17
+
+- Fix publish workflow (republish 12.8.0)
+
+# 12.8.0 - 2024-05-17
+
+- integration-sdk-cli: Export entity schema to graph schema
+- integration-sdk-core: Add createIntegrationHelpers
+
+# 12.7.1 - 2024-05-14
+
+- Add `NO_COLLECTION_METRICS` for disabling data collection metrics
+
+# 12.7.0 - 2024-05-08
+
+- Add expiremental `OnDiskDuplicateKeyTracker`
+- Add asn validator to j1Formats
+- Replace validateEntityWithSchema
+
+# 12.6.0 - 2024-04-24
+
+- http-client: add option to pass body as plain text
+
+# 12.5.1 - 2024-04-24
+
+- entity-validator: republish
+
+# 12.5.0 - 2024-04-18
+
+- entity-validator: first release
+
+## 12.4.1 - 2024-04-11
+
+- updated `json-diff` dependency
+- removed redudant `??` from `hasCachePath` function
+
+## 12.4.0 - 2024-04-09
+
+- http-client: add default timeout handler
+
+## 12.3.1 - 2024-03-28
+
+- http-client: consume body when paginate's response status is 204 to avoid
+  memory leaks
+
+## 12.3.0 - 2024-03-28
+
+- update @jupiterone/data-model
+- @jupiterone/data-model has new restrictions on some classes such as Host
+
+## 12.2.7 - 2024-03-27
+
+- update yarn.lock
+
+## 12.2.6 - 2024-03-27
+
+- http-client: upgrade node-fetch to latest 2.x version (2.7.0)
+
+## 12.2.5 - 2024-03-14
+
+- update http-client README.md
+- http-client: add method to override default response parse in paginate
+- http-client: pass headers to error cause
+
+## 12.2.4 - 2024-03-08
+
+- http-client: fix withBaseUrl method to not encode urls
+
+## 12.2.3 - 2024-03-08
+
+- fix withBaseUrl method on http-client
+- add bodyType option to handle both multipart/form-data and application/json on
+  http-client
+
+## 12.2.2 - 2024-03-04
+
+- Handle standard and non-standard rate limits in BaseAPIClient.
+
+## 12.2.1 - 2024-03-01
+
+- Fix issues related to pagination and token bucket in BaseAPIClient.
+
+## 12.2.0 - 2024-02-23
+
+- Implement BaseAPIClient in http-client package.
+
+## 12.1.0 - 2024-02-21
+
+- Enhanced step summaries to include `encounteredTypeCounts` property.
+
+## 12.0.0 - 2024-02-01
+
+- Added in `collectEncounteredKeys` to invocation config. This will allow keys
+  encountered during the integration to be returned after execution.
+- **breaking** Updated interface for `resultsCallback` in `executeIntegration`
+  to include the entire job summary.
+- Enhanced step summaries to include `startTime`, `endTime`, and `duration`
+  properties.
+
+## 11.8.0 - 2024-01-16
+
+- Added `_rawData` property to entity spec by default. This can be overridden
+  using `schema: { _rawData: { exclude: true } }`.
+
+## 11.7.1 - 2024-01-09
+
+- Updated types for Jest toImplementSpec matcher
+
+## 11.7.0 - 2024-01-09
+
+- Added option to require all implemented steps to have a spec.
+
+## 11.6.0 - 2024-01-09
+
+- Added in `exclude` option to entity schema which can be used to override
+  required properties before validation.
+
+## 11.5.2 - 2023-12-21
+
+- No new changes. Needed to force a new deployment.
+
+## 11.5.1 - 2023-12-20
+
+- No new changes. Needed to force a new deployment.
+
+## 11.5.0 - 2023-12-19
+
+- Introduce `resultsCallback` hook
+- Make `IntegrationEntityData.source` optional
+
+## 11.4.0 - 2023-12-14
+
+- Support Node 20.x
+- Improved logging for upload errors
+- Added `region` and `_key` properties to visualized entities
+
 ## 11.3.1 - 2023-11-28
 
 - Patch to fix issue with deployment pipeline not processing
@@ -1541,13 +1681,13 @@ of the support.jupiterone.io site.
 Old:
 
 ```ts
-getData: <T,>(key: string) => Promise<T>;
+getData: <T>(key: string) => Promise<T>;
 ```
 
 New:
 
 ```ts
-getData: <T,>(key: string) => Promise<T | undefined>;
+getData: <T>(key: string) => Promise<T | undefined>;
 ```
 
 ## 5.8.0 - 2021-02-26

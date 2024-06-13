@@ -6,7 +6,6 @@ import * as zlib from 'zlib';
 
 import {
   createDirectRelationship,
-  createMappedRelationship,
   Entity,
   IntegrationExecutionContext,
   IntegrationInstance,
@@ -15,10 +14,8 @@ import {
   IntegrationInvocationValidationFunction,
   IntegrationLogger,
   IntegrationValidationError,
-  JobState,
   Relationship,
   RelationshipClass,
-  RelationshipDirection,
   StepResultStatus,
 } from '@jupiterone/integration-sdk-core';
 import { InMemoryGraphObjectStore } from '@jupiterone/integration-sdk-private-test-utils';
@@ -34,7 +31,6 @@ import {
 } from '../executeIntegration';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import { createInstanceConfiguration } from './utils/createIntegrationConfig';
-import { IntegrationRuntimeMetric } from '../../metrics';
 
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
@@ -245,7 +241,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -393,7 +393,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-second-step',
@@ -401,7 +405,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'depends-on-second-step',
@@ -410,7 +418,11 @@ describe('executeIntegrationInstance', () => {
             dependsOn: ['my-second-step'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-fourth-step',
@@ -418,7 +430,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.SUCCESS,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -953,147 +969,6 @@ describe('executeIntegrationInstance', () => {
     });
   });
 
-  test('publishes metrics about collected data', async () => {
-    async function executionHandler(jobState: JobState) {
-      const e1 = await jobState.addEntity({
-        _key: 'test',
-        _type: 'test',
-        _class: 'Test',
-      });
-
-      const e2 = await jobState.addEntity({
-        _key: 'test1',
-        _type: 'test1',
-        _class: 'Test',
-      });
-
-      await jobState.addEntities([
-        {
-          _key: 'test2',
-          _type: 'test2',
-          _class: 'Test',
-        },
-        {
-          _key: 'test3',
-          _type: 'test3',
-          _class: 'Test',
-        },
-      ]);
-
-      await jobState.addRelationship(
-        createDirectRelationship({
-          _class: RelationshipClass.HAS,
-          from: e2,
-          to: e1,
-        }),
-      );
-
-      await jobState.addRelationship(
-        createMappedRelationship({
-          _class: RelationshipClass.HAS,
-          _type: 'my_mapping_type',
-          _mapping: {
-            relationshipDirection: RelationshipDirection.REVERSE,
-            targetEntity: {
-              _key: 'b',
-              _type: 'b_entity',
-            },
-            targetFilterKeys: [['something']],
-            sourceEntityKey: 'a',
-          },
-        }),
-      );
-    }
-
-    const config = createInstanceConfiguration({
-      invocationConfig: {
-        integrationSteps: [
-          {
-            id: 'my-step',
-            name: 'My awesome step',
-            entities: [],
-            relationships: [],
-            async executionHandler({ jobState }) {
-              await executionHandler(jobState);
-            },
-          },
-        ],
-      },
-    });
-
-    const publishMetricSpy = jest.spyOn(config.logger, 'publishMetric');
-    await executeIntegrationInstanceWithConfig(config);
-
-    // The first `jobState.addEntity`
-    expect(publishMetricSpy).toHaveBeenCalledWith(
-      {
-        name: IntegrationRuntimeMetric.COLLECTED_ENTITIES,
-        value: 1,
-        dimensions: {
-          entity_type: 'test',
-        },
-      },
-      {
-        logMetric: false,
-      },
-    );
-
-    // From `jobState.addEntities`
-    expect(publishMetricSpy).toHaveBeenCalledWith(
-      {
-        name: IntegrationRuntimeMetric.COLLECTED_ENTITIES,
-        value: 1,
-        dimensions: {
-          entity_type: 'test2',
-        },
-      },
-      {
-        logMetric: false,
-      },
-    );
-
-    expect(publishMetricSpy).toHaveBeenCalledWith(
-      {
-        name: IntegrationRuntimeMetric.COLLECTED_ENTITIES,
-        value: 1,
-        dimensions: {
-          entity_type: 'test3',
-        },
-      },
-      {
-        logMetric: false,
-      },
-    );
-
-    // From `jobState.addRelationship`
-    expect(publishMetricSpy).toHaveBeenCalledWith(
-      {
-        name: IntegrationRuntimeMetric.COLLECTED_RELATIONSHIPS,
-        value: 1,
-        dimensions: {
-          relationship_type: 'test1_has_test',
-        },
-      },
-      {
-        logMetric: false,
-      },
-    );
-
-    // From `jobState.addRelationship` with a mapped relationship
-    expect(publishMetricSpy).toHaveBeenCalledWith(
-      {
-        name: IntegrationRuntimeMetric.COLLECTED_MAPPED_RELATIONSHIPS,
-        value: 1,
-        dimensions: {
-          relationship_type: 'my_mapping_type',
-        },
-      },
-      {
-        logMetric: false,
-      },
-    );
-  });
-
   test('populates partialDatasets type for failed steps', async () => {
     const config = createInstanceConfiguration({
       invocationConfig: {
@@ -1126,7 +1001,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -1184,7 +1063,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_a'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-step-b',
@@ -1192,8 +1075,12 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_b'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             dependsOn: ['my-step-a'],
             status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -1257,16 +1144,24 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_a'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-step-b',
             name: 'My awesome step',
             declaredTypes: ['test_b', 'test_b2'],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             partialTypes: ['test_b2'],
             dependsOn: ['my-step-a'],
             status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -1330,7 +1225,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_a', 'test_a2'],
             partialTypes: ['test_a2'],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-step-b',
@@ -1338,8 +1237,12 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_b'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             dependsOn: ['my-step-a'],
             status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
         ],
         metadata: {
@@ -1401,7 +1304,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_a'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-step-b',
@@ -1409,6 +1316,7 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_b'],
             partialTypes: ['test_b'],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.DISABLED,
           },
         ],
@@ -1474,7 +1382,11 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_a'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.FAILURE,
+            startTime: expect.any(Number),
+            endTime: expect.any(Number),
+            duration: expect.any(Number),
           },
           {
             id: 'my-step-b',
@@ -1482,6 +1394,7 @@ describe('executeIntegrationInstance', () => {
             declaredTypes: ['test_b'],
             partialTypes: [],
             encounteredTypes: [],
+            encounteredTypeCounts: expect.any(Object),
             status: StepResultStatus.DISABLED,
           },
         ],
@@ -1598,7 +1511,11 @@ describe('executeIntegrationInstance', () => {
           declaredTypes: ['test'],
           partialTypes: [],
           encounteredTypes: [],
+          encounteredTypeCounts: expect.any(Object),
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'my-step-2',
@@ -1606,7 +1523,11 @@ describe('executeIntegrationInstance', () => {
           declaredTypes: ['test_2'],
           partialTypes: [],
           encounteredTypes: [],
+          encounteredTypeCounts: expect.any(Object),
           status: StepResultStatus.FAILURE,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
       ],
       metadata: {
@@ -1693,7 +1614,11 @@ describe('executeIntegrationInstance', () => {
           declaredTypes: ['test_1', 'test_1b'],
           partialTypes: ['test_1b'],
           encounteredTypes: [],
+          encounteredTypeCounts: expect.any(Object),
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
         {
           id: 'my-step-2',
@@ -1701,7 +1626,11 @@ describe('executeIntegrationInstance', () => {
           declaredTypes: ['test_2', 'test_2b', 'test_3'],
           partialTypes: ['test_2b', 'test_3'],
           encounteredTypes: [],
+          encounteredTypeCounts: expect.any(Object),
           status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
         },
       ],
       metadata: {
@@ -1765,6 +1694,7 @@ describe('executeIntegrationInstance', () => {
       integrationStepResults: [
         {
           encounteredTypes: ['duplicate_entity'],
+          encounteredTypeCounts: expect.any(Object),
           status: 'failure',
         },
       ],
@@ -1828,11 +1758,13 @@ describe('executeIntegrationInstance', () => {
         {
           id: 'a',
           encounteredTypes: ['duplicate_entity'],
+          encounteredTypeCounts: expect.any(Object),
           status: 'success',
         },
         {
           id: 'b',
           encounteredTypes: [],
+          encounteredTypeCounts: expect.any(Object),
           status: 'failure',
         },
       ],
@@ -1966,6 +1898,139 @@ describe('executeIntegrationInstance', () => {
         displayName: 'HAS',
       },
     ]);
+  });
+
+  test('should call results callback', async () => {
+    const config = createInstanceConfiguration({
+      invocationConfig: {
+        collectEncounteredKeys: true,
+        integrationSteps: [
+          {
+            id: 'hitori',
+            name: 'Fetch Person 1',
+            entities: [
+              {
+                resourceName: 'Test Person',
+                _type: 'test_person_1',
+                _class: 'User',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'person_1',
+                _type: 'test_person_1',
+                _class: 'User',
+              });
+            },
+          },
+          {
+            id: 'futari',
+            name: 'Fetch Person 2',
+            entities: [
+              {
+                resourceName: 'Test Person 2',
+                _type: 'test_person_2',
+                _class: 'User',
+              },
+            ],
+            relationships: [],
+            async executionHandler({ jobState }) {
+              await jobState.addEntity({
+                _key: 'person_2',
+                _type: 'test_person_2',
+                _class: 'User',
+              });
+            },
+          },
+          {
+            id: 'tomodachi',
+            name: 'Build person relationships',
+            entities: [],
+            relationships: [
+              {
+                sourceType: 'test_person_1',
+                targetType: 'test_person_2',
+                _type: 'test_person_1_has_test_person_2',
+                _class: RelationshipClass.HAS,
+              },
+            ],
+            dependsOn: ['hitori', 'futari'],
+            async executionHandler({ jobState }) {
+              await jobState.addRelationship(
+                createDirectRelationship({
+                  fromKey: 'person_1',
+                  fromType: 'test_person',
+                  _class: RelationshipClass.HAS,
+                  toKey: 'person_2',
+                  toType: 'test_person_2',
+                  properties: {
+                    _type: 'test_person_1_has_test_person_2',
+                  },
+                }),
+              );
+            },
+          },
+        ],
+      },
+    });
+
+    const expectedResults: ExecuteIntegrationResult = {
+      integrationStepResults: [
+        {
+          id: 'hitori',
+          name: 'Fetch Person 1',
+          declaredTypes: ['test_person_1'],
+          partialTypes: [],
+          encounteredTypes: ['test_person_1'],
+          encounteredTypeCounts: { test_person_1: 1 },
+          status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        {
+          id: 'futari',
+          name: 'Fetch Person 2',
+          declaredTypes: ['test_person_2'],
+          partialTypes: [],
+          encounteredTypes: ['test_person_2'],
+          encounteredTypeCounts: { test_person_2: 1 },
+          status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
+        },
+        {
+          id: 'tomodachi',
+          name: 'Build person relationships',
+          declaredTypes: ['test_person_1_has_test_person_2'],
+          partialTypes: [],
+          encounteredTypes: ['test_person_1_has_test_person_2'],
+          encounteredTypeCounts: {
+            test_person_1_has_test_person_2: 1,
+          },
+          status: StepResultStatus.SUCCESS,
+          startTime: expect.any(Number),
+          endTime: expect.any(Number),
+          duration: expect.any(Number),
+          dependsOn: ['hitori', 'futari'],
+        },
+      ],
+      encounteredKeys: [['person_1', 'person_2', 'person_1|has|person_2']],
+      metadata: {
+        partialDatasets: {
+          types: [],
+        },
+      },
+    };
+
+    const resultsCallback = jest.fn();
+    await executeIntegrationInstanceWithConfig(config, {
+      resultsCallback,
+    });
+    expect(resultsCallback).toHaveBeenCalledOnce();
+    expect(resultsCallback).toHaveBeenCalledWith(expectedResults);
   });
 });
 

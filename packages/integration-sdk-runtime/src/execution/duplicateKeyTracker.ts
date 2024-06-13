@@ -7,7 +7,14 @@ import {
 import { deepStrictEqual } from 'assert';
 import { BigMap } from './utils/bigMap';
 
-const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2000000;
+const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2_000_000;
+
+export interface DuplicateKeyTracker {
+  getEncounteredKeys(): string[][];
+  registerKey(_key: string): void;
+  getGraphObjectMetadata(_key: string): string | undefined;
+  hasKey(_key: string): boolean;
+}
 
 /**
  * Contains a map of every graph object key to a specific set of metadata about
@@ -16,7 +23,7 @@ const DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE = 2000000;
  * or relationships. We store the `_type` inside the metadata for a fast lookup
  * table.
  */
-export class DuplicateKeyTracker {
+export class InMemoryDuplicateKeyTracker implements DuplicateKeyTracker {
   private readonly graphObjectKeyMap: BigMap<string, string>;
   private readonly normalizationFunction: KeyNormalizationFunction;
 
@@ -26,6 +33,10 @@ export class DuplicateKeyTracker {
     this.graphObjectKeyMap = new BigMap<string, string>(
       DUPLICATE_KEY_TRACKER_DEFAULT_MAP_KEY_SPACE,
     );
+  }
+
+  getEncounteredKeys() {
+    return this.graphObjectKeyMap.keys();
   }
 
   registerKey(_key: string) {

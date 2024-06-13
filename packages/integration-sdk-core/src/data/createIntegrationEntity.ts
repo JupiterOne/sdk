@@ -1,8 +1,9 @@
 import {
   getSchema,
   IntegrationEntitySchema,
-  validateEntityWithSchema,
+  entitySchemas,
 } from '@jupiterone/data-model';
+import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 
 import { IntegrationError } from '../errors';
 import { Entity, EntityRawData } from '../types';
@@ -11,6 +12,9 @@ import { validateRawData } from './rawData';
 import { assignTags, ResourceTagList, ResourceTagMap } from './tagging';
 
 const SUPPORTED_TYPES = ['string', 'number', 'boolean'];
+const VALIDATOR = new EntityValidator({
+  schemas: Object.values(entitySchemas),
+});
 
 /**
  * Properties to be assigned to a generated entity which are declared in code
@@ -57,7 +61,7 @@ export type IntegrationEntityData = {
    * The common properties defined by data model schemas, selected by the
    * `assign._class`, will be found and transferred to the generated entity.
    */
-  source: ProviderSourceData;
+  source?: ProviderSourceData;
 
   /**
    * Literal property assignments. These values will override anything
@@ -92,6 +96,40 @@ export type IntegrationEntityBuilderInput = {
   // integrations.
 };
 
+const validateEntityWithSchema = (entity: GeneratedEntity) => {
+  const { isValid, errors, skippedSchemas } = VALIDATOR.validateEntity(entity);
+
+  const classNotFound = skippedSchemas?.find(
+    (skippedSchema) =>
+      skippedSchema.reason === 'not-found' && skippedSchema.type === 'class',
+  );
+
+  if (classNotFound) {
+    throw new Error(
+      `Could not find schema for class ${classNotFound.schemaId.replace(
+        '#',
+        '',
+      )}!`,
+    );
+  }
+
+  const validationType = skippedSchemas?.find(
+    (skippedSchema) =>
+      skippedSchema.type === 'class' &&
+      skippedSchema.reason === 'type-already-validated',
+  )
+    ? 'type'
+    : 'class';
+
+  if (!isValid) {
+    throw new Error(
+      `Entity fails to validate as ${validationType} '${
+        validationType === 'type' ? entity._type : entity._class
+      }':\n\n${JSON.stringify(errors, null, 2)}`,
+    );
+  }
+};
+
 /**
  * Generates an `Entity` using the provided `entityData`.
  */
@@ -115,7 +153,7 @@ function generateEntity({
   tagProperties,
 }: IntegrationEntityData): GeneratedEntity {
   const _rawData: EntityRawData[] = [];
-  if (Object.entries(source).length > 0) {
+  if (source && Object.entries(source).length > 0) {
     _rawData.push({ name: 'default', rawData: source });
   }
   if (assign._rawData) {
@@ -125,13 +163,13 @@ function generateEntity({
   const _class = Array.isArray(assign._class) ? assign._class : [assign._class];
 
   const entity: GeneratedEntity = {
-    ...whitelistedProviderData(source, _class),
+    ...(source ? whitelistedProviderData(source, _class) : {}),
     ...assign,
     _class,
     _rawData,
   };
 
-  if (entity.createdOn === undefined) {
+  if (entity.createdOn === undefined && source) {
     entity.createdOn =
       (source.createdAt && parseTimePropertyValue(source.createdAt)) ||
       (source.creationDate && parseTimePropertyValue(source.creationDate)) ||
@@ -140,7 +178,7 @@ function generateEntity({
         parseTimePropertyValue(source.creationTimestamp));
   }
 
-  if (entity.active === undefined && source.status) {
+  if (entity.active === undefined && source && source.status) {
     const isActive = new RegExp('(?<!in)active|enabled|online', 'i').test(
       source.status,
     );
@@ -151,8 +189,8 @@ function generateEntity({
     entity.active = isActive
       ? true // if
       : isInactive
-      ? false // else if
-      : undefined; // else
+        ? false // else if
+        : undefined; // else
   }
 
   // Remove transferred `source.tags` property from the entity. `tags` is in the
@@ -160,7 +198,7 @@ function generateEntity({
   // `assignTags` will take care of preparing `tags` properly.
   delete entity.tags;
 
-  assignTags(entity, source.tags, tagProperties);
+  assignTags(entity, source?.tags, tagProperties);
 
   // `assignTags` may populate `displayName` from the `source.tags`. When there
   // is an `assign.displayName`, use that instead assuming that an assigned

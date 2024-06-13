@@ -4,7 +4,14 @@ import { configFieldsFlow } from './configFieldsFlow';
 import { stepsFlow } from './stepsFlow';
 import { generateRelationshipName } from './helpers';
 import { generateRelationshipType } from '@jupiterone/integration-sdk-core';
-import { yarnFormat, yarnInstall, yarnLint } from './actions';
+import {
+  npmFormat,
+  npmInstall,
+  npmLint,
+  yarnFormat,
+  yarnInstall,
+  yarnLint,
+} from './actions';
 import { kebabCase } from 'lodash';
 import checkboxPlus from 'inquirer-checkbox-plus-prompt';
 import path from 'path';
@@ -19,9 +26,15 @@ function newIntegration(plop: NodePlopAPI) {
   });
 
   plop.setHelper('generateRelationshipName', generateRelationshipName);
+  // NPM
+  plop.setActionType('npmFormat', npmFormat);
+  plop.setActionType('npmInstall', npmInstall);
+  plop.setActionType('npmLint', npmLint);
+  // Yarn
   plop.setActionType('yarnFormat', yarnFormat);
   plop.setActionType('yarnInstall', yarnInstall);
   plop.setActionType('yarnLint', yarnLint);
+
   plop.setPrompt('checkbox-plus', checkboxPlus);
 
   plop.setGenerator('new:integration', {
@@ -66,6 +79,14 @@ function newIntegration(plop: NodePlopAPI) {
         },
       });
 
+      const { packageManager } = await inquirer.prompt({
+        type: 'list',
+        name: 'packageManager',
+        message: 'Which package manager do you want to use?',
+        choices: ['npm', 'yarn'],
+        default: 'npm',
+      });
+
       const configFields = await configFieldsFlow(inquirer);
       const entities = await entitiesFlow(inquirer, vendorName);
       let relationships: Relationship[] = [];
@@ -83,6 +104,7 @@ function newIntegration(plop: NodePlopAPI) {
         entities,
         relationships,
         steps,
+        packageManager,
       };
     },
     actions: function (data) {
@@ -90,10 +112,19 @@ function newIntegration(plop: NodePlopAPI) {
         return [];
       }
 
+      const { packageManager } = data;
+
+      // @jupiterone/graph-foo -> graph-foo
+      // graph-foo -> graph-foo
+      const directoryName = path.join(
+        process.cwd(),
+        path.basename(data.packageName),
+      );
+
       const actions: any[] = [];
       actions.push({
         type: 'addMany',
-        destination: '.',
+        destination: directoryName,
         base: path.join(__dirname, '/template'),
         templateFiles: path.join(__dirname + '/template/**'),
         globOptions: { dot: true },
@@ -104,7 +135,10 @@ function newIntegration(plop: NodePlopAPI) {
       for (const step of data.steps) {
         actions.push({
           type: 'add',
-          path: path.normalize(`src/steps/${kebabCase(step.name)}/index.ts`),
+          path: path.join(
+            directoryName,
+            path.normalize(`src/steps/${kebabCase(step.name)}/index.ts`),
+          ),
           templateFile: path.join(__dirname, 'stepTemplate/index.ts.hbs'),
           data: step,
           force: true,
@@ -112,20 +146,20 @@ function newIntegration(plop: NodePlopAPI) {
       }
 
       actions.push({
-        type: 'yarnInstall',
-        path: '.',
+        type: packageManager === 'yarn' ? 'yarnInstall' : 'npmInstall',
+        path: directoryName,
         verbose: true,
       });
 
       actions.push({
-        type: 'yarnFormat',
-        path: '.',
+        type: packageManager === 'yarn' ? 'yarnFormat' : 'npmFormat',
+        path: directoryName,
         verbose: true,
       });
 
       actions.push({
-        type: 'yarnLint',
-        path: '.',
+        type: packageManager === 'yarn' ? 'yarnLint' : 'npmLint',
+        path: directoryName,
         verbose: true,
       });
 

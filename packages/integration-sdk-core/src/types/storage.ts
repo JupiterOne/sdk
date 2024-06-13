@@ -34,6 +34,8 @@ export interface GraphObjectStore {
 
   findEntity(_key: string | undefined): Promise<Entity | undefined>;
 
+  hasKey?: (_key: string | undefined) => boolean;
+
   iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,

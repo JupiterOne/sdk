@@ -1,0 +1,13 @@
+{{#with template}}
+{{#each steps}}
+import { {{camelCase entity.name}}Steps } from './{{id}}';
+{{/each}}
+
+const integrationSteps = [
+{{#each steps}}
+  ...{{camelCase entity.name}}Steps,
+{{/each}}
+];
+
+export { integrationSteps };
+{{/with}}

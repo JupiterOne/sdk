@@ -1,5 +1,13 @@
 name: Build
-on: [push, pull_request]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -12,23 +20,26 @@ jobs:
 
     steps:
       - name: Check out code repository source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - id: setup-node
         name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: yarn
+          cache: npm
+          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: npm ci --include=optional
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
 
       - name: Run tests
-        run: yarn test:ci
+        run: npm run test:ci
 
       - name: Run build
-        run: yarn build:dist
+        run: npm run build:dist
 
   # Publishing is done in a separate job to allow
   # for all matrix builds to complete.
@@ -41,34 +52,36 @@ jobs:
 
     steps:
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
 
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 18.x
-          cache: yarn
+          cache: npm
+          registry-url: https://registry.npmjs.org
 
       # Fetch tags and describe the commit before the merge commit
       # to see if it's a version publish
       - name: Fetch tags
+        id: tags
         run: |
           git fetch --tags
           if git describe --exact-match --match "v[0-9]*.[0-9]*.[0-9]*" HEAD^2
           then
             echo "Found version commit tag. Publishing."
-            echo "publish=true" >> $GITHUB_ENV
+            echo "publish=true" >> $GITHUB_OUTPUT
           else
             echo "Version commit tag not found. Not publishing."
           fi
 
       - name: Publish
-        if: env.publish == 'true'
+        if: steps.tags.outputs.publish == 'true'
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
-          yarn --frozen-lock-file
-          yarn lerna publish from-package --no-verify-access --yes
+          npm ci
+          npm exec -c "lerna publish from-package --no-verify-access --yes"

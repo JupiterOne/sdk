@@ -1,7 +1,4 @@
 import {
-  AfterAddEntityHookFunction,
-  AfterAddRelationshipHookFunction,
-  Entity,
   ExecutionContext,
   ExecutionHistory,
   IntegrationInstance,
@@ -12,12 +9,12 @@ import {
   IntegrationStepResult,
   InvocationConfig,
   PartialDatasets,
-  Relationship,
   StepExecutionContext,
   StepResultStatus,
 } from '@jupiterone/integration-sdk-core';
 
 import {
+  DEFAULT_STORAGE_DIRECTORY_NAME,
   getRootStorageDirectorySize,
   isCompressionEnabled,
   isRootStorageDirectoryPresent,
@@ -29,13 +26,9 @@ import {
   registerIntegrationLoggerEventHandlers,
   unregisterIntegrationLoggerEventHandlers,
 } from '../logger';
-import {
-  publishEntitiesCollectedMetric,
-  publishMappedRelationshipsCollectedMetric,
-  publishRelationshipsCollectedMetric,
-  timeOperation,
-} from '../metrics';
+import { timeOperation } from '../metrics';
 import { FileSystemGraphObjectStore, GraphObjectStore } from '../storage';
+import path from 'path';
 import { createIntegrationInstanceForLocalExecution } from './instance';
 import { MemoryDataStore } from './jobState';
 import {
@@ -48,11 +41,15 @@ import { getMaskedFields } from './utils/getMaskedFields';
 import { trimStringValues } from './utils/trimStringValues';
 import { validateStepStartStates } from './validation';
 import { processDeclaredTypesDiff } from './utils/processDeclaredTypesDiff';
-import { DuplicateKeyTracker } from './duplicateKeyTracker';
+import {
+  DuplicateKeyTracker,
+  InMemoryDuplicateKeyTracker,
+} from './duplicateKeyTracker';
 import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
 
 export interface ExecuteIntegrationResult {
   integrationStepResults: IntegrationStepResult[];
+  encounteredKeys?: string[][];
   metadata: {
     partialDatasets: PartialDatasets;
   };
@@ -62,13 +59,14 @@ export interface ExecuteIntegrationOptions {
   enableSchemaValidation?: boolean;
   graphObjectStore?: GraphObjectStore;
   createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
+  resultsCallback?: (results: ExecuteIntegrationResult) => Promise<void>;
   pretty?: boolean;
 }
 
-export interface ExecuteWithContextOptions {
-  graphObjectStore?: GraphObjectStore;
-  createStepGraphObjectDataUploader?: CreateStepGraphObjectDataUploaderFunction;
-}
+type ExecuteWithContextOptions = Pick<
+  ExecuteIntegrationOptions,
+  'graphObjectStore' | 'resultsCallback' | 'createStepGraphObjectDataUploader'
+>;
 
 const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
 
@@ -251,23 +249,46 @@ export async function executeWithContext<
       const {
         graphObjectStore = new FileSystemGraphObjectStore(),
         createStepGraphObjectDataUploader,
+        resultsCallback,
       } = options;
+
+      let duplicateKeyTracker: DuplicateKeyTracker =
+        new InMemoryDuplicateKeyTracker(config.normalizeGraphObjectKey);
+
+      if (process.env.USE_ON_DISK_DKT) {
+        // conditionally require so the dependency can remain optional
+        try {
+          const {
+            OnDiskDuplicateKeyTracker,
+          } = require('./onDiskDuplicateKeyTracker');
+          duplicateKeyTracker = new OnDiskDuplicateKeyTracker({
+            filepath: path.join(
+              process.cwd(),
+              DEFAULT_STORAGE_DIRECTORY_NAME,
+              'key-tracker.db',
+            ),
+          });
+        } catch (err) {
+          logger.warn(
+            { err },
+            'Tried to require OnDiskDuplicateKeyTracker, but failed. Falling back to InMemoryDuplicateKeyTracker',
+          );
+        }
+      }
 
       const integrationStepResults = await executeSteps({
         executionContext: context,
         integrationSteps: config.integrationSteps,
         stepStartStates,
         stepConcurrency: config.stepConcurrency,
-        duplicateKeyTracker: new DuplicateKeyTracker(
-          config.normalizeGraphObjectKey,
-        ),
+        duplicateKeyTracker,
         graphObjectStore,
         dataStore: new MemoryDataStore(),
         createStepGraphObjectDataUploader,
         beforeAddEntity: config.beforeAddEntity,
         beforeAddRelationship: config.beforeAddRelationship,
-        afterAddEntity: createAfterAddEntityInternalHook(logger),
-        afterAddRelationship: createAfterAddRelationshipInternalHook(logger),
+        afterAddEntity: undefined,
+        afterAddRelationship: undefined,
         dependencyGraphOrder: config.dependencyGraphOrder,
         executionHandlerWrapper: config.executionHandlerWrapper,
       });
@@ -278,6 +299,9 @@ export async function executeWithContext<
 
       const summary: ExecuteIntegrationResult = {
         integrationStepResults,
+        encounteredKeys: config.collectEncounteredKeys
+          ? duplicateKeyTracker.getEncounteredKeys()
+          : undefined,
         metadata: {
           partialDatasets,
         },
@@ -287,6 +311,17 @@ export async function executeWithContext<
         path: 'summary.json',
         data: summary,
       });
+
+      if (resultsCallback != null) {
+        try {
+          await resultsCallback(summary);
+        } catch (err) {
+          context.logger.warn(
+            err,
+            'Unable to run results callback for integration job',
+          );
+        }
+      }
 
       processDeclaredTypesDiff(summary, (step, undeclaredTypes) => {
         if (
@@ -325,47 +360,4 @@ export async function executeWithContext<
       }
     }
   }
-}
-
-/**
- * Internal hook called after an entity has been fully added to the job state.
- * This hook publishes a count custom metric for the entity added.
- */
-function createAfterAddEntityInternalHook<
-  TExecutionContext extends ExecutionContext,
->(logger: IntegrationLogger): AfterAddEntityHookFunction<TExecutionContext> {
-  return (_: TExecutionContext, e: Entity) => {
-    publishEntitiesCollectedMetric({
-      logger,
-      entityType: e._type,
-    });
-
-    return e;
-  };
-}
-
-/**
- * Internal hook called after a relationship has been fully added to the job
- * state. This hook publishes a count custom metric for the relationship added.
- */
-function createAfterAddRelationshipInternalHook<
-  TExecutionContext extends ExecutionContext,
->(
-  logger: IntegrationLogger,
-): AfterAddRelationshipHookFunction<TExecutionContext> {
-  return (_: TExecutionContext, r: Relationship) => {
-    if (r._mapping) {
-      publishMappedRelationshipsCollectedMetric({
-        logger,
-        relationshipType: r._type,
-      });
-    } else {
-      publishRelationshipsCollectedMetric({
-        logger,
-        relationshipType: r._type,
-      });
-    }
-
-    return r;
-  };
 }

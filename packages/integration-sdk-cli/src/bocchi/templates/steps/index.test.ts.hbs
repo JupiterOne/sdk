@@ -1,0 +1,41 @@
+{{#with step}}
+import { executeStepWithDependencies } from '@jupiterone/integration-sdk-testing';
+
+import { buildStepTestConfigForStep } from '../../../test/config';
+import { Recording, setupProjectRecording } from '../../../test/recording';
+import { Steps } from '../constants';
+
+let recording: Recording;
+afterEach(async () => {
+  await recording.stop();
+});
+
+test('{{kebabCase id}}', async () => {
+  recording = setupProjectRecording({
+    directory: __dirname,
+    name: '{{kebabCase id}}',
+  });
+
+  const stepConfig = buildStepTestConfigForStep(Steps.{{constantCase id}});
+  const stepResult = await executeStepWithDependencies(stepConfig);
+  expect(stepResult).toMatchStepMetadata(stepConfig);
+});
+
+{{#if directRelationships}}
+{{#with (getDirectRelationships this)}}
+{{#each this}}
+test('build-{{kebabCase sourceStep.entity.name}}-{{kebabCase targetStep.entity.name}}-relationships', async () => {
+  recording = setupProjectRecording({
+    directory: __dirname,
+    name: 'build-{{kebabCase sourceStep.entity.name}}-{{kebabCase targetStep.entity.name}}-relationships',
+  });
+
+  const stepConfig = buildStepTestConfigForStep(Steps.BUILD_{{constantCase sourceStep.entity.name}}_{{constantCase targetStep.entity.name}}_RELATIONSHIPS);
+  const stepResult = await executeStepWithDependencies(stepConfig);
+  expect(stepResult).toMatchStepMetadata(stepConfig);
+});
+
+{{/each}}
+{{/with}}
+{{/if}}
+{{/with}}
