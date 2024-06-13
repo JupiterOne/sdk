@@ -495,7 +495,11 @@ export function executeStepDependencyGraph<
           workingGraph.getNodeData(stepId),
           err,
         );
-        updateStepResultStatus(stepId, StepResultStatus.FAILURE, typeTracker);
+        updateStepResultStatus({
+          stepId,
+          status: StepResultStatus.FAILURE,
+          typeTracker,
+        });
       }
     }
     async function forceFlushEverything() {
@@ -539,11 +543,11 @@ export function executeStepDependencyGraph<
             workingGraph.getNodeData(lastStep),
             err,
           );
-          updateStepResultStatus(
-            lastStep,
-            StepResultStatus.FAILURE,
+          updateStepResultStatus({
+            stepId: lastStep,
+            status: StepResultStatus.FAILURE,
             typeTracker,
-          );
+          });
         }
       }
     }
