@@ -159,7 +159,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async addEntities(
     stepId: string,
     newEntities: Entity[],
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onEntitiesFlushed?: (
+      entities: Entity[],
+      stepsInvolved?: string[],
+    ) => Promise<void>,
   ) {
     await this.localGraphObjectStore.addEntities(stepId, newEntities);
 
@@ -174,7 +177,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async addRelationships(
     stepId: string,
     newRelationships: Relationship[],
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onRelationshipsFlushed?: (
+      relationships: Relationship[],
+      stepsInvolved?: string[],
+    ) => Promise<void>,
   ) {
     await this.localGraphObjectStore.addRelationships(stepId, newRelationships);
 
@@ -235,8 +241,14 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   }
 
   async flush(
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onEntitiesFlushed?: (
+      entities: Entity[],
+      stepsInvolved?: string[],
+    ) => Promise<void>,
+    onRelationshipsFlushed?: (
+      relationships: Relationship[],
+      stepsInvolved?: string[],
+    ) => Promise<void>,
   ) {
     await Promise.all([
       this.flushEntitiesToDisk(onEntitiesFlushed),
@@ -245,7 +257,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   }
 
   async flushEntitiesToDisk(
-    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onEntitiesFlushed?: (
+      entities: Entity[],
+      stepsInvolved?: string[],
+    ) => Promise<void>,
   ) {
     await this.lockOperation(async () => {
       const entitiesByStep = this.localGraphObjectStore.collectEntitiesByStep();
@@ -295,13 +310,19 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       }
 
       if (onEntitiesFlushed) {
-        await onEntitiesFlushed(entitiesToUpload);
+        await onEntitiesFlushed(
+          entitiesToUpload,
+          Array.from(entitiesByStep.keys()),
+        );
       }
     });
   }
 
   async flushRelationshipsToDisk(
-    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    onRelationshipsFlushed?: (
+      relationships: Relationship[],
+      stepsInvolved?: string[],
+    ) => Promise<void>,
   ) {
     await this.lockOperation(async () => {
       const relationshipsByStep =
@@ -340,7 +361,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       }
 
       if (onRelationshipsFlushed) {
-        await onRelationshipsFlushed(relationshipsToUpload);
+        await onRelationshipsFlushed(
+          relationshipsToUpload,
+          Array.from(relationshipsByStep.keys()),
+        );
       }
     });
   }

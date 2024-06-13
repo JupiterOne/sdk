@@ -98,7 +98,16 @@ export class IntegrationLocalConfigFieldMissingError extends IntegrationError {
     });
   }
 }
-
+export class UploadError extends IntegrationError {
+  readonly stepsInvolved: string[] | undefined;
+  constructor(message: string, stepsInvolved?: string[]) {
+    super({
+      code: 'UPLOAD_ERROR',
+      message,
+    });
+    this.stepsInvolved = stepsInvolved;
+  }
+}
 export class IntegrationLocalConfigFieldTypeMismatchError extends IntegrationError {
   constructor(message: string) {
     super({
