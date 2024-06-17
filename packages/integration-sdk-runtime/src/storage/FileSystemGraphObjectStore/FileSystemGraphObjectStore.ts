@@ -251,8 +251,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     ) => Promise<void>,
   ) {
     await Promise.all([
-      this.flushEntitiesToDisk(onEntitiesFlushed),
-      this.flushRelationshipsToDisk(onRelationshipsFlushed),
+      this.flushEntitiesToDisk(onEntitiesFlushed, true),
+      this.flushRelationshipsToDisk(onRelationshipsFlushed, true),
     ]);
   }
 
@@ -261,8 +261,18 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       entities: Entity[],
       stepsInvolved?: string[],
     ) => Promise<void>,
+    force: Boolean = false,
   ) {
     await this.lockOperation(async () => {
+      if (!force) {
+        if (
+          this.localGraphObjectStore.getTotalEntitySizeInBytes() <
+          this.graphObjectBufferThresholdInBytes
+        ) {
+          return;
+        }
+      }
+
       const entitiesByStep = this.localGraphObjectStore.collectEntitiesByStep();
       let entitiesToUpload: Entity[] = [];
       for (const [stepId, entities] of entitiesByStep) {
@@ -323,8 +333,17 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       relationships: Relationship[],
       stepsInvolved?: string[],
     ) => Promise<void>,
+    force: Boolean = false,
   ) {
     await this.lockOperation(async () => {
+      if (!force) {
+        if (
+          this.localGraphObjectStore.getTotalRelationshipSizeInBytes() <
+          this.graphObjectBufferThresholdInBytes
+        ) {
+          return;
+        }
+      }
       const relationshipsByStep =
         this.localGraphObjectStore.collectRelationshipsByStep();
       let relationshipsToUpload: Relationship[] = [];
