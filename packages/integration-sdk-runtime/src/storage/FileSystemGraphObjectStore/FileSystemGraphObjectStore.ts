@@ -152,9 +152,6 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         integrationStepsToGraphObjectIndexMetadataMap(params.integrationSteps);
     }
   }
-  getStepsStored() {
-    return this.localGraphObjectStore.getStepsStored();
-  }
 
   async addEntities(
     stepId: string,
@@ -264,13 +261,13 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     force: Boolean = false,
   ) {
     await this.lockOperation(async () => {
-      if (!force) {
-        if (
-          this.localGraphObjectStore.getTotalEntitySizeInBytes() <
+      // Do not flush entities to disk if we haven't reached the `graphObjectBufferThresholdInBytes` of data in memory or if we don't force this process (when all the steps are completed)
+      if (
+        !force &&
+        this.localGraphObjectStore.getTotalEntitySizeInBytes() <
           this.graphObjectBufferThresholdInBytes
-        ) {
-          return;
-        }
+      ) {
+        return;
       }
 
       const entitiesByStep = this.localGraphObjectStore.collectEntitiesByStep();
@@ -336,13 +333,13 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     force: Boolean = false,
   ) {
     await this.lockOperation(async () => {
-      if (!force) {
-        if (
-          this.localGraphObjectStore.getTotalRelationshipSizeInBytes() <
+      // Do not flush relationships to disk if we haven't reached the `graphObjectBufferThresholdInBytes` of data in memory or if we don't force this process (when all the steps are completed)
+      if (
+        !force &&
+        this.localGraphObjectStore.getTotalRelationshipSizeInBytes() <
           this.graphObjectBufferThresholdInBytes
-        ) {
-          return;
-        }
+      ) {
+        return;
       }
       const relationshipsByStep =
         this.localGraphObjectStore.collectRelationshipsByStep();
