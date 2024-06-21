@@ -175,17 +175,11 @@ export function createStepJobState({
       });
     }
 
-    await graphObjectStore.addEntities(
-      stepId,
-      entities,
-      async (entities, stepsInvolved) =>
-        uploader?.enqueue(
-          {
-            entities,
-            relationships: [],
-          },
-          stepsInvolved,
-        ),
+    await graphObjectStore.addEntities(stepId, entities, async (entities) =>
+      uploader?.enqueue({
+        entities,
+        relationships: [],
+      }),
     );
 
     if (afterAddEntity) {
@@ -226,14 +220,11 @@ export function createStepJobState({
     await graphObjectStore.addRelationships(
       stepId,
       relationships,
-      async (relationships, stepsInvolved) =>
-        uploader?.enqueue(
-          {
-            entities: [],
-            relationships,
-          },
-          stepsInvolved,
-        ),
+      async (relationships) =>
+        uploader?.enqueue({
+          entities: [],
+          relationships,
+        }),
     );
 
     if (afterAddRelationship) {
@@ -291,22 +282,16 @@ export function createStepJobState({
 
     flush: () =>
       graphObjectStore.flush(
-        async (entities, stepsInvolved) =>
-          uploader?.enqueue(
-            {
-              entities,
-              relationships: [],
-            },
-            stepsInvolved,
-          ),
-        async (relationships, stepsInvolved) =>
-          uploader?.enqueue(
-            {
-              entities: [],
-              relationships,
-            },
-            stepsInvolved,
-          ),
+        async (entities) =>
+          uploader?.enqueue({
+            entities,
+            relationships: [],
+          }),
+        async (relationships) =>
+          uploader?.enqueue({
+            entities: [],
+            relationships,
+          }),
       ),
 
     async waitUntilUploadsComplete() {

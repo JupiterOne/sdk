@@ -146,9 +146,17 @@ export function executeStepDependencyGraph<
     startTime?: number;
     endTime?: number;
     duration?: number;
+    partialTypes?: string[];
   }) {
-    const { stepId, status, typeTracker, startTime, endTime, duration } =
-      params;
+    const {
+      stepId,
+      status,
+      typeTracker,
+      startTime,
+      endTime,
+      duration,
+      partialTypes,
+    } = params;
     const existingResult = stepResultsMap.get(stepId);
     if (existingResult) {
       stepResultsMap.set(stepId, {
@@ -163,6 +171,7 @@ export function executeStepDependencyGraph<
         startTime,
         endTime,
         duration,
+        partialTypes: existingResult.partialTypes.concat(partialTypes ?? []),
       });
     }
   }
@@ -418,7 +427,7 @@ export function executeStepDependencyGraph<
 
         status = StepResultStatus.FAILURE;
       }
-
+      let possibleAdditionalPartialTypes: string[] | undefined = [];
       if (context.jobState.waitUntilUploadsComplete) {
         try {
           // Failing to upload all integration data should not be considered a
@@ -426,11 +435,10 @@ export function executeStepDependencyGraph<
           // and move on with our lives!
           await context.jobState.waitUntilUploadsComplete();
         } catch (err) {
+          context.logger.stepFailure(step, err);
+          status = StepResultStatus.FAILURE;
           if (err instanceof UploadError) {
-            failAllStepsWithError(err.stepsInvolved, err);
-          } else {
-            context.logger.stepFailure(step, err);
-            status = StepResultStatus.FAILURE;
+            possibleAdditionalPartialTypes = err.typesInvolved;
           }
         }
       }
@@ -442,6 +450,7 @@ export function executeStepDependencyGraph<
         startTime,
         endTime: Date.now(),
         duration: Date.now() - startTime,
+        partialTypes: possibleAdditionalPartialTypes,
       });
       enqueueLeafSteps();
     }
@@ -489,19 +498,7 @@ export function executeStepDependencyGraph<
 
       return status;
     }
-    function failAllStepsWithError(steps, err) {
-      for (const stepId of steps) {
-        executionContext.logger.stepFailure(
-          workingGraph.getNodeData(stepId),
-          err,
-        );
-        updateStepResultStatus({
-          stepId,
-          status: StepResultStatus.FAILURE,
-          typeTracker,
-        });
-      }
-    }
+
     async function forceFlushEverything() {
       /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
        * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
@@ -512,37 +509,36 @@ export function executeStepDependencyGraph<
         uploader = createStepGraphObjectDataUploader(lastStep);
       }
       await graphObjectStore.flush(
-        async (entities, stepsInvolved) =>
+        async (entities) =>
           entities.length
-            ? uploader?.enqueue(
-                {
-                  entities,
-                  relationships: [],
-                },
-                stepsInvolved,
-              )
+            ? uploader?.enqueue({
+                entities,
+                relationships: [],
+              })
             : undefined,
-        async (relationships, stepsInvolved) =>
+        async (relationships) =>
           relationships.length
-            ? uploader?.enqueue(
-                {
-                  entities: [],
-                  relationships,
-                },
-                stepsInvolved,
-              )
+            ? uploader?.enqueue({
+                entities: [],
+                relationships,
+              })
             : undefined,
       );
       try {
         await uploader?.waitUntilUploadsComplete();
       } catch (err) {
+        executionContext.logger.stepFailure(
+          workingGraph.getNodeData(lastStep),
+          err,
+        );
         if (err instanceof UploadError) {
-          failAllStepsWithError(err.stepsInvolved, err);
+          updateStepResultStatus({
+            stepId: lastStep,
+            status: StepResultStatus.FAILURE,
+            typeTracker,
+            partialTypes: err.typesInvolved, //We mark as partial all types related to the failed uploads
+          });
         } else {
-          executionContext.logger.stepFailure(
-            workingGraph.getNodeData(lastStep),
-            err,
-          );
           updateStepResultStatus({
             stepId: lastStep,
             status: StepResultStatus.FAILURE,

@@ -10,10 +10,7 @@ import { randomUUID as uuid } from 'crypto';
 
 export interface StepGraphObjectDataUploader {
   stepId: string;
-  enqueue: (
-    graphObjectData: FlushedGraphObjectData,
-    stepsInvolved?: string[],
-  ) => Promise<void>;
+  enqueue: (graphObjectData: FlushedGraphObjectData) => Promise<void>;
   waitUntilUploadsComplete: () => Promise<void>;
 }
 
@@ -40,10 +37,10 @@ export function createQueuedStepGraphObjectDataUploader({
 
   let completed = false;
   const uploadErrors: Error[] = [];
-  const stepsInvolvedInFailures = new Set<string>();
+  const typesInvolvedInFailures = new Set<string>();
   return {
     stepId,
-    async enqueue(graphObjectData, stepsInvolved) {
+    async enqueue(graphObjectData) {
       if (completed) {
         // This step has already called ran `waitUntilUploadsComplete`, so we
         // do not want to allow any additional enqueuing.
@@ -78,13 +75,17 @@ export function createQueuedStepGraphObjectDataUploader({
           // The JupiterOne synchronization should be resilient enough to handle
           // cases where this could cause an issue (e.g. a relationship getting
           // uploaded that references an entity that failed to upload).
-          if (stepsInvolved) {
-            stepsInvolved.forEach(
-              stepsInvolvedInFailures.add,
-              stepsInvolvedInFailures,
+          uploadErrors.push(err);
+          if (graphObjectData) {
+            graphObjectData.entities.forEach(
+              (entity) => typesInvolvedInFailures.add(entity._type),
+              typesInvolvedInFailures,
+            );
+            graphObjectData.relationships.forEach(
+              (relationship) => typesInvolvedInFailures.add(relationship._type),
+              typesInvolvedInFailures,
             );
           }
-          uploadErrors.push(err);
         });
     },
 
@@ -106,7 +107,7 @@ export function createQueuedStepGraphObjectDataUploader({
           `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=${uploadErrors.join(
             ',',
           )})`,
-          Array.from(stepsInvolvedInFailures.values()),
+          Array.from(typesInvolvedInFailures.values()),
         );
       }
     },
