@@ -17,19 +17,13 @@ export interface GraphObjectStore {
   addEntities(
     stepId: string,
     newEntities: Entity[],
-    onEntitiesFlushed?: (
-      entities: Entity[],
-      stepsInvolved?: string[],
-    ) => Promise<void>,
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
   ): Promise<void>;
 
   addRelationships(
     stepId: string,
     newRelationships: Relationship[],
-    onRelationshipsFlushed?: (
-      relationships: Relationship[],
-      stepsInvolved?: string[],
-    ) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
 
   findEntity(_key: string | undefined): Promise<Entity | undefined>;
@@ -47,14 +41,8 @@ export interface GraphObjectStore {
   ): Promise<void>;
 
   flush(
-    onEntitiesFlushed?: (
-      entities: Entity[],
-      stepsInvolved?: string[],
-    ) => Promise<void>,
-    onRelationshipsFlushed?: (
-      relationships: Relationship[],
-      stepsInvolved?: string[],
-    ) => Promise<void>,
+    onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ): Promise<void>;
 
   getIndexMetadataForGraphObjectType?: (

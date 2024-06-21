@@ -99,13 +99,13 @@ export class IntegrationLocalConfigFieldMissingError extends IntegrationError {
   }
 }
 export class UploadError extends IntegrationError {
-  readonly stepsInvolved: string[] | undefined;
-  constructor(message: string, stepsInvolved?: string[]) {
+  readonly typesInvolved: string[] | undefined;
+  constructor(message: string, typesInvolved?: string[]) {
     super({
       code: 'UPLOAD_ERROR',
       message,
     });
-    this.stepsInvolved = stepsInvolved;
+    this.typesInvolved = typesInvolved;
   }
 }
 export class IntegrationLocalConfigFieldTypeMismatchError extends IntegrationError {
