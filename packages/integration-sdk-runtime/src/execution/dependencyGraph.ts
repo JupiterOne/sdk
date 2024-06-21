@@ -146,7 +146,7 @@ export function executeStepDependencyGraph<
     startTime?: number;
     endTime?: number;
     duration?: number;
-    partialTypes?: string[];
+    partialTypesToForce?: string[];
   }) {
     const {
       stepId,
@@ -155,7 +155,7 @@ export function executeStepDependencyGraph<
       startTime,
       endTime,
       duration,
-      partialTypes,
+      partialTypesToForce,
     } = params;
     const existingResult = stepResultsMap.get(stepId);
     if (existingResult) {
@@ -171,7 +171,7 @@ export function executeStepDependencyGraph<
         startTime,
         endTime,
         duration,
-        partialTypes: existingResult.partialTypes.concat(partialTypes ?? []),
+        partialTypesToForce: partialTypesToForce,
       });
     }
   }
@@ -450,7 +450,7 @@ export function executeStepDependencyGraph<
         startTime,
         endTime: Date.now(),
         duration: Date.now() - startTime,
-        partialTypes: possibleAdditionalPartialTypes,
+        partialTypesToForce: possibleAdditionalPartialTypes,
       });
       enqueueLeafSteps();
     }
@@ -536,7 +536,7 @@ export function executeStepDependencyGraph<
             stepId: lastStep,
             status: StepResultStatus.FAILURE,
             typeTracker,
-            partialTypes: err.typesInvolved, //We mark as partial all types related to the failed uploads
+            partialTypesToForce: err.typesInvolved, //We mark as partial all types related to the failed uploads
           });
         } else {
           updateStepResultStatus({
