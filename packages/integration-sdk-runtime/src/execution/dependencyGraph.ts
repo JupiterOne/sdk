@@ -427,7 +427,7 @@ export function executeStepDependencyGraph<
 
         status = StepResultStatus.FAILURE;
       }
-      let possibleAdditionalPartialTypes: string[] | undefined = [];
+      let possibleAdditionalPartialTypes: string[] | undefined = undefined;
       if (context.jobState.waitUntilUploadsComplete) {
         try {
           // Failing to upload all integration data should not be considered a
