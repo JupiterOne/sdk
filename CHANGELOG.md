@@ -9,6 +9,12 @@ and this project adheres to
 
 # Unreleased
 
+# 13.0.0 - 2024-06-24
+
+- Stop flushing after a step completes.
+- General flushing optimizations.
+- Mark as partials all types releated to failed uploads.
+
 # 12.8.3 - 2024-06-11
 
 - integration-sdk-core: Fix typing in createIntegrationHelpers
