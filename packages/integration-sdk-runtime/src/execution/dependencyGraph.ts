@@ -171,7 +171,9 @@ export function executeStepDependencyGraph<
         startTime,
         endTime,
         duration,
-        partialTypes: existingResult.partialTypes.concat(partialTypes ?? []),
+        partialTypes: Array.from(
+          new Set(existingResult.partialTypes.concat(partialTypes ?? [])),
+        ),
       });
     }
   }
