@@ -98,7 +98,7 @@ describe('flushEntitiesToDisk', () => {
     const entities = times(25, () => createTestEntity({ _type: entityType }));
     await store.addEntities(storageDirectoryPath, entities);
 
-    await store.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk(undefined, true);
 
     const entitiesDirectory = path.join(
       getRootStorageDirectory(),
@@ -147,7 +147,7 @@ describe('flushEntitiesToDisk', () => {
       graphObjectBufferThresholdInBytes: getSizeOfObject(entities),
     });
     await store.addEntities(storageDirectoryPath, entities);
-    await store.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk(undefined, true);
 
     const entitiesDirectory = path.join(
       getRootStorageDirectory(),
@@ -183,7 +183,7 @@ describe('flushRelationshipsToDisk', () => {
     );
     await store.addRelationships(storageDirectoryPath, relationships);
 
-    await store.flushRelationshipsToDisk();
+    await store.flushRelationshipsToDisk(undefined, true);
 
     const relationshipsDirectory = path.join(
       getRootStorageDirectory(),
@@ -233,7 +233,7 @@ describe('flushRelationshipsToDisk', () => {
       graphObjectBufferThresholdInBytes: getSizeOfObject(relationships),
     });
     await store.addRelationships(storageDirectoryPath, relationships);
-    await store.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk(undefined, true);
 
     const relationshipsDirectory = path.join(
       getRootStorageDirectory(),
@@ -443,7 +443,7 @@ describe('findEntity', () => {
       ...nonMatchingEntities,
       matchingEntity,
     ]);
-    await store.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk(undefined, true);
 
     await expect(store.findEntity(_key)).resolves.toEqual(matchingEntity);
     expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
@@ -495,7 +495,7 @@ describe('findEntity', () => {
     const matchingEntity = createTestEntity({ _type, _key });
 
     await store.addEntities(stepId, [...nonMatchingEntities, matchingEntity]);
-    await store.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk(undefined, true);
 
     await expect(store.findEntity(_key)).resolves.toBeUndefined();
     expect(localGraphObjectStoreFindEntitySpy).toHaveLastReturnedWith(
@@ -523,7 +523,7 @@ describe('iterateEntities', () => {
       ...matchingEntities,
     ]);
 
-    await store.flushEntitiesToDisk();
+    await store.flushEntitiesToDisk(undefined, true);
 
     const bufferedEntity = createTestEntity({ _type: matchingType });
     await store.addEntities(storageDirectoryPath, [bufferedEntity]);
@@ -751,7 +751,7 @@ describe('flush callbacks', () => {
     expect(addEntitiesFlushCalledTimes).toEqual(0);
     expect(flushedEntitiesCollected).toEqual([]);
 
-    await store.flushEntitiesToDisk(onEntitiesFlushed);
+    await store.flushEntitiesToDisk(onEntitiesFlushed, true);
 
     expect(addEntitiesFlushCalledTimes).toEqual(1);
     expect(flushedEntitiesCollected).toEqual(entities);
@@ -838,7 +838,7 @@ describe('flush callbacks', () => {
     expect(addEntitiesFlushCalledTimes).toEqual(0);
     expect(flushedEntitiesCollected).toEqual([]);
 
-    await store.flushEntitiesToDisk(onEntitiesFlushed);
+    await store.flushEntitiesToDisk(onEntitiesFlushed, true);
     expect(addEntitiesFlushCalledTimes).toEqual(1);
 
     // This should include every entity. Even the ones that are not written to
@@ -944,7 +944,7 @@ describe('flush callbacks', () => {
     expect(addRelationshipsFlushedCalledTimes).toEqual(0);
     expect(flushedRelationshipsCollected).toEqual([]);
 
-    await store.flushRelationshipsToDisk(onRelationshipsFlushed);
+    await store.flushRelationshipsToDisk(onRelationshipsFlushed, true);
     expect(addRelationshipsFlushedCalledTimes).toEqual(1);
 
     // This should include every relationship. Even the ones that are not written to
@@ -987,7 +987,7 @@ describe('flush callbacks', () => {
     expect(addRelationshipsFlushedCalledTimes).toEqual(0);
     expect(flushedRelationshipsCollected).toEqual([]);
 
-    await store.flushRelationshipsToDisk(onRelationshipsFlushed);
+    await store.flushRelationshipsToDisk(onRelationshipsFlushed, true);
 
     expect(addRelationshipsFlushedCalledTimes).toEqual(1);
     expect(flushedRelationshipsCollected).toEqual(relationships);

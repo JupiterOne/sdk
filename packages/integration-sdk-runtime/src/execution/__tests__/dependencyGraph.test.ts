@@ -650,7 +650,7 @@ describe('executeStepDependencyGraph', () => {
     expect(spyB).toHaveBeenCalledBefore(spyC);
   });
 
-  test('should mark steps with failed executionHandlers with status FAILURE and dependent steps with status PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE when step upload fails', async () => {
+  test('should throw if upload fails', async () => {
     const spyA = jest.fn();
     const spyB = jest.fn();
     const spyC = jest.fn();
@@ -715,18 +715,19 @@ describe('executeStepDependencyGraph', () => {
 
     function createFailingUploader(
       stepId: string,
+      collector: FlushedGraphObjectData[],
     ): StepGraphObjectDataUploader {
       return {
         stepId,
-        async enqueue() {
+        async enqueue(graphObjectData) {
+          collector.push(graphObjectData);
           return Promise.resolve();
         },
         waitUntilUploadsComplete() {
-          return Promise.reject(new Error('expected upload wait failure'));
+          return Promise.reject(new Error('Expected error'));
         },
       };
     }
-
     const passingUploaderCollector: FlushedGraphObjectData[] = [];
 
     /**
@@ -737,72 +738,22 @@ describe('executeStepDependencyGraph', () => {
      * 'b' depends on 'a',
      * 'c' depends on 'b'
      */
-    const result = await executeSteps(
-      steps,
-      stepStartStates,
-      graphObjectStore,
-      (stepId) => {
-        if (stepId === 'b') {
-          return createFailingUploader(stepId);
-        } else {
-          return createPassingUploader(stepId, passingUploaderCollector);
+    await expect(
+      executeSteps(steps, stepStartStates, graphObjectStore, (stepId) => {
+        if (stepId == 'c') {
+          return createFailingUploader(stepId, passingUploaderCollector);
         }
-      },
-    );
+        return createPassingUploader(stepId, passingUploaderCollector);
+      }),
+    ).rejects.toThrow();
 
     const expectedCollected: FlushedGraphObjectData[] = [
       {
-        entities: [eA],
-        relationships: [],
-      },
-      {
-        entities: [eC],
+        entities: [eA, eB, eC],
         relationships: [],
       },
     ];
-
     expect(passingUploaderCollector).toEqual(expectedCollected);
-
-    expect(result).toEqual([
-      {
-        id: 'a',
-        name: 'a',
-        declaredTypes: [],
-        partialTypes: [],
-        encounteredTypes: [eA._type],
-        encounteredTypeCounts: expect.any(Object),
-        status: StepResultStatus.SUCCESS,
-        startTime: expect.any(Number),
-        endTime: expect.any(Number),
-        duration: expect.any(Number),
-      },
-      {
-        id: 'b',
-        name: 'b',
-        declaredTypes: [],
-        partialTypes: [],
-        encounteredTypes: [eB._type],
-        encounteredTypeCounts: expect.any(Object),
-        dependsOn: ['a'],
-        status: StepResultStatus.FAILURE,
-        startTime: expect.any(Number),
-        endTime: expect.any(Number),
-        duration: expect.any(Number),
-      },
-      {
-        id: 'c',
-        name: 'c',
-        declaredTypes: [],
-        partialTypes: [],
-        encounteredTypes: [eC._type],
-        encounteredTypeCounts: expect.any(Object),
-        dependsOn: ['b'],
-        status: StepResultStatus.PARTIAL_SUCCESS_DUE_TO_DEPENDENCY_FAILURE,
-        startTime: expect.any(Number),
-        endTime: expect.any(Number),
-        duration: expect.any(Number),
-      },
-    ]);
 
     expect(spyA).toHaveBeenCalledTimes(1);
     expect(spyB).toHaveBeenCalledTimes(1);

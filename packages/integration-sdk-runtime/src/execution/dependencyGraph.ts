@@ -16,6 +16,7 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
+  UploadError,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -145,9 +146,17 @@ export function executeStepDependencyGraph<
     startTime?: number;
     endTime?: number;
     duration?: number;
+    partialTypes?: string[];
   }) {
-    const { stepId, status, typeTracker, startTime, endTime, duration } =
-      params;
+    const {
+      stepId,
+      status,
+      typeTracker,
+      startTime,
+      endTime,
+      duration,
+      partialTypes,
+    } = params;
     const existingResult = stepResultsMap.get(stepId);
     if (existingResult) {
       stepResultsMap.set(stepId, {
@@ -162,6 +171,9 @@ export function executeStepDependencyGraph<
         startTime,
         endTime,
         duration,
+        partialTypes: Array.from(
+          new Set(existingResult.partialTypes.concat(partialTypes ?? [])),
+        ),
       });
     }
   }
@@ -417,9 +429,7 @@ export function executeStepDependencyGraph<
 
         status = StepResultStatus.FAILURE;
       }
-
-      await context.jobState.flush();
-
+      let possibleAdditionalPartialTypes: string[] | undefined = undefined;
       if (context.jobState.waitUntilUploadsComplete) {
         try {
           // Failing to upload all integration data should not be considered a
@@ -429,6 +439,9 @@ export function executeStepDependencyGraph<
         } catch (err) {
           context.logger.stepFailure(step, err);
           status = StepResultStatus.FAILURE;
+          if (err instanceof UploadError) {
+            possibleAdditionalPartialTypes = err.typesInvolved;
+          }
         }
       }
 
@@ -439,6 +452,7 @@ export function executeStepDependencyGraph<
         startTime,
         endTime: Date.now(),
         duration: Date.now() - startTime,
+        partialTypes: possibleAdditionalPartialTypes,
       });
       enqueueLeafSteps();
     }
@@ -486,11 +500,62 @@ export function executeStepDependencyGraph<
 
       return status;
     }
+
+    async function forceFlushEverything() {
+      /** Instead of flushing after each step, flush only when we finish all steps OR when we reach the threshold limit
+       * Because the 'createStepGraphObjectDataUploader' needs a step I'm using the last step as it
+       */
+      let uploader: StepGraphObjectDataUploader | undefined;
+      const lastStep = Array.from(stepResultsMap.keys()).pop() as string;
+      if (createStepGraphObjectDataUploader) {
+        uploader = createStepGraphObjectDataUploader(lastStep);
+      }
+      await graphObjectStore.flush(
+        async (entities) =>
+          entities.length
+            ? uploader?.enqueue({
+                entities,
+                relationships: [],
+              })
+            : undefined,
+        async (relationships) =>
+          relationships.length
+            ? uploader?.enqueue({
+                entities: [],
+                relationships,
+              })
+            : undefined,
+      );
+      try {
+        await uploader?.waitUntilUploadsComplete();
+      } catch (err) {
+        executionContext.logger.stepFailure(
+          workingGraph.getNodeData(lastStep),
+          err,
+        );
+        if (err instanceof UploadError) {
+          updateStepResultStatus({
+            stepId: lastStep,
+            status: StepResultStatus.FAILURE,
+            typeTracker,
+            partialTypes: err.typesInvolved, //We mark as partial all types related to the failed uploads
+          });
+        } else {
+          updateStepResultStatus({
+            stepId: lastStep,
+            status: StepResultStatus.FAILURE,
+            typeTracker,
+          });
+        }
+      }
+    }
+
     // kick off work for all leaf nodes
     enqueueLeafSteps();
 
     void promiseQueue
       .onIdle()
+      .then(forceFlushEverything)
       .then(() => resolve([...stepResultsMap.values()]))
       .catch(reject);
   });

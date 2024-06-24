@@ -1,5 +1,4 @@
 import { Sema } from 'async-sema';
-import pMap from 'p-map';
 
 import {
   Entity,
@@ -237,109 +236,159 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
   ) {
     await Promise.all([
-      this.flushEntitiesToDisk(onEntitiesFlushed),
-      this.flushRelationshipsToDisk(onRelationshipsFlushed),
+      this.flushEntitiesToDisk(onEntitiesFlushed, true),
+      this.flushRelationshipsToDisk(onRelationshipsFlushed, true),
     ]);
   }
-
+  /**
+   * Asynchronously flushes entity data to disk.
+   *
+   * This function ensures that entity data is saved to disk when necessary. It uses a locking mechanism
+   * to prevent concurrent modifications and checks if the data size exceeds a certain threshold before flushing.
+   *
+   * @param {function} [onEntitiesFlushed] - Optional. A callback function that is invoked after the entities
+   *                                              have been flushed to disk. It receives an array of entities as
+   *                                              an argument and returns a Promise.
+   * @param {Boolean} [force=false] - Optional. A boolean flag indicating whether to force the flushing process
+   *                                  regardless of the data size threshold.
+   *
+   * This process ensures efficient and necessary data uploads, avoiding redundant or unnecessary disk operations.
+   */
   async flushEntitiesToDisk(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
+    force: Boolean = false,
   ) {
-    await this.lockOperation(() =>
-      pMap(
-        this.localGraphObjectStore.collectEntitiesByStep(),
-        async ([stepId, entities]) => {
-          const indexable = entities.filter((e) => {
-            const indexMetadata = this.getIndexMetadataForGraphObjectType({
-              stepId,
-              _type: e._type,
-              graphObjectCollectionType: 'entities',
-            });
+    await this.lockOperation(async () => {
+      // This code rechecks the condition that triggers the flushing process to avoid unnecessary uploads
+      // During concurrent steps, we might be deleting items from memory while a step is adding new items. This could cause the threshold
+      // to be triggered again. By rechecking the condition, we ensure that only necessary uploads occur.
+      if (
+        !force &&
+        this.localGraphObjectStore.getTotalEntitySizeInBytes() <
+          this.graphObjectBufferThresholdInBytes
+      ) {
+        return;
+      }
 
-            if (typeof indexMetadata === 'undefined') {
-              return true;
-            }
-
-            return indexMetadata.enabled === true;
+      const entitiesByStep = this.localGraphObjectStore.collectEntitiesByStep();
+      let entitiesToUpload: Entity[] = [];
+      for (const [stepId, entities] of entitiesByStep) {
+        const indexable = entities.filter((e) => {
+          const indexMetadata = this.getIndexMetadataForGraphObjectType({
+            stepId,
+            _type: e._type,
+            graphObjectCollectionType: 'entities',
           });
 
-          if (indexable.length) {
-            await Promise.all(
-              chunk(indexable, this.graphObjectFileSize).map(async (data) => {
-                const graphObjectsToFilePaths = await flushDataToDisk({
-                  storageDirectoryPath: stepId,
-                  collectionType: 'entities',
-                  data,
-                  pretty: this.prettifyFiles,
-                });
+          if (typeof indexMetadata === 'undefined') {
+            return true;
+          }
 
-                for (const {
-                  graphDataPath,
-                  collection,
-                } of graphObjectsToFilePaths) {
-                  for (const [index, e] of collection.entries()) {
-                    this.entityOnDiskLocationMap.set(e._key, {
-                      graphDataPath,
-                      index,
-                    });
-                  }
+          return indexMetadata.enabled === true;
+        });
+
+        if (indexable.length) {
+          await Promise.all(
+            chunk(indexable, this.graphObjectFileSize).map(async (data) => {
+              const graphObjectsToFilePaths = await flushDataToDisk({
+                storageDirectoryPath: stepId,
+                collectionType: 'entities',
+                data,
+                pretty: this.prettifyFiles,
+              });
+
+              for (const {
+                graphDataPath,
+                collection,
+              } of graphObjectsToFilePaths) {
+                for (const [index, e] of collection.entries()) {
+                  this.entityOnDiskLocationMap.set(e._key, {
+                    graphDataPath,
+                    index,
+                  });
                 }
-              }),
-            );
-          }
+              }
+            }),
+          );
+        }
 
-          this.localGraphObjectStore.flushEntities(entities, stepId);
+        this.localGraphObjectStore.flushEntities(entities, stepId);
+        entitiesToUpload = entitiesToUpload.concat(entities);
+      }
 
-          if (onEntitiesFlushed) {
-            await onEntitiesFlushed(entities);
-          }
-        },
-      ),
-    );
+      if (onEntitiesFlushed) {
+        await onEntitiesFlushed(entitiesToUpload);
+      }
+    });
   }
-
+  /**
+   * Asynchronously flushes relationship data to disk.
+   *
+   * This function ensures that relationship data is saved to disk when necessary. It uses a locking mechanism
+   * to prevent concurrent modifications and checks if the data size exceeds a certain threshold before flushing.
+   *
+   * @param {function} [onRelationshipsFlushed] - Optional. A callback function that is invoked after the relationships
+   *                                              have been flushed to disk. It receives an array of relationships as
+   *                                              an argument and returns a Promise.
+   * @param {Boolean} [force=false] - Optional. A boolean flag indicating whether to force the flushing process
+   *                                  regardless of the data size threshold.
+   *
+   * This process ensures efficient and necessary data uploads, avoiding redundant or unnecessary disk operations.
+   */
   async flushRelationshipsToDisk(
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
+    force: Boolean = false,
   ) {
-    await this.lockOperation(() =>
-      pMap(
-        this.localGraphObjectStore.collectRelationshipsByStep(),
-        async ([stepId, relationships]) => {
-          const indexable = relationships.filter((r) => {
-            const indexMetadata = this.getIndexMetadataForGraphObjectType({
-              stepId,
-              _type: r._type,
-              graphObjectCollectionType: 'relationships',
-            });
-
-            if (typeof indexMetadata === 'undefined') {
-              return true;
-            }
-
-            return indexMetadata.enabled === true;
+    await this.lockOperation(async () => {
+      // This code rechecks the condition that triggers the flushing process to avoid unnecessary uploads
+      // During concurrent steps, we might be deleting items from memory while a step is adding new items. This could cause the threshold
+      // to be triggered again. By rechecking the condition, we ensure that only necessary uploads occur.
+      if (
+        !force &&
+        this.localGraphObjectStore.getTotalRelationshipSizeInBytes() <
+          this.graphObjectBufferThresholdInBytes
+      ) {
+        return;
+      }
+      const relationshipsByStep =
+        this.localGraphObjectStore.collectRelationshipsByStep();
+      let relationshipsToUpload: Relationship[] = [];
+      for (const [stepId, relationships] of relationshipsByStep) {
+        const indexable = relationships.filter((r) => {
+          const indexMetadata = this.getIndexMetadataForGraphObjectType({
+            stepId,
+            _type: r._type,
+            graphObjectCollectionType: 'relationships',
           });
 
-          if (indexable.length) {
-            await Promise.all(
-              chunk(indexable, this.graphObjectFileSize).map(async (data) => {
-                await flushDataToDisk({
-                  storageDirectoryPath: stepId,
-                  collectionType: 'relationships',
-                  data,
-                  pretty: this.prettifyFiles,
-                });
-              }),
-            );
+          if (typeof indexMetadata === 'undefined') {
+            return true;
           }
 
-          this.localGraphObjectStore.flushRelationships(relationships, stepId);
+          return indexMetadata.enabled === true;
+        });
 
-          if (onRelationshipsFlushed) {
-            await onRelationshipsFlushed(relationships);
-          }
-        },
-      ),
-    );
+        if (indexable.length) {
+          await Promise.all(
+            chunk(indexable, this.graphObjectFileSize).map(async (data) => {
+              await flushDataToDisk({
+                storageDirectoryPath: stepId,
+                collectionType: 'relationships',
+                data,
+                pretty: this.prettifyFiles,
+              });
+            }),
+          );
+        }
+
+        this.localGraphObjectStore.flushRelationships(relationships, stepId);
+        relationshipsToUpload = relationshipsToUpload.concat(relationships);
+      }
+
+      if (onRelationshipsFlushed) {
+        await onRelationshipsFlushed(relationshipsToUpload);
+      }
+    });
   }
 
   getIndexMetadataForGraphObjectType({

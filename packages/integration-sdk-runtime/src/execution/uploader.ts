@@ -1,4 +1,4 @@
-import { IntegrationError } from '@jupiterone/integration-sdk-core';
+import { UploadError } from '@jupiterone/integration-sdk-core';
 import PQueue from 'p-queue/dist';
 import { FlushedGraphObjectData } from '../storage/types';
 import {
@@ -37,7 +37,7 @@ export function createQueuedStepGraphObjectDataUploader({
 
   let completed = false;
   const uploadErrors: Error[] = [];
-
+  const typesInvolvedInFailures = new Set<string>();
   return {
     stepId,
     async enqueue(graphObjectData) {
@@ -76,6 +76,16 @@ export function createQueuedStepGraphObjectDataUploader({
           // cases where this could cause an issue (e.g. a relationship getting
           // uploaded that references an entity that failed to upload).
           uploadErrors.push(err);
+          if (graphObjectData) {
+            graphObjectData.entities.forEach(
+              (entity) => typesInvolvedInFailures.add(entity._type),
+              typesInvolvedInFailures,
+            );
+            graphObjectData.relationships.forEach(
+              (relationship) => typesInvolvedInFailures.add(relationship._type),
+              typesInvolvedInFailures,
+            );
+          }
         });
     },
 
@@ -93,15 +103,12 @@ export function createQueuedStepGraphObjectDataUploader({
       }
 
       if (uploadErrors.length) {
-        throw new IntegrationError({
-          code: 'UPLOAD_ERROR',
-          message: `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=${uploadErrors.join(
+        throw new UploadError(
+          `Error(s) uploading graph object data (stepId=${stepId}, errorMessages=${uploadErrors.join(
             ',',
           )})`,
-          // Just include the first error cause. We should be able to gather
-          // additional information from the joined error messages.
-          cause: uploadErrors[0],
-        });
+          Array.from(typesInvolvedInFailures.values()),
+        );
       }
     },
   };

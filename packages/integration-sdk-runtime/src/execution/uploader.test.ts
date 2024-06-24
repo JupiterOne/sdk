@@ -16,6 +16,7 @@ import { createApiClient, getApiBaseUrl } from '../api';
 import { generateSynchronizationJob } from '../synchronization/__tests__/util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../test/util/fixtures';
 import { getExpectedRequestHeaders } from '../../test/util/request';
+import { UploadError } from '@jupiterone/integration-sdk-core';
 
 function createFlushedGraphObjectData(): FlushedGraphObjectData {
   return {
@@ -134,6 +135,52 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
     await uploader.enqueue(flushedAfterCompleted);
 
     expect(uploaded).toEqual([flushed[0], flushed[2], flushedAfterFailure]);
+  });
+
+  test('should throw UploadError with types involved', async () => {
+    const uploaded: FlushedGraphObjectData[] = [];
+    const stepId = uuid();
+
+    let numQueued = 0;
+
+    const uploader = createQueuedStepGraphObjectDataUploader({
+      stepId,
+      uploadConcurrency: 2,
+      async upload(d) {
+        numQueued++;
+
+        if (numQueued === 2) {
+          await sleep(100);
+          throw new Error('expected upload error');
+        } else {
+          await sleep(200);
+          uploaded.push(d);
+        }
+      },
+    });
+
+    const flushed = await createAndEnqueueUploads(uploader, 3);
+
+    // Ensure that the next enqueue happens _after_ a failure has occurred.
+    await sleep(300);
+    const flushedAfterFailure = createFlushedGraphObjectData();
+    await uploader.enqueue(flushedAfterFailure);
+
+    try {
+      await uploader.waitUntilUploadsComplete();
+    } catch (error) {
+      expect(error).toBeInstanceOf(UploadError);
+      flushed[1].entities.forEach((entity) =>
+        expect((error as UploadError).typesInvolved as string[]).toInclude(
+          entity._type,
+        ),
+      );
+      flushed[1].relationships.forEach((relationship) =>
+        expect((error as UploadError).typesInvolved as string[]).toInclude(
+          relationship._type,
+        ),
+      );
+    }
   });
 });
 
