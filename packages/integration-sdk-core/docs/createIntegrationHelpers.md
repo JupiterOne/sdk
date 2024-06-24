@@ -34,7 +34,7 @@ import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 
 const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
   integrationName: 'my_awesome_integration',
-  schemaMap: typeboxClassSchemaMap,
+  classSchemaMap: typeboxClassSchemaMap,
 });
 
 const [USER_ENTITY, createUserAssignEntity] = createEntityMetadata({
@@ -125,3 +125,7 @@ export function createUserEntity(name: string): Entity {
   });
 }
 ```
+
+7. In order for the integration to successfully publish these new entity schemas
+   for consumption outside the integraion, the package `platform-sdk-cli` must
+   be >= version `12.8.1` in the integration's deployment package.json.
