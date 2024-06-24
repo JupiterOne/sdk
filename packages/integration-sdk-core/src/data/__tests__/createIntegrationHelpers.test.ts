@@ -176,7 +176,7 @@ describe('createIntegrationHelpers', () => {
     });
   });
 
-  test.only('createMultiClassEntityMetadata', () => {
+  test('createMultiClassEntityMetadata', () => {
     const [MULTI, createMulti] = createMultiClassEntityMetadata({
       resourceName: 'Multi',
       _type: 'multi',
