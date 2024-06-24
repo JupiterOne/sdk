@@ -3,9 +3,15 @@ import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 import { createIntegrationHelpers } from '../createIntegrationHelpers';
 import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 import { entitySchemas } from '@jupiterone/data-model';
+import { Device } from '@jupiterone/data-model/dist/typebox_class_schemas/Device';
+import { Host } from '@jupiterone/data-model/dist/typebox_class_schemas/Host';
 
 describe('createIntegrationHelpers', () => {
-  const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
+  const {
+    createEntityType,
+    createEntityMetadata,
+    createMultiClassEntityMetadata,
+  } = createIntegrationHelpers({
     integrationName: 'test',
     classSchemaMap: typeboxClassSchemaMap,
   });
@@ -170,12 +176,12 @@ describe('createIntegrationHelpers', () => {
     });
   });
 
-  test.only('yo', () => {
-    const [YO, createYo] = createEntityMetadata({
-      resourceName: 'Yo',
-      _class: ['Device', 'Host'],
-      _type: 'yo',
-      description: 'Yo description',
+  test.only('createMultiClassEntityMetadata', () => {
+    const [MULTI, createMulti] = createMultiClassEntityMetadata({
+      resourceName: 'Multi',
+      _type: 'multi',
+      _class: [Device, Host],
+      description: 'Multi description',
       schema: Type.Object({
         id: Type.String(),
         name: Type.String(),
@@ -184,98 +190,234 @@ describe('createIntegrationHelpers', () => {
       }),
     });
 
-    createYo({
+    const yoEntity = createMulti({
       id: '1',
-      _key: 'id:123',
-      // hostname: 'hostname',
+      _key: createEntityType('multi'),
+      hostname: 'hostname',
       serial: '123456',
       name: 'entity',
-      // someNewProperty: 'someNewProperty',
+      someNewProperty: 'someNewProperty',
       make: 'here',
       model: 'there',
       deviceId: 'yolo',
       displayName: 'hey',
       category: 'yolo',
       lastSeenOn: 0,
-      // _class: ['Device', 'Host'],
-      // _type: 'yo'
     });
 
-    // const validator = new EntityValidator({
-    //   schemas: Object.values(entitySchemas),
-    // });
+    // @ts-expect-error lacks someNewProperty
+    createMulti({
+      id: '1',
+      _key: createEntityType('multi'),
+      hostname: 'hostname',
+      serial: '123456',
+      name: 'entity',
+      make: 'here',
+      model: 'there',
+      deviceId: 'yolo',
+      displayName: 'hey',
+      category: 'yolo',
+      lastSeenOn: 0,
+    });
 
-    // validator.addSchemas(YO.schema);
+    // @ts-expect-error has all Entity+Host required properties
+    createMulti({
+      id: 'id',
+      someNewProperty: 'someNewProperty',
+      _key: 'test_multi',
+      name: 'entity',
+      displayName: 'hey',
+      hostname: 'yolo',
+    });
 
-    // const { errors } = validator.validateEntity(
-    //   createYo({
-    //     id: '1',
-    //     _key: 'id:123',
-    //     serial: '123456',
-    //     name: 'entity',
-    //   }),
-    // );
+    // @ts-expect-error has all Entity+Device required properties
+    createMulti({
+      id: 'id',
+      someNewProperty: 'someNewProperty',
+      _key: 'test_multi',
+      name: 'entity',
+      displayName: 'hey',
+      serial: '123456',
+      make: 'here',
+      model: 'there',
+      deviceId: 'yolo',
+      category: 'yolo',
+      lastSeenOn: 0,
+    });
 
-    // expect(errors).toEqual([
-    //   {
-    //     dataPath: '',
-    //     keyword: 'required',
-    //     message: "should have required property 'someNewProperty'",
-    //     params: { missingProperty: 'someNewProperty' },
-    //     schemaPath: '#/required',
-    //   },
-    // ]);
-
-    expect(YO).toEqual({
-      resourceName: 'Yo',
+    expect(yoEntity).toEqual({
+      id: '1',
+      _key: 'test_multi',
+      hostname: 'hostname',
+      serial: '123456',
+      name: 'entity',
+      someNewProperty: 'someNewProperty',
+      make: 'here',
+      model: 'there',
+      deviceId: 'yolo',
+      displayName: 'hey',
+      category: 'yolo',
+      lastSeenOn: 0,
       _class: ['Device', 'Host'],
-      _type: 'yo',
+      _type: 'multi',
+    });
+
+    const validator = new EntityValidator({
+      schemas: Object.values(entitySchemas),
+    });
+
+    validator.addSchemas(MULTI.schema);
+
+    const { errors } = validator.validateEntity(createMulti({} as any));
+
+    expect(errors).toEqual([
+      {
+        message: "must have required property '_key'",
+        property: '_key',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'name'",
+        property: 'name',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'displayName'",
+        property: 'displayName',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'category'",
+        property: 'category',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'make'",
+        property: 'make',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'model'",
+        property: 'model',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'serial'",
+        property: 'serial',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'deviceId'",
+        property: 'deviceId',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'lastSeenOn'",
+        property: 'lastSeenOn',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property '_key'",
+        property: '_key',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        // twice since it's required in both Device and Host
+        message: "must have required property 'name'",
+        property: 'name',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        // twice since it's required in both Device and Host
+        message: "must have required property 'displayName'",
+        property: 'displayName',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        // required on Host
+        message: "must have required property 'hostname'",
+        property: 'hostname',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        // required on Multi!!
+        message: "must have required property 'id'",
+        property: 'id',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'name'",
+        property: 'name',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+      {
+        message: "must have required property 'someNewProperty'",
+        property: 'someNewProperty',
+        schemaId: '#multi',
+        validation: 'required',
+      },
+    ]);
+
+    expect(MULTI).toEqual({
+      resourceName: 'Multi',
+      _class: ['Device', 'Host'],
+      _type: 'multi',
       schema: {
-        $id: '#yo',
-        description: 'Yo description',
+        $id: '#multi',
+        description: 'Multi description',
         allOf: [
           { $ref: '#Device' },
           { $ref: '#Host' },
           {
-            allOf: [
-              {
-                properties: {
-                  _class: {
-                    type: 'array',
-                    items: [
-                      {
-                        const: 'Device',
-                        type: 'string',
-                      },
-                      {
-                        const: 'Host',
-                        type: 'string',
-                      },
-                    ],
-                    additionalItems: false,
-                    maxItems: 2,
-                    minItems: 2,
-                  },
-                  _type: { const: 'yo', type: 'string' },
-                },
-                type: 'object',
-                required: ['_class', '_type'],
-              },
-              {
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  someNewProperty: {
+            properties: {
+              _class: {
+                type: 'array',
+                items: [
+                  {
+                    const: 'Device',
                     type: 'string',
                   },
-                  thisOneIsNotRequired: {
+                  {
+                    const: 'Host',
                     type: 'string',
                   },
-                },
-                required: ['id', 'name', 'someNewProperty'],
-                type: 'object',
+                ],
+                additionalItems: false,
+                maxItems: 2,
+                minItems: 2,
               },
-            ],
+              _type: { const: 'multi', type: 'string' },
+            },
+            type: 'object',
+            required: ['_class', '_type'],
+          },
+          {
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              someNewProperty: {
+                type: 'string',
+              },
+              thisOneIsNotRequired: {
+                type: 'string',
+              },
+            },
+            required: ['id', 'name', 'someNewProperty'],
             type: 'object',
           },
         ],
