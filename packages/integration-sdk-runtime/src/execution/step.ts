@@ -142,9 +142,6 @@ export function determinePartialDatasetsFromStepExecutionResults(
         stepPartialDatasets.types.push(...stepResult.declaredTypes);
       }
 
-      if (stepResult.partialTypesToForce) {
-        stepPartialDatasets.types.push(...stepResult.partialTypesToForce);
-      }
       return {
         types: uniq(partialDatasets.types.concat(stepPartialDatasets.types)),
       };

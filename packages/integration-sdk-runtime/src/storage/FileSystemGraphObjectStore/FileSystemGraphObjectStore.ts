@@ -240,13 +240,28 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       this.flushRelationshipsToDisk(onRelationshipsFlushed, true),
     ]);
   }
-
+  /**
+   * Asynchronously flushes entity data to disk.
+   *
+   * This function ensures that entity data is saved to disk when necessary. It uses a locking mechanism
+   * to prevent concurrent modifications and checks if the data size exceeds a certain threshold before flushing.
+   *
+   * @param {function} [onEntitiesFlushed] - Optional. A callback function that is invoked after the entities
+   *                                              have been flushed to disk. It receives an array of entities as
+   *                                              an argument and returns a Promise.
+   * @param {Boolean} [force=false] - Optional. A boolean flag indicating whether to force the flushing process
+   *                                  regardless of the data size threshold.
+   *
+   * This process ensures efficient and necessary data uploads, avoiding redundant or unnecessary disk operations.
+   */
   async flushEntitiesToDisk(
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     force: Boolean = false,
   ) {
     await this.lockOperation(async () => {
-      // Do not flush entities to disk if we haven't reached the `graphObjectBufferThresholdInBytes` of data in memory or if we don't force this process (when all the steps are completed)
+      // This code rechecks the condition that triggers the flushing process to avoid unnecessary uploads
+      // During concurrent steps, we might be deleting items from memory while a step is adding new items. This could cause the threshold
+      // to be triggered again. By rechecking the condition, we ensure that only necessary uploads occur.
       if (
         !force &&
         this.localGraphObjectStore.getTotalEntitySizeInBytes() <
@@ -306,13 +321,28 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       }
     });
   }
-
+  /**
+   * Asynchronously flushes relationship data to disk.
+   *
+   * This function ensures that relationship data is saved to disk when necessary. It uses a locking mechanism
+   * to prevent concurrent modifications and checks if the data size exceeds a certain threshold before flushing.
+   *
+   * @param {function} [onRelationshipsFlushed] - Optional. A callback function that is invoked after the relationships
+   *                                              have been flushed to disk. It receives an array of relationships as
+   *                                              an argument and returns a Promise.
+   * @param {Boolean} [force=false] - Optional. A boolean flag indicating whether to force the flushing process
+   *                                  regardless of the data size threshold.
+   *
+   * This process ensures efficient and necessary data uploads, avoiding redundant or unnecessary disk operations.
+   */
   async flushRelationshipsToDisk(
     onRelationshipsFlushed?: (relationships: Relationship[]) => Promise<void>,
     force: Boolean = false,
   ) {
     await this.lockOperation(async () => {
-      // Do not flush relationships to disk if we haven't reached the `graphObjectBufferThresholdInBytes` of data in memory or if we don't force this process (when all the steps are completed)
+      // This code rechecks the condition that triggers the flushing process to avoid unnecessary uploads
+      // During concurrent steps, we might be deleting items from memory while a step is adding new items. This could cause the threshold
+      // to be triggered again. By rechecking the condition, we ensure that only necessary uploads occur.
       if (
         !force &&
         this.localGraphObjectStore.getTotalRelationshipSizeInBytes() <

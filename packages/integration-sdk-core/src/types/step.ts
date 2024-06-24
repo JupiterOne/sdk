@@ -113,11 +113,6 @@ export type IntegrationStepResult = Omit<
    * Duration of the step in milliseconds, calculated as endTime - startTime.
    */
   duration?: number;
-  /**
-   * TODO: Decouple steps from uploads. This shouldn't be here.
-   * This are types that are involved in a failed upload. We should mark them as partial.
-   */
-  partialTypesToForce?: string[];
 };
 
 export type IntegrationStep<
