@@ -43,40 +43,24 @@ export const createIntegrationHelpers = <
     description: string;
     schema: EntitySchema;
   }) => {
-    const classSchemaRefs = _class.map((c) => Type.Ref(c)) as [
+    const classRefs = _class.map((c) => Type.Ref(c)) as [
       TRef<TSchema>,
       ...TRef<TSchema>[],
     ];
-    const entitySchema = Type.Intersect([
-      ..._class,
-      Type.Object({
-        _class: Type.Tuple(
-          _class.map((classSchema) =>
-            Type.Literal(classSchema.$id!.replace('#', '')),
-          ),
+    const requiredProps = Type.Object({
+      _class: Type.Tuple(
+        _class.map((classSchema) =>
+          Type.Literal(classSchema.$id!.replace('#', '')),
         ),
-        _type: Type.Literal(_type),
-      }),
-      schema,
-    ]);
-    const jsonSchema = Type.Intersect(
-      [
-        ...classSchemaRefs,
-        Type.Object({
-          _class: Type.Tuple(
-            _class.map((classSchema) =>
-              Type.Literal(classSchema.$id!.replace('#', '')),
-            ),
-          ),
-          _type: Type.Literal(_type),
-        }),
-        schema,
-      ],
-      {
-        $id: `#${_type}`,
-        description,
-      },
-    );
+      ),
+      _type: Type.Literal(_type),
+    });
+
+    const jsonSchemaParts = [...classRefs, requiredProps, schema];
+    const schemaMetadata = { $id: `#${_type}`, description };
+
+    const entitySchema = Type.Intersect([..._class, requiredProps, schema]);
+    const jsonSchema = Type.Intersect(jsonSchemaParts, schemaMetadata);
 
     const createEntityData = (
       entityData: Omit<Static<typeof entitySchema>, '_class' | '_type'>,
