@@ -34,7 +34,7 @@ import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 
 const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
   integrationName: 'my_awesome_integration',
-  schemaMap: typeboxClassSchemaMap,
+  classSchemaMap: typeboxClassSchemaMap,
 });
 
 const [USER_ENTITY, createUserAssignEntity] = createEntityMetadata({
