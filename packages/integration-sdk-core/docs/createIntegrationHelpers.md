@@ -65,7 +65,7 @@ import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 
 export const { createEntityType, createEntityMetadata } =
   createIntegrationHelpers({
-    integrationName: INTEGRATION_NAME,
+    integrationName: INTEGRATION_NAME, // Should be lowercase
     schemaMap: typeboxClassSchemaMap,
   });
 ```
@@ -129,3 +129,8 @@ export function createUserEntity(name: string): Entity {
 7. In order for the integration to successfully publish these new entity schemas
    for consumption outside the integraion, the package `platform-sdk-cli` must
    be >= version `12.8.1` in the integration's deployment package.json.
+
+### Notes:
+
+1. To set up nullable fields, you can use
+   `SchemaType.Union([SchemaType.String(), SchemaType.Null()])`
