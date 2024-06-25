@@ -18,10 +18,12 @@ function createIntegrationHelpers(
 
 An object containing the following properties:
 
-- `createEntityType`: A function to generate entity types with
+- `createEntityType`: A function to generate entity types with the
   `${integrationName}_${entityName}` pattern.
-- `createEntityMetadata`: A function to create a entity metadata and a typed
+- `createEntityMetadata`: A function to create an entity metadata and a typed
   create entity function.
+- `createMultiClassEntityMetadata`: A function to create an entity metadata and
+  a typed create entity function for entities with multiple classes.
 
 #### Example
 
@@ -39,18 +41,56 @@ const { createEntityType, createEntityMetadata } = createIntegrationHelpers({
 
 const [USER_ENTITY, createUserAssignEntity] = createEntityMetadata({
   resourceName: 'User',
-  _class: ['User'],
+  _class: ['User'], // only supports one class
   _type: createEntityType('user'), // This will generate "my_awesome_integration_user", but you are free to not use the createEntityType helper
   description: 'Entity description', // This will be used in the json schema
   schema: SchemaType.Object({
-    name: SchemaType.String(),
+    employeeId: SchemaType.String(),
   }),
 });
 
 // _type and _class will be generated automatically
 createUserAssignEntity({
   _key: `${Entities.ACCOUNT._type}|${_integrationInstanceId}`,
-  name,
+  employeeId: '12345',
+});
+```
+
+#### Example for Entities with Multiple Classes
+
+In order to support entities with more than one class, you can use the
+`createMultiClassEntityMetadata` function. This function is similar to
+`createEntityMetadata`, but it accepts an array of explicit Typebox class
+schemas instead of an array of strings:
+
+```typescript
+import {
+  createIntegrationHelpers,
+  SchemaType,
+} from '@jupiterone/integration-sdk-core';
+import { typeboxClassSchemaMap } from '@jupiterone/data-model';
+
+const {
+  createEntityType,
+  createMultiClassEntityMetadata, // now importing this function
+} = createIntegrationHelpers({
+  integrationName: 'some_vendor',
+  classSchemaMap: typeboxClassSchemaMap,
+});
+
+const [MACHINE_ENTITY, createComputerEntity] = createMultiClassEntityMetadata({
+  resourceName: 'Machine',
+
+  // the old way
+  // _class: ['Device', 'Host'],
+
+  // now we use the typebox class schemas directly
+  _class: [typeboxClassSchemaMap['Device'], typeboxClassSchemaMap['Host']],
+  _type: createEntityType('machine'), // some_vendor_machine
+  description: 'A computer issued to an employee',
+  schema: SchemaType.Object({
+    becomesObsoleteOn: SchemaType.Date(),
+  }),
 });
 ```
 

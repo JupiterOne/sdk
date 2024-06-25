@@ -1,10 +1,8 @@
-import { Type } from '@sinclair/typebox';
 import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 import { createIntegrationHelpers } from '../createIntegrationHelpers';
 import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 import { entitySchemas } from '@jupiterone/data-model';
-import { Device } from '@jupiterone/data-model/dist/typebox_class_schemas/Device';
-import { Host } from '@jupiterone/data-model/dist/typebox_class_schemas/Host';
+import { SchemaType } from '../..';
 
 describe('createIntegrationHelpers', () => {
   const {
@@ -26,9 +24,9 @@ describe('createIntegrationHelpers', () => {
       _class: ['Entity'],
       _type: 'entity',
       description: 'Entity description',
-      schema: Type.Object({
-        id: Type.String(),
-        name: Type.String(),
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
       }),
     });
 
@@ -55,11 +53,11 @@ describe('createIntegrationHelpers', () => {
       _class: ['Entity'],
       _type: 'entity',
       description: 'Entity description',
-      schema: Type.Object({
-        id: Type.String(),
-        name: Type.String(),
-        someNewProperty: Type.String(),
-        thisOneIsNotRequired: Type.Optional(Type.String()),
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
+        someNewProperty: SchemaType.String(),
+        thisOneIsNotRequired: SchemaType.Optional(SchemaType.String()),
       }),
     });
 
@@ -116,11 +114,11 @@ describe('createIntegrationHelpers', () => {
       _class: ['Entity'],
       _type: 'entity',
       description: 'Entity description',
-      schema: Type.Object({
-        id: Type.String(),
-        name: Type.String(),
-        someNewProperty: Type.String(),
-        thisOneIsNotRequired: Type.Optional(Type.String()),
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
+        someNewProperty: SchemaType.String(),
+        thisOneIsNotRequired: SchemaType.Optional(SchemaType.String()),
       }),
     });
 
@@ -180,13 +178,13 @@ describe('createIntegrationHelpers', () => {
     const [MULTI, createMulti] = createMultiClassEntityMetadata({
       resourceName: 'Multi',
       _type: 'multi',
-      _class: [Device, Host],
+      _class: [typeboxClassSchemaMap['Device'], typeboxClassSchemaMap['Host']],
       description: 'Multi description',
-      schema: Type.Object({
-        id: Type.String(),
-        name: Type.String(),
-        someNewProperty: Type.String(),
-        thisOneIsNotRequired: Type.Optional(Type.String()),
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
+        someNewProperty: SchemaType.String(),
+        thisOneIsNotRequired: SchemaType.Optional(SchemaType.String()),
       }),
     });
 
@@ -435,10 +433,10 @@ describe('createIntegrationHelpers', () => {
       _class: ['Entity'],
       _type: 'type',
       description: 'Type description',
-      schema: Type.Object({
-        id: Type.String(),
-        name: Type.String(),
-        aNewProperty: Type.Number(),
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
+        aNewProperty: SchemaType.Number(),
       }),
     });
     validator.addSchemas(schema);
