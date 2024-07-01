@@ -211,11 +211,20 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
   ) {
-    await this.localGraphObjectStore.iterateEntities(filter, iteratee);
+    const iteratedEntities = new Map<string, boolean>();
+    await this.localGraphObjectStore.iterateEntities(filter, (obj: T) => {
+      iteratedEntities.set(obj._key, true);
+      return iteratee(obj);
+    });
 
     await iterateEntityTypeIndex({
       type: filter._type,
-      iteratee,
+      iteratee: (obj: T) => {
+        if (iteratedEntities.has(obj._key)) {
+          return;
+        }
+        return iteratee(obj);
+      },
     });
   }
 
@@ -223,11 +232,20 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
   ) {
-    await this.localGraphObjectStore.iterateRelationships(filter, iteratee);
+    const iteratedRelationships = new Map<string, boolean>();
+    await this.localGraphObjectStore.iterateRelationships(filter, (obj: T) => {
+      iteratedRelationships.set(obj._key, true);
+      return iteratee(obj);
+    });
 
     await iterateRelationshipTypeIndex({
       type: filter._type,
-      iteratee,
+      iteratee: (obj: T) => {
+        if (iteratedRelationships.has(obj._key)) {
+          return;
+        }
+        return iteratee(obj);
+      },
     });
   }
 
