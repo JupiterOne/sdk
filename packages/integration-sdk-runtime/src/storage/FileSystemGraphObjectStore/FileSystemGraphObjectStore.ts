@@ -211,6 +211,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
   ) {
+    //TODO: Remove maps. This is a hack we did to avoid returning duplicated entities.
+    //This should not work this way.
+    //There is a detailed description of the changes to come to avoid having to do this
+    //Here: https://jupiterone.atlassian.net/wiki/spaces/INT/pages/786169857/Task+SDK+decouple+tasks
     const iteratedEntities = new Map<string, boolean>();
     await this.localGraphObjectStore.iterateEntities(filter, (obj: T) => {
       iteratedEntities.set(obj._key, true);
@@ -232,6 +236,10 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
   ) {
+    //TODO: Remove maps. This is a hack we did to avoid returning duplicated entities.
+    //This should not work this way.
+    //There is a detailed description of the changes to come to avoid having to do this
+    //Here: https://jupiterone.atlassian.net/wiki/spaces/INT/pages/786169857/Task+SDK+decouple+tasks
     const iteratedRelationships = new Map<string, boolean>();
     await this.localGraphObjectStore.iterateRelationships(filter, (obj: T) => {
       iteratedRelationships.set(obj._key, true);
