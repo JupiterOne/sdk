@@ -11,7 +11,7 @@ and this project adheres to
 
 # 13.1.0 - 2024-07-02
 
-- Add support for multiple classes in `createIntegrationHelpers`.
+- Add support for multiple class entities in `createIntegrationHelpers`.
 
 # 13.0.0 - 2024-06-24
 
