@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+# 13.1.1 - 2024-07-02
+
+- Keep track of graphObjects iterated in memory in `iterateEntities` and
+  `iterateRelationships`.
+
 # 13.1.0 - 2024-07-02
 
 - Add support for multiple class entities in `createIntegrationHelpers`.
