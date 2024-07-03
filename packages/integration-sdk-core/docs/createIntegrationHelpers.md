@@ -65,8 +65,8 @@ import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 
 export const { createEntityType, createEntityMetadata } =
   createIntegrationHelpers({
-    integrationName: INTEGRATION_NAME, // Should be lowercase
-    schemaMap: typeboxClassSchemaMap,
+    integrationName: INTEGRATION_NAME, // Should be lowercase (i.e. aws)
+    classSchemaMap: typeboxClassSchemaMap,
   });
 ```
 
@@ -130,7 +130,12 @@ export function createUserEntity(name: string): Entity {
    for consumption outside the integraion, the package `platform-sdk-cli` must
    be >= version `12.8.1` in the integration's deployment package.json.
 
-### Notes:
+### Notes/Gotchas:
 
 1. To set up nullable fields, you can use
    `SchemaType.Union([SchemaType.String(), SchemaType.Null()])`
+
+2. If a property's type you have added to the new schema is not being respected,
+   check to see if it already exists on the \_class. If it does, you will need
+   to make sure the type complies with the \_class schema. You will not be able
+   to override it on a \_type level.
