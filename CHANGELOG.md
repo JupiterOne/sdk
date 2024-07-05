@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.1.2 - 2024-07-05
+
+- Send `terminalStatus` in the `/abort` sync API endpoint.
+
 # 13.1.1 - 2024-07-02
 
 - Keep track of graphObjects iterated in memory in `iterateEntities` and
