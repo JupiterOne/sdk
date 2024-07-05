@@ -7,6 +7,7 @@ export enum SynchronizationJobStatus {
   FINISHED = 'FINISHED',
   UNKNOWN = 'UNKNOWN',
   ERROR_BAD_DATA = 'ERROR_BAD_DATA',
+  ABORTED_DUE_TO_INVALID_CONFIGURATION = 'ABORTED_DUE_TO_INVALID_CONFIGURATION',
 }
 
 export interface SynchronizationJob {

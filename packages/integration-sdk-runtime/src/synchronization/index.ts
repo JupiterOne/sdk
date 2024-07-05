@@ -7,6 +7,7 @@ import {
   PartialDatasets,
   Relationship,
   SynchronizationJob,
+  SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
 
 import { AxiosError } from 'axios';
@@ -569,6 +570,7 @@ export async function uploadData<T extends UploadDataLookup, K extends keyof T>(
 
 interface AbortSynchronizationInput extends SynchronizationJobContext {
   reason?: string;
+  terminalStatus?: SynchronizationJobStatus;
 }
 /**
  * Aborts a synchronization job
@@ -578,15 +580,19 @@ export async function abortSynchronization({
   apiClient,
   job,
   reason,
+  terminalStatus,
 }: AbortSynchronizationInput) {
-  logger.info('Aborting synchronization job...');
+  logger.info(
+    { integrationJobId: job.id, reason, terminalStatus },
+    'Aborting synchronization job...',
+  );
 
   let abortedJob: SynchronizationJob;
 
   try {
     const response = await apiClient.post(
       `/persister/synchronization/jobs/${job.id}/abort`,
-      { reason },
+      { reason, terminalStatus },
     );
     abortedJob = response.data.job;
   } catch (err) {
