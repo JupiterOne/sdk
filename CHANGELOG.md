@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.1.3 - 2024-07-09
+
+- Bump the `@jupiterone/data-model` dependency to `0.61.9`.
+
 # 13.1.2 - 2024-07-05
 
 - Send `terminalStatus` in the `/abort` sync API endpoint.
