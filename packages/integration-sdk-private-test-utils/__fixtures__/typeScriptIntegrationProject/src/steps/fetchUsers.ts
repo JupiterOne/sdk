@@ -25,9 +25,7 @@ const fetchUsersStep: Step<StepExecutionContext> = {
       targetType: 'my_user',
     },
   ],
-  executionHandler: async ({
-    jobState,
-  }: IntegrationStepExecutionContext<{}>) => {
+  executionHandler: async ({ jobState }: StepExecutionContext) => {
     await jobState.addEntities([
       createIntegrationEntity({
         entityData: {

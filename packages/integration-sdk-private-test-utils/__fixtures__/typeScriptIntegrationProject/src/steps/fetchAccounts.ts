@@ -16,9 +16,7 @@ const fetchAccountsStep: Step<StepExecutionContext> = {
     },
   ],
   relationships: [],
-  executionHandler: async ({
-    jobState,
-  }: IntegrationStepExecutionContext<{}>) => {
+  executionHandler: async ({ jobState }: StepExecutionContext) => {
     await jobState.addEntities([
       createIntegrationEntity({
         entityData: {
@@ -31,6 +29,7 @@ const fetchAccountsStep: Step<StepExecutionContext> = {
             _key: 'account:1234',
             _type: 'my_account',
             _class: 'Account',
+            vendor: 'J1',
           },
         },
       }),
