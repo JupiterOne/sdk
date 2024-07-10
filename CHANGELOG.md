@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+- Bump data-model package in relevant packages.
+
 # 13.1.2 - 2024-07-05
 
 - Send `terminalStatus` in the `/abort` sync API endpoint.
