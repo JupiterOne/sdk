@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-entity-validator",
-  "version": "13.1.2",
+  "version": "13.1.4",
   "description": "Validator for JupiterOne integration entities",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

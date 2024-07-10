@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-entities",
-  "version": "13.1.2",
+  "version": "13.1.4",
   "description": "Generated types for the JupiterOne data-model",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -26,7 +26,7 @@
     "generate-ts-classes": "npm run copy-schemas && rm -rf src && mkdir src && json2ts -i 'tools/copy-schemas/_schemas/*.json' -o src  --cwd=tools/copy-schemas/_schemas --declareExternallyReferenced=false && ts-dedupe --duplicatesFile=src/Base.ts && npm run create-barrel"
   },
   "dependencies": {
-    "@jupiterone/data-model": "^0.61.3",
+    "@jupiterone/data-model": "^0.61.9",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
