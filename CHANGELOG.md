@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.2.0 - 2024-07-11
+
+- De-nest resulting single-class validation schema.
+
 # 13.1.4 - 2024-07-10
 
 - Bump data-model package in relevant packages.
