@@ -67,42 +67,37 @@ describe('createIntegrationHelpers', () => {
       allOf: [
         { $ref: '#Entity' },
         {
-          allOf: [
-            {
-              properties: {
-                _class: {
-                  type: 'array',
-                  items: [
-                    {
-                      const: 'Entity',
-                      type: 'string',
-                    },
-                  ],
-                  additionalItems: false,
-                  maxItems: 1,
-                  minItems: 1,
-                },
-                _type: { const: 'entity', type: 'string' },
-              },
-              type: 'object',
-              required: ['_class', '_type'],
-            },
-            {
-              properties: {
-                id: { type: 'string' },
-                name: { type: 'string' },
-                someNewProperty: {
+          properties: {
+            _class: {
+              type: 'array',
+              items: [
+                {
+                  const: 'Entity',
                   type: 'string',
                 },
-                thisOneIsNotRequired: {
-                  type: 'string',
-                },
-              },
-              type: 'object',
-              required: ['id', 'name', 'someNewProperty'],
+              ],
+              additionalItems: false,
+              maxItems: 1,
+              minItems: 1,
             },
-          ],
+            _type: { const: 'entity', type: 'string' },
+          },
           type: 'object',
+          required: ['_class', '_type'],
+        },
+        {
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            someNewProperty: {
+              type: 'string',
+            },
+            thisOneIsNotRequired: {
+              type: 'string',
+            },
+          },
+          type: 'object',
+          required: ['id', 'name', 'someNewProperty'],
         },
       ],
     });
@@ -132,41 +127,36 @@ describe('createIntegrationHelpers', () => {
         allOf: [
           { $ref: '#Entity' },
           {
-            allOf: [
-              {
-                properties: {
-                  _class: {
-                    type: 'array',
-                    items: [
-                      {
-                        const: 'Entity',
-                        type: 'string',
-                      },
-                    ],
-                    additionalItems: false,
-                    maxItems: 1,
-                    minItems: 1,
-                  },
-                  _type: { const: 'entity', type: 'string' },
-                },
-                type: 'object',
-                required: ['_class', '_type'],
-              },
-              {
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  someNewProperty: {
+            properties: {
+              _class: {
+                type: 'array',
+                items: [
+                  {
+                    const: 'Entity',
                     type: 'string',
                   },
-                  thisOneIsNotRequired: {
-                    type: 'string',
-                  },
-                },
-                required: ['id', 'name', 'someNewProperty'],
-                type: 'object',
+                ],
+                additionalItems: false,
+                maxItems: 1,
+                minItems: 1,
               },
-            ],
+              _type: { const: 'entity', type: 'string' },
+            },
+            type: 'object',
+            required: ['_class', '_type'],
+          },
+          {
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' },
+              someNewProperty: {
+                type: 'string',
+              },
+              thisOneIsNotRequired: {
+                type: 'string',
+              },
+            },
+            required: ['id', 'name', 'someNewProperty'],
             type: 'object',
           },
         ],
