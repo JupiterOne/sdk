@@ -205,6 +205,13 @@ SchemaType.Object({
   vendor: SchemaType.Literal('Apple'),
   // If a field can only have a certain set of values, you can use the `SchemaType.Enum` field.
   spamModerationLevel: SchemaType.Enum(SpamModerationLevel),
+  email: SchemaType.Optional(
+    SchemaType.String({
+      // These are formats that can be specified: https://ajv.js.org/packages/ajv-formats.html
+      // Additionally, we define some J1 specific formats here: https://github.com/JupiterOne/sdk/blob/main/packages/integration-sdk-entity-validator/src/j1Formats.ts#L14
+      format: 'email',
+    }),
+  ),
 });
 
 enum SpamModerationLevel {
