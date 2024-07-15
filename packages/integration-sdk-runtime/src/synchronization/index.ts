@@ -437,13 +437,6 @@ function handleUploadDataChunkError({
       message:
         'Failed to upload integration data because job has already ended',
     });
-  } else {
-    throw new IntegrationError({
-      code: 'UPLOAD_ERROR',
-      cause: err,
-      fatal: true,
-      message: 'Upload failed',
-    });
   }
 }
 
