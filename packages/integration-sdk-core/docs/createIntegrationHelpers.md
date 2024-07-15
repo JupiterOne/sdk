@@ -175,7 +175,58 @@ export function createUserEntity(name: string): Entity {
 1. To set up nullable fields, you can use
    `SchemaType.Union([SchemaType.String(), SchemaType.Null()])`
 
-2. If a property's type you have added to the new schema is not being respected,
+1. There are lots of options for adding helpful information to the schema. Below
+   are some of the common ones you may want to use. In particular, the
+   `description` field is really useful to describe any kind of computation done
+   on our end to determine the value of a field.
+
+```typescript
+SchemaType.Object({
+  // This is a common scenario - the integration defines a property called `byod`, however the Device _class has a property calld `BYOD`. We can use the `deprecated` field to indicate that the `byod` property is deprecated and `BYOD` should be used instead. You would want to make sure the BYOD property is added to the entity in the converter.
+  byod: SchemaType.String({
+    deprecated: true,
+    description: 'Please use `BYOD` instead.',
+  }),
+  age: SchemaType.Optional(
+    SchemaType.Number({
+      // If there is some kind of computation done on our end to determine the value of a field, you can describe it here.
+      // Additionally, if the integration docs provide helpful information about the field, you can include that as well.
+      description:
+        'The age of the user in years. Calculated based on the `birthDate` property.',
+    }),
+  ),
+  hashFunction: SchemaType.Optional(
+    SchemaType.String({
+      // The api provides a list of example values for this field. You can include them in an examples array.
+      examples: ['MD5', 'SHA-1', 'crypt'],
+    }),
+  ),
+  // If a field has a hardcoded value and will definitely always be the same, you can use the `SchemaType.Literal` field.
+  vendor: SchemaType.Literal('Apple'),
+  // If a field can only have a certain set of values, you can use the `SchemaType.Enum` field.
+  spamModerationLevel: SchemaType.Enum(SpamModerationLevel),
+  email: SchemaType.Optional(
+    SchemaType.String({
+      // These are formats that can be specified: https://ajv.js.org/packages/ajv-formats.html
+      // Additionally, we define some J1 specific formats here: https://github.com/JupiterOne/sdk/blob/main/packages/integration-sdk-entity-validator/src/j1Formats.ts#L14
+      format: 'email',
+    }),
+  ),
+});
+
+enum SpamModerationLevel {
+  Low = 'low',
+  Medium = 'medium',
+  High = 'high',
+}
+```
+
+3. If a property's type you have added to the new schema is not being respected,
    check to see if it already exists on the \_class. If it does, you will need
    to make sure the type complies with the \_class schema. You will not be able
-   to override it on a \_type level.
+   to override it on a \_type level. You can see classes and their properties in
+   the docs here:
+   https://docs.jupiterone.io/api/data-model/jupiterone-data-model#defined-entities
+
+4. If you encounter `/docs/spec/*` files, feel free to delete them. They are no
+   longer needed.
