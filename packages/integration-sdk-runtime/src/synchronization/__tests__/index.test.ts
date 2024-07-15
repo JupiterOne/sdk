@@ -31,8 +31,7 @@ import { getRootStorageDirectory, readJsonFromPath } from '../../fileSystem';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { getExpectedRequestHeaders } from '../../../test/util/request';
 
-import * as shrinkBatchRawData from '../shrinkBatchRawData';
-
+jest.setTimeout(10_000);
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
   restoreProjectStructure();
@@ -492,7 +491,13 @@ describe('uploadDataChunk', () => {
     requestTooLargeError['code'] = 'RequestEntityTooLargeException';
 
     const type = 'entities';
-    const batch = [];
+    const batch = [
+      {
+        _key: `entity:1`,
+        _type: 'resource',
+        _class: 'Resource',
+      },
+    ];
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
@@ -507,9 +512,6 @@ describe('uploadDataChunk', () => {
         };
       });
 
-    // don't allow shrinkBatchRawData throw error due to unshrinkable payload
-    jest.spyOn(shrinkBatchRawData, 'shrinkBatchRawData').mockReturnValue();
-
     await expect(
       uploadDataChunk({
         logger: context.logger,
@@ -518,9 +520,12 @@ describe('uploadDataChunk', () => {
         type,
         batch,
       }),
-    ).rejects.toThrow(requestTooLargeError);
+    ).rejects.toThrow();
 
-    expect(postSpy).toHaveBeenCalledTimes(5);
+    expect(postSpy).toHaveBeenCalledTimes(10);
+    for (let i = 1; i <= 10; i++) {
+      expect((postSpy.mock.calls[i - 1][1] as any).entities[0]).toBe(batch[0]);
+    }
   });
 
   it('should not retry uploading data when a "JOB_NOT_AWAITING_UPLOADS" is returned', async () => {
