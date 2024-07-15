@@ -25,7 +25,6 @@ import { AttemptContext, retry } from '@lifeomic/attempt';
 import { randomUUID as uuid } from 'crypto';
 import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
-import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes, getSizeOfObject } from './batchBySize';
 import type { Alpha } from '@lifeomic/alpha';
 
@@ -360,13 +359,6 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
-function isRequestUploadTooLargeError(err): boolean {
-  return (
-    err.code === 'RequestEntityTooLargeException' ||
-    err.response?.status === 413
-  );
-}
-
 type SystemErrorResponseData = {
   /**
    * The specific system-level error code (e.g. `ENTITY_IS_NOT_ARRAY`)
@@ -437,15 +429,20 @@ function handleUploadDataChunkError({
     'Handling upload error...',
   );
 
-  if (isRequestUploadTooLargeError(err)) {
-    shrinkBatchRawData(batch, logger, DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES);
-  } else if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
+  if (systemErrorResponseData?.code === 'JOB_NOT_AWAITING_UPLOADS') {
     throw new IntegrationError({
       code: 'INTEGRATION_UPLOAD_AFTER_JOB_ENDED',
       cause: err,
       fatal: true,
       message:
         'Failed to upload integration data because job has already ended',
+    });
+  } else {
+    throw new IntegrationError({
+      code: 'UPLOAD_ERROR',
+      cause: err,
+      fatal: true,
+      message: 'Upload failed',
     });
   }
 }
@@ -458,8 +455,6 @@ export async function uploadDataChunk<
 
   await retry(
     async (ctx) => {
-      // TODO [INT-3707]: on first try, shrink raw data of every entity
-      // to the point where each entity is < 1MB
       logger.debug(
         {
           uploadCorrelationId,
@@ -514,8 +509,8 @@ export async function uploadDataChunk<
       );
     },
     {
-      maxAttempts: 5,
-      delay: 200,
+      maxAttempts: 10,
+      delay: 500,
       factor: 1.05,
       handleError(err, attemptContext) {
         try {
