@@ -68,7 +68,15 @@ export class EntityValidator {
   }
 
   addSchemas(schema: AnySchema | AnySchema[]) {
-    this.ajvInstance.addSchema(schema);
+    const schemas = Array.isArray(schema) ? schema : [schema];
+    for (const schema of schemas) {
+      if (schema !== false && schema !== true && schema.$id) {
+        if (this.ajvInstance.getSchema(schema.$id)) {
+          this.ajvInstance.removeSchema(schema.$id);
+        }
+      }
+      this.ajvInstance.addSchema(schema);
+    }
     return this;
   }
 

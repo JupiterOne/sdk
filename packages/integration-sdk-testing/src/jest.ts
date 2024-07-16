@@ -12,11 +12,13 @@ import {
   Relationship,
   RelationshipClass,
   Step,
+  StepEntityMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { SyncExpectationResult } from 'expect/build/types';
 import { StepTestConfig } from './config';
 import { buildStepDependencyGraph } from '@jupiterone/integration-sdk-runtime';
 import { filterGraphObjects } from './filterGraphObjects';
+import { getValidatorSync } from '@jupiterone/integration-sdk-entity-validator';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -49,6 +51,36 @@ declare global {
       toMatchStepMetadata(testConfig: StepTestConfig): R;
 
       /**
+       * Used to replace `toMatchGraphObjectSchema` using up-to-date data model schemas.
+       *
+       * It will fetch the latest schemas from the data-model-service and fall back to the
+       * schemas provided in the @jupiterone/data-model package.
+       *
+       * @example
+       * ```ts
+       * const [USER_ENTITY] = createEntityMetadata({
+       *   resourceName: 'User',
+       *   _class: [Class.USER],
+       *   _type: 'acme_user',
+       *   description: 'A user in the ACME system',
+       *   schema: SchemaType.Object({
+       *     someProperty: SchemaType.String(),
+       *   }),
+       * });
+       *
+       * const { collectedEntities } = await executeStepWithDependencies({
+       *   stepId: Steps.FETCH_USERS.id,
+       *   invocationConfig,
+       *   instanceConfig,
+       * });
+       *
+       * expect(collectedEntities).toMatchDataModelSchema(USER_ENTITY);
+       */
+
+      toMatchDataModelSchema(metadata: StepEntityMetadata): R;
+
+      /**
+       * @deprecated
        * Used to verify that a collection of Entities matches the _type, _class,
        * and schema defined for the collection, as well as any additional schema
        * defined for the _class in the @jupiterone/data-model project
@@ -151,6 +183,44 @@ declare global {
       ): R;
     }
   }
+}
+
+export function toMatchDataModelSchema<T extends Entity>(
+  received: T | T[],
+  metadata: StepEntityMetadata,
+): SyncExpectationResult {
+  if (!metadata.schema) {
+    return {
+      message: () => 'No schema provided',
+      pass: false,
+    };
+  }
+
+  const entityValidator = getValidatorSync();
+
+  entityValidator.addSchemas([metadata.schema]);
+
+  received = Array.isArray(received) ? received : [received];
+
+  for (let i = 0; i < received.length; i++) {
+    // if valid
+    const { isValid, errors = [] } = entityValidator.validateEntity(
+      received[i],
+    );
+
+    if (isValid) continue;
+
+    return {
+      message: () =>
+        `Error validating object with data model schema ${errors?.map((e) => e.message).join(', ')}`,
+      pass: false,
+    };
+  }
+
+  return {
+    message: () => '',
+    pass: true,
+  };
 }
 
 const FIND_OUT_MORE =
@@ -747,14 +817,15 @@ export function toImplementSpec<
       }
     }
   }
-  if (unimplementedSteps.length > 0) {
-    console.log(
-      {
-        unimplementedSteps,
-      },
-      'Spec steps marked as `implemented: false`',
-    );
-  }
+
+  // if (unimplementedSteps.length > 0) {
+  //   console.log(
+  //     {
+  //       unimplementedSteps,
+  //     },
+  //     'Spec steps marked as `implemented: false`',
+  //   );
+  // }
 
   if (options?.requireSpec) {
     const specStepIds = normalizedSpec.integrationSteps
@@ -969,6 +1040,7 @@ function isMappedRelationship(r: Relationship): r is MappedRelationship {
 export function registerMatchers(expect: jest.Expect) {
   expect.extend({
     toMatchStepMetadata,
+    toMatchDataModelSchema,
     toMatchGraphObjectSchema,
     toMatchDirectRelationshipSchema,
     toTargetEntities,
