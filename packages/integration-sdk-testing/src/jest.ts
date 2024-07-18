@@ -80,7 +80,8 @@ declare global {
       toMatchDataModelSchema(metadata: StepEntityMetadata): R;
 
       /**
-       * @deprecated
+       * @deprecated Use `toMatchDataModelSchema` instead
+       *
        * Used to verify that a collection of Entities matches the _type, _class,
        * and schema defined for the collection, as well as any additional schema
        * defined for the _class in the @jupiterone/data-model project

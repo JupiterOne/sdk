@@ -4,7 +4,7 @@ import { EntityValidator } from './validator';
 import { tmpdir } from 'os';
 import path from 'path';
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, rmSync } from 'fs';
 
 const CLASS_SCHEMA_URL =
   'https://api.us.jupiterone.io/data-model/schemas/classes';
@@ -46,28 +46,39 @@ async function fetchSchemas(): Promise<SchemaObjectMap | undefined> {
  *
  * Fallbacks will kick in silently if this process fails.
  */
+const HOUR_IN_MS = 1000 * 60 * 60;
 function fetchSchemasSync(): SchemaObjectMap | undefined {
-  const tmpFile = path.join(
+  // round to the last hour checkpoint
+  const cachedTimestamp = Math.floor(Date.now() / HOUR_IN_MS) * HOUR_IN_MS;
+
+  const cachedFile = path.join(
     tmpdir(),
-    (Math.random() + 1).toString(36).substring(4),
+    `j1-class-schemas-${cachedTimestamp}.json`,
   );
+
+  if (existsSync(cachedFile)) {
+    try {
+      return JSON.parse(readFileSync(cachedFile, 'utf8'));
+    } catch (err) {
+      try {
+        rmSync(cachedFile);
+      } catch (err) {
+        // ignore
+      }
+      // ignore
+    }
+  }
 
   try {
     // write to a temp file to avoid potential unplanned output
+    // we parse the json and re-stringify it to ensure it's valid json
     execSync(
-      `node -e "fetch('${CLASS_SCHEMA_URL}').then(res => res.json()).then(json => require('fs').writeFileSync('${tmpFile}', JSON.stringify(json)));"`,
+      `node -e "fetch('${CLASS_SCHEMA_URL}').then(res => res.json()).then(json => require('fs').writeFileSync('${cachedFile}', JSON.stringify(json)));"`,
     );
 
-    const schemas = JSON.parse(readFileSync(tmpFile, 'utf8'));
-    return schemas;
+    return JSON.parse(readFileSync(cachedFile, 'utf8'));
   } catch (err) {
     return undefined;
-  } finally {
-    try {
-      execSync(`rm ${tmpFile}`);
-    } catch (err) {
-      // ignore
-    }
   }
 }
 
