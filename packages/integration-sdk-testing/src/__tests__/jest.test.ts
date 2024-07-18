@@ -10,7 +10,10 @@ import {
   Relationship,
   RelationshipClass,
   RelationshipDirection,
+  createIntegrationHelpers,
+  SchemaType,
 } from '@jupiterone/integration-sdk-core';
+import { typeboxClassSchemaMap as classSchemaMap } from '@jupiterone/data-model';
 import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 import { randomUUID as uuid } from 'crypto';
 import { toMatchStepMetadata } from '..';
@@ -19,51 +22,56 @@ import {
   toImplementSpec,
   toMatchDirectRelationshipSchema,
   toMatchGraphObjectSchema,
+  toMatchDataModelSchema,
   toTargetEntities,
 } from '../jest';
 
-describe('#toMatchGraphObjectSchema', () => {
-  function generateCollectedEntity(partial?: Partial<Entity>): Entity {
-    return {
-      name: 'appengine.googleapis.com',
-      _class: ['Service'],
-      _type: 'google_cloud_api_service',
-      _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
-      displayName: 'App Engine Admin API',
-      category: ['infrastructure'],
-      description:
-        "Provisions and manages developers' App Engine applications.",
-      state: 'ENABLED',
-      enabled: true,
-      usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
-      function: ['other'],
-      _rawData: [
-        {
-          name: 'default',
-          rawData: {
-            name: 'projects/123/services/appengine.googleapis.com',
-            config: {
-              name: 'appengine.googleapis.com',
-              title: 'App Engine Admin API',
-              documentation: {
-                summary:
-                  "Provisions and manages developers' App Engine applications.",
-              },
-              quota: {},
-              authentication: {},
-              usage: {
-                requirements: ['serviceusage.googleapis.com/tos/cloud'],
-              },
+function generateCollectedEntity(partial?: Partial<Entity>): Entity {
+  return {
+    name: 'appengine.googleapis.com',
+    _class: ['Service'],
+    _type: 'google_cloud_api_service',
+    _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+    displayName: 'App Engine Admin API',
+    category: ['infrastructure'],
+    description: "Provisions and manages developers' App Engine applications.",
+    state: 'ENABLED',
+    enabled: true,
+    usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
+    function: ['other'],
+    _rawData: [
+      {
+        name: 'default',
+        rawData: {
+          name: 'projects/123/services/appengine.googleapis.com',
+          config: {
+            name: 'appengine.googleapis.com',
+            title: 'App Engine Admin API',
+            documentation: {
+              summary:
+                "Provisions and manages developers' App Engine applications.",
             },
-            state: 'ENABLED',
-            parent: 'projects/123',
+            quota: {},
+            authentication: {},
+            usage: {
+              requirements: ['serviceusage.googleapis.com/tos/cloud'],
+            },
           },
+          state: 'ENABLED',
+          parent: 'projects/123',
         },
-      ],
-      ...partial,
-    };
-  }
+      },
+    ],
+    ...partial,
+  };
+}
 
+const { createEntityMetadata } = createIntegrationHelpers({
+  integrationName: 'testing',
+  classSchemaMap,
+});
+
+describe('#toMatchGraphObjectSchema', () => {
   function generateGraphObjectSchema(
     partialProperties?: Record<string, any>,
     options?: { additionalProperties?: boolean },
@@ -553,6 +561,78 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
     "message": "must NOT have additional properties"
   }`,
     );
+  });
+});
+
+describe('#toMatchDataModelSchema', () => {
+  test('should pass for valid entity', () => {
+    // yanked this from the typebox docs
+    const StringEnum = <T extends string[]>(values: [...T]) =>
+      SchemaType.Unsafe<T[number]>({
+        type: 'string',
+        enum: values,
+      });
+    const [API_SERVICE, createApiService] = createEntityMetadata({
+      resourceName: 'Google Cloud API Service',
+      _class: ['Service'],
+      _type: 'google_cloud_api_service',
+      description: 'Provisions and manages developers App Engine applications.',
+      schema: SchemaType.Object({
+        usageRequirements: SchemaType.Array(SchemaType.String()),
+        state: StringEnum(['STATE_UNSPECIFIED', 'DISABLED', 'ENABLED']),
+        enabled: SchemaType.Boolean(),
+      }),
+    });
+
+    const entity = createApiService({
+      name: 'appengine.googleapis.com',
+      function: ['other'],
+      _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+      displayName: 'App Engine Admin API',
+      category: ['infrastructure'],
+      state: 'ENABLED',
+      enabled: true,
+      usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
+    });
+
+    const result = toMatchDataModelSchema(entity, API_SERVICE);
+
+    expect(result.pass).toBe(true);
+  });
+
+  test('should not pass for invalid entity', () => {
+    // yanked this from the typebox docs
+    const StringEnum = <T extends string[]>(values: [...T]) =>
+      SchemaType.Unsafe<T[number]>({
+        type: 'string',
+        enum: values,
+      });
+    const [API_SERVICE, createApiService] = createEntityMetadata({
+      resourceName: 'Google Cloud API Service',
+      _class: ['Service'],
+      _type: 'google_cloud_api_service',
+      description: 'Provisions and manages developers App Engine applications.',
+      schema: SchemaType.Object({
+        usageRequirements: SchemaType.Array(SchemaType.String()),
+        state: StringEnum(['STATE_UNSPECIFIED', 'DISABLED', 'ENABLED']),
+        enabled: SchemaType.Boolean(),
+      }),
+    });
+
+    const entity = createApiService({
+      name: 'appengine.googleapis.com',
+      function: ['other'],
+      _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+      displayName: 'App Engine Admin API',
+      category: ['infrastructure'],
+      state: 'ENABLED',
+      enabled: true,
+      usageRequirements: null as unknown as string[], // lil hack to make it fail
+    });
+
+    const result = toMatchDataModelSchema(entity, API_SERVICE);
+
+    expect(result.pass).toBe(false);
   });
 });
 
@@ -1736,6 +1816,7 @@ describe('#registerMatchers', () => {
     expect(mockJestExtendFn).toHaveBeenCalledTimes(1);
     expect(mockJestExtendFn).toHaveBeenCalledWith({
       toImplementSpec,
+      toMatchDataModelSchema,
       toMatchDirectRelationshipSchema,
       toMatchGraphObjectSchema,
       toMatchStepMetadata,

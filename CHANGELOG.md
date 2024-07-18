@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+- Added a `toMatchDataModelSchema` Jest matcher for validating entities against
+  the live production data model schema.
+- Deprecated the `toMatchGraphObjectSchema` method in favor of
+  `toMatchDataModelSchema`.
+
 # 13.2.0 - 2024-07-11
 
 - De-nest resulting single-class validation schema.
