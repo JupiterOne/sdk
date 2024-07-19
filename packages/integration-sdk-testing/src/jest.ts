@@ -25,6 +25,8 @@ declare global {
   namespace jest {
     interface Matchers<R> {
       /**
+       * @deprecated use `toMatchEntityStepMetadata` instead.
+       *
        * Used to verify that the full result of an integration step is compliant
        * with the metadata defined for the step. For each entity and
        * relationship defined in the metadata, the matcher checks:
@@ -84,7 +86,7 @@ declare global {
        *
        * Used to verify that a collection of Entities matches the _type, _class,
        * and schema defined for the collection, as well as any additional schema
-       * defined for the _class in the @jupiterone/data-model project
+       * defined for the _class in the `@jupiterone/data-model` project
        *
        * @example
        * ```ts
@@ -213,7 +215,7 @@ export function toMatchDataModelSchema<T extends Entity>(
 
     return {
       message: () =>
-        `Error validating object with data model schema ${errors?.map((e) => e.message).join(', ')}`,
+        `Error validating object with data model schema: ${errors?.map((e) => `${e.schemaId}:${String(e.property)}:${e.message}`).join(', ')}`,
       pass: false,
     };
   }
@@ -862,6 +864,17 @@ export function toImplementSpec<
   }
 }
 
+export function toMatchEntityStepMetadata(
+  results: {
+    collectedEntities: Entity[];
+    collectedRelationships: Relationship[];
+    encounteredEntityKeys?: Set<string>;
+  },
+  testConfig: Omit<StepTestConfig, 'instanceConfig' | 'dependencyStepIds'>,
+): SyncExpectationResult {
+  return _toMatchStepMetadata(results, testConfig, toMatchDataModelSchema);
+}
+
 export function toMatchStepMetadata(
   results: {
     collectedEntities: Entity[];
@@ -869,6 +882,22 @@ export function toMatchStepMetadata(
     encounteredEntityKeys?: Set<string>;
   },
   testConfig: Omit<StepTestConfig, 'instanceConfig' | 'dependencyStepIds'>,
+): SyncExpectationResult {
+  return _toMatchStepMetadata(results, testConfig, toMatchGraphObjectSchema);
+}
+
+function _toMatchStepMetadata(
+  results: {
+    collectedEntities: Entity[];
+    collectedRelationships: Relationship[];
+    encounteredEntityKeys?: Set<string>;
+  },
+  testConfig: Omit<StepTestConfig, 'instanceConfig' | 'dependencyStepIds'>,
+  // one of toMatchDataModelSchema (preferred) or toMatchGraphObjectSchema (deprecated)
+  validationMethod: <T extends Entity>(
+    received: T | T[],
+    metadata: StepEntityMetadata,
+  ) => SyncExpectationResult,
 ): SyncExpectationResult {
   const { stepId, invocationConfig } = testConfig;
   const stepDependencyGraph = buildStepDependencyGraph(
@@ -890,7 +919,7 @@ export function toMatchStepMetadata(
           `Expected >0 entities of _type=${entityMetadata._type}, got 0.`,
       };
     }
-    const { pass, message } = toMatchGraphObjectSchema(targets, entityMetadata);
+    const { pass, message } = validationMethod(targets, entityMetadata);
     if (pass === false) {
       return {
         pass,
@@ -1040,6 +1069,7 @@ function isMappedRelationship(r: Relationship): r is MappedRelationship {
 
 export function registerMatchers(expect: jest.Expect) {
   expect.extend({
+    toMatchEntityStepMetadata,
     toMatchStepMetadata,
     toMatchDataModelSchema,
     toMatchGraphObjectSchema,
