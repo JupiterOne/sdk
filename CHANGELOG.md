@@ -9,8 +9,12 @@ and this project adheres to
 
 # Unreleased
 
+- Added a `toMatchEntityStepMetadata` Jest matcher for validating step results
+  against the live production data model schema.
 - Added a `toMatchDataModelSchema` Jest matcher for validating entities against
   the live production data model schema.
+- Deprecated the `toMatchStepMetadata` method in favor of
+  `toMatchEntityStepMetadata`.
 - Deprecated the `toMatchGraphObjectSchema` method in favor of
   `toMatchDataModelSchema`.
 

@@ -24,6 +24,7 @@ import {
   toMatchGraphObjectSchema,
   toMatchDataModelSchema,
   toTargetEntities,
+  toMatchEntityStepMetadata,
 } from '../jest';
 
 function generateCollectedEntity(partial?: Partial<Entity>): Entity {
@@ -1336,6 +1337,92 @@ describe('#toImplementSpec', () => {
   });
 });
 
+describe('#toMatchEntityStepMetadata', () => {
+  test('should fail if declared entity type does not match schema', () => {
+    const StringEnum = <T extends string[]>(values: [...T]) =>
+      SchemaType.Unsafe<T[number]>({
+        type: 'string',
+        enum: values,
+      });
+    const [API_SERVICE, createApiService] = createEntityMetadata({
+      resourceName: 'Google Cloud API Service',
+      _class: ['Service'],
+      _type: 'google_cloud_api_service',
+      description: 'Provisions and manages developers App Engine applications.',
+      schema: SchemaType.Object({
+        usageRequirements: SchemaType.Array(SchemaType.String()),
+        state: StringEnum(['STATE_UNSPECIFIED', 'DISABLED', 'ENABLED']),
+        enabled: SchemaType.Boolean(),
+      }),
+    });
+    const entity1 = createApiService({
+      name: 'appengine.googleapis.com',
+      function: ['other'],
+      _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+      displayName: 'App Engine Admin API',
+      category: ['infrastructure'],
+      state: 'ENABLED',
+      enabled: true,
+      usageRequirements: null as unknown as string[], // lil hack to make it fail
+    });
+    const result1 = toMatchEntityStepMetadata(
+      {
+        collectedEntities: [entity1],
+        collectedRelationships: [],
+      },
+      {
+        stepId: 'step-id',
+        invocationConfig: {
+          integrationSteps: [
+            getMockIntegrationStep({
+              id: 'step-id',
+              entities: [API_SERVICE],
+            }),
+          ],
+        },
+      },
+    );
+
+    expect(result1).toMatchObject({ pass: false });
+    expect(result1.message()).toMatch(
+      'Error validating object with data model schema: #google_cloud_api_service:usageRequirements:must be array',
+    );
+
+    const entity2 = createApiService({
+      name: 'appengine.googleapis.com',
+      function: ['other'],
+      _key: 'google_cloud_api_service_projects/123/services/appengine.googleapis.com',
+      displayName: 'App Engine Admin API',
+      category: undefined as unknown as string[],
+      state: 'ENABLED',
+      enabled: true,
+      usageRequirements: ['serviceusage.googleapis.com/tos/cloud'],
+    });
+
+    const result2 = toMatchEntityStepMetadata(
+      {
+        collectedEntities: [entity2],
+        collectedRelationships: [],
+      },
+      {
+        stepId: 'step-id',
+        invocationConfig: {
+          integrationSteps: [
+            getMockIntegrationStep({
+              id: 'step-id',
+              entities: [API_SERVICE],
+            }),
+          ],
+        },
+      },
+    );
+    expect(result2).toMatchObject({ pass: false });
+    expect(result2.message()).toMatch(
+      "Error validating object with data model schema: #google_cloud_api_service:category:must have required property 'category'",
+    );
+  });
+});
+
 describe('#toMatchStepMetadata', () => {
   function getMockInvocationConfig(
     config?: Partial<IntegrationInvocationConfig>,
@@ -1819,6 +1906,7 @@ describe('#registerMatchers', () => {
       toMatchDataModelSchema,
       toMatchDirectRelationshipSchema,
       toMatchGraphObjectSchema,
+      toMatchEntityStepMetadata,
       toMatchStepMetadata,
       toTargetEntities,
     });
