@@ -67,17 +67,6 @@ function generateCollectedEntity(partial?: Partial<Entity>): Entity {
   };
 }
 
-function getMockEntity(e?: Partial<Entity>): Entity {
-  return {
-    _class: 'Record',
-    _type: 'entity-type',
-    _key: uuid(),
-    name: '',
-    displayName: '',
-    ...e,
-  };
-}
-
 const { createEntityMetadata } = createIntegrationHelpers({
   integrationName: 'testing',
   classSchemaMap,
