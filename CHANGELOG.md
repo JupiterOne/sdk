@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.4.0 - 2024-08-08
+
+- Add steps_finished info event name
+
 # 13.3.0 - 2024-08-07
 
 - Added a `toMatchEntityStepMetadata` Jest matcher for validating step results

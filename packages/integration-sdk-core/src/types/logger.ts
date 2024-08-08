@@ -51,6 +51,7 @@ export enum IntegrationInfoEventName {
   Info = 'info',
   Stats = 'stats',
   Results = 'results',
+  StepsFinished = 'steps_finished',
 }
 
 export interface PublishInfoEventInput extends PublishEventInput {
