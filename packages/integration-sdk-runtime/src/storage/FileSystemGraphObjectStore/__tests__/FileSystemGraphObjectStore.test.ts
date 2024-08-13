@@ -545,6 +545,49 @@ describe('iterateEntities', () => {
     ]);
   });
 
+  test('should allow concurrent executions of the iteratee function.', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+
+    const matchingType = uuid();
+
+    const nonMatchingEntities = times(25, () =>
+      createTestEntity({ _type: uuid() }),
+    );
+    const matchingEntities = times(300, () =>
+      createTestEntity({ _type: matchingType }),
+    );
+
+    await store.addEntities(storageDirectoryPath, [
+      ...nonMatchingEntities,
+      ...matchingEntities,
+    ]);
+
+    await store.flushEntitiesToDisk(undefined, true);
+
+    const bufferedEntity = createTestEntity({ _type: matchingType });
+    await store.addEntities(storageDirectoryPath, [bufferedEntity]);
+
+    const collectedEntities = new Map<string, Entity>();
+
+    await store.iterateEntities(
+      { _type: matchingType },
+      (e: Entity) => {
+        if (collectedEntities.has(e._key)) {
+          throw new Error(
+            `duplicate entity _key found in iterateEntities (_key=${e._key})`,
+          );
+        }
+        collectedEntities.set(e._key, e);
+      },
+      5,
+    );
+    console.log('length', collectedEntities.size);
+    expect(Array.from(collectedEntities.values())).toEqual([
+      bufferedEntity,
+      ...matchingEntities,
+    ]);
+  });
+
   test('should allow extended types to be iterated', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 

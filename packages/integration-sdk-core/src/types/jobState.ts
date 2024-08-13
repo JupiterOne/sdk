@@ -100,10 +100,27 @@ export interface JobState {
    * steps it depends on. Other steps outside the dependency ancestry may not
    * have run and therefore entities collected by those other steps should not
    * be expected to exist.
+   *
+   * If concurrency is specified (defaults to 1), the iteratee will be executed
+   * concurrently for graph objects that are found in memory and for
+   * graph objects found in single graph file.
+   * Consideration should be taken for provider rate limits when API requests
+   * are being made within the iteratee and also while increasing concurrency
+   * beyond the default.
+   *
+   * Example:
+   * await jobState.iterateEntities(
+   *   { _type: EcrEntities.ECR_IMAGE._type },
+   *   async (image) => {
+   *     ...
+   *   },
+   *   5,
+   * );
    */
   iterateEntities: <T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    concurrency?: number,
   ) => Promise<void>;
 
   /**
@@ -115,10 +132,27 @@ export interface JobState {
    * previous steps it depends on. Other steps outside the dependency ancestry
    * may not have run and therefore relationships collected by those other steps
    * should not be expected to exist.
+   *
+   * If concurrency is specified (defaults to 1), the iteratee will be executed
+   * concurrently for graph objects that are found in memory and for
+   * graph objects found in single graph file.
+   * Consideration should be taken for provider rate limits when API requests
+   * are being made within the iteratee and also while increasing concurrency
+   * beyond the default.
+   *
+   * Example:
+   * await jobState.iterateRelationships(
+   *   { _type: Relationships.COMPARTMENT_HAS_DOMAIN._type },
+   *   async (relationship) => {
+   *     ...
+   *   },
+   *   5,
+   * );
    */
   iterateRelationships: <T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    concurrency?: number,
   ) => Promise<void>;
 
   /**
