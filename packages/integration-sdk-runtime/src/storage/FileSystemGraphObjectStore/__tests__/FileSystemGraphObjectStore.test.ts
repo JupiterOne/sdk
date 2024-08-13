@@ -514,7 +514,7 @@ describe('iterateEntities', () => {
     const nonMatchingEntities = times(25, () =>
       createTestEntity({ _type: uuid() }),
     );
-    const matchingEntities = times(25, () =>
+    const matchingEntities = times(25000, () =>
       createTestEntity({ _type: matchingType }),
     );
 
@@ -539,10 +539,10 @@ describe('iterateEntities', () => {
     };
 
     await store.iterateEntities({ _type: matchingType }, collectEntity);
-    expect(Array.from(collectedEntities.values())).toEqual([
-      bufferedEntity,
-      ...matchingEntities,
-    ]);
+    expect(collectedEntities.size).toEqual(matchingEntities.length + 1);
+    expect(Array.from(collectedEntities.keys()).sort()).toEqual(
+      [bufferedEntity, ...matchingEntities].map((e) => e._key).sort(),
+    );
   });
 
   test('should allow concurrent executions of the iteratee function.', async () => {
@@ -550,10 +550,10 @@ describe('iterateEntities', () => {
 
     const matchingType = uuid();
 
-    const nonMatchingEntities = times(25, () =>
+    const nonMatchingEntities = times(1_000, () =>
       createTestEntity({ _type: uuid() }),
     );
-    const matchingEntities = times(300, () =>
+    const matchingEntities = times(1_000, () =>
       createTestEntity({ _type: matchingType }),
     );
 
@@ -581,11 +581,11 @@ describe('iterateEntities', () => {
       },
       5,
     );
-    console.log('length', collectedEntities.size);
-    expect(Array.from(collectedEntities.values())).toEqual([
-      bufferedEntity,
-      ...matchingEntities,
-    ]);
+
+    expect(collectedEntities.size).toEqual(matchingEntities.length + 1);
+    expect(Array.from(collectedEntities.keys()).sort()).toEqual(
+      [bufferedEntity, ...matchingEntities].map((e) => e._key).sort(),
+    );
   });
 
   test('should allow extended types to be iterated', async () => {
