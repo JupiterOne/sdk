@@ -8,10 +8,12 @@ import { readJsonFromPath, WalkDirectoryIterateeInput } from '../../fileSystem';
 
 import { buildIndexDirectoryPath } from './path';
 import { iterateParsedGraphFiles } from '../..';
+import pMap from 'p-map';
 
 interface BaseIterateCollectionIndexParams<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
+  options?: BaseIterateCollectionIndexOptionsParams;
 }
 
 interface IterateCollectionIndexParams<GraphObject>
@@ -19,9 +21,22 @@ interface IterateCollectionIndexParams<GraphObject>
   collectionType: 'entities' | 'relationships';
 }
 
+interface BaseIterateCollectionIndexOptionsParams {
+  concurrency?: number;
+}
+
+/**
+ * Iterates through graph files.
+ * If concurrency is specified, it'll process the graph objects concurrently.
+ * @param type
+ * @param collectionType
+ * @param concurrency
+ * @param iteratee
+ */
 async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
   type,
   collectionType,
+  options,
   iteratee,
 }: IterateCollectionIndexParams<T>) {
   const path = buildIndexDirectoryPath({
@@ -30,29 +45,34 @@ async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
   });
 
   await iterateParsedGraphFiles(async (data) => {
-    for (const graphObj of (data[collectionType] as T[]) || []) {
-      await iteratee(graphObj);
-    }
+    await pMap(
+      (data[collectionType] as T[]) || [],
+      (graphObj) => iteratee(graphObj),
+      { concurrency: options?.concurrency ?? 1 },
+    );
   }, path);
 }
 
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
+  options,
 }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,
     iteratee,
+    options,
     collectionType: 'entities',
   });
 }
 
 export async function iterateRelationshipTypeIndex<
   T extends Relationship = Relationship,
->({ type, iteratee }: BaseIterateCollectionIndexParams<T>) {
+>({ type, iteratee, options }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,
     iteratee,
+    options,
     collectionType: 'relationships',
   });
 }

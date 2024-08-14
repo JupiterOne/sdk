@@ -2,12 +2,14 @@ import {
   Entity,
   GraphObjectFilter,
   GraphObjectIteratee,
+  GraphObjectIterateeOptions,
   GraphObjectStore,
   IntegrationError,
   IntegrationMissingKeyError,
   Relationship,
 } from '@jupiterone/integration-sdk-core';
 import { getSizeOfObject } from '../synchronization/batchBySize';
+import pMap from 'p-map';
 
 export interface GraphObjectMetadata {
   stepId: string;
@@ -155,6 +157,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: GraphObjectIterateeOptions,
   ): Promise<void> {
     const entityTypeKeysMap = this.entityTypeToKeysMap.get(filter._type);
 
@@ -162,24 +165,29 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
       return;
     }
 
-    for (const [_key] of entityTypeKeysMap) {
-      const graphObjectData = this.entityKeyToEntityMap.get(_key);
+    await pMap(
+      entityTypeKeysMap,
+      async ([_key]) => {
+        const graphObjectData = this.entityKeyToEntityMap.get(_key);
 
-      if (!graphObjectData) {
-        // NOTE: This should never happen. Our data structures should stay in
-        // sync.
-        throw new IntegrationMissingKeyError(
-          `Failed to find entity (_type=${filter._type}, _key=${_key})`,
-        );
-      }
+        if (!graphObjectData) {
+          // NOTE: This should never happen. Our data structures should stay in
+          // sync.
+          throw new IntegrationMissingKeyError(
+            `Failed to find entity (_type=${filter._type}, _key=${_key})`,
+          );
+        }
 
-      await iteratee(graphObjectData.entity as T);
-    }
+        await iteratee(graphObjectData.entity as T);
+      },
+      { concurrency: options?.concurrency ?? 1 },
+    );
   }
 
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: GraphObjectIterateeOptions,
   ): Promise<void> {
     const relationshipTypeKeysMap = this.relationshipTypeToKeysMap.get(
       filter._type,
@@ -189,19 +197,23 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
       return;
     }
 
-    for (const [_key] of relationshipTypeKeysMap) {
-      const graphObjectData = this.relationshipKeyToRelationshipMap.get(_key);
+    await pMap(
+      relationshipTypeKeysMap,
+      async ([_key]) => {
+        const graphObjectData = this.relationshipKeyToRelationshipMap.get(_key);
 
-      if (!graphObjectData) {
-        // NOTE: This should never happen. Our data structures should stay in
-        // sync.
-        throw new IntegrationMissingKeyError(
-          `Failed to find relationship (_type=${filter._type}, _key=${_key})`,
-        );
-      }
+        if (!graphObjectData) {
+          // NOTE: This should never happen. Our data structures should stay in
+          // sync.
+          throw new IntegrationMissingKeyError(
+            `Failed to find relationship (_type=${filter._type}, _key=${_key})`,
+          );
+        }
 
-      await iteratee(graphObjectData.relationship as T);
-    }
+        await iteratee(graphObjectData.relationship as T);
+      },
+      { concurrency: options?.concurrency ?? 1 },
+    );
   }
 
   /**

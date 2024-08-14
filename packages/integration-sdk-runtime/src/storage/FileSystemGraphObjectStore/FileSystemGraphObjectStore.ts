@@ -9,6 +9,7 @@ import {
   GraphObjectIndexMetadata,
   GetIndexMetadataForGraphObjectTypeParams,
   IntegrationStep,
+  GraphObjectIterateeOptions,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -210,19 +211,25 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: GraphObjectIterateeOptions,
   ) {
     //TODO: Remove maps. This is a hack we did to avoid returning duplicated entities.
     //This should not work this way.
     //There is a detailed description of the changes to come to avoid having to do this
     //Here: https://jupiterone.atlassian.net/wiki/spaces/INT/pages/786169857/Task+SDK+decouple+tasks
     const iteratedEntities = new Map<string, boolean>();
-    await this.localGraphObjectStore.iterateEntities(filter, (obj: T) => {
-      iteratedEntities.set(obj._key, true);
-      return iteratee(obj);
-    });
+    await this.localGraphObjectStore.iterateEntities(
+      filter,
+      (obj: T) => {
+        iteratedEntities.set(obj._key, true);
+        return iteratee(obj);
+      },
+      options,
+    );
 
     await iterateEntityTypeIndex({
       type: filter._type,
+      options,
       iteratee: (obj: T) => {
         if (iteratedEntities.has(obj._key)) {
           return;
@@ -235,6 +242,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: GraphObjectIterateeOptions,
   ) {
     //TODO: Remove maps. This is a hack we did to avoid returning duplicated relationships.
     //This should not work this way.
@@ -248,6 +256,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
     await iterateRelationshipTypeIndex({
       type: filter._type,
+      options,
       iteratee: (obj: T) => {
         if (iteratedRelationships.has(obj._key)) {
           return;
