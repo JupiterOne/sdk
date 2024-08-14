@@ -5,6 +5,9 @@ export interface GraphObjectFilter {
 }
 
 export type GraphObjectIteratee<T> = (obj: T) => void | Promise<void>;
+export type GraphObjectIterateeOptions = {
+  concurrency?: number;
+};
 
 /**
  * The `JobState` is used to store and retrieve entities and relationships
@@ -103,7 +106,7 @@ export interface JobState {
    *
    * If concurrency is specified (defaults to 1), the iteratee will be executed
    * concurrently for graph objects that are found in memory and for
-   * graph objects found in single graph file.
+   * graph objects found in a given graph file. No specific ordering is guaranteed.
    * Consideration should be taken for provider rate limits when API requests
    * are being made within the iteratee and also while increasing concurrency
    * beyond the default.
@@ -120,7 +123,7 @@ export interface JobState {
   iterateEntities: <T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
-    concurrency?: number,
+    options?: GraphObjectIterateeOptions,
   ) => Promise<void>;
 
   /**
@@ -135,7 +138,7 @@ export interface JobState {
    *
    * If concurrency is specified (defaults to 1), the iteratee will be executed
    * concurrently for graph objects that are found in memory and for
-   * graph objects found in single graph file.
+   * graph objects found in a given graph file. No specific ordering is guaranteed.
    * Consideration should be taken for provider rate limits when API requests
    * are being made within the iteratee and also while increasing concurrency
    * beyond the default.
@@ -152,7 +155,7 @@ export interface JobState {
   iterateRelationships: <T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
-    concurrency?: number,
+    options?: GraphObjectIterateeOptions,
   ) => Promise<void>;
 
   /**

@@ -13,12 +13,16 @@ import pMap from 'p-map';
 interface BaseIterateCollectionIndexParams<GraphObject> {
   type: string;
   iteratee: GraphObjectIteratee<GraphObject>;
-  concurrency?: number;
+  options?: BaseIterateCollectionIndexOptionsParams;
 }
 
 interface IterateCollectionIndexParams<GraphObject>
   extends BaseIterateCollectionIndexParams<GraphObject> {
   collectionType: 'entities' | 'relationships';
+}
+
+interface BaseIterateCollectionIndexOptionsParams {
+  concurrency?: number;
 }
 
 /**
@@ -32,7 +36,7 @@ interface IterateCollectionIndexParams<GraphObject>
 async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
   type,
   collectionType,
-  concurrency,
+  options,
   iteratee,
 }: IterateCollectionIndexParams<T>) {
   const path = buildIndexDirectoryPath({
@@ -44,7 +48,7 @@ async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
     await pMap(
       (data[collectionType] as T[]) || [],
       (graphObj) => iteratee(graphObj),
-      { concurrency: concurrency ?? 1 },
+      { concurrency: options?.concurrency ?? 1 },
     );
   }, path);
 }
@@ -52,23 +56,23 @@ async function iterateCollectionTypeIndex<T extends Entity | Relationship>({
 export async function iterateEntityTypeIndex<T extends Entity = Entity>({
   type,
   iteratee,
-  concurrency,
+  options,
 }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,
     iteratee,
-    concurrency,
+    options,
     collectionType: 'entities',
   });
 }
 
 export async function iterateRelationshipTypeIndex<
   T extends Relationship = Relationship,
->({ type, iteratee, concurrency }: BaseIterateCollectionIndexParams<T>) {
+>({ type, iteratee, options }: BaseIterateCollectionIndexParams<T>) {
   await iterateCollectionTypeIndex({
     type,
     iteratee,
-    concurrency,
+    options,
     collectionType: 'relationships',
   });
 }

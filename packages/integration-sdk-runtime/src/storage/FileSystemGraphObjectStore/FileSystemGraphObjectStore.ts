@@ -9,6 +9,7 @@ import {
   GraphObjectIndexMetadata,
   GetIndexMetadataForGraphObjectTypeParams,
   IntegrationStep,
+  GraphObjectIterateeOptions,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -210,7 +211,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
-    concurrency?: number,
+    options?: GraphObjectIterateeOptions,
   ) {
     //TODO: Remove maps. This is a hack we did to avoid returning duplicated entities.
     //This should not work this way.
@@ -223,12 +224,12 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         iteratedEntities.set(obj._key, true);
         return iteratee(obj);
       },
-      concurrency,
+      options,
     );
 
     await iterateEntityTypeIndex({
       type: filter._type,
-      concurrency,
+      options,
       iteratee: (obj: T) => {
         if (iteratedEntities.has(obj._key)) {
           return;
@@ -241,7 +242,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
-    concurrency?: number,
+    options?: GraphObjectIterateeOptions,
   ) {
     //TODO: Remove maps. This is a hack we did to avoid returning duplicated relationships.
     //This should not work this way.
@@ -255,7 +256,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
 
     await iterateRelationshipTypeIndex({
       type: filter._type,
-      concurrency,
+      options,
       iteratee: (obj: T) => {
         if (iteratedRelationships.has(obj._key)) {
           return;

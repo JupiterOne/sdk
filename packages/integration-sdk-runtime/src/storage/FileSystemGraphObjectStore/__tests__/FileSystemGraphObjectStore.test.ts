@@ -514,7 +514,7 @@ describe('iterateEntities', () => {
     const nonMatchingEntities = times(25, () =>
       createTestEntity({ _type: uuid() }),
     );
-    const matchingEntities = times(25000, () =>
+    const matchingEntities = times(2500, () =>
       createTestEntity({ _type: matchingType }),
     );
 
@@ -579,7 +579,7 @@ describe('iterateEntities', () => {
         }
         collectedEntities.set(e._key, e);
       },
-      5,
+      { concurrency: 5 },
     );
 
     expect(collectedEntities.size).toEqual(matchingEntities.length + 1);

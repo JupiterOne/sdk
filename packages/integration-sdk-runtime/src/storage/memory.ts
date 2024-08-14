@@ -2,6 +2,7 @@ import {
   Entity,
   GraphObjectFilter,
   GraphObjectIteratee,
+  GraphObjectIterateeOptions,
   GraphObjectStore,
   IntegrationError,
   IntegrationMissingKeyError,
@@ -156,7 +157,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
   async iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
-    concurrency?: number,
+    options?: GraphObjectIterateeOptions,
   ): Promise<void> {
     const entityTypeKeysMap = this.entityTypeToKeysMap.get(filter._type);
 
@@ -179,14 +180,14 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
         await iteratee(graphObjectData.entity as T);
       },
-      { concurrency: concurrency ?? 1 },
+      { concurrency: options?.concurrency ?? 1 },
     );
   }
 
   async iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
-    concurrency?: number,
+    options?: GraphObjectIterateeOptions,
   ): Promise<void> {
     const relationshipTypeKeysMap = this.relationshipTypeToKeysMap.get(
       filter._type,
@@ -211,7 +212,7 @@ export class InMemoryGraphObjectStore implements GraphObjectStore {
 
         await iteratee(graphObjectData.relationship as T);
       },
-      { concurrency: concurrency ?? 1 },
+      { concurrency: options?.concurrency ?? 1 },
     );
   }
 
