@@ -9,6 +9,23 @@ and this project adheres to
 
 # Unreleased
 
+# 13.4.0 - 2024-08-14
+
+- Add new options parameter `GraphObjectIterateeOptions` to
+  jobState.iterateEntities() and jobState.iterateRelationships() that allows a
+  concurrency option to be specified. The options parameters is passed to in
+  memory and the file based object stores. Example:
+
+```ts
+await jobState.iterateEntities(
+  { _type: EcrEntities.ECR_IMAGE._type },
+  async (image) => {
+    ...
+  },
+  { concurrency: 5 },
+);
+```
+
 # 13.3.0 - 2024-08-07
 
 - Added a `toMatchEntityStepMetadata` Jest matcher for validating step results

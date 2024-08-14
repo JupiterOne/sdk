@@ -117,7 +117,7 @@ export interface JobState {
    *   async (image) => {
    *     ...
    *   },
-   *   5,
+   *   { concurrency: 5 },
    * );
    */
   iterateEntities: <T extends Entity = Entity>(
@@ -149,7 +149,7 @@ export interface JobState {
    *   async (relationship) => {
    *     ...
    *   },
-   *   5,
+   *   { concurrency: 5 },
    * );
    */
   iterateRelationships: <T extends Relationship = Relationship>(
