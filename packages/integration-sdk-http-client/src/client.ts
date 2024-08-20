@@ -244,7 +244,7 @@ export abstract class BaseAPIClient {
       } else if (bodyType === 'text' && typeof body === 'string') {
         fmtBody = body;
       } else if (bodyType === 'urlencoded') {
-        const fmtBody = new URLSearchParams();
+        fmtBody = new URLSearchParams();
         Object.entries(body).forEach(([key, value]) => {
           if (typeof value !== 'string') {
             throw new IntegrationError({
@@ -252,7 +252,7 @@ export abstract class BaseAPIClient {
               message: 'Form values must be strings',
             });
           }
-          fmtBody.append(key, value);
+          (fmtBody as URLSearchParams).append(key, value);
         });
       } else {
         fmtBody = JSON.stringify(body);
