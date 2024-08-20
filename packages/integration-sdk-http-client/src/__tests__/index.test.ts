@@ -1,8 +1,10 @@
 import { BaseAPIClient, defaultErrorHandler } from '../client';
 import { sleep } from '@lifeomic/attempt';
+import FormData from 'form-data';
 
 jest.mock('node-fetch');
 import fetch from 'node-fetch';
+
 const { Response } = jest.requireActual('node-fetch');
 
 jest.mock('@lifeomic/attempt', () => {
@@ -177,6 +179,155 @@ describe('APIClient', () => {
           Authorization: 'Bearer test-token',
         },
         body: `{"test":"test"}`,
+      });
+    });
+
+    describe('fmtBody', () => {
+      test('should format body as JSON string when bodyType is json', async () => {
+        const mockResponse = {} as Response;
+        (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+        const client = new MockAPIClient({
+          baseUrl: 'https://api.example.com',
+          logger: mockLogger,
+        });
+
+        const body = { key1: 'value1', key2: 'value2' };
+        await (client as any).request('/test', {
+          bodyType: 'json',
+          body,
+        });
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: JSON.stringify(body),
+            headers: expect.objectContaining({
+              'Content-Type': 'application/json',
+            }),
+          }),
+        );
+      });
+
+      test('should format body as plain text when bodyType is text', async () => {
+        const mockResponse = {} as Response;
+        (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+        const client = new MockAPIClient({
+          baseUrl: 'https://api.example.com',
+          logger: mockLogger,
+        });
+
+        const body = 'plain text body';
+        await (client as any).request('/test', {
+          bodyType: 'text',
+          body,
+        });
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body,
+            headers: expect.objectContaining({
+              'Content-Type': 'text/plain',
+            }),
+          }),
+        );
+      });
+
+      test('should format body as FormData when bodyType is form', async () => {
+        const mockResponse = {} as Response;
+        (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+        const client = new MockAPIClient({
+          baseUrl: 'https://api.example.com',
+          logger: mockLogger,
+        });
+
+        const body = { key1: 'value1', key2: 'value2' };
+        const appendSpy = jest.spyOn(FormData.prototype, 'append');
+        const getHeadersSpy = jest.spyOn(FormData.prototype, 'getHeaders');
+        getHeadersSpy.mockReturnValue({
+          'content-type': 'multipart/form-data',
+        });
+
+        await (client as any).request('/test', {
+          bodyType: 'form',
+          body,
+        });
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            headers: expect.objectContaining({
+              'content-type': 'multipart/form-data',
+            }),
+          }),
+        );
+
+        expect(appendSpy).toHaveBeenCalledWith('key1', 'value1');
+        expect(appendSpy).toHaveBeenCalledWith('key2', 'value2');
+      });
+
+      test('should throw an error when bodyType is form and a non-string value is provided', async () => {
+        const mockResponse = {} as Response;
+        (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+        const client = new MockAPIClient({
+          baseUrl: 'https://api.example.com',
+          logger: mockLogger,
+        });
+
+        const body = { key1: 'value1', key2: 123 }; // Invalid value
+        await expect(
+          (client as any).request('/test', { bodyType: 'form', body }),
+        ).rejects.toThrow('Form data values must be strings');
+      });
+
+      test('should format body as URLSearchParams when bodyType is urlencoded', async () => {
+        const mockResponse = {} as Response;
+        (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+        const client = new MockAPIClient({
+          baseUrl: 'https://api.example.com',
+          logger: mockLogger,
+        });
+
+        const body = { key1: 'value1', key2: 'value2' };
+        await (client as any).request('/test', {
+          bodyType: 'urlencoded',
+          body,
+        });
+
+        expect(fetch).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: expect.any(URLSearchParams),
+            headers: expect.objectContaining({
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }),
+          }),
+        );
+
+        const urlSearchParams = (fetch as unknown as jest.Mock).mock.calls[0][1]
+          .body as URLSearchParams;
+        expect(urlSearchParams.get('key1')).toBe('value1');
+        expect(urlSearchParams.get('key2')).toBe('value2');
+      });
+
+      test('should throw an error when bodyType is urlencoded and a non-string value is provided', async () => {
+        const mockResponse = {} as Response;
+        (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+        const client = new MockAPIClient({
+          baseUrl: 'https://api.example.com',
+          logger: mockLogger,
+        });
+
+        const body = { key1: 'value1', key2: 123 }; // Invalid value
+        await expect(
+          (client as any).request('/test', { bodyType: 'urlencoded', body }),
+        ).rejects.toThrow('Form values must be strings');
       });
     });
   });
