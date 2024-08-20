@@ -228,7 +228,7 @@ export abstract class BaseAPIClient {
       url = this.withBaseUrl(endpoint);
     }
 
-    let fmtBody: string | FormData | undefined;
+    let fmtBody: string | FormData | URLSearchParams | undefined;
     if (body) {
       if (bodyType === 'form') {
         fmtBody = new FormData();
@@ -243,6 +243,17 @@ export abstract class BaseAPIClient {
         });
       } else if (bodyType === 'text' && typeof body === 'string') {
         fmtBody = body;
+      } else if (bodyType === 'urlencoded') {
+        fmtBody = new URLSearchParams();
+        Object.entries(body).forEach(([key, value]) => {
+          if (typeof value !== 'string') {
+            throw new IntegrationError({
+              code: 'INVALID_FORM_DATA',
+              message: 'Form values must be strings',
+            });
+          }
+          (fmtBody as URLSearchParams).append(key, value);
+        });
       } else {
         fmtBody = JSON.stringify(body);
       }
@@ -253,6 +264,9 @@ export abstract class BaseAPIClient {
         ...(bodyType === 'json' && { 'Content-Type': 'application/json' }),
         ...(bodyType === 'form' && (fmtBody as FormData).getHeaders()),
         ...(bodyType === 'text' && { 'Content-Type': 'text/plain' }),
+        ...(bodyType === 'urlencoded' && {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        }),
         Accept: 'application/json',
         ...(authorize && this.authorizationHeaders),
         ...headers,
