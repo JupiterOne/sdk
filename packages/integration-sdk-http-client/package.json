@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-http-client",
-  "version": "13.4.0",
+  "version": "13.5.0",
   "description": "The HTTP client for use in JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,15 +24,15 @@
   },
   "dependencies": {
     "@jupiterone/hierarchical-token-bucket": "^0.3.1",
-    "@jupiterone/integration-sdk-core": "^13.4.0",
+    "@jupiterone/integration-sdk-core": "^13.5.0",
     "@lifeomic/attempt": "^3.0.3",
     "form-data": "^4.0.0",
     "lodash": "^4.17.21",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
-    "@jupiterone/integration-sdk-dev-tools": "^13.4.0",
-    "@jupiterone/integration-sdk-private-test-utils": "^13.4.0",
+    "@jupiterone/integration-sdk-dev-tools": "^13.5.0",
+    "@jupiterone/integration-sdk-private-test-utils": "^13.5.0",
     "@types/node-fetch": "^2.6.11"
   },
   "bugs": {
