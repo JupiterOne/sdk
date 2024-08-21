@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+# 13.5.0 - 2024-08-20
+
+- http-client: Added option to format and send body for content type
+  `application/x-www-form-urlencoded`
+
 # 13.4.0 - 2024-08-14
 
 - Add new options parameter `GraphObjectIterateeOptions` to
