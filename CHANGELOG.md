@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.5.1 - 2024-08-09
+
+- bump @jupiterone/data-model to 0.61.11
+
 # 13.5.0 - 2024-08-20
 
 - http-client: Added option to format and send body for content type
