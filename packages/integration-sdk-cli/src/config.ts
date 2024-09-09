@@ -133,6 +133,7 @@ function registerTypescript() {
   } catch (err) {
     log.warn(
       'Looks like you are developing with TypeScript. Please make sure you have both typescript and ts-node installed. To allow the SDK to work with your code.',
+      err
     );
   }
 }
