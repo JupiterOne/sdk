@@ -132,7 +132,9 @@ function registerTypescript() {
     require('ts-node/register/transpile-only');
   } catch (err) {
     log.warn(
-      'Looks like you are developing with TypeScript. Please make sure you have both typescript and ts-node installed. To allow the SDK to work with your code.',
+      'Looks like you are developing with TypeScript. Please make sure you have both typescript and ts-node installed. To allow the SDK to work with your code.'
+    );
+    log.warn(
       err
     );
   }
