@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-core",
-  "version": "13.5.1",
+  "version": "13.5.2-alpha.0",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.61.11",
-    "@jupiterone/integration-sdk-entity-validator": "^13.5.1",
+    "@jupiterone/integration-sdk-entity-validator": "^13.5.2-alpha.0",
     "@sinclair/typebox": "^0.32.30",
     "lodash": "^4.17.21"
   },
