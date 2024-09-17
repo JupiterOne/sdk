@@ -290,6 +290,23 @@ export async function uploadGraphObjectData(
         uploadBatchSizeInBytes,
       );
 
+      if (
+        synchronizationJobContext.job.integrationInstanceId ===
+        'b066d99d-e0d3-4463-8133-1ec583170b7b'
+      ) {
+        const s3BucketEntity = graphObjectData.entities
+          .filter((entity) => entity._type === 'aws_s3_bucket')
+          .map((entity) => ({
+            _key: entity._key,
+            public: entity.public,
+            access: entity.access,
+          }));
+        synchronizationJobContext.logger.info(
+          { s3BucketEntity },
+          'uploaded s3BucketEntity for instance',
+        );
+      }
+
       synchronizationJobContext.logger.debug(
         {
           entities: graphObjectData.entities.length,
