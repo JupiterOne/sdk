@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.5.2 - 2024-09-17
+
+- Temporary logging that should be removed after investigation.
+
 # 13.5.1 - 2024-09-09
 
 - bump @jupiterone/data-model to 0.61.11
