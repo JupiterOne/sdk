@@ -530,7 +530,8 @@ describe('iterateEntities', () => {
       (entity) => entity.immutable === true,
     );
 
-    // Ideally the values would actually be immutable. This could be done by using Object.freeze prior to
+    // Ideally the values would actually be immutable. This could be done by using Object.freeze
+    // after integrations have adopted the new version of the SDK.
     expect(allHaveNotBeenMutated).toBe(false);
   });
 
