@@ -516,7 +516,7 @@ describe('iterateEntities', () => {
     await store.addEntities(storageDirectoryPath, newEntities);
 
     await store.iterateEntities({ _type: _type }, (entity) => {
-      // @ts-ignore
+      // @ts-expect-error Modifying graph objects during iteration MUST not be done.
       entity.immutable = false;
     });
 

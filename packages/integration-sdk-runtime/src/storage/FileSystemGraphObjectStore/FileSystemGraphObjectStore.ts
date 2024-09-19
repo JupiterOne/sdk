@@ -25,7 +25,6 @@ import { BigMap } from '../../execution/utils/bigMap';
 import { chunk, min } from 'lodash';
 import { DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES } from '../../synchronization';
 
-export const DEFAULT_GRAPH_OBJECT_BUFFER_THRESHOLD = 500;
 export const DEFAULT_GRAPH_OBJECT_FILE_SIZE = 500;
 
 // no more than 2^30 bytes (1GB)
@@ -220,7 +219,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     const iteratedEntities = new Map<string, boolean>();
     await this.localGraphObjectStore.iterateEntities(
       filter,
-      (obj: T) => {
+      (obj: Readonly<T>) => {
         iteratedEntities.set(obj._key, true);
         return iteratee(obj);
       },
@@ -230,7 +229,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     await iterateEntityTypeIndex({
       type: filter._type,
       options,
-      iteratee: (obj: T) => {
+      iteratee: (obj: Readonly<T>) => {
         if (iteratedEntities.has(obj._key)) {
           return;
         }
@@ -249,15 +248,18 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     //There is a detailed description of the changes to come to avoid having to do this
     //Here: https://jupiterone.atlassian.net/wiki/spaces/INT/pages/786169857/Task+SDK+decouple+tasks
     const iteratedRelationships = new Map<string, boolean>();
-    await this.localGraphObjectStore.iterateRelationships(filter, (obj: T) => {
-      iteratedRelationships.set(obj._key, true);
-      return iteratee(obj);
-    });
+    await this.localGraphObjectStore.iterateRelationships(
+      filter,
+      (obj: Readonly<T>) => {
+        iteratedRelationships.set(obj._key, true);
+        return iteratee(obj);
+      },
+    );
 
     await iterateRelationshipTypeIndex({
       type: filter._type,
       options,
-      iteratee: (obj: T) => {
+      iteratee: (obj: Readonly<T>) => {
         if (iteratedRelationships.has(obj._key)) {
           return;
         }
