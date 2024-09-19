@@ -9,6 +9,20 @@ and this project adheres to
 
 # Unreleased
 
+# 13.6.0 - 2024-09-19
+
+- Minor breaking change to JobState methods iterateEntities and
+  iterateRelationships function signatures. The graph object passed to the
+  iteratee is now Readonly. The intention is to prevent modification of the
+  object during iteration. This is not a breaking change since the long-standing
+  understanding is that these objects should never be modified once added to the
+  jobState.
+
+```diff
+- export type GraphObjectIteratee<T> = (obj: T) => void | Promise<void>;
++ export type GraphObjectIteratee<T> = (obj: Readonly<T>) => void | Promise<void>;
+```
+
 # 13.5.2 - 2024-09-17
 
 - Temporary logging that should be removed after investigation.

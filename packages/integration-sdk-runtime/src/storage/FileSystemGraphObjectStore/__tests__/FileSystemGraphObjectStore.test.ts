@@ -506,6 +506,35 @@ describe('findEntity', () => {
 });
 
 describe('iterateEntities', () => {
+  test('iterated entities are mutable, but only if TS error is ignored.', async () => {
+    const { storageDirectoryPath, store } = setupFileSystemObjectStore();
+    const _type = uuid();
+    const newEntities = times(5, () =>
+      createTestEntity({ _type: _type, immutable: true }),
+    );
+
+    await store.addEntities(storageDirectoryPath, newEntities);
+
+    await store.iterateEntities({ _type: _type }, (entity) => {
+      // @ts-expect-error Modifying graph objects during iteration MUST not be done.
+      entity.immutable = false;
+    });
+
+    const collectedEntities: Entity[] = [];
+    await store.iterateEntities({ _type: _type }, (entity) => {
+      collectedEntities.push(entity);
+    });
+
+    expect(collectedEntities.length).toBe(5);
+    const allHaveNotBeenMutated = collectedEntities.every(
+      (entity) => entity.immutable === true,
+    );
+
+    // Ideally the values would actually be immutable. This could be done by using Object.freeze
+    // after integrations have adopted the new version of the SDK.
+    expect(allHaveNotBeenMutated).toBe(false);
+  });
+
   test('should find buffered & non-buffered entities and iterate the entity "_type" index stored on disk', async () => {
     const { storageDirectoryPath, store } = setupFileSystemObjectStore();
 

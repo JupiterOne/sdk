@@ -4,7 +4,7 @@ export interface GraphObjectFilter {
   _type: string;
 }
 
-export type GraphObjectIteratee<T> = (obj: T) => void | Promise<void>;
+export type GraphObjectIteratee<T> = (obj: Readonly<T>) => void | Promise<void>;
 export type GraphObjectIterateeOptions = {
   concurrency?: number;
 };
@@ -104,6 +104,11 @@ export interface JobState {
    * have run and therefore entities collected by those other steps should not
    * be expected to exist.
    *
+   * The graph object parameter passed to the iteratee is marked as Readonly.
+   * Once created and added to the JobState, graph objects should be considered immutable.
+   * Modifying a graph object during iteration can result in undesirable behavior
+   * since objects are upload to JupiterOne at non-regular intervals.
+   *
    * If concurrency is specified (defaults to 1), the iteratee will be executed
    * concurrently for graph objects that are found in memory and for
    * graph objects found in a given graph file. No specific ordering is guaranteed.
@@ -135,6 +140,11 @@ export interface JobState {
    * previous steps it depends on. Other steps outside the dependency ancestry
    * may not have run and therefore relationships collected by those other steps
    * should not be expected to exist.
+   *
+   * The graph object parameter passed to the iteratee is marked as Readonly.
+   * Once created and added to the JobState, graph objects should be considered immutable.
+   * Modifying a graph object during iteration can result in undesirable behavior
+   * since objects are upload to JupiterOne at non-regular intervals.
    *
    * If concurrency is specified (defaults to 1), the iteratee will be executed
    * concurrently for graph objects that are found in memory and for
