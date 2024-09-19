@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@jupiterone/data-model": "^0.61.11",
-    "@jupiterone/integration-sdk-entity-validator": "^13.5.2",
+    "@jupiterone/integration-sdk-entity-validator": "13.5.2",
     "@sinclair/typebox": "^0.32.30",
     "lodash": "^4.17.21"
   },
