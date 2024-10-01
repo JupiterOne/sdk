@@ -1,6 +1,7 @@
 import {
   IntegrationInstanceConfig,
   IntegrationInvocationConfig,
+  IntegrationStep,
 } from '@jupiterone/integration-sdk-core';
 
 export interface StepTestConfig<
@@ -12,4 +13,6 @@ export interface StepTestConfig<
   dependencyStepIds?: string[];
   invocationConfig: TInvocationConfig;
   instanceConfig: TInstanceConfig;
+  onBeforeExecuteStep?: (step: IntegrationStep) => void;
+  onAfterExecuteStep?: (step: IntegrationStep) => void;
 }

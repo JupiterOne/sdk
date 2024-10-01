@@ -8,8 +8,14 @@ import {
 import { getStepExecutionOrder } from './getStepExecutionOrder';
 
 export async function executeStepWithDependencies(params: StepTestConfig) {
-  const { stepId, invocationConfig, instanceConfig, dependencyStepIds } =
-    params;
+  const {
+    stepId,
+    invocationConfig,
+    instanceConfig,
+    dependencyStepIds,
+    onBeforeExecuteStep,
+    onAfterExecuteStep,
+  } = params;
 
   const stepDependencyGraph = buildStepDependencyGraph(
     invocationConfig.integrationSteps,
@@ -54,7 +60,9 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
 
   for (const dependencyStepId of dependencySteps) {
     const dependencyStep = stepDependencyGraph.getNodeData(dependencyStepId);
+    onBeforeExecuteStep?.(dependencyStep);
     await dependencyStep.executionHandler(preContext);
+    onAfterExecuteStep?.(dependencyStep);
   }
 
   const context: MockIntegrationStepExecutionContext & {
@@ -69,7 +77,9 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
     executionConfig,
   };
 
+  onBeforeExecuteStep?.(step);
   await step.executionHandler(context);
+  onAfterExecuteStep?.(step);
 
   return {
     collectedEntities: context.jobState.collectedEntities,
