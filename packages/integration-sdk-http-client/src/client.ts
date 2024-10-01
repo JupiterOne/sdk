@@ -80,6 +80,7 @@ export abstract class BaseAPIClient {
   protected baseTokenBucket?: HierarchicalTokenBucket;
   protected tokenBucketInitialConfig?: TokenBucketOptions | undefined;
   protected endpointTokenBuckets: Record<string, HierarchicalTokenBucket> = {};
+  protected refreshAuthHeadersOnError?: boolean;
 
   /**
    * The authorization headers for the API requests
@@ -109,6 +110,7 @@ export abstract class BaseAPIClient {
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='ratelimit-reset'] - The header for the rate limit reset
    * @param {TokenBucketOptions} [config.tokenBucket] - The token bucket options,
    *    if not provided, token bucket will not be enabled
+   * @param {boolean} [config.refreshAuthHeadersOnError] - If true, the auth headers will be refreshed on 401 and 403 errors
    *
    * @example
    * ```typescript
@@ -146,6 +148,7 @@ export abstract class BaseAPIClient {
         refillRate: config.tokenBucket.refillRate,
       });
     }
+    this.refreshAuthHeadersOnError = config.refreshAuthHeadersOnError;
   }
 
   protected withBaseUrl(endpoint: string): string {
@@ -322,9 +325,11 @@ export abstract class BaseAPIClient {
             } else {
               error = await fatalRequestError(requestErrorParams);
             }
-            for await (const _chunk of response.body) {
-              // force consumption of body to avoid memory leaks
-              // https://github.com/node-fetch/node-fetch/issues/83
+            if (response.body) {
+              for await (const _chunk of response.body) {
+                // force consumption of body to avoid memory leaks
+                // https://github.com/node-fetch/node-fetch/issues/83
+              }
             }
             throw error;
           });
@@ -335,6 +340,19 @@ export abstract class BaseAPIClient {
           timeout: this.retryOptions.timeout,
           factor: this.retryOptions.factor,
           handleError: async (err, context) => {
+            if (
+              this.refreshAuthHeadersOnError &&
+              (err.status === 401 || err.status === 403) &&
+              context.attemptsRemaining > 1
+            ) {
+              this.logger.warn(
+                'Encountered an authentication error. Refreshing authorization headers and retrying.',
+              );
+              this.authorizationHeaders = undefined as any;
+              context.attemptsRemaining = 1;
+              return;
+            }
+
             await this.retryOptions.handleError(err, context, this.logger);
           },
           handleTimeout: async (attemptContext, options) => {
@@ -428,7 +446,7 @@ export abstract class BaseAPIClient {
         isInitialRequest ? initialRequest.endpoint : (nextUrl as string),
         isInitialRequest ? initialRequest.options : nextRequestOptions,
       );
-      if (response.status === 204) {
+      if (response.status === 204 && response.body) {
         for await (const _chunk of response.body) {
           // force consumption of body to avoid memory leaks
         }

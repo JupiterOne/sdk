@@ -1,3 +1,4 @@
+import { IntegrationProviderAuthenticationError } from '@jupiterone/integration-sdk-core';
 import { BaseAPIClient, defaultErrorHandler } from '../client';
 import { sleep } from '@lifeomic/attempt';
 import FormData from 'form-data';
@@ -5,7 +6,7 @@ import FormData from 'form-data';
 jest.mock('node-fetch');
 import fetch from 'node-fetch';
 
-const { Response } = jest.requireActual('node-fetch');
+const { Response, Headers } = jest.requireActual('node-fetch');
 
 jest.mock('@lifeomic/attempt', () => {
   const originalModule = jest.requireActual('@lifeomic/attempt');
@@ -151,6 +152,32 @@ describe('APIClient', () => {
         body: undefined,
       });
     });
+
+    it('should try to authorize again when 401/403 errors are received', async () => {
+      (fetch as unknown as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: [],
+      });
+
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+        refreshAuthHeadersOnError: true,
+      });
+
+      const endpoint = '/test';
+      await expect(
+        (client as any).retryableRequest(endpoint, {
+          method: 'GET',
+          body: { test: 'test' },
+        }),
+      ).rejects.toThrow(IntegrationProviderAuthenticationError);
+
+      expect(authHeadersFn).toHaveBeenCalledTimes(2);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    }, 50_000);
 
     it('should make a fetch request with correct parameters', async () => {
       authHeadersFn.mockReturnValue({

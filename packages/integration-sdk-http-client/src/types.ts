@@ -49,6 +49,7 @@ export interface ClientConfig {
   logErrorBody?: boolean;
   rateLimitThrottling?: RateLimitThrottlingOptions;
   tokenBucket?: TokenBucketOptions;
+  refreshAuthHeadersOnError?: boolean;
 }
 
 export interface IterateCallbackResult {
