@@ -1,5 +1,5 @@
 import { IntegrationProviderAuthenticationError } from '@jupiterone/integration-sdk-core';
-import { BaseAPIClient, defaultErrorHandler } from '../client';
+import { BaseAPIClient } from '../client';
 import { sleep } from '@lifeomic/attempt';
 import FormData from 'form-data';
 
@@ -50,7 +50,6 @@ describe('APIClient', () => {
         timeout: 180_000,
         factor: 2,
         timeoutMaxAttempts: 3,
-        handleError: defaultErrorHandler,
       });
     });
 
@@ -61,7 +60,6 @@ describe('APIClient', () => {
         timeout: 30_000,
         factor: 1.5,
         timeoutMaxAttempts: 2,
-        handleError: jest.fn(),
       };
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
@@ -164,7 +162,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
-        refreshAuthHeadersOnError: true,
+        refreshAuth: { enabled: true },
       });
 
       const endpoint = '/test';
