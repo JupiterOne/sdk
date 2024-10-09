@@ -18,7 +18,10 @@ export interface RetryOptions {
   factor: number;
   timeout: number;
   timeoutMaxAttempts: number;
-  handleError: (
+  /**
+   * @deprecated Override `retryErrorHandler` protected method instead.
+   */
+  handleError?: (
     err: any,
     context: AttemptContext,
     logger: IntegrationLogger,
@@ -42,6 +45,11 @@ export interface TokenBucketOptions {
   refillRate: number;
 }
 
+export interface RefreshAuthOptions {
+  enabled: boolean;
+  errorCodes?: number[];
+}
+
 export interface ClientConfig {
   baseUrl: string;
   logger: IntegrationLogger;
@@ -49,6 +57,7 @@ export interface ClientConfig {
   logErrorBody?: boolean;
   rateLimitThrottling?: RateLimitThrottlingOptions;
   tokenBucket?: TokenBucketOptions;
+  refreshAuth?: RefreshAuthOptions;
 }
 
 export interface IterateCallbackResult {

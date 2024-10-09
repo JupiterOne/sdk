@@ -21,39 +21,11 @@ import {
   IterateCallbackResult,
   TokenBucketOptions,
   NextPageData,
+  RefreshAuthOptions,
 } from './types';
 import get from 'lodash/get';
 import { HierarchicalTokenBucket } from '@jupiterone/hierarchical-token-bucket';
 import FormData from 'form-data';
-
-export const defaultErrorHandler = async (
-  err: any,
-  context: AttemptContext,
-  logger: IntegrationLogger,
-) => {
-  if (
-    ['ECONNRESET', 'ETIMEDOUT'].some(
-      (code) => err.code === code || err.message.includes(code),
-    )
-  ) {
-    return;
-  }
-
-  if (!err.retryable) {
-    // can't retry this? just abort
-    context.abort();
-    return;
-  }
-
-  if (err.status === 429) {
-    const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5_000;
-    logger.warn(
-      { retryAfter },
-      'Received a rate limit error. Waiting before retrying.',
-    );
-    await sleep(retryAfter);
-  }
-};
 
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 3,
@@ -61,7 +33,6 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   timeout: 180_000,
   timeoutMaxAttempts: 3,
   factor: 2, // exponential backoff factor. with 30 sec start and 3 attempts, longest wait is 2 min
-  handleError: defaultErrorHandler,
 };
 
 const DEFAULT_RATE_LIMIT_HEADERS: { [key in keyof RateLimitHeaders]: string } =
@@ -80,6 +51,7 @@ export abstract class BaseAPIClient {
   protected baseTokenBucket?: HierarchicalTokenBucket;
   protected tokenBucketInitialConfig?: TokenBucketOptions | undefined;
   protected endpointTokenBuckets: Record<string, HierarchicalTokenBucket> = {};
+  protected refreshAuth?: RefreshAuthOptions;
 
   /**
    * The authorization headers for the API requests
@@ -109,6 +81,8 @@ export abstract class BaseAPIClient {
    * @param {string} [config.rateLimitThrottling.rateLimitHeaders.reset='ratelimit-reset'] - The header for the rate limit reset
    * @param {TokenBucketOptions} [config.tokenBucket] - The token bucket options,
    *    if not provided, token bucket will not be enabled
+   * @param {boolean} [config.refreshAuth.enabled] - If true, the auth headers will be refreshed on 401 and 403 errors
+   * @param {number[]} [config.refreshAuth.errorCodes] - If provided, the auth headers will be refreshed on the provided error codes
    *
    * @example
    * ```typescript
@@ -146,6 +120,7 @@ export abstract class BaseAPIClient {
         refillRate: config.tokenBucket.refillRate,
       });
     }
+    this.refreshAuth = config.refreshAuth;
   }
 
   protected withBaseUrl(endpoint: string): string {
@@ -322,9 +297,11 @@ export abstract class BaseAPIClient {
             } else {
               error = await fatalRequestError(requestErrorParams);
             }
-            for await (const _chunk of response.body) {
-              // force consumption of body to avoid memory leaks
-              // https://github.com/node-fetch/node-fetch/issues/83
+            if (response.body) {
+              for await (const _chunk of response.body) {
+                // force consumption of body to avoid memory leaks
+                // https://github.com/node-fetch/node-fetch/issues/83
+              }
             }
             throw error;
           });
@@ -335,7 +312,11 @@ export abstract class BaseAPIClient {
           timeout: this.retryOptions.timeout,
           factor: this.retryOptions.factor,
           handleError: async (err, context) => {
-            await this.retryOptions.handleError(err, context, this.logger);
+            if (this.retryOptions.handleError) {
+              await this.retryOptions.handleError(err, context, this.logger);
+            } else {
+              await this.retryErrorHandler(err, context);
+            }
           },
           handleTimeout: async (attemptContext, options) => {
             if (timeoutRetryAttempt < this.retryOptions.timeoutMaxAttempts) {
@@ -369,6 +350,45 @@ export abstract class BaseAPIClient {
       );
     };
     return await doRequest();
+  }
+
+  protected async retryErrorHandler(err: any, context: AttemptContext) {
+    if (
+      ['ECONNRESET', 'ETIMEDOUT'].some(
+        (code) => err.code === code || err.message.includes(code),
+      )
+    ) {
+      return;
+    }
+
+    const refreshAuthErrorCodes = this.refreshAuth?.errorCodes ?? [401, 403];
+    if (
+      this.refreshAuth?.enabled &&
+      refreshAuthErrorCodes.includes(err.status) &&
+      context.attemptsRemaining > 1
+    ) {
+      this.logger.warn(
+        'Encountered an authentication error. Refreshing authorization headers and retrying.',
+      );
+      this.authorizationHeaders = undefined as any;
+      context.attemptsRemaining = 1;
+      return;
+    }
+
+    if (!err.retryable) {
+      // can't retry this? just abort
+      context.abort();
+      return;
+    }
+
+    if (err.status === 429) {
+      const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5_000;
+      this.logger.warn(
+        { retryAfter },
+        'Received a rate limit error. Waiting before retrying.',
+      );
+      await sleep(retryAfter);
+    }
   }
 
   /**
@@ -428,7 +448,7 @@ export abstract class BaseAPIClient {
         isInitialRequest ? initialRequest.endpoint : (nextUrl as string),
         isInitialRequest ? initialRequest.options : nextRequestOptions,
       );
-      if (response.status === 204) {
+      if (response.status === 204 && response.body) {
         for await (const _chunk of response.body) {
           // force consumption of body to avoid memory leaks
         }

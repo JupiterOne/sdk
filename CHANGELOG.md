@@ -9,6 +9,12 @@ and this project adheres to
 
 # Unreleased
 
+# 13.7.0 - 2024-10-09
+
+- http-client: Added option to refresh authentication headers on 401/403 errors
+- http-client: deprecated `retryOptions.retryErrorHandler` in favor of protected
+  method `defaultErrorHandler`
+
 # 13.6.0 - 2024-09-19
 
 - Minor breaking change to JobState methods iterateEntities and
