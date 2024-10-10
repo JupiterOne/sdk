@@ -231,31 +231,50 @@ export async function finalizeSynchronization({
 }: FinalizeSynchronizationInput): Promise<SynchronizationJob> {
   logger.info('Finalizing synchronization...');
 
-  let finalizedJob: SynchronizationJob;
+  return await retry(
+    async () => {
+      const response = await apiClient.post(
+        `/persister/synchronization/jobs/${job.id}/finalize`,
+        {
+          partialDatasets,
+        },
+      );
 
-  try {
-    const response = await apiClient.post(
-      `/persister/synchronization/jobs/${job.id}/finalize`,
-      {
-        partialDatasets,
-      },
-    );
-    finalizedJob = response.data.job;
-  } catch (err) {
-    logger.warn(
-      {
-        err,
-        'err.$response': (err as any)?.$response,
-      },
-      'Error occurred while finalizing synchronization job',
-    );
-    throw synchronizationApiError(
-      err,
-      'Error occurred while finalizing synchronization job.',
-    );
-  }
+      return response.data.job;
+    },
+    {
+      maxAttempts: 5,
+      delay: 200,
+      factor: 1.05,
+      handleError(err, context) {
+        if (context.attemptsRemaining > 0) {
+          logger.warn(
+            {
+              err,
+              'err.$response': (err as any)?.$response,
+              context,
+            },
+            'Error occurred while finalizing synchronization job. Retrying request.',
+          );
+        }
 
-  return finalizedJob;
+        if (context.attemptsRemaining === 0) {
+          logger.error(
+            {
+              err,
+              'err.$response': (err as any)?.$response,
+              context,
+            },
+            'Error occurred while finalizing synchronization job',
+          );
+          throw synchronizationApiError(
+            err,
+            'Error occurred while finalizing synchronization job.',
+          );
+        }
+      },
+    },
+  );
 }
 
 async function getPartialDatasets() {
@@ -587,22 +606,48 @@ export async function abortSynchronization({
     'Aborting synchronization job...',
   );
 
-  let abortedJob: SynchronizationJob;
+  return await retry(
+    async () => {
+      const response = await apiClient.post(
+        `/persister/synchronization/jobs/${job.id}/abort`,
+        { reason, terminalStatus },
+      );
 
-  try {
-    const response = await apiClient.post(
-      `/persister/synchronization/jobs/${job.id}/abort`,
-      { reason, terminalStatus },
-    );
-    abortedJob = response.data.job;
-  } catch (err) {
-    throw synchronizationApiError(
-      err,
-      'Error occurred while aborting synchronization job',
-    );
-  }
+      return response.data.job;
+    },
+    {
+      maxAttempts: 5,
+      delay: 200,
+      factor: 1.05,
+      handleError(err, context) {
+        if (context.attemptsRemaining > 0) {
+          logger.warn(
+            {
+              err,
+              'err.$response': (err as any)?.$response,
+              context,
+            },
+            'Error occurred while aborting synchronization job. Retrying request.',
+          );
+        }
 
-  return abortedJob;
+        if (context.attemptsRemaining === 0) {
+          logger.error(
+            {
+              err,
+              'err.$response': (err as any)?.$response,
+              context,
+            },
+            'Error occurred while aborting synchronization job',
+          );
+          throw synchronizationApiError(
+            err,
+            'Error occurred while aborting synchronization job.',
+          );
+        }
+      },
+    },
+  );
 }
 
 function cleanAxiosError(err: AxiosError) {
