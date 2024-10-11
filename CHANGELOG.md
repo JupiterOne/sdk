@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+# 13.7.1 - 2024-10-11
+
+- Add retry logic to sync job requests /abort and /finalize.
+- Added steps_finished Info Log Event
+
 # 13.7.0 - 2024-10-09
 
 - http-client: Added option to refresh authentication headers on 401/403 errors
