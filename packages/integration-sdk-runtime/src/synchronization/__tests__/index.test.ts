@@ -32,6 +32,8 @@ import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { getExpectedRequestHeaders } from '../../../test/util/request';
 
 import * as shrinkBatchRawData from '../shrinkBatchRawData';
+import { AxiosError } from 'axios';
+import { SynchronizationApiErrorResponse } from '../types';
 
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
@@ -383,9 +385,8 @@ describe('abortSynchronization', () => {
 });
 
 describe('synchronizeCollectedData', () => {
-  test('creates job, uploads collected data, and starts finalization', async () => {
+  test('creates job, uploads collected data, and starts finalization with successful retry', async () => {
     loadProjectStructure('synchronization');
-
     const context = createTestContext();
     const job = generateSynchronizationJob();
     const finalizedJob = {
@@ -395,22 +396,38 @@ describe('synchronizeCollectedData', () => {
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
-      .mockImplementation((path: string): any => {
-        if (path === `/persister/synchronization/jobs/${job.id}/finalize`) {
-          return { data: { job: finalizedJob } };
-        }
-
-        return {
-          data: {
-            job,
-          },
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => {
+        const error: AxiosError<SynchronizationApiErrorResponse> = {
+          name: '',
+          message: '',
+          config: undefined as any,
+          isAxiosError: false,
+          toJSON: () => ({}),
         };
+        throw error;
+      })
+      .mockImplementationOnce((): any => {
+        return { data: { job: finalizedJob } };
       });
+
+    const summary = await readJsonFromPath<ExecuteIntegrationResult>(
+      path.resolve(getRootStorageDirectory(), 'summary.json'),
+    );
+    const { partialDatasets } = summary.metadata;
 
     const returnedJob = await synchronizeCollectedData(context);
     expect(returnedJob).toEqual(finalizedJob);
 
     const expectedRequestHeaders = getExpectedRequestHeaders();
+
+    expect(postSpy).toHaveBeenCalledTimes(9);
 
     expect(postSpy).toHaveBeenNthCalledWith(
       1,
@@ -433,13 +450,15 @@ describe('synchronizeCollectedData', () => {
       expectedRequestHeaders,
     );
 
-    const summary = await readJsonFromPath<ExecuteIntegrationResult>(
-      path.resolve(getRootStorageDirectory(), 'summary.json'),
+    expect(postSpy).toHaveBeenNthCalledWith(
+      8,
+      `/persister/synchronization/jobs/${job.id}/finalize`,
+      {
+        partialDatasets,
+      },
     );
-
-    const { partialDatasets } = summary.metadata;
-
-    expect(postSpy).toHaveBeenCalledWith(
+    expect(postSpy).toHaveBeenNthCalledWith(
+      9,
       `/persister/synchronization/jobs/${job.id}/finalize`,
       {
         partialDatasets,
