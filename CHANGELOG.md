@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 13.7.2 - 2024-10-14
+
+- Add agent option to http client
+
 # 13.7.1 - 2024-10-11
 
 - Add retry logic to sync job requests /abort and /finalize.
