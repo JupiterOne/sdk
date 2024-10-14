@@ -65,6 +65,7 @@ export async function executeStepWithDependencies(params: StepTestConfig) {
       entities: preContext.jobState.collectedEntities,
       relationships: preContext.jobState.collectedRelationships,
       setData: preContext.jobState.collectedData,
+      normalizeGraphObjectKey: invocationConfig.normalizeGraphObjectKey,
     }),
     executionConfig,
   };
