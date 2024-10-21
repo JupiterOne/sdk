@@ -164,6 +164,25 @@ export abstract class BaseAPIClient {
   >;
 
   /**
+   * Intended to be overridden by subclasses to determine if the access has expired.
+   * If implemented, this avoids needing to check if token is expired before each request;
+   * the client will automatically refresh the token.
+   * If the access has expired, the authorization headers will be refreshed. See {@link getAuthorizationHeaders}
+   *
+   * Default behavior is to always return false for backwards compatibility.
+   *
+   * @example
+   * ```typescript
+   * hasAccessExpired(): boolean {
+   *   return Date.now() > this.accessTokenExpiresOn;
+   * }
+   * ```
+   */
+  protected hasAccessExpired(): boolean {
+    return false;
+  }
+
+  /**
    * Perform a request to the API.
    *
    * @param {string} endpoint - The endpoint to request
@@ -192,7 +211,7 @@ export abstract class BaseAPIClient {
       headers,
       authorize = true,
     } = options ?? {};
-    if (authorize && !this.authorizationHeaders) {
+    if (authorize && (!this.authorizationHeaders || this.hasAccessExpired())) {
       this.authorizationHeaders = await this.getAuthorizationHeaders();
     }
     let url: string | undefined;
