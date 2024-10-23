@@ -9,6 +9,15 @@ and this project adheres to
 
 # Unreleased
 
+# 14.0.0 - 2024-10-23
+
+- Upgrade @jupiterone/data-model to v0.61.13
+- Breaking changes to the Device & Host \_class schema validation.
+- More details can be found
+  [here](https://docs.jupiterone.io/api/data-model/schemas/Device) and
+  [here](https://docs.jupiterone.io/api/data-model/schemas/Host) or
+  [here](https://github.com/JupiterOne/jupiter-data-model/pull/36/files)
+
 # 13.7.2 - 2024-10-14
 
 - Add agent option to http client

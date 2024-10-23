@@ -187,10 +187,20 @@ describe('createIntegrationHelpers', () => {
       someNewProperty: 'someNewProperty',
       make: 'here',
       model: 'there',
-      deviceId: 'yolo',
+      deviceId: ['yolo'],
       displayName: 'hey',
       category: 'yolo',
       lastSeenOn: 0,
+      ipv4Addresses: null,
+      ipv6Addresses: null,
+      macAddresses: null,
+      publicIpAddresses: null,
+      privateIpAddresses: null,
+      fqdn: null,
+      osName: null,
+      osType: 'other',
+      osDetails: null,
+      osVersion: null,
     });
 
     // @ts-expect-error lacks someNewProperty
@@ -202,7 +212,7 @@ describe('createIntegrationHelpers', () => {
       name: 'entity',
       make: 'here',
       model: 'there',
-      deviceId: 'yolo',
+      deviceId: ['yolo'],
       displayName: 'hey',
       category: 'yolo',
       lastSeenOn: 0,
@@ -228,7 +238,7 @@ describe('createIntegrationHelpers', () => {
       serial: '123456',
       make: 'here',
       model: 'there',
-      deviceId: 'yolo',
+      deviceId: ['yolo'],
       category: 'yolo',
       lastSeenOn: 0,
     });
@@ -242,12 +252,22 @@ describe('createIntegrationHelpers', () => {
       someNewProperty: 'someNewProperty',
       make: 'here',
       model: 'there',
-      deviceId: 'yolo',
+      deviceId: ['yolo'],
       displayName: 'hey',
       category: 'yolo',
       lastSeenOn: 0,
       _class: ['Device', 'Host'],
       _type: 'multi',
+      ipv4Addresses: null,
+      ipv6Addresses: null,
+      macAddresses: null,
+      publicIpAddresses: null,
+      privateIpAddresses: null,
+      fqdn: null,
+      osName: null,
+      osType: 'other',
+      osDetails: null,
+      osVersion: null,
     });
 
     const validator = new EntityValidator({
@@ -258,108 +278,7 @@ describe('createIntegrationHelpers', () => {
 
     const { errors } = validator.validateEntity(createMulti({} as any));
 
-    expect(errors).toEqual([
-      {
-        message: "must have required property '_key'",
-        property: '_key',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'name'",
-        property: 'name',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'displayName'",
-        property: 'displayName',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'category'",
-        property: 'category',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'make'",
-        property: 'make',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'model'",
-        property: 'model',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'serial'",
-        property: 'serial',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'deviceId'",
-        property: 'deviceId',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'lastSeenOn'",
-        property: 'lastSeenOn',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property '_key'",
-        property: '_key',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        // twice since it's required in both Device and Host
-        message: "must have required property 'name'",
-        property: 'name',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        // twice since it's required in both Device and Host
-        message: "must have required property 'displayName'",
-        property: 'displayName',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        // required on Host
-        message: "must have required property 'hostname'",
-        property: 'hostname',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        // required on Multi!!
-        message: "must have required property 'id'",
-        property: 'id',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'name'",
-        property: 'name',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-      {
-        message: "must have required property 'someNewProperty'",
-        property: 'someNewProperty',
-        schemaId: '#multi',
-        validation: 'required',
-      },
-    ]);
+    expect(errors).toMatchSnapshot();
 
     expect(MULTI).toEqual({
       resourceName: 'Multi',
