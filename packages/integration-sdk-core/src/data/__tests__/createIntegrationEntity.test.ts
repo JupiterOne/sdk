@@ -57,7 +57,14 @@ describe('schemaWhitelistedPropertyNames', () => {
   test('answers union of properies in both schemas', () => {
     expect(
       schemaWhitelistedPropertyNames(['Network', 'Host']),
-    ).toIncludeAllMembers(['id', 'name', 'CIDR', 'hostname', 'platform']);
+    ).toIncludeAllMembers([
+      'id',
+      'name',
+      'CIDR',
+      'public',
+      'hostname',
+      'macAddresses',
+    ]);
   });
 
   test('does not duplicate entries in cache', () => {

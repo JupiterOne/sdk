@@ -483,9 +483,9 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
     );
   });
 
-  test('should try to merge two enum set properties in array of classes', () => {
+  test('should try to merge properties of two _classes', () => {
     const entity: Entity = {
-      _class: ['Host', 'Device'],
+      _class: ['HostAgent', 'Device'],
       _type: 'user_endpoint',
       _key: 'enum-set-test',
       hostname: 'test',
@@ -495,14 +495,25 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
       make: 'Apple',
       model: 'MacBookPro14,3',
       serial: 'C0123',
-      platform: 'darwin',
       specialProp: 'abc',
-      deviceId: 'udid of device',
+      deviceId: ['udid of device'],
       lastSeenOn: 923618340000,
+      ipv4Addresses: null,
+      ipv6Addresses: null,
+      macAddresses: null,
+      publicIpAddresses: null,
+      privateIpAddresses: null,
+      fqdn: null,
+      osName: null,
+      osType: 'other',
+      osDetails: null,
+      osVersion: null,
+      status: 'other',
+      function: ['HIDS'],
     };
 
     const result = toMatchGraphObjectSchema(entity, {
-      _class: ['Host', 'Device'],
+      _class: ['HostAgent', 'Device'],
       schema: {
         additionalProperties: false,
         properties: {
@@ -511,6 +522,12 @@ Find out more about JupiterOne schemas: https://github.com/JupiterOne/data-model
         },
       },
     });
+
+    if (!result.pass) {
+      /* eslint-disable no-console */
+      console.error(result.message());
+      /* eslint-enable no-console */
+    }
 
     expect(result).toEqual({
       message: expect.any(Function),
