@@ -2,6 +2,7 @@ import { IntegrationProviderAuthenticationError } from '@jupiterone/integration-
 import { BaseAPIClient } from '../client';
 import { sleep } from '@lifeomic/attempt';
 import FormData from 'form-data';
+import https from 'node:https';
 
 jest.mock('node-fetch');
 import fetch from 'node-fetch';
@@ -42,6 +43,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       expect((client as any).retryOptions).toEqual({
@@ -64,6 +66,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
         retryOptions,
       });
 
@@ -76,6 +79,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com/',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const endpoint = '/test';
@@ -88,6 +92,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com/',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const endpoint = 'test';
@@ -100,6 +105,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com/api/v1',
         logger: mockLogger,
+        integrationConfig: {},
       });
       const endpoint = 'test/1';
       const result = (client as any).withBaseUrl(endpoint);
@@ -114,6 +120,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com/api/v1',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const endpoint = '/test?param1=1&param2=2';
@@ -133,6 +140,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const endpoint = '/test';
@@ -162,6 +170,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
         refreshAuth: { enabled: true },
       });
 
@@ -187,6 +196,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const endpoint = '/test';
@@ -207,6 +217,83 @@ describe('APIClient', () => {
       });
     });
 
+    it('should call the protected method getDefaultAgent if integration configs includes disableTlsVerification', async () => {
+      authHeadersFn.mockReturnValue({
+        Authorization: 'Bearer test-token',
+      });
+      const mockResponse = {} as Response;
+      (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+        integrationConfig: {
+          disableTlsVerification: true,
+        },
+      });
+
+      const spy = jest.spyOn(client as any, 'getDefaultAgent' as any);
+
+      const endpoint = '/test';
+      await (client as any).request(endpoint, {
+        method: 'GET',
+        body: { test: 'test' },
+      });
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should call the protected method getDefaultAgent if integration configs includes caCertificate', async () => {
+      authHeadersFn.mockReturnValue({
+        Authorization: 'Bearer test-token',
+      });
+      const mockResponse = {} as Response;
+      (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+        integrationConfig: {
+          caCertificate: true,
+        },
+      });
+
+      const spy = jest.spyOn(client as any, 'getDefaultAgent' as any);
+
+      const endpoint = '/test';
+      await (client as any).request(endpoint, {
+        method: 'GET',
+        body: { test: 'test' },
+      });
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should NOT call the protected method getDefaultAgent if a custom agent in passed within request options', async () => {
+      authHeadersFn.mockReturnValue({
+        Authorization: 'Bearer test-token',
+      });
+      const mockResponse = {} as Response;
+      (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+        integrationConfig: {},
+      });
+
+      const spy = jest.spyOn(client as any, 'getDefaultAgent' as any);
+
+      const endpoint = '/test';
+      await (client as any).request(endpoint, {
+        method: 'GET',
+        body: { test: 'test' },
+        agent: new https.Agent(),
+      });
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
     describe('fmtBody', () => {
       test('should format body as JSON string when bodyType is json', async () => {
         const mockResponse = {} as Response;
@@ -215,6 +302,7 @@ describe('APIClient', () => {
         const client = new MockAPIClient({
           baseUrl: 'https://api.example.com',
           logger: mockLogger,
+          integrationConfig: {},
         });
 
         const body = { key1: 'value1', key2: 'value2' };
@@ -241,6 +329,7 @@ describe('APIClient', () => {
         const client = new MockAPIClient({
           baseUrl: 'https://api.example.com',
           logger: mockLogger,
+          integrationConfig: {},
         });
 
         const body = 'plain text body';
@@ -267,6 +356,7 @@ describe('APIClient', () => {
         const client = new MockAPIClient({
           baseUrl: 'https://api.example.com',
           logger: mockLogger,
+          integrationConfig: {},
         });
 
         const body = { key1: 'value1', key2: 'value2' };
@@ -301,6 +391,7 @@ describe('APIClient', () => {
         const client = new MockAPIClient({
           baseUrl: 'https://api.example.com',
           logger: mockLogger,
+          integrationConfig: {},
         });
 
         const body = { key1: 'value1', key2: 123 }; // Invalid value
@@ -316,6 +407,7 @@ describe('APIClient', () => {
         const client = new MockAPIClient({
           baseUrl: 'https://api.example.com',
           logger: mockLogger,
+          integrationConfig: {},
         });
 
         const body = { key1: 'value1', key2: 'value2' };
@@ -347,6 +439,7 @@ describe('APIClient', () => {
         const client = new MockAPIClient({
           baseUrl: 'https://api.example.com',
           logger: mockLogger,
+          integrationConfig: {},
         });
 
         const body = { key1: 'value1', key2: 123 }; // Invalid value
@@ -365,6 +458,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const response = await (client as any).withRateLimiting(fn);
@@ -387,6 +481,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
         rateLimitThrottling: {
           threshold: 0.5,
         },
@@ -408,6 +503,7 @@ describe('APIClient', () => {
       const client = new MockAPIClient({
         baseUrl: 'https://api.example.com',
         logger: mockLogger,
+        integrationConfig: {},
       });
 
       const mockResponses = [

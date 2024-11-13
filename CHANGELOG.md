@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 14.0.2 - 2024-11-13
+
+- http-client: moved the initialization of the agent class to the HTTP client.
+
 # 14.0.0 - 2024-10-23
 
 - Upgrade @jupiterone/data-model to v0.61.13
