@@ -1,6 +1,9 @@
-import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationInstanceConfig,
+  IntegrationLogger,
+} from '@jupiterone/integration-sdk-core';
 import { AttemptContext } from '@lifeomic/attempt';
-import { Agent } from 'http';
+import { Agent } from 'node:https';
 
 export type OptionalPromise<T> = T | Promise<T>;
 
@@ -11,6 +14,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   authorize?: boolean;
   bucketTokens?: number;
+  agent?: Agent;
 }
 
 export interface RetryOptions {
@@ -54,12 +58,12 @@ export interface RefreshAuthOptions {
 export interface ClientConfig {
   baseUrl: string;
   logger: IntegrationLogger;
+  integrationConfig: IntegrationInstanceConfig;
   retryOptions?: Partial<RetryOptions>;
   logErrorBody?: boolean;
   rateLimitThrottling?: RateLimitThrottlingOptions;
   tokenBucket?: TokenBucketOptions;
   refreshAuth?: RefreshAuthOptions;
-  agent?: Agent;
 }
 
 export interface IterateCallbackResult {

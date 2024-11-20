@@ -9,6 +9,12 @@ and this project adheres to
 
 # Unreleased
 
+# 15.0.0 - 2024-11-20
+
+- http-client: BRAKING CHANGE: moved the initialization of the agent class to
+  the HTTP client. Now integration configurations should be passed to the http
+  client when initialize.
+
 # 14.0.0 - 2024-10-23
 
 - Upgrade @jupiterone/data-model to v0.61.13

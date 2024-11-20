@@ -2,6 +2,7 @@ import { join as joinPath } from 'node:path/posix';
 import fetch, { Headers, Response } from 'node-fetch';
 import {
   IntegrationError,
+  IntegrationInstanceConfig,
   IntegrationLogger,
   IntegrationProviderAPIError,
 } from '@jupiterone/integration-sdk-core';
@@ -27,6 +28,7 @@ import get from 'lodash/get';
 import { HierarchicalTokenBucket } from '@jupiterone/hierarchical-token-bucket';
 import FormData from 'form-data';
 import { Agent } from 'http';
+import https from 'node:https';
 
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 3,
@@ -53,6 +55,8 @@ export abstract class BaseAPIClient {
   protected tokenBucketInitialConfig?: TokenBucketOptions | undefined;
   protected endpointTokenBuckets: Record<string, HierarchicalTokenBucket> = {};
   protected refreshAuth?: RefreshAuthOptions;
+
+  protected readonly integrationConfig: IntegrationInstanceConfig;
   protected readonly agent?: Agent;
 
   /**
@@ -85,7 +89,6 @@ export abstract class BaseAPIClient {
    *    if not provided, token bucket will not be enabled
    * @param {boolean} [config.refreshAuth.enabled] - If true, the auth headers will be refreshed on 401 and 403 errors
    * @param {number[]} [config.refreshAuth.errorCodes] - If provided, the auth headers will be refreshed on the provided error codes
-   * @param {Agent} [config.agent] - If provided, the client will use the provided http agent for requests.
    *
    * @example
    * ```typescript
@@ -106,6 +109,7 @@ export abstract class BaseAPIClient {
   constructor(config: ClientConfig) {
     this.baseUrl = config.baseUrl;
     this.logger = config.logger;
+    this.integrationConfig = config.integrationConfig;
     this.retryOptions = {
       ...DEFAULT_RETRY_OPTIONS,
       ...config.retryOptions,
@@ -124,7 +128,6 @@ export abstract class BaseAPIClient {
       });
     }
     this.refreshAuth = config.refreshAuth;
-    this.agent = config.agent;
   }
 
   protected withBaseUrl(endpoint: string): string {
@@ -168,6 +171,24 @@ export abstract class BaseAPIClient {
   >;
 
   /**
+   * Returns a default agent to be used along with the http requests, depending
+   * on the integration configurations.
+   * @returns {Agent | undefined} - The default agent for the API requests
+   */
+  protected getDefaultAgent(): Agent | undefined {
+    const integrationHasAgentConfigs =
+      this.integrationConfig.caCertificate ||
+      this.integrationConfig.disableTlsVerification;
+
+    return integrationHasAgentConfigs
+      ? new https.Agent({
+          ca: this.integrationConfig.caCertificate,
+          rejectUnauthorized: !this.integrationConfig.disableTlsVerification,
+        })
+      : undefined;
+  }
+
+  /**
    * Perform a request to the API.
    *
    * @param {string} endpoint - The endpoint to request
@@ -195,6 +216,7 @@ export abstract class BaseAPIClient {
       bodyType = 'json',
       headers,
       authorize = true,
+      agent,
     } = options ?? {};
     if (authorize && !this.authorizationHeaders) {
       this.authorizationHeaders = await this.getAuthorizationHeaders();
@@ -251,7 +273,7 @@ export abstract class BaseAPIClient {
         ...headers,
       },
       body: fmtBody,
-      agent: this.agent,
+      agent: agent ?? this.getDefaultAgent(),
     });
     return response;
   }
