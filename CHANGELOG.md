@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 15.1.0 - 2024-11-21
+
+- http-client: added retryCalculateDelay method to allow for custom delay
+
 # 15.0.0 - 2024-11-20
 
 - http-client: BRAKING CHANGE: moved the initialization of the agent class to
