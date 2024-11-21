@@ -2,6 +2,8 @@ import { IntegrationLogger } from '@jupiterone/integration-sdk-core';
 import { AttemptContext } from '@lifeomic/attempt';
 import { Agent } from 'http';
 
+export { AttemptContext, AttemptOptions } from '@lifeomic/attempt';
+
 export type OptionalPromise<T> = T | Promise<T>;
 
 export interface RequestOptions {
