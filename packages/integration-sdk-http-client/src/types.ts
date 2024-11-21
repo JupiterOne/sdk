@@ -5,6 +5,8 @@ import {
 import { AttemptContext } from '@lifeomic/attempt';
 import { Agent } from 'node:https';
 
+export { AttemptContext, AttemptOptions } from '@lifeomic/attempt';
+
 export type OptionalPromise<T> = T | Promise<T>;
 
 export interface RequestOptions {

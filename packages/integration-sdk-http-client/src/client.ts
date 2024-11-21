@@ -6,7 +6,13 @@ import {
   IntegrationLogger,
   IntegrationProviderAPIError,
 } from '@jupiterone/integration-sdk-core';
-import { AttemptContext, retry, sleep } from '@lifeomic/attempt';
+import {
+  AttemptContext,
+  AttemptOptions,
+  defaultCalculateDelay,
+  retry,
+  sleep,
+} from '@lifeomic/attempt';
 import {
   fatalRequestError,
   isRetryableRequest,
@@ -338,6 +344,9 @@ export abstract class BaseAPIClient {
           delay: this.retryOptions.delay,
           timeout: this.retryOptions.timeout,
           factor: this.retryOptions.factor,
+          calculateDelay: (context, options) => {
+            return this.retryCalculateDelay(context, options);
+          },
           handleError: async (err, context) => {
             if (this.retryOptions.handleError) {
               await this.retryOptions.handleError(err, context, this.logger);
@@ -416,6 +425,16 @@ export abstract class BaseAPIClient {
       );
       await sleep(retryAfter);
     }
+  }
+
+  protected retryCalculateDelay<T>(
+    context: AttemptContext,
+    options: AttemptOptions<T>,
+  ) {
+    if (context.attemptNum === 0) {
+      return 0; // don't wait before the first attempt
+    }
+    return defaultCalculateDelay(context, options);
   }
 
   /**
