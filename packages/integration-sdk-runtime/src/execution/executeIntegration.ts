@@ -240,14 +240,14 @@ export async function executeWithContext<
 
       logger.info(
         {
-          integrationSteps: config.integrationSteps.filter(
-            (step) => step.id === DEBUG_STEP_ID,
-          ),
-          configStepStartStates: configStepStartStates[DEBUG_STEP_ID],
-          instanceDisabledSources: context.instance?.disabledSources?.filter(
-            (step) => step.ingestionSourceId === DEBUG_STEP_ID,
-          ),
-          stepStartStatesInConfig: stepStartStatesInConfig?.[DEBUG_STEP_ID],
+          integrationSteps: config.integrationSteps,
+          configStepStartStates: configStepStartStates,
+          configStepStartStatesForSSOUsers:
+            configStepStartStates[DEBUG_STEP_ID],
+          instanceDisabledSources: context.instance?.disabledSources,
+          stepStartStatesInConfig: stepStartStatesInConfig,
+          stepStartStatesInConfigForSSOUsers:
+            stepStartStatesInConfig?.[DEBUG_STEP_ID],
         },
         'Calculating step start states',
       );
@@ -262,7 +262,8 @@ export async function executeWithContext<
 
       logger.info(
         {
-          stepStartStates: stepStartStates[DEBUG_STEP_ID],
+          stepStartStates: stepStartStates,
+          stepStartStatesForSSOUsers: stepStartStates[DEBUG_STEP_ID],
         },
         `Step start states calculated`,
       );
