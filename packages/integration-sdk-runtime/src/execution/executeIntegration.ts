@@ -258,7 +258,7 @@ export async function executeWithContext<
       });
 
       logger.info(`Step start states calculated`, {
-        stepStartStates: stepStartStates['DEBUG_STEP_ID'],
+        stepStartStates: stepStartStates[DEBUG_STEP_ID],
       });
 
       if (shouldPublishDiskUsageMetric) {
