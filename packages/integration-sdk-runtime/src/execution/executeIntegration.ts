@@ -69,6 +69,7 @@ type ExecuteWithContextOptions = Pick<
 >;
 
 const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
+const DEBUG_STEP_ID = 'fetch-sso-users';
 
 /**
  * Starts execution of an integration instance generated from local environment
@@ -228,11 +229,25 @@ export async function executeWithContext<
         throw err;
       }
 
+      const stepStartStatesInConfig =
+        await config.getStepStartStates?.(context);
+
       const configStepStartStates =
-        (await config.getStepStartStates?.(context)) ??
+        stepStartStatesInConfig ??
         getDefaultStepStartStates(config.integrationSteps);
 
       validateStepStartStates(config.integrationSteps, configStepStartStates);
+
+      logger.info('Calculating step start states', {
+        integrationSteps: config.integrationSteps.filter(
+          (step) => step.id === DEBUG_STEP_ID,
+        ),
+        configStepStartStates: configStepStartStates[DEBUG_STEP_ID],
+        instanceDisabledSources: context.instance?.disabledSources?.filter(
+          (step) => step.ingestionSourceId === DEBUG_STEP_ID,
+        ),
+        stepStartStatesInConfig: stepStartStatesInConfig?.[DEBUG_STEP_ID],
+      });
 
       const stepStartStates = getIngestionSourceStepStartStates({
         integrationSteps: config.integrationSteps,
@@ -240,6 +255,10 @@ export async function executeWithContext<
         disabledSources: context.instance?.disabledSources?.map(
           (source) => source.ingestionSourceId,
         ),
+      });
+
+      logger.info(`Step start states calculated`, {
+        stepStartStates: stepStartStates['DEBUG_STEP_ID'],
       });
 
       if (shouldPublishDiskUsageMetric) {
