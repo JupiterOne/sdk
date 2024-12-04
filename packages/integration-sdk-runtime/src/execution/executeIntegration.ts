@@ -107,7 +107,7 @@ export async function executeIntegrationLocally(
  */
 export async function executeIntegrationInstance<
   TIntegrationConfig extends
-    IntegrationInstanceConfig = IntegrationInstanceConfig,
+  IntegrationInstanceConfig = IntegrationInstanceConfig,
 >(
   logger: IntegrationLogger,
   instance: IntegrationInstance<TIntegrationConfig>,
@@ -238,7 +238,7 @@ export async function executeWithContext<
 
       validateStepStartStates(config.integrationSteps, configStepStartStates);
 
-      logger.info('Calculating step start states', {
+      logger.info({
         integrationSteps: config.integrationSteps.filter(
           (step) => step.id === DEBUG_STEP_ID,
         ),
@@ -247,7 +247,7 @@ export async function executeWithContext<
           (step) => step.ingestionSourceId === DEBUG_STEP_ID,
         ),
         stepStartStatesInConfig: stepStartStatesInConfig?.[DEBUG_STEP_ID],
-      });
+      }, 'Calculating step start states');
 
       const stepStartStates = getIngestionSourceStepStartStates({
         integrationSteps: config.integrationSteps,
@@ -257,9 +257,9 @@ export async function executeWithContext<
         ),
       });
 
-      logger.info(`Step start states calculated`, {
+      logger.info({
         stepStartStates: stepStartStates[DEBUG_STEP_ID],
-      });
+      }, `Step start states calculated`);
 
       if (shouldPublishDiskUsageMetric) {
         diskUsagePublishInterval = createDiskUsagePublishInterval();
@@ -350,7 +350,7 @@ export async function executeWithContext<
           context.logger.error(
             { undeclaredTypes, stepId: step.id },
             `Undeclared types detected during execution. To prevent accidental data loss, please ensure that` +
-              ` all known entity and relationship types are declared.`,
+            ` all known entity and relationship types are declared.`,
           );
         }
       });
