@@ -238,16 +238,19 @@ export async function executeWithContext<
 
       validateStepStartStates(config.integrationSteps, configStepStartStates);
 
-      logger.info('Calculating step start states', {
-        integrationSteps: config.integrationSteps.filter(
-          (step) => step.id === DEBUG_STEP_ID,
-        ),
-        configStepStartStates: configStepStartStates[DEBUG_STEP_ID],
-        instanceDisabledSources: context.instance?.disabledSources?.filter(
-          (step) => step.ingestionSourceId === DEBUG_STEP_ID,
-        ),
-        stepStartStatesInConfig: stepStartStatesInConfig?.[DEBUG_STEP_ID],
-      });
+      logger.info(
+        {
+          integrationSteps: config.integrationSteps.filter(
+            (step) => step.id === DEBUG_STEP_ID,
+          ),
+          configStepStartStates: configStepStartStates[DEBUG_STEP_ID],
+          instanceDisabledSources: context.instance?.disabledSources?.filter(
+            (step) => step.ingestionSourceId === DEBUG_STEP_ID,
+          ),
+          stepStartStatesInConfig: stepStartStatesInConfig?.[DEBUG_STEP_ID],
+        },
+        'Calculating step start states',
+      );
 
       const stepStartStates = getIngestionSourceStepStartStates({
         integrationSteps: config.integrationSteps,
@@ -257,9 +260,12 @@ export async function executeWithContext<
         ),
       });
 
-      logger.info(`Step start states calculated`, {
-        stepStartStates: stepStartStates[DEBUG_STEP_ID],
-      });
+      logger.info(
+        {
+          stepStartStates: stepStartStates[DEBUG_STEP_ID],
+        },
+        `Step start states calculated`,
+      );
 
       if (shouldPublishDiskUsageMetric) {
         diskUsagePublishInterval = createDiskUsagePublishInterval();
