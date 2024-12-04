@@ -132,7 +132,97 @@ export type DuplicateEntityReport = {
   _key: string;
   rawDataMatch: boolean;
   propertiesMatch: boolean;
+  rawDataDiff?: string;
+  propertiesDiff?: string;
 };
+
+type DiffType =
+  | 'missing_in_src'
+  | 'missing_in_dest'
+  | 'type_mismatch'
+  | 'value_mismatch';
+
+interface ObjectDiff {
+  [key: string]: {
+    type: DiffType;
+    valueTypes?: { src: string; dest: string };
+  };
+}
+
+/**
+ * Compares two objects and returns the differences between them.
+ *
+ * @param {unknown} src - The source object to compare.
+ * @param {unknown} dest - The destination object to compare.
+ * @param {string} [path=''] - The base path for keys, used for tracking nested object differences.
+ * @returns {ObjectDiff} An object representing the differences between `src` and `dest`.
+ *   Each key corresponds to a path in the objects, with details about the type of difference.
+ *
+ * @example
+ * const src = { a: 1, b: { c: 2 } };
+ * const dest = { a: 1, b: { c: 3 }, d: 4 };
+ * const result = diffObjects(src, dest);
+ * console.log(result);
+ * // Output:
+ * // {
+ * //   "b.c": { type: "value_mismatch" },
+ * //   "d": { type: "missing_in_src" }
+ * // }
+ */
+export function diffObjects(
+  src: unknown,
+  dest: unknown,
+  path: string = '',
+): ObjectDiff {
+  const diff = {};
+
+  // Helper to add differences
+  const addDiff = (
+    key: string,
+    type: DiffType,
+    valueTypes?: { src: string; dest: string },
+  ) => {
+    diff[key] = { type, valueTypes };
+  };
+
+  // Iterate through the keys of both objects
+  const allKeys = new Set([
+    ...Object.keys(src || {}),
+    ...Object.keys(dest || {}),
+  ]);
+
+  const isObject = (val: unknown): val is Record<string, unknown> =>
+    typeof val === 'object' && val !== null;
+
+  for (const key of allKeys) {
+    const fullPath = path ? `${path}.${key}` : key;
+    const valSrc = src?.[key];
+    const valDest = dest?.[key];
+
+    if (valSrc === undefined) {
+      addDiff(fullPath, 'missing_in_src');
+    } else if (valDest === undefined) {
+      addDiff(fullPath, 'missing_in_dest');
+    } else if (typeof valSrc !== typeof valDest) {
+      addDiff(fullPath, 'type_mismatch', {
+        src: typeof valSrc,
+        dest: typeof valDest,
+      });
+    } else if (Array.isArray(valSrc) && Array.isArray(valDest)) {
+      if (JSON.stringify(valSrc) !== JSON.stringify(valDest)) {
+        addDiff(fullPath, 'value_mismatch');
+      }
+    } else if (isObject(valSrc) && isObject(valDest)) {
+      // Recursive comparison for nested objects
+      const nestedDiff = diffObjects(valSrc, valDest, fullPath);
+      Object.assign(diff, nestedDiff);
+    } else if (valSrc !== valDest) {
+      addDiff(fullPath, 'value_mismatch');
+    }
+  }
+
+  return diff;
+}
 
 /**
  * compareEntities compares two entities and produces a DuplicateEntityReport describing their
@@ -144,12 +234,38 @@ export type DuplicateEntityReport = {
 function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
   const aClone = JSON.parse(JSON.stringify(a));
   const bClone = JSON.parse(JSON.stringify(b));
-  aClone._rawData = undefined;
-  bClone._rawData = undefined;
+  delete aClone._rawData;
+  delete bClone._rawData;
+
+  const rawDataMatch = isDeepStrictEqual(a._rawData, b._rawData);
+  const propertiesMatch = isDeepStrictEqual(aClone, bClone);
+
+  let rawDataDiff: ObjectDiff | undefined;
+  if (!rawDataMatch) {
+    try {
+      rawDataDiff = diffObjects(
+        a._rawData?.[0].rawData,
+        b._rawData?.[0].rawData,
+      );
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  let propertiesDiff: ObjectDiff | undefined;
+  if (!propertiesMatch) {
+    try {
+      propertiesDiff = diffObjects(aClone, bClone);
+    } catch (e) {
+      // ignore
+    }
+  }
 
   return {
     _key: a._key,
-    rawDataMatch: isDeepStrictEqual(a._rawData, b._rawData),
-    propertiesMatch: isDeepStrictEqual(aClone, bClone),
+    rawDataMatch,
+    propertiesMatch,
+    ...(rawDataDiff && { rawDataDiff: JSON.stringify(rawDataDiff) }),
+    ...(propertiesDiff && { propertiesDiff: JSON.stringify(propertiesDiff) }),
   };
 }
