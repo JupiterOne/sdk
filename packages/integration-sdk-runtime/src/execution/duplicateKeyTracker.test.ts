@@ -74,7 +74,7 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: true,
+      entityPropertiesMatch: true,
       rawDataMatch: true,
     });
   });
@@ -131,11 +131,11 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: false,
+      entityPropertiesMatch: false,
       rawDataMatch: true,
-      propertiesDiff: JSON.stringify({
-        _class: { type: 'value_mismatch' },
-        _type: { type: 'value_mismatch' },
+      entityPropertiesDiff: JSON.stringify({
+        _class: { diffType: 'array_values_mismatch' },
+        _type: { diffType: 'value_mismatch' },
       }),
     });
   });
@@ -188,10 +188,10 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: true,
+      entityPropertiesMatch: true,
       rawDataMatch: false,
       rawDataDiff: JSON.stringify({
-        data: { type: 'missing_in_src' },
+        data: { diffType: 'missing_in_original' },
       }),
     });
   });
@@ -247,10 +247,10 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: true,
+      entityPropertiesMatch: true,
       rawDataMatch: false,
       rawDataDiff: JSON.stringify({
-        data: { type: 'missing_in_src' },
+        data: { diffType: 'missing_in_original' },
       }),
     });
   });
@@ -258,94 +258,94 @@ describe('createDuplicateEntityReport', () => {
 
 describe('diffObjects', () => {
   test('returns an empty diff for identical objects', () => {
-    const src = { name: 'Alice', age: 30 };
-    const dest = { name: 'Alice', age: 30 };
+    const original = { name: 'Alice', age: 30 };
+    const duplicate = { name: 'Alice', age: 30 };
 
-    expect(diffObjects(src, dest)).toEqual({});
+    expect(diffObjects(original, duplicate)).toEqual({});
   });
 
-  test('detects missing keys in src', () => {
-    const src = { name: 'Alice' };
-    const dest = { name: 'Alice', age: 30 };
+  test('detects missing keys in original', () => {
+    const original = { name: 'Alice' };
+    const duplicate = { name: 'Alice', age: 30 };
 
-    expect(diffObjects(src, dest)).toEqual({
-      age: { type: 'missing_in_src' },
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: { diffType: 'missing_in_original' },
     });
   });
 
-  test('detects missing keys in dest', () => {
-    const src = { name: 'Alice', age: 30 };
-    const dest = { name: 'Alice' };
+  test('detects missing keys in duplicate', () => {
+    const original = { name: 'Alice', age: 30 };
+    const duplicate = { name: 'Alice' };
 
-    expect(diffObjects(src, dest)).toEqual({
-      age: { type: 'missing_in_dest' },
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: { diffType: 'missing_in_duplicate' },
     });
   });
 
   test('detects type mismatches', () => {
-    const src = { age: 30 };
-    const dest = { age: '30' };
+    const original = { age: 30 };
+    const duplicate = { age: '30' };
 
-    expect(diffObjects(src, dest)).toEqual({
+    expect(diffObjects(original, duplicate)).toEqual({
       age: {
-        type: 'type_mismatch',
-        valueTypes: { src: 'number', dest: 'string' },
+        diffType: 'type_mismatch',
+        valueTypes: { original: 'number', duplicate: 'string' },
       },
     });
   });
 
   test('detects value mismatches', () => {
-    const src = { age: 30 };
-    const dest = { age: 31 };
+    const original = { age: 30 };
+    const duplicate = { age: 31 };
 
-    expect(diffObjects(src, dest)).toEqual({
-      age: { type: 'value_mismatch' },
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: { diffType: 'value_mismatch' },
     });
   });
 
   test('handles nested object differences', () => {
-    const src = { user: { name: 'Alice', age: 30 } };
-    const dest = { user: { name: 'Alice', age: 31 } };
+    const original = { user: { name: 'Alice', age: 30 } };
+    const duplicate = { user: { name: 'Alice', age: 31 } };
 
-    expect(diffObjects(src, dest)).toEqual({
-      'user.age': { type: 'value_mismatch' },
+    expect(diffObjects(original, duplicate)).toEqual({
+      'user.age': { diffType: 'value_mismatch' },
     });
   });
 
-  test('handles missing nested keys in src', () => {
-    const src = { user: { name: 'Alice' } };
-    const dest = { user: { name: 'Alice', age: 30 } };
+  test('handles missing nested keys in original', () => {
+    const original = { user: { name: 'Alice' } };
+    const duplicate = { user: { name: 'Alice', age: 30 } };
 
-    expect(diffObjects(src, dest)).toEqual({
-      'user.age': { type: 'missing_in_src' },
+    expect(diffObjects(original, duplicate)).toEqual({
+      'user.age': { diffType: 'missing_in_original' },
     });
   });
 
-  test('handles missing nested keys in dest', () => {
-    const src = { user: { name: 'Alice', age: 30 } };
-    const dest = { user: { name: 'Alice' } };
+  test('handles missing nested keys in duplicate', () => {
+    const original = { user: { name: 'Alice', age: 30 } };
+    const duplicate = { user: { name: 'Alice' } };
 
-    expect(diffObjects(src, dest)).toEqual({
-      'user.age': { type: 'missing_in_dest' },
+    expect(diffObjects(original, duplicate)).toEqual({
+      'user.age': { diffType: 'missing_in_duplicate' },
     });
   });
 
   test('handles array comparison', () => {
-    const src = { tags: ['a', 'b', 'c'], other: ['a', 'b', 'c'] };
-    const dest = { tags: ['a', 'b', 'd'], other: ['a', 'b', 'c'] };
+    const original = { tags: ['a', 'b', 'c'], other: ['a', 'b', 'c'] };
+    const duplicate = { tags: ['a', 'b', 'd'], other: ['a', 'b', 'c'] };
 
-    expect(diffObjects(src, dest)).toEqual({
+    expect(diffObjects(original, duplicate)).toEqual({
       tags: {
-        type: 'value_mismatch',
+        diffType: 'array_values_mismatch',
       },
     });
   });
 
   test('handles empty objects', () => {
-    const src = {};
-    const dest = {};
+    const original = {};
+    const duplicate = {};
 
-    expect(diffObjects(src, dest)).toEqual({});
+    expect(diffObjects(original, duplicate)).toEqual({});
   });
 
   test('handles null and undefined objects', () => {
