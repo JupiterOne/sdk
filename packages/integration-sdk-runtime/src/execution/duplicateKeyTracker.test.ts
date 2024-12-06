@@ -1,6 +1,7 @@
 import {
   InMemoryDuplicateKeyTracker,
   createDuplicateEntityReport,
+  diffObjects,
 } from './duplicateKeyTracker';
 import { InMemoryGraphObjectStore } from '../storage';
 import { Entity } from '@jupiterone/integration-sdk-core';
@@ -73,7 +74,7 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: true,
+      entityPropertiesMatch: true,
       rawDataMatch: true,
     });
   });
@@ -130,8 +131,12 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: false,
+      entityPropertiesMatch: false,
       rawDataMatch: true,
+      entityPropertiesDiff: JSON.stringify({
+        _class: { diffType: 'array_values_mismatch' },
+        _type: { diffType: 'value_mismatch' },
+      }),
     });
   });
 
@@ -183,8 +188,11 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: true,
+      entityPropertiesMatch: true,
       rawDataMatch: false,
+      rawDataDiff: JSON.stringify({
+        data: { diffType: 'missing_in_original' },
+      }),
     });
   });
 
@@ -239,8 +247,110 @@ describe('createDuplicateEntityReport', () => {
 
     expect(der).toMatchObject({
       _key: 'test-key',
-      propertiesMatch: true,
+      entityPropertiesMatch: true,
       rawDataMatch: false,
+      rawDataDiff: JSON.stringify({
+        data: { diffType: 'missing_in_original' },
+      }),
     });
+  });
+});
+
+describe('diffObjects', () => {
+  test('returns an empty diff for identical objects', () => {
+    const original = { name: 'Alice', age: 30 };
+    const duplicate = { name: 'Alice', age: 30 };
+
+    expect(diffObjects(original, duplicate)).toEqual({});
+  });
+
+  test('detects missing keys in original', () => {
+    const original = { name: 'Alice' };
+    const duplicate = { name: 'Alice', age: 30 };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: { diffType: 'missing_in_original' },
+    });
+  });
+
+  test('detects missing keys in duplicate', () => {
+    const original = { name: 'Alice', age: 30 };
+    const duplicate = { name: 'Alice' };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: { diffType: 'missing_in_duplicate' },
+    });
+  });
+
+  test('detects type mismatches', () => {
+    const original = { age: 30 };
+    const duplicate = { age: '30' };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: {
+        diffType: 'type_mismatch',
+        valueTypes: { original: 'number', duplicate: 'string' },
+      },
+    });
+  });
+
+  test('detects value mismatches', () => {
+    const original = { age: 30 };
+    const duplicate = { age: 31 };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      age: { diffType: 'value_mismatch' },
+    });
+  });
+
+  test('handles nested object differences', () => {
+    const original = { user: { name: 'Alice', age: 30 } };
+    const duplicate = { user: { name: 'Alice', age: 31 } };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      'user.age': { diffType: 'value_mismatch' },
+    });
+  });
+
+  test('handles missing nested keys in original', () => {
+    const original = { user: { name: 'Alice' } };
+    const duplicate = { user: { name: 'Alice', age: 30 } };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      'user.age': { diffType: 'missing_in_original' },
+    });
+  });
+
+  test('handles missing nested keys in duplicate', () => {
+    const original = { user: { name: 'Alice', age: 30 } };
+    const duplicate = { user: { name: 'Alice' } };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      'user.age': { diffType: 'missing_in_duplicate' },
+    });
+  });
+
+  test('handles array comparison', () => {
+    const original = { tags: ['a', 'b', 'c'], other: ['a', 'b', 'c'] };
+    const duplicate = { tags: ['a', 'b', 'd'], other: ['a', 'b', 'c'] };
+
+    expect(diffObjects(original, duplicate)).toEqual({
+      tags: {
+        diffType: 'array_values_mismatch',
+      },
+    });
+  });
+
+  test('handles empty objects', () => {
+    const original = {};
+    const duplicate = {};
+
+    expect(diffObjects(original, duplicate)).toEqual({});
+  });
+
+  test('handles null and undefined objects', () => {
+    expect(diffObjects(null, undefined)).toEqual({});
+    expect(diffObjects(undefined, {})).toEqual({});
+    expect(diffObjects({}, null)).toEqual({});
   });
 });

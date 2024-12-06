@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+# 15.2.0 - 2024-12-04
+
+- runtime: Add diff object in the duplicate entity report for rawData and
+  properties mismatch
+
 # 15.1.0 - 2024-11-21
 
 - http-client: added retryCalculateDelay method to allow for custom delay
