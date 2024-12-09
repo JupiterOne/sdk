@@ -134,6 +134,7 @@ export type DuplicateEntityReport = {
   entityPropertiesMatch: boolean;
   rawDataDiff?: string;
   entityPropertiesDiff?: string;
+  diffErrors?: { rawData?: string; entityProperties?: string };
 };
 
 type DiffType =
@@ -241,6 +242,8 @@ function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
   const rawDataMatch = isDeepStrictEqual(a._rawData, b._rawData);
   const entityPropertiesMatch = isDeepStrictEqual(aClone, bClone);
 
+  const diffErrors: { rawData?: string; entityProperties?: string } = {};
+
   let rawDataDiff: ObjectDiff | undefined;
   if (!rawDataMatch) {
     try {
@@ -249,7 +252,7 @@ function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
         b._rawData?.[0].rawData,
       );
     } catch (e) {
-      // ignore
+      diffErrors.rawData = e.message;
     }
   }
 
@@ -258,7 +261,7 @@ function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
     try {
       entityPropertiesDiff = diffObjects(aClone, bClone);
     } catch (e) {
-      // ignore
+      diffErrors.entityProperties = e.message;
     }
   }
 
@@ -270,5 +273,6 @@ function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
     ...(entityPropertiesDiff && {
       entityPropertiesDiff: JSON.stringify(entityPropertiesDiff),
     }),
+    ...(Object.keys(diffErrors).length > 0 && { diffErrors }),
   };
 }
