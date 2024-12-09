@@ -131,8 +131,100 @@ function isDeepStrictEqual(a: any, b: any): boolean {
 export type DuplicateEntityReport = {
   _key: string;
   rawDataMatch: boolean;
-  propertiesMatch: boolean;
+  entityPropertiesMatch: boolean;
+  rawDataDiff?: string;
+  entityPropertiesDiff?: string;
+  diffErrors?: { rawData?: string; entityProperties?: string };
 };
+
+type DiffType =
+  | 'missing_in_original'
+  | 'missing_in_duplicate'
+  | 'type_mismatch'
+  | 'value_mismatch'
+  | 'array_values_mismatch';
+
+interface ObjectDiff {
+  [key: string]: {
+    type: DiffType;
+    valueTypes?: { src: string; dest: string };
+  };
+}
+
+/**
+ * Compares two objects and returns the differences between them.
+ *
+ * @param {unknown} originalObject - The source object to compare.
+ * @param {unknown} duplicateObject - The destination object to compare.
+ * @param {string} [path=''] - The base path for keys, used for tracking nested object differences.
+ * @returns {ObjectDiff} An object representing the differences between `original` and `duplicate`.
+ *   Each key corresponds to a path in the objects, with details about the type of difference.
+ *
+ * @example
+ * const originalObj = { a: 1, b: { c: 2 } };
+ * const duplicateObj = { a: 1, b: { c: 3 }, d: 4 };
+ * const result = diffObjects(originalObj, duplicateObj);
+ * console.log(result);
+ * // Output:
+ * // {
+ * //   "b.c": { type: "value_mismatch" },
+ * //   "d": { type: "missing_in_original" }
+ * // }
+ */
+export function diffObjects(
+  originalObject: unknown,
+  duplicateObject: unknown,
+  path: string = '',
+): ObjectDiff {
+  const diff = {};
+
+  // Helper to add differences
+  const addDiff = (
+    key: string,
+    diffType: DiffType,
+    valueTypes?: { original: string; duplicate: string },
+  ) => {
+    diff[key] = { diffType, valueTypes };
+  };
+
+  // Iterate through the keys of both objects
+  const allKeys = new Set([
+    ...Object.keys(originalObject || {}),
+    ...Object.keys(duplicateObject || {}),
+  ]);
+
+  const isObject = (val: unknown): val is Record<string, unknown> =>
+    typeof val === 'object' && val !== null;
+
+  for (const key of allKeys) {
+    const fullPath = path ? `${path}.${key}` : key;
+    const valOriginal = originalObject?.[key];
+    const valDuplicate = duplicateObject?.[key];
+
+    if (valOriginal === undefined) {
+      addDiff(fullPath, 'missing_in_original');
+    } else if (valDuplicate === undefined) {
+      addDiff(fullPath, 'missing_in_duplicate');
+    } else if (typeof valOriginal !== typeof valDuplicate) {
+      addDiff(fullPath, 'type_mismatch', {
+        original: typeof valOriginal,
+        duplicate: typeof valDuplicate,
+      });
+    } else if (Array.isArray(valOriginal) && Array.isArray(valDuplicate)) {
+      if (JSON.stringify(valOriginal) !== JSON.stringify(valDuplicate)) {
+        addDiff(fullPath, 'array_values_mismatch');
+      }
+    } else if (isObject(valOriginal) && isObject(valDuplicate)) {
+      // Recursive comparison for nested objects
+      const nestedDiff = diffObjects(valOriginal, valDuplicate, fullPath);
+      Object.assign(diff, nestedDiff);
+    } else if (valOriginal !== valDuplicate) {
+      addDiff(fullPath, 'value_mismatch');
+    }
+  }
+
+  return diff;
+}
 
 /**
  * compareEntities compares two entities and produces a DuplicateEntityReport describing their
@@ -144,12 +236,43 @@ export type DuplicateEntityReport = {
 function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
   const aClone = JSON.parse(JSON.stringify(a));
   const bClone = JSON.parse(JSON.stringify(b));
-  aClone._rawData = undefined;
-  bClone._rawData = undefined;
+  delete aClone._rawData;
+  delete bClone._rawData;
+
+  const rawDataMatch = isDeepStrictEqual(a._rawData, b._rawData);
+  const entityPropertiesMatch = isDeepStrictEqual(aClone, bClone);
+
+  const diffErrors: { rawData?: string; entityProperties?: string } = {};
+
+  let rawDataDiff: ObjectDiff | undefined;
+  if (!rawDataMatch) {
+    try {
+      rawDataDiff = diffObjects(
+        a._rawData?.[0].rawData,
+        b._rawData?.[0].rawData,
+      );
+    } catch (e) {
+      diffErrors.rawData = e.message;
+    }
+  }
+
+  let entityPropertiesDiff: ObjectDiff | undefined;
+  if (!entityPropertiesMatch) {
+    try {
+      entityPropertiesDiff = diffObjects(aClone, bClone);
+    } catch (e) {
+      diffErrors.entityProperties = e.message;
+    }
+  }
 
   return {
     _key: a._key,
-    rawDataMatch: isDeepStrictEqual(a._rawData, b._rawData),
-    propertiesMatch: isDeepStrictEqual(aClone, bClone),
+    rawDataMatch,
+    entityPropertiesMatch,
+    ...(rawDataDiff && { rawDataDiff: JSON.stringify(rawDataDiff) }),
+    ...(entityPropertiesDiff && {
+      entityPropertiesDiff: JSON.stringify(entityPropertiesDiff),
+    }),
+    ...(Object.keys(diffErrors).length > 0 && { diffErrors }),
   };
 }
