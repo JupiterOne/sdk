@@ -69,7 +69,6 @@ type ExecuteWithContextOptions = Pick<
 >;
 
 const THIRTY_SECONDS_STORAGE_INTERVAL_MS = 60000 / 2;
-const DEBUG_STEP_ID = 'fetch-sso-users';
 
 /**
  * Starts execution of an integration instance generated from local environment
