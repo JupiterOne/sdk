@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-core",
-  "version": "15.2.0",
+  "version": "15.2.1",
   "description": "The SDK for developing JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -23,8 +23,8 @@
     "prepack": "npm run build:dist"
   },
   "dependencies": {
-    "@jupiterone/data-model": "0.61.13",
-    "@jupiterone/integration-sdk-entity-validator": "^15.2.0",
+    "@jupiterone/data-model": "0.61.15",
+    "@jupiterone/integration-sdk-entity-validator": "^15.2.1",
     "@sinclair/typebox": "^0.32.30",
     "lodash": "^4.17.21"
   },
