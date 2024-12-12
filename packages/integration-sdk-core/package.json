@@ -23,7 +23,7 @@
     "prepack": "npm run build:dist"
   },
   "dependencies": {
-    "@jupiterone/data-model": "0.61.13",
+    "@jupiterone/data-model": "0.61.15",
     "@jupiterone/integration-sdk-entity-validator": "^15.2.0",
     "@sinclair/typebox": "^0.32.30",
     "lodash": "^4.17.21"

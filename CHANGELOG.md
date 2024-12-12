@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 15.2.1 - 2024-12-12
+
+- Update `@jupiterone/data-model` to v0.61.15
+
 # 15.2.0 - 2024-12-04
 
 - runtime: Add diff object in the duplicate entity report for rawData and
