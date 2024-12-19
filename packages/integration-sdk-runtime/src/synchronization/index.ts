@@ -488,7 +488,6 @@ export async function uploadDataChunk<
         },
         'Uploading data...',
       );
-      const startTime = Date.now();
       try {
         await apiClient.post(
           `/persister/synchronization/jobs/${jobId}/${type as string}`,
@@ -507,30 +506,6 @@ export async function uploadDataChunk<
         cleanAxiosError(err);
         throw err;
       }
-
-      const duration = Date.now() - startTime;
-      if (duration >= 10_000) {
-        logger.info(
-          {
-            uploadCorrelationId,
-            uploadType: type,
-            attemptNum: ctx.attemptNum,
-            batchSize: batch.length,
-            batchSizeInBytes: getSizeOfObject(batch),
-            uploadDuration: duration,
-          },
-          'Finished uploading big batch',
-        );
-      }
-      logger.debug(
-        {
-          uploadCorrelationId,
-          uploadType: type,
-          attemptNum: ctx.attemptNum,
-          batchSize: batch.length,
-        },
-        'Finished uploading batch',
-      );
     },
     {
       maxAttempts: 5,
