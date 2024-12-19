@@ -26,7 +26,7 @@ import { randomUUID as uuid } from 'crypto';
 import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
-import { batchGraphObjectsBySizeInBytes, getSizeOfObject } from './batchBySize';
+import { batchGraphObjectsBySizeInBytes } from './batchBySize';
 import type { Alpha } from '@lifeomic/alpha';
 
 export { synchronizationApiError };
