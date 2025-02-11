@@ -25,7 +25,7 @@
     "plop": "plop --plopfile dist/src/generator/newIntegration.js"
   },
   "dependencies": {
-    "@jupiterone/data-model": "0.61.15",
+    "@jupiterone/data-model": "0.62.0",
     "@jupiterone/integration-sdk-core": "^15.2.2",
     "@jupiterone/integration-sdk-runtime": "^15.2.2",
     "chalk": "^4",

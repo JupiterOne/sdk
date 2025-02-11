@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 15.2.3 - 2025-02-11
+
+- Update `@jupiterone/data-model` to v0.62.0
+
 # 15.2.2 - 2024-12-19
 
 - Remove batching logs from runtime.
