@@ -9,6 +9,11 @@ and this project adheres to
 
 # Unreleased
 
+# 16.0.0 - 2025-02-11
+
+- Update `@jupiterone/data-model` to v0.62.0
+- Add deprecation log warnings when validating entities
+
 # 15.2.2 - 2024-12-19
 
 - Remove batching logs from runtime.
