@@ -17,9 +17,29 @@ const j1JsonSchemaFormats = {
   asn: (x: string) => asnRegex.test(x),
 } satisfies Record<string, AjvFormat>;
 
+const additionalKeywords = [
+  {
+    keyword: 'deprecated',
+    validate: (value: boolean, data, parentSchema, context) => {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Property "${context.parentDataProperty}" is deprecated. ${parentSchema.description}`,
+      );
+      // Dont want to fail validation, just alert the user
+      return true;
+    },
+  },
+];
+
 export const addJ1Formats = (ajvInstance: Ajv) => {
   for (const [name, format] of Object.entries(j1JsonSchemaFormats)) {
     ajvInstance.addFormat(name, format);
+  }
+
+  // Replace the deprecated keyword with our own implementation which will warn the user instead of ignoring
+  ajvInstance.removeKeyword('deprecated');
+  for (const keyword of additionalKeywords) {
+    ajvInstance.addKeyword(keyword);
   }
   return ajvInstance;
 };
