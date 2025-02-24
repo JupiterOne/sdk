@@ -54,7 +54,11 @@ export interface SynchronizeInput {
    * Using `'api'` will allow data to be uploaded without associating it with a specific integration instance. This is
    * useful when using the SDK to upload data from a script or other non-integration source.
    */
-  source: 'integration-managed' | 'integration-external' | 'api';
+  source:
+    | 'integration-managed'
+    | 'integration-external'
+    | 'api'
+    | 'system-internal';
 
   /**
    * The `scope` value used when creating the synchronization job. This value will be null when the
@@ -136,9 +140,23 @@ function buildJobConfiguration({
   integrationInstanceId,
   integrationJobId,
 }: SynchronizeInput) {
-  return source === 'api'
-    ? { source, scope }
-    : { source, integrationInstanceId, integrationJobId };
+  if (source === 'api') {
+    return {
+      source,
+      scope,
+    };
+  }
+
+  if (source === 'system-internal') {
+    return {
+      source,
+      scope,
+      integrationInstanceId,
+      integrationJobId,
+    };
+  }
+
+  return { source, integrationInstanceId, integrationJobId };
 }
 
 export interface SynchronizationJobContext {
