@@ -1,6 +1,6 @@
 {
   "name": "@jupiterone/integration-sdk-benchmark",
-  "version": "16.0.0",
+  "version": "16.1.0",
   "private": true,
   "description": "SDK benchmarking scripts",
   "main": "./src/index.js",
@@ -15,8 +15,8 @@
     "benchmark": "for file in ./src/benchmarks/*; do npm run prebenchmark && node $file; done"
   },
   "dependencies": {
-    "@jupiterone/integration-sdk-core": "^16.0.0",
-    "@jupiterone/integration-sdk-runtime": "^16.0.0",
+    "@jupiterone/integration-sdk-core": "^16.1.0",
+    "@jupiterone/integration-sdk-runtime": "^16.1.0",
     "benchmark": "^2.1.4"
   }
 }
