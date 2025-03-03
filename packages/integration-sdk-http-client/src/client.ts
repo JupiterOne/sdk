@@ -418,7 +418,9 @@ export abstract class BaseAPIClient {
     }
 
     if (err.status === 429) {
-      const retryAfter = err.retryAfter ? err.retryAfter * 1000 : 5_000;
+      const retryAfter = err.retryAfter
+        ? err.retryAfter * 1_000
+        : this.retryOptions.delay;
       this.logger.warn(
         { retryAfter },
         'Received a rate limit error. Waiting before retrying.',
