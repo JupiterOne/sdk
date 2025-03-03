@@ -9,6 +9,14 @@ and this project adheres to
 
 # Unreleased
 
+# 16.2.0 - 2025-03-03
+
+- http-client: use the retryOptions.delay as default delay for rate limit errors
+
+# 16.1.0 - 2025-02-25
+
+- runtime: Add support for system-internal
+
 # 16.0.0 - 2025-02-11
 
 - Update `@jupiterone/data-model` to v0.62.0
