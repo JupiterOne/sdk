@@ -15,6 +15,8 @@ import {
   setupRecording,
 } from '../recording';
 
+import { withRecording } from '../dataCollection';
+
 // mock fs so that we don't store recordings
 jest.mock('fs');
 
@@ -316,6 +318,20 @@ test('unzipGzippedRecordingEntry with hex encoding', () => {
     '{"@jupiterone/npm-enforce-age":"write","@jupiterone/jupiter-managed-integration-sdk":"write","@jupiterone/jupiter-integration-google":"write","@jupiterone/jupiter-integration-veracode":"write","@jupiterone/veracode-client":"write","@jupiterone/jupiter-integration-onelogin":"write","@jupiterone/whitehat-client":"write","@jupiterone/jupiter-integration-cbdefense":"write","@jupiterone/jupiter-integration-whitehat":"write","@jupiterone/jupiter-integration-okta":"write","@jupiterone/jupiterone-client-nodejs":"write","@jupiterone/jupiter-integration-wazuh":"write","@jupiterone/jupiter-integration-jira":"write","@jupiterone/jupiter-integration-sentinelone":"write","@jupiterone/jupiterone-alert-rules":"write","@jupiterone/jupiter-integration-tenable-cloud":"write","@jupiterone/jupiter-integration-openshift":"write","@jupiterone/jupiter-integration-jamf":"write","@jupiterone/security-policy-templates":"write","@jupiterone/jupiter-integration-hackerone":"write","@jupiterone/jupiter-integration-azure":"write","@jupiterone/jupiter-policy-builder":"write","@jupiterone/jupiter-integration-threatstack":"write","@jupiterone/jupiter-integration-knowbe4":"write","@jupiterone/jupiter-integration-zeit":"write","@jupiterone/snyk-client":"write","@jupiterone/jupiter-integration-snyk":"write","@jupiterone/jupiter-change-management-client":"write","@jupiterone/change-management-client":"write","@jupiterone/bitbucket-pr-detector":"write","@jupiterone/graph-azure":"write","@jupiterone/graph-jamf":"write","@jupiterone/docs":"write","@jupiterone/graph-cbdefense":"write","@jupiterone/graph-google":"write","@jupiterone/graph-hackerone":"write","@jupiterone/graph-jira":"write","@jupiterone/graph-knowbe4":"write","@jupiterone/graph-okta":"write","@jupiterone/graph-onelogin":"write","@jupiterone/graph-sentinelone":"write","@jupiterone/graph-snyk":"write","@jupiterone/graph-tenable-cloud":"write","@jupiterone/graph-threatstack":"write","@jupiterone/graph-openshift":"write","@jupiterone/graph-veracode":"write","@jupiterone/graph-wazuh":"write","@jupiterone/graph-whitehat":"write","@jupiterone/graph-jumpcloud":"write","@jupiterone/graph-crowdstrike":"write","@jupiterone/security-policy-builder":"write","@jupiterone/graph-airwatch":"write","@jupiterone/graph-whois":"write","@jupiterone/data-model":"write","@jupiterone/integration-sdk":"write"}',
   );
   expect(recordingEntry.response.content.encoding).toBeUndefined();
+});
+
+test('withRecordingTest should record', async () => {
+  process.env.LOAD_ENV = '1';
+  void (await withRecording({
+    recordingName: 'mockRecording',
+    directoryName: __dirname,
+    normalizeEntry: false,
+    cb: async () => {
+      await fetch(`http://localhost:${server.port}`);
+      return Promise.resolve();
+    },
+  }));
+  expect(Object.keys(vol.toJSON())).toHaveLength(1);
 });
 
 async function startServer(statusCode?: number) {
