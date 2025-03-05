@@ -79,7 +79,10 @@ export async function retryableRequestError({
 
   if (response.status === 429) {
     return new RateLimitError({
-      cause: errorBody ? new ResponseBodyError(errorBody, headers) : undefined,
+      cause:
+        errorBody !== undefined
+          ? new ResponseBodyError(errorBody, headers)
+          : undefined,
       status: response.status,
       statusText: response.statusText,
       endpoint,
@@ -88,7 +91,10 @@ export async function retryableRequestError({
   }
 
   return new RetryableIntegrationProviderApiError({
-    cause: errorBody ? new ResponseBodyError(errorBody, headers) : undefined,
+    cause:
+      errorBody !== undefined
+        ? new ResponseBodyError(errorBody, headers)
+        : undefined,
     endpoint,
     status: response.status,
     statusText: response.statusText,
@@ -105,7 +111,10 @@ export async function fatalRequestError({
   const headers = headersToRecord(response.headers);
 
   const apiErrorOptions = {
-    cause: errorBody ? new ResponseBodyError(errorBody, headers) : undefined,
+    cause:
+      errorBody !== undefined
+        ? new ResponseBodyError(errorBody, headers)
+        : undefined,
     endpoint,
     status: response.status,
     statusText: response.statusText,
