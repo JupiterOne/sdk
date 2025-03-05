@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 16.2.1 - 2025-03-05
+
+- http-client: create ResponseBodyError when the body is empty
+
 # 16.2.0 - 2025-03-03
 
 - http-client: use the retryOptions.delay as default delay for rate limit errors
