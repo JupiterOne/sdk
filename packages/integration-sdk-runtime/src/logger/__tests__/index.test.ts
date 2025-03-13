@@ -494,7 +494,7 @@ describe('validation failure logging', () => {
 
     const error = new Error('WAT?');
     const expectedDescriptionRegex = new RegExp(
-      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", reason="Unexpected error .*?"\\)$`,
+      `Error occurred while validating integration configuration. \\(errorCode="UNEXPECTED_ERROR", reason="An unexpected error .*?"\\)$`,
     );
 
     logger.validationFailure(error);
