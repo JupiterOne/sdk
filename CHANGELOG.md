@@ -9,6 +9,10 @@ and this project adheres to
 
 # Unreleased
 
+# 16.2.2 - 2025-03-25
+
+- http-client: use only one Agent instance for all requests
+
 # 16.2.1 - 2025-03-05
 
 - http-client: create ResponseBodyError when the body is empty
