@@ -70,8 +70,6 @@ export abstract class BaseAPIClient {
    */
   protected authorizationHeaders: Record<string, string>;
 
-  private defaultAgent: Agent | undefined;
-
   /**
    * Create a new API client
    *
@@ -196,13 +194,6 @@ export abstract class BaseAPIClient {
       : undefined;
   }
 
-  private internalGetDefaultAgent(): Agent | undefined {
-    if (!this.defaultAgent) {
-      this.defaultAgent = this.getDefaultAgent();
-    }
-    return this.defaultAgent;
-  }
-
   /**
    * Perform a request to the API.
    *
@@ -288,7 +279,7 @@ export abstract class BaseAPIClient {
         ...headers,
       },
       body: fmtBody,
-      agent: agent ?? this.internalGetDefaultAgent(),
+      agent: agent ?? this.getDefaultAgent(),
     });
     return response;
   }
