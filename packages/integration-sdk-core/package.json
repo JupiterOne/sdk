@@ -28,10 +28,10 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@jupiterone/data-model": "^0.62.0",
+    "@jupiterone/data-model": "^0.63.0",
     "@types/lodash": "^4.14.168"
   },
   "peerDependencies": {
-    "@jupiterone/data-model": ">= 0.62.0"
+    "@jupiterone/data-model": ">= 0.63.0"
   }
 }
