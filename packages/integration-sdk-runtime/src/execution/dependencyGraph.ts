@@ -16,7 +16,6 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
-  UploadError,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
