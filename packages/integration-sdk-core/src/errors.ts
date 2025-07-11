@@ -328,8 +328,8 @@ export type UserConfigError =
 
 export function isUserConfigError(err: Error): err is UserConfigError {
   return (
-    err instanceof IntegrationValidationError ||
-    err instanceof IntegrationProviderAuthenticationError
+    err.constructor?.name === 'IntegrationValidationError' ||
+    err.constructor?.name === 'IntegrationProviderAuthenticationError'
   );
 }
 
@@ -339,13 +339,13 @@ export type ProviderAuthError =
 
 export function isProviderAuthError(err: Error): err is ProviderAuthError {
   return (
-    err instanceof IntegrationProviderAuthorizationError ||
-    err instanceof IntegrationProviderAuthenticationError
+    err.constructor?.name === 'IntegrationProviderAuthorizationError' ||
+    err.constructor?.name === 'IntegrationProviderAuthenticationError'
   );
 }
 
 export function isProviderRetriesExceededError(err: Error): boolean {
-  return err instanceof IntegrationProviderRetriesExceededError;
+  return err.constructor?.name === 'IntegrationProviderRetriesExceededError';
 }
 
 export function shouldReportErrorToOperator(err: Error): boolean {

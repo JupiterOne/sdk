@@ -491,6 +491,25 @@ export class IntegrationLogger
 
 type NameValuePair = [string, any];
 
+/**
+ * Checks if an error is an IntegrationError or one of its subclasses.
+ * This function is more reliable than instanceof when dealing with multiple
+ * module instances that might have different IntegrationError class references.
+ */
+function isIntegrationError(err: any): err is IntegrationError {
+  return (
+    err &&
+    typeof err === 'object' &&
+    'code' in err &&
+    typeof err.code === 'string' &&
+    'fatal' in err &&
+    (err.constructor?.name?.startsWith('Integration') ||
+      err.constructor?.name === 'UnaccountedStepStartStatesError' ||
+      err.constructor?.name === 'StepStartStateUnknownStepIdsError' ||
+      err.constructor?.name === 'UploadError')
+  );
+}
+
 export function createErrorEventDescription(
   err: Error | IntegrationError,
   message: string,
@@ -506,8 +525,8 @@ export function createErrorEventDescription(
   let errorCode: string;
   let errorReason: string;
 
-  if (err instanceof IntegrationError) {
-    errorCode = err.code;
+  if (isIntegrationError(err)) {
+    errorCode = (err as any).code;
     errorReason = err.message;
   } else {
     errorCode = UNEXPECTED_ERROR_CODE;
