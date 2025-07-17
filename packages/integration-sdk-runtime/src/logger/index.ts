@@ -526,7 +526,7 @@ export function createErrorEventDescription(
   let errorReason: string;
 
   if (isIntegrationError(err)) {
-    errorCode = (err as any).code;
+    errorCode = (err as IntegrationError).code;
     errorReason = err.message;
   } else {
     errorCode = UNEXPECTED_ERROR_CODE;
