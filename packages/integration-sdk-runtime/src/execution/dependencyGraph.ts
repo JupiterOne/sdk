@@ -16,7 +16,6 @@ import {
   StepResultStatus,
   StepStartStates,
   StepExecutionHandlerWrapperFunction,
-  UploadError,
 } from '@jupiterone/integration-sdk-core';
 
 import { timeOperation } from '../metrics';
@@ -439,7 +438,11 @@ export function executeStepDependencyGraph<
         } catch (err) {
           context.logger.stepFailure(step, err);
           status = StepResultStatus.FAILURE;
-          if (err instanceof UploadError) {
+          if (
+            err &&
+            err.constructor &&
+            err.constructor.name === 'UploadError'
+          ) {
             possibleAdditionalPartialTypes = err.typesInvolved;
           }
         }
@@ -533,7 +536,7 @@ export function executeStepDependencyGraph<
           workingGraph.getNodeData(lastStep),
           err,
         );
-        if (err instanceof UploadError) {
+        if (err?.constructor?.name === 'UploadError') {
           updateStepResultStatus({
             stepId: lastStep,
             status: StepResultStatus.FAILURE,
