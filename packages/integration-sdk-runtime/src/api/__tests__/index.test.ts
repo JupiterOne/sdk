@@ -99,7 +99,7 @@ describe('createApiClient', () => {
       headers: {
         Authorization: 'Bearer test-key',
         'Content-Type': 'application/json',
-        'LifeOmic-Account': 'test-account',
+        'JupiterOne-Account': 'test-account',
       },
       retry: {
         maxTimeout: 20000,
