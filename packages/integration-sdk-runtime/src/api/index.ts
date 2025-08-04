@@ -60,6 +60,40 @@ export function createApiClient({
   };
 
   const client = new Alpha(opts) as ApiClient;
+
+  // Redact Authorization header from error response
+  client.interceptors?.response?.use(
+    (response) => response,
+    (error: any) => {
+      if (error?.config?.headers) {
+        error.config.headers = '[REDACTED]';
+      }
+
+      if (error?.response?.config?.headers) {
+        error.response.config.headers = '[REDACTED]';
+      }
+
+      if (typeof error?.request?._header === 'string') {
+        error.request._header = error.request._header.replace(
+          /Authorization: Bearer\s[^\r\n]+/i,
+          'Authorization: [REDACTED]',
+        );
+      }
+
+      const outHeadersSym = Object.getOwnPropertySymbols(
+        error.request || {},
+      ).find((sym) => String(sym).includes('kOutHeaders'));
+      if (outHeadersSym) {
+        const outHeaders = (error.request as any)[outHeadersSym];
+        if (outHeaders?.authorization) {
+          outHeaders.authorization = '[REDACTED]';
+        }
+      }
+
+      return Promise.reject(error);
+    },
+  );
+
   if (compressUploads) {
     // interceptors is incorrectly typed even without the case to ApiClient.
     // an AxiosInterceptor doesn't work here. You must use the AlphaInterceptor
