@@ -62,7 +62,7 @@ export function createApiClient({
   const client = new Alpha(opts) as ApiClient;
 
   // Redact Authorization header from error response
-  client.interceptors.response.use(
+  client.interceptors?.response?.use(
     (response) => response,
     (error: any) => {
       if (error?.config?.headers) {
