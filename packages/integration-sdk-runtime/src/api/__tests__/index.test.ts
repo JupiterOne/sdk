@@ -143,3 +143,31 @@ describe('compressRequest', () => {
     expect(config.data).toEqual({ some: 'data' });
   });
 });
+
+describe('real Alpha request with fake API key', () => {
+  test('should not expose API key in error', async () => {
+    jest.resetModules();
+    jest.unmock('@lifeomic/alpha');
+
+    const { createApiClient, getApiBaseUrl } = require('../index');
+
+    const apiBaseUrl = getApiBaseUrl();
+
+    const client = createApiClient({
+      apiBaseUrl,
+      account: 'test-account',
+      accessToken: 'test-key',
+      retryOptions: {
+        maxTimeout: 20000,
+      },
+    });
+
+    try {
+      await client.post('/persister/synchronization/jobs/', { some: 'data' });
+    } catch (err: any) {
+      const errorString = JSON.stringify(err);
+
+      expect(errorString).not.toContain('test-key');
+    }
+  });
+});
