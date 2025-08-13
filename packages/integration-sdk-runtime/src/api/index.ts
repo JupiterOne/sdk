@@ -45,7 +45,7 @@ export function createApiClient({
   alphaOptions,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
-    'LifeOmic-Account': account,
+    'JupiterOne-Account': account,
     'Content-Type': 'application/json',
   };
 
