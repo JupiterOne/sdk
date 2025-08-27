@@ -368,6 +368,7 @@ describe('step event publishing', () => {
     expect(onEmitEvent).toHaveBeenNthCalledWith(8, {
       name: 'step_failure',
       level: PublishEventLevel.Error,
+      eventCode: expect.toBeString(),
       description: expect.stringMatching(
         new RegExp(
           `Step "Mochi" failed to complete due to error. \\(errorCode="${error.code}", reason="ripperoni"\\)$`,
@@ -423,6 +424,7 @@ describe('provider auth error details', () => {
       expect(onEmitEvent).toHaveBeenCalledWith({
         name: 'step_failure',
         level: PublishEventLevel.Error,
+        eventCode: expect.toBeString(),
         description: expect.stringMatching(
           new RegExp(
             '^Step "Mochi" failed to complete due to error.' +
@@ -439,6 +441,7 @@ describe('provider auth error details', () => {
       expect(onEmitEvent).toHaveBeenCalledWith({
         name: 'validation_failure',
         level: PublishEventLevel.Error,
+        eventCode: expect.toBeString(),
         description: expect.stringMatching(
           new RegExp(
             '^Error occurred while validating integration configuration.' +
@@ -503,6 +506,7 @@ describe('validation failure logging', () => {
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'validation_failure',
       level: PublishEventLevel.Error,
+      eventCode: expect.toBeString(),
       description: expect.stringMatching(expectedDescriptionRegex),
     });
 
@@ -535,6 +539,7 @@ describe('validation failure logging', () => {
     expect(onEmitEvent).toHaveBeenNthCalledWith(1, {
       name: 'validation_failure',
       level: PublishEventLevel.Error,
+      eventCode: expect.toBeString(),
       description: expect.stringMatching(expectedDescriptionRegex),
     });
 
@@ -731,6 +736,7 @@ describe('#publishEvent', () => {
       logger.publishWarnEvent({
         name: IntegrationWarnEventName[key],
         description: 'the description',
+        eventCode: 'AWS-PER-ECS',
       });
 
       expect(onEmitEvent).toHaveBeenCalledTimes(1);
@@ -738,6 +744,7 @@ describe('#publishEvent', () => {
         name: IntegrationWarnEventName[key],
         level: PublishEventLevel.Warn,
         description: 'the description',
+        eventCode: 'AWS-PER-ECS',
       });
     },
   );
@@ -756,6 +763,7 @@ describe('#publishEvent', () => {
       logger.publishErrorEvent({
         name: IntegrationErrorEventName[key],
         description: 'the description',
+        eventCode: 'AWS-PER-ECS',
       });
 
       expect(onEmitEvent).toHaveBeenCalledTimes(1);
@@ -764,6 +772,7 @@ describe('#publishEvent', () => {
         name: IntegrationErrorEventName[key],
         level: PublishEventLevel.Error,
         description: 'the description',
+        eventCode: 'AWS-PER-ECS',
       });
     },
   );

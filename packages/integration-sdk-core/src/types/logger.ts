@@ -40,6 +40,10 @@ export type IntegrationEvent = {
 export type PublishEventInput = {
   name: string;
   description: string;
+  /**
+   * Allows the event to be identified via a code.
+   */
+  eventCode?: string;
   level?: PublishEventLevel;
 };
 
