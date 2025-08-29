@@ -599,48 +599,12 @@ export async function abortSynchronization({
     'Aborting synchronization job...',
   );
 
-  return await retry(
-    async () => {
-      const response = await apiClient.post(
-        `/persister/synchronization/jobs/${job.id}/abort`,
-        { reason, terminalStatus },
-      );
-
-      return response.data.job;
-    },
-    {
-      maxAttempts: 5,
-      delay: 200,
-      factor: 1.05,
-      handleError(err, context) {
-        if (context.attemptsRemaining > 0) {
-          logger.warn(
-            {
-              err,
-              'err.$response': (err as any)?.$response,
-              context,
-            },
-            'Error occurred while aborting synchronization job. Retrying request.',
-          );
-        }
-
-        if (context.attemptsRemaining === 0) {
-          logger.error(
-            {
-              err,
-              'err.$response': (err as any)?.$response,
-              context,
-            },
-            'Error occurred while aborting synchronization job',
-          );
-          throw synchronizationApiError(
-            err,
-            'Error occurred while aborting synchronization job.',
-          );
-        }
-      },
-    },
+  const response = await apiClient.post(
+    `/persister/synchronization/jobs/${job.id}/abort`,
+    { reason, terminalStatus },
   );
+
+  return response.data.job;
 }
 
 function cleanAxiosError(err: AxiosError) {
