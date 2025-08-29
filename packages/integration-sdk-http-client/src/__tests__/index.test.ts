@@ -294,6 +294,39 @@ describe('APIClient', () => {
       expect(spy).not.toHaveBeenCalled();
     });
 
+    it('should use HTTP_PROXY environment variable if set', async () => {
+      process.env.HTTP_PROXY = 'http://proxy.example.com:8080';
+
+      authHeadersFn.mockReturnValue({
+        Authorization: 'Bearer test-token',
+      });
+      const mockResponse = {} as Response;
+      (fetch as unknown as jest.Mock).mockResolvedValue(mockResponse);
+
+      const client = new MockAPIClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+        integrationConfig: {},
+      });
+
+      await (client as any).request('/test', {
+        method: 'GET',
+        body: { test: 'test' },
+      });
+
+      // Check that fetch was called with an agent that is a HttpsProxyAgent and has the correct proxy URL
+      const fetchOptions = (fetch as unknown as jest.Mock).mock.calls[0][1];
+      const { HttpsProxyAgent } = require('https-proxy-agent');
+      expect(fetchOptions.agent).toBeInstanceOf(HttpsProxyAgent);
+      expect(
+        fetchOptions.agent.proxy?.href ||
+        fetchOptions.agent.options?.proxy?.href ||
+        fetchOptions.agent.options?.url // fallback for some versions
+      ).toContain('http://proxy.example.com:8080');
+
+      delete process.env.HTTP_PROXY;
+    });
+
     describe('fmtBody', () => {
       test('should format body as JSON string when bodyType is json', async () => {
         const mockResponse = {} as Response;
@@ -564,6 +597,4 @@ describe('APIClient', () => {
       );
     });
   });
-
-  // Add more test cases for other methods as needed
 });

@@ -1,5 +1,6 @@
 import { join as joinPath } from 'node:path/posix';
 import fetch, { Headers, Response } from 'node-fetch';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import {
   IntegrationError,
   IntegrationInstanceConfig,
@@ -274,6 +275,22 @@ export abstract class BaseAPIClient {
         fmtBody = JSON.stringify(body);
       }
     }
+
+    // Proxy agent logic
+    const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+    let finalAgent: Agent | undefined;
+    if (proxy) {
+      // If an agent is provided, wrap it with the proxy agent
+      finalAgent = new HttpsProxyAgent(proxy);
+      // If a custom agent is provided, set it as the 'secureProxy' option for HttpsProxyAgent
+      if (agent) {
+        // @ts-ignore: HttpsProxyAgent accepts 'secureProxy' in its options
+        finalAgent.options = { ...finalAgent.options, secureProxy: agent };
+      }
+    } else {
+      finalAgent = agent ?? this.internalGetDefaultAgent();
+    }
+
     const response = await fetch(url, {
       method,
       headers: {
@@ -288,7 +305,7 @@ export abstract class BaseAPIClient {
         ...headers,
       },
       body: fmtBody,
-      agent: agent ?? this.internalGetDefaultAgent(),
+      agent: finalAgent,
     });
     return response;
   }
