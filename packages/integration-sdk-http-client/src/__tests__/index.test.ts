@@ -320,8 +320,8 @@ describe('APIClient', () => {
       expect(fetchOptions.agent).toBeInstanceOf(HttpsProxyAgent);
       expect(
         fetchOptions.agent.proxy?.href ||
-        fetchOptions.agent.options?.proxy?.href ||
-        fetchOptions.agent.options?.url // fallback for some versions
+          fetchOptions.agent.options?.proxy?.href ||
+          fetchOptions.agent.options?.url, // fallback for some versions
       ).toContain('http://proxy.example.com:8080');
 
       delete process.env.HTTP_PROXY;
