@@ -284,7 +284,7 @@ export abstract class BaseAPIClient {
       finalAgent = new HttpsProxyAgent(proxy);
       // If a custom agent is provided, set it as the 'secureProxy' option for HttpsProxyAgent
       if (agent) {
-        // @ts-ignore: HttpsProxyAgent accepts 'secureProxy' in its options
+        // @ts-expect-error: HttpsProxyAgent accepts 'secureProxy' in its options
         finalAgent.options = { ...finalAgent.options, secureProxy: agent };
       }
     } else {
