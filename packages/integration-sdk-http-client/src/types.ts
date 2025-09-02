@@ -66,6 +66,7 @@ export interface ClientConfig {
   rateLimitThrottling?: RateLimitThrottlingOptions;
   tokenBucket?: TokenBucketOptions;
   refreshAuth?: RefreshAuthOptions;
+  redactUrlQueryParamsKeys?: string[];
 }
 
 export interface IterateCallbackResult {

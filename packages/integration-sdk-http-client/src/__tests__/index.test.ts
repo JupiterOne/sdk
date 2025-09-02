@@ -6,6 +6,7 @@ import https from 'node:https';
 
 jest.mock('node-fetch');
 import fetch from 'node-fetch';
+import { redactUrlQueryParametersKeys } from '../errors';
 
 const { Response, Headers } = jest.requireActual('node-fetch');
 
@@ -562,6 +563,29 @@ describe('APIClient', () => {
         'https://example.com/api?page=2',
         expect.any(Object),
       );
+    });
+  });
+
+  describe('redactUrlQueryParametersKeys', () => {
+    it('should redact the query parameters from the URL', () => {
+      const url = 'https://api.example.com?key1=value1&key2=value2';
+      const keys = ['key1'];
+      const result = redactUrlQueryParametersKeys(url, keys);
+      expect(result).toBe('https://api.example.com?key2=value2');
+    });
+
+    it('should redact the query parameters from the URL', () => {
+      const url = 'https://api.example.com?key1=value1&key2=value2';
+      const keys = ['key1', 'key2'];
+      const result = redactUrlQueryParametersKeys(url, keys);
+      expect(result).toBe('https://api.example.com');
+    });
+
+    it('should not redact the query parameters from the URL if the keys are not provided', () => {
+      const url = 'https://api.example.com?key1=value1&key2=value2';
+      const keys = [];
+      const result = redactUrlQueryParametersKeys(url, keys);
+      expect(result).toBe('https://api.example.com?key1=value1&key2=value2');
     });
   });
 

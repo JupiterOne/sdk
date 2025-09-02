@@ -61,6 +61,7 @@ export abstract class BaseAPIClient {
   protected tokenBucketInitialConfig?: TokenBucketOptions | undefined;
   protected endpointTokenBuckets: Record<string, HierarchicalTokenBucket> = {};
   protected refreshAuth?: RefreshAuthOptions;
+  protected redactUrlQueryParamsKeys?: string[];
 
   protected readonly integrationConfig: IntegrationInstanceConfig;
   protected readonly agent?: Agent;
@@ -97,6 +98,7 @@ export abstract class BaseAPIClient {
    *    if not provided, token bucket will not be enabled
    * @param {boolean} [config.refreshAuth.enabled] - If true, the auth headers will be refreshed on 401 and 403 errors
    * @param {number[]} [config.refreshAuth.errorCodes] - If provided, the auth headers will be refreshed on the provided error codes
+   * @param {string[]} [config.redactUrlQueryParamsKeys] - If provided, the query parameters will be redacted from the URL
    *
    * @example
    * ```typescript
@@ -136,6 +138,7 @@ export abstract class BaseAPIClient {
       });
     }
     this.refreshAuth = config.refreshAuth;
+    this.redactUrlQueryParamsKeys = config.redactUrlQueryParamsKeys;
   }
 
   protected withBaseUrl(endpoint: string): string {
@@ -333,6 +336,7 @@ export abstract class BaseAPIClient {
               response,
               logger: this.logger,
               logErrorBody: this.logErrorBody,
+              redactUrlQueryParamsKeys: this.redactUrlQueryParamsKeys,
             };
             if (isRetryableRequest(response.status)) {
               error = await retryableRequestError(requestErrorParams);

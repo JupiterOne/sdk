@@ -17,6 +17,7 @@ interface RequestErrorParams {
   response: Response;
   logger: IntegrationLogger;
   logErrorBody: boolean;
+  redactUrlQueryParamsKeys?: string[];
 }
 
 export class RetryableIntegrationProviderApiError extends IntegrationProviderAPIError {
@@ -101,11 +102,32 @@ export async function retryableRequestError({
   });
 }
 
+/**
+ * Redact the query parameters from the URL
+ * @param url - The URL to redact
+ * @param keys - The keys to redact
+ * @returns The URL with the query parameters redacted
+ */
+export function redactUrlQueryParametersKeys(
+  url: string,
+  keys: string[],
+): string {
+  const [base, query] = url.split('?');
+  if (!query) return url;
+
+  const params = new URLSearchParams(query);
+  keys.forEach((key) => params.delete(key));
+
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
+}
+
 export async function fatalRequestError({
   endpoint,
   response,
   logger,
   logErrorBody,
+  redactUrlQueryParamsKeys,
 }: RequestErrorParams): Promise<IntegrationProviderAPIError> {
   const errorBody = await getErrorBody(response, logger, logErrorBody);
   const headers = headersToRecord(response.headers);
@@ -115,7 +137,9 @@ export async function fatalRequestError({
       typeof errorBody === 'string'
         ? new ResponseBodyError(errorBody, headers)
         : undefined,
-    endpoint,
+    endpoint: redactUrlQueryParamsKeys?.length
+      ? redactUrlQueryParametersKeys(endpoint, redactUrlQueryParamsKeys)
+      : endpoint,
     status: response.status,
     statusText: response.statusText,
   };
