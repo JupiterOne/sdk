@@ -1,4 +1,4 @@
-import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
+import { HttpClient, HttpClientOptions } from './http-client';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -9,7 +9,7 @@ import {
 } from './error';
 import { gzipData } from '../synchronization/util';
 
-export type ApiClient = Alpha;
+export type ApiClient = HttpClient;
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
@@ -17,7 +17,8 @@ interface CreateApiClientInput {
   accessToken?: string;
   retryOptions?: RetryOptions;
   compressUploads?: boolean;
-  alphaOptions?: AlphaOptions;
+  proxy?: string;
+  timeout?: number;
 }
 
 interface RetryOptions {
@@ -42,7 +43,8 @@ export function createApiClient({
   accessToken,
   retryOptions,
   compressUploads,
-  alphaOptions,
+  proxy,
+  timeout,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
     'JupiterOne-Account': account,
@@ -52,14 +54,16 @@ export function createApiClient({
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
-  const opts: AlphaOptions = {
+
+  const opts: HttpClientOptions = {
     baseURL: apiBaseUrl,
     headers,
+    timeout,
+    proxy,
     retry: retryOptions ?? {},
-    ...alphaOptions,
   };
 
-  const client = new Alpha(opts) as ApiClient;
+  const client = new HttpClient(opts) as ApiClient;
 
   // Redact Authorization header from error response
   client.interceptors?.response?.use(
@@ -95,18 +99,12 @@ export function createApiClient({
   );
 
   if (compressUploads) {
-    // interceptors is incorrectly typed even without the case to ApiClient.
-    // an AxiosInterceptor doesn't work here. You must use the AlphaInterceptor
-    // as we are registering these interceptors on the Alpha instance.
-    // AlphaInterceptors _must_ return the config or a Promise for the config.
     client.interceptors.request.use(compressRequest);
   }
   return client;
 }
 
-export const compressRequest: AlphaInterceptor = async function (
-  config: AlphaOptions,
-) {
+export const compressRequest = async function (config: any) {
   if (
     config.method === 'post' &&
     config.url &&

@@ -10,8 +10,6 @@ import {
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
 
-import { AxiosError } from 'axios';
-
 import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
@@ -27,7 +25,6 @@ import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes } from './batchBySize';
-import type { Alpha } from '@lifeomic/alpha';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -391,7 +388,7 @@ export interface UploadDataLookup {
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   logger: IntegrationLogger;
-  apiClient: Alpha;
+  apiClient: ApiClient;
   jobId: string;
   type: K;
   batch: T[K][];
@@ -607,7 +604,7 @@ export async function abortSynchronization({
   return response.data.job;
 }
 
-function cleanAxiosError(err: AxiosError) {
+function cleanAxiosError(err: any) {
   if (err.config?.headers?.Authorization) {
     delete err.config.headers.Authorization;
   }

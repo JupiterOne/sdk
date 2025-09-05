@@ -1,5 +1,5 @@
 import { mocked } from 'jest-mock';
-import { Alpha } from '@lifeomic/alpha';
+import { HttpClient } from '../http-client';
 
 import {
   getApiBaseUrl,
@@ -8,11 +8,10 @@ import {
   getAccountFromEnvironment,
   compressRequest,
 } from '../index';
-import { AxiosRequestConfig } from 'axios';
 
-jest.mock('@lifeomic/alpha');
+jest.mock('../http-client');
 
-const AlphaMock = mocked(Alpha);
+const HttpClientMock = mocked(HttpClient);
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {
@@ -91,10 +90,10 @@ describe('createApiClient', () => {
       },
     });
 
-    expect(client).toBeInstanceOf(AlphaMock);
+    expect(client).toBeInstanceOf(HttpClientMock);
 
-    expect(AlphaMock).toHaveReturnedTimes(1);
-    expect(AlphaMock).toHaveBeenCalledWith({
+    expect(HttpClientMock).toHaveReturnedTimes(1);
+    expect(HttpClientMock).toHaveBeenCalledWith({
       baseURL: apiBaseUrl,
       headers: {
         Authorization: 'Bearer test-key',
@@ -110,7 +109,7 @@ describe('createApiClient', () => {
 
 describe('compressRequest', () => {
   it('should compress the request data when the URL matches', async () => {
-    const config: AxiosRequestConfig = {
+    const config: any = {
       method: 'post',
       url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
       headers: {},
@@ -147,7 +146,7 @@ describe('compressRequest', () => {
 describe('real Alpha request with fake API key', () => {
   test('should not expose API key in error', async () => {
     jest.resetModules();
-    jest.unmock('@lifeomic/alpha');
+    jest.unmock('../http-client');
 
     const { createApiClient, getApiBaseUrl } = require('../index');
 
