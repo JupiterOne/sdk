@@ -1,4 +1,5 @@
 import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
+import { AxiosProxyConfig } from 'axios';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -18,6 +19,7 @@ interface CreateApiClientInput {
   retryOptions?: RetryOptions;
   compressUploads?: boolean;
   alphaOptions?: AlphaOptions;
+  proxyUrl?: string;
 }
 
 interface RetryOptions {
@@ -43,6 +45,7 @@ export function createApiClient({
   retryOptions,
   compressUploads,
   alphaOptions,
+  proxyUrl,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
     'JupiterOne-Account': account,
@@ -52,10 +55,15 @@ export function createApiClient({
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
+
+  const proxyUrlString = proxyUrl || getProxyFromEnvironment();
+  const proxy = proxyUrlString ? parseProxyUrl(proxyUrlString) : undefined;
+
   const opts: AlphaOptions = {
     baseURL: apiBaseUrl,
     headers,
     retry: retryOptions ?? {},
+    ...(proxy && { proxy }),
     ...alphaOptions,
   };
 
@@ -161,3 +169,26 @@ export const getApiKeyFromEnvironment = () =>
 
 export const getAccountFromEnvironment = () =>
   getFromEnv('JUPITERONE_ACCOUNT', IntegrationAccountRequiredError);
+
+function parseProxyUrl(proxyUrl: string) {
+  const url = new URL(proxyUrl);
+  const proxy: AxiosProxyConfig = {
+    host: url.hostname,
+    port: parseInt(url.port) || (url.protocol === 'https:' ? 443 : 80),
+    protocol: url.protocol.replace(':', ''),
+  };
+
+  if (url.username && url.password) {
+    proxy.auth = {
+      username: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+    };
+  }
+
+  return proxy;
+}
+
+function getProxyFromEnvironment(): string | undefined {
+  dotenvExpand(dotenv.config());
+  return process.env.HTTPS_PROXY || process.env.https_proxy;
+}

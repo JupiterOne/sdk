@@ -2,7 +2,7 @@ import { AnySchema } from 'ajv';
 import { EntityValidator } from '../validator';
 
 const RESOLVED_SCHEMAS_URL =
-  'https://raw.githubusercontent.com/JupiterOne/data-model/main/external/resolvedSchemas.json';
+  'https://api.us.jupiterone.io/data-model/schemas/classes';
 
 const ENTITY_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
