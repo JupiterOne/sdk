@@ -171,7 +171,6 @@ export const getAccountFromEnvironment = () =>
   getFromEnv('JUPITERONE_ACCOUNT', IntegrationAccountRequiredError);
 
 function parseProxyUrl(proxyUrl: string) {
-  try {
     const url = new URL(proxyUrl);
     const proxy: AxiosProxyConfig = {
       host: url.hostname,
@@ -187,11 +186,6 @@ function parseProxyUrl(proxyUrl: string) {
     }
 
     return proxy;
-  } catch (error) {
-    const parsedError = error instanceof TypeError ? error : new TypeError(String(error));
-    console.warn('Failed to parse proxy URL:', proxyUrl, parsedError);
-    return undefined;
-  }
 }
 
 function getProxyFromEnvironment(): string | undefined {
