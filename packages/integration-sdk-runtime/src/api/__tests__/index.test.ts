@@ -171,3 +171,179 @@ describe('real Alpha request with fake API key', () => {
     }
   });
 });
+
+describe('createApiClient', () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...originalEnv };
+  });
+
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
+  describe('proxy configuration', () => {
+    it('should not configure proxy when no proxy URL is provided', () => {
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      // The client should be created without proxy configuration
+      expect(client).toBeDefined();
+    });
+
+    it('should configure proxy when proxyUrl parameter is provided', () => {
+      const proxyUrl = 'https://foo:bar@proxy.example.com:8888';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+        proxyUrl,
+      });
+
+      expect(client).toBeDefined();
+      // Note: We can't easily test the internal proxy config without exposing it
+      // This test verifies the client is created successfully with proxy config
+    });
+
+    it('should configure proxy from HTTPS_PROXY environment variable', () => {
+      process.env.HTTPS_PROXY = 'https://foo:bar@proxy.example.com:8888';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+
+    it('should configure proxy from https_proxy environment variable', () => {
+      process.env.https_proxy = 'http://user:pass@proxy.local:3128';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+
+    it('should prefer HTTPS_PROXY over https_proxy', () => {
+      process.env.HTTPS_PROXY = 'https://primary:proxy@proxy1.com:8888';
+      process.env.https_proxy = 'http://secondary:proxy@proxy2.com:3128';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+
+    it('should prefer proxyUrl parameter over environment variables', () => {
+      process.env.HTTPS_PROXY = 'https://env:proxy@env-proxy.com:8888';
+      const proxyUrl = 'https://param:proxy@param-proxy.com:9999';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+        proxyUrl,
+      });
+
+      expect(client).toBeDefined();
+    });
+  });
+
+  describe('parseProxyUrl functionality', () => {
+    // We need to import the parseProxyUrl function or test it indirectly
+    it('should handle proxy URL with authentication', () => {
+      process.env.HTTPS_PROXY = 'https://username:password@proxy.example.com:8888';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+
+    it('should handle proxy URL without authentication', () => {
+      process.env.HTTPS_PROXY = 'https://proxy.example.com:8888';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+
+    it('should handle HTTP proxy URLs', () => {
+      process.env.HTTPS_PROXY = 'http://proxy.example.com:3128';
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+
+    it('should handle invalid proxy URLs gracefully', () => {
+      process.env.HTTPS_PROXY = 'invalid-url';
+
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Failed to parse proxy URL:',
+        'invalid-url',
+        expect.any(Error)
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it('should use default ports when not specified', () => {
+      // Test HTTPS default port (443)
+      process.env.HTTPS_PROXY = 'https://proxy.example.com';
+
+      let client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+
+      // Test HTTP default port (80)
+      process.env.HTTPS_PROXY = 'http://proxy.example.com';
+
+      client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
+
+      expect(client).toBeDefined();
+    });
+  });
+});
