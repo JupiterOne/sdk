@@ -266,7 +266,8 @@ describe('createApiClient', () => {
   describe('parseProxyUrl functionality', () => {
     // We need to import the parseProxyUrl function or test it indirectly
     it('should handle proxy URL with authentication', () => {
-      process.env.HTTPS_PROXY = 'https://username:password@proxy.example.com:8888';
+      process.env.HTTPS_PROXY =
+        'https://username:password@proxy.example.com:8888';
 
       const client = createApiClient({
         apiBaseUrl: 'https://api.example.com',

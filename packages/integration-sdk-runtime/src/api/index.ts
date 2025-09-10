@@ -171,21 +171,21 @@ export const getAccountFromEnvironment = () =>
   getFromEnv('JUPITERONE_ACCOUNT', IntegrationAccountRequiredError);
 
 function parseProxyUrl(proxyUrl: string) {
-    const url = new URL(proxyUrl);
-    const proxy: AxiosProxyConfig = {
-      host: url.hostname,
-      port: parseInt(url.port) || (url.protocol === 'https:' ? 443 : 80),
-      protocol: url.protocol.replace(':', ''),
+  const url = new URL(proxyUrl);
+  const proxy: AxiosProxyConfig = {
+    host: url.hostname,
+    port: parseInt(url.port) || (url.protocol === 'https:' ? 443 : 80),
+    protocol: url.protocol.replace(':', ''),
+  };
+
+  if (url.username && url.password) {
+    proxy.auth = {
+      username: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
     };
+  }
 
-    if (url.username && url.password) {
-      proxy.auth = {
-        username: decodeURIComponent(url.username),
-        password: decodeURIComponent(url.password),
-      };
-    }
-
-    return proxy;
+  return proxy;
 }
 
 function getProxyFromEnvironment(): string | undefined {
