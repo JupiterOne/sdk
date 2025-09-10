@@ -301,25 +301,16 @@ describe('createApiClient', () => {
       expect(client).toBeDefined();
     });
 
-    it('should handle invalid proxy URLs gracefully', () => {
+    it('should throw an error for invalid proxy URLs', () => {
       process.env.HTTPS_PROXY = 'invalid-url';
 
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to parse proxy URL:',
-        'invalid-url',
-        expect.any(Error)
-      );
-
-      consoleSpy.mockRestore();
+      expect(() => {
+        createApiClient({
+          apiBaseUrl: 'https://api.example.com',
+          account: 'test-account',
+          accessToken: 'test-token',
+        });
+      }).toThrow();
     });
 
     it('should use default ports when not specified', () => {
