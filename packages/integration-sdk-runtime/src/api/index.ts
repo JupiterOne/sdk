@@ -1,4 +1,5 @@
 import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
+import { AxiosProxyConfig } from 'axios';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -172,7 +173,7 @@ export const getAccountFromEnvironment = () =>
 function parseProxyUrl(proxyUrl: string) {
   try {
     const url = new URL(proxyUrl);
-    const proxy: any = {
+    const proxy: AxiosProxyConfig = {
       host: url.hostname,
       port: parseInt(url.port) || (url.protocol === 'https:' ? 443 : 80),
       protocol: url.protocol.replace(':', ''),
