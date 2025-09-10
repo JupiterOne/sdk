@@ -188,7 +188,8 @@ function parseProxyUrl(proxyUrl: string) {
 
     return proxy;
   } catch (error) {
-    console.warn('Failed to parse proxy URL:', proxyUrl, error instanceof TypeError ? error : new TypeError(String(error)));
+    const parsedError = error instanceof TypeError ? error : new TypeError(String(error));
+    console.warn('Failed to parse proxy URL:', proxyUrl, parsedError);
     return undefined;
   }
 }
