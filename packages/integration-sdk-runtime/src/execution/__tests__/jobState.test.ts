@@ -25,6 +25,7 @@ import {
 } from '../uploader';
 import { FlushedGraphObjectData } from '../../storage/types';
 import pMap from 'p-map';
+import { createMockIntegrationLogger } from '../../../test/util/fixtures';
 
 jest.mock('fs');
 
@@ -35,11 +36,14 @@ function entitiesToEntityKeySet(entities: Entity[]): Set<string> {
 }
 
 function createInMemoryStepGraphObjectDataUploaderCollector(
-  partial?: CreateQueuedStepGraphObjectDataUploaderParams,
+  partial?: Partial<CreateQueuedStepGraphObjectDataUploaderParams>,
 ) {
   const graphObjectDataCollection: FlushedGraphObjectData[] = [];
 
+  const logger = createMockIntegrationLogger();
+
   const uploader = createQueuedStepGraphObjectDataUploader({
+    logger,
     stepId: uuid(),
     uploadConcurrency: 5,
     upload(graphObjectData) {
@@ -307,8 +311,10 @@ describe('upload callbacks', () => {
 
   test('#waitUntilUploadsComplete should resolve when all uploads completed', async () => {
     const graphObjectDataCollection: FlushedGraphObjectData[] = [];
+    const logger = createMockIntegrationLogger();
 
     const uploader = createQueuedStepGraphObjectDataUploader({
+      logger,
       stepId: uuid(),
       uploadConcurrency: 5,
       async upload(graphObjectData) {

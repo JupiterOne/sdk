@@ -1,4 +1,7 @@
-import { UploadError } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationLogger,
+  UploadError,
+} from '@jupiterone/integration-sdk-core';
 import PQueue from 'p-queue/dist';
 import { FlushedGraphObjectData } from '../storage/types';
 import {
@@ -19,6 +22,7 @@ export type CreateStepGraphObjectDataUploaderFunction = (
 ) => StepGraphObjectDataUploader;
 
 export interface CreateQueuedStepGraphObjectDataUploaderParams {
+  logger: IntegrationLogger;
   stepId: string;
   uploadConcurrency: number;
   upload: (graphObjectData: FlushedGraphObjectData) => Promise<void>;
@@ -26,6 +30,7 @@ export interface CreateQueuedStepGraphObjectDataUploaderParams {
 }
 
 export function createQueuedStepGraphObjectDataUploader({
+  logger,
   stepId,
   uploadConcurrency: maximumQueueSize,
   upload,
@@ -69,6 +74,10 @@ export function createQueuedStepGraphObjectDataUploader({
       queue
         .add(() => upload(graphObjectData))
         .catch((err) => {
+          logger.warn(
+            { err, stepId, graphObjectData },
+            'Error uploading graph object data batch',
+          );
           // Do not pause the queue entirely. We will try to prevent additional
           // tasks from being added to the queue, but even if an error occurs,
           // we should try uploading the remaining data that we have queued up.
@@ -100,6 +109,15 @@ export function createQueuedStepGraphObjectDataUploader({
         // this time, we could be receiving additional tasks in our queue that
         // will grow the queue.
         completed = true;
+
+        logger.debug(
+          {
+            stepId,
+            uploadErrorCount: uploadErrors.length,
+            typesInvolvedInFailures: Array.from(typesInvolvedInFailures),
+          },
+          'Upload queue processing complete',
+        );
       }
 
       if (uploadErrors.length) {
@@ -150,6 +168,7 @@ export function createPersisterApiStepGraphObjectDataUploader({
   uploadBatchSizeInBytes = DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
 }: CreatePersisterApiStepGraphObjectDataUploaderParams) {
   return createQueuedStepGraphObjectDataUploader({
+    logger: synchronizationJobContext.logger,
     stepId,
     uploadConcurrency,
     async upload(graphObjectData) {

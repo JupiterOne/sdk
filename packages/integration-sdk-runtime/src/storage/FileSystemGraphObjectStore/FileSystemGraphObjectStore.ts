@@ -10,6 +10,7 @@ import {
   GetIndexMetadataForGraphObjectTypeParams,
   IntegrationStep,
   GraphObjectIterateeOptions,
+  IntegrationLogger,
 } from '@jupiterone/integration-sdk-core';
 
 import { flushDataToDisk } from './flushDataToDisk';
@@ -52,6 +53,11 @@ export interface FileSystemGraphObjectStoreParams {
    * Whether the files that are written to disk should be minified or not
    */
   prettifyFiles?: boolean;
+
+  /**
+   * Optional logger for debugging and tracking data flow
+   */
+  logger?: IntegrationLogger;
 }
 
 interface GraphObjectIndexMetadataMap {
@@ -135,6 +141,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     string,
     GraphObjectLocationOnDisk
   >(ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE);
+  private readonly logger?: IntegrationLogger;
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
@@ -142,6 +149,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       params?.graphObjectFileSize || DEFAULT_GRAPH_OBJECT_FILE_SIZE;
 
     this.prettifyFiles = params?.prettifyFiles || false;
+    this.logger = params?.logger;
     this.graphObjectBufferThresholdInBytes = min([
       params?.graphObjectBufferThresholdInBytes ||
         DEFAULT_UPLOAD_BATCH_SIZE_IN_BYTES,
@@ -325,28 +333,64 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         });
 
         if (indexable.length) {
-          await Promise.all(
-            chunk(indexable, this.graphObjectFileSize).map(async (data) => {
-              const graphObjectsToFilePaths = await flushDataToDisk({
-                storageDirectoryPath: stepId,
-                collectionType: 'entities',
-                data,
-                pretty: this.prettifyFiles,
-              });
-
-              for (const {
-                graphDataPath,
-                collection,
-              } of graphObjectsToFilePaths) {
-                for (const [index, e] of collection.entries()) {
-                  this.entityOnDiskLocationMap.set(e._key, {
-                    graphDataPath,
-                    index,
-                  });
-                }
-              }
-            }),
+          const chunks = chunk(indexable, this.graphObjectFileSize);
+          this.logger?.debug(
+            {
+              stepId,
+              entityCount: indexable.length,
+              chunkCount: chunks.length,
+              chunkSize: this.graphObjectFileSize,
+            },
+            'Flushing entity chunks to disk',
           );
+
+          try {
+            await Promise.all(
+              chunks.map(async (data, chunkIndex) => {
+                const graphObjectsToFilePaths = await flushDataToDisk({
+                  storageDirectoryPath: stepId,
+                  collectionType: 'entities',
+                  data,
+                  pretty: this.prettifyFiles,
+                  logger: this.logger,
+                });
+
+                for (const {
+                  graphDataPath,
+                  collection,
+                } of graphObjectsToFilePaths) {
+                  for (const [index, e] of collection.entries()) {
+                    this.entityOnDiskLocationMap.set(e._key, {
+                      graphDataPath,
+                      index,
+                    });
+                  }
+                }
+
+                this.logger?.debug(
+                  {
+                    stepId,
+                    chunkIndex,
+                    entitiesInChunk: data.length,
+                    filesCreated: graphObjectsToFilePaths.length,
+                  },
+                  'Entity chunk flushed successfully',
+                );
+              }),
+            );
+          } catch (error) {
+            this.logger?.error(
+              {
+                stepId,
+                entityCount: indexable.length,
+                chunkCount: chunks.length,
+                error: error.message,
+                errorStack: error.stack,
+              },
+              'Failed to flush entity chunks to disk',
+            );
+            throw error;
+          }
         }
 
         this.localGraphObjectStore.flushEntities(entities, stepId);
@@ -354,7 +398,18 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       }
 
       if (onEntitiesFlushed) {
-        await onEntitiesFlushed(entitiesToUpload);
+        try {
+          await onEntitiesFlushed(entitiesToUpload);
+        } catch (err) {
+          this.logger?.error(
+            {
+              entityCount: entitiesToUpload.length,
+              err,
+            },
+            'onEntitiesFlushed callback failed',
+          );
+          throw err;
+        }
       }
     });
   }
@@ -406,16 +461,51 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         });
 
         if (indexable.length) {
-          await Promise.all(
-            chunk(indexable, this.graphObjectFileSize).map(async (data) => {
-              await flushDataToDisk({
-                storageDirectoryPath: stepId,
-                collectionType: 'relationships',
-                data,
-                pretty: this.prettifyFiles,
-              });
-            }),
+          const chunks = chunk(indexable, this.graphObjectFileSize);
+          this.logger?.debug(
+            {
+              stepId,
+              relationshipCount: indexable.length,
+              chunkCount: chunks.length,
+              chunkSize: this.graphObjectFileSize,
+            },
+            'Flushing relationship chunks to disk',
           );
+
+          try {
+            await Promise.all(
+              chunks.map(async (data, chunkIndex) => {
+                await flushDataToDisk({
+                  storageDirectoryPath: stepId,
+                  collectionType: 'relationships',
+                  data,
+                  pretty: this.prettifyFiles,
+                  logger: this.logger,
+                });
+
+                this.logger?.debug(
+                  {
+                    stepId,
+                    chunkIndex,
+                    relationshipsInChunk: data.length,
+                  },
+                  'Relationship chunk flushed successfully',
+                );
+              }),
+            );
+          } catch (error) {
+            this.logger?.error(
+              {
+                stepId,
+                relationshipCount: indexable.length,
+                chunkCount: chunks.length,
+                error: error.message,
+                errorStack: error.stack,
+              },
+              'Failed to flush relationship chunks to disk',
+            );
+            throw error;
+          }
         }
 
         this.localGraphObjectStore.flushRelationships(relationships, stepId);
@@ -423,7 +513,19 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
       }
 
       if (onRelationshipsFlushed) {
-        await onRelationshipsFlushed(relationshipsToUpload);
+        try {
+          await onRelationshipsFlushed(relationshipsToUpload);
+        } catch (error) {
+          this.logger?.error(
+            {
+              relationshipCount: relationshipsToUpload.length,
+              error: error.message,
+              errorStack: error.stack,
+            },
+            'onRelationshipsFlushed callback failed',
+          );
+          throw error;
+        }
       }
     });
   }

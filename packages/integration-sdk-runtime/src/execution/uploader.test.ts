@@ -52,7 +52,10 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
     const uploaded: FlushedGraphObjectData[] = [];
     let numQueued = 0;
 
+    const logger = createMockIntegrationLogger();
+
     const uploader = createQueuedStepGraphObjectDataUploader({
+      logger,
       stepId: uuid(),
       uploadConcurrency: Infinity,
       async upload(d) {
@@ -77,7 +80,10 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
     const uploaded: FlushedGraphObjectData[] = [];
     let throttleCount = 0;
 
+    const logger = createMockIntegrationLogger();
+
     const uploader = createQueuedStepGraphObjectDataUploader({
+      logger,
       stepId: uuid(),
       uploadConcurrency: 2,
       async upload(d) {
@@ -101,7 +107,10 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
 
     let numQueued = 0;
 
+    const logger = createMockIntegrationLogger();
+
     const uploader = createQueuedStepGraphObjectDataUploader({
+      logger,
       stepId,
       uploadConcurrency: 2,
       async upload(d) {
@@ -143,7 +152,10 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
 
     let numQueued = 0;
 
+    const logger = createMockIntegrationLogger();
+
     const uploader = createQueuedStepGraphObjectDataUploader({
+      logger,
       stepId,
       uploadConcurrency: 2,
       async upload(d) {
