@@ -397,7 +397,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         entitiesToUpload = entitiesToUpload.concat(entities);
       }
 
-      if (onEntitiesFlushed && entitiesToUpload.length > 0) {
+      if (onEntitiesFlushed) {
         try {
           await onEntitiesFlushed(entitiesToUpload);
         } catch (err) {
@@ -512,7 +512,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
         relationshipsToUpload = relationshipsToUpload.concat(relationships);
       }
 
-      if (onRelationshipsFlushed && relationshipsToUpload.length > 0) {
+      if (onRelationshipsFlushed) {
         try {
           await onRelationshipsFlushed(relationshipsToUpload);
         } catch (error) {
