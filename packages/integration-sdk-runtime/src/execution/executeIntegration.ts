@@ -250,7 +250,9 @@ export async function executeWithContext<
       }
 
       const {
-        graphObjectStore = new FileSystemGraphObjectStore(),
+        graphObjectStore = new FileSystemGraphObjectStore({
+          logger,
+        }),
         createStepGraphObjectDataUploader,
         resultsCallback,
       } = options;

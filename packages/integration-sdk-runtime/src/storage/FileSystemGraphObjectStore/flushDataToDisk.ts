@@ -17,6 +17,7 @@ interface FlushDataToDiskInput<TGraphObject = Entity | Relationship> {
   collectionType: CollectionType;
   data: TGraphObject[];
   pretty?: boolean;
+  logger?: any;
 }
 
 interface GraphObjectToFilePath<TGraphObject = Entity | Relationship> {
@@ -34,15 +35,33 @@ export async function flushDataToDisk<TGraphObject = Entity | Relationship>({
   collectionType,
   data,
   pretty,
+  logger,
 }: FlushDataToDiskInput<TGraphObject>): Promise<
   GraphObjectToFilePath<TGraphObject>[]
 > {
   // split the data by type first
   const groupedCollections = groupBy(data, '_type');
 
+  const totalObjects = data.length;
+  const typeCount = Object.keys(groupedCollections).length;
+  const chunkInfo = Object.entries(groupedCollections)
+    .map(([type, items]) => `${type}:${items.length}`)
+    .join(', ');
+
+  logger?.debug(
+    {
+      stepId: storageDirectoryPath,
+      collectionType,
+      totalObjects,
+      typeCount,
+      chunkInfo,
+    },
+    'Flushing data to disk',
+  );
+
   // for each collection, write the data to disk,
   // then symlink to index directory
-  return await pMap(
+  const results = await pMap(
     Object.entries(groupedCollections),
     async ([type, collection]) => {
       const filename = generateJsonFilename();
@@ -53,25 +72,65 @@ export async function flushDataToDisk<TGraphObject = Entity | Relationship>({
       });
       const indexPath = buildIndexFilePath({ type, collectionType, filename });
 
-      await writeJsonToPath({
-        path: graphDataPath,
-        data: {
-          [collectionType]: collection,
-        },
-        pretty,
-      });
+      try {
+        await writeJsonToPath({
+          path: graphDataPath,
+          data: {
+            [collectionType]: collection,
+          },
+          pretty,
+        });
 
-      await symlink({
-        sourcePath: graphDataPath,
-        destinationPath: indexPath,
-      });
-      return {
-        graphDataPath,
-        collection,
-      };
+        await symlink({
+          sourcePath: graphDataPath,
+          destinationPath: indexPath,
+        });
+
+        logger?.debug(
+          {
+            type,
+            count: collection.length,
+            filename,
+            graphDataPath,
+          },
+          'Chunk written to disk successfully',
+        );
+
+        return {
+          graphDataPath,
+          collection,
+        };
+      } catch (error) {
+        logger?.error(
+          {
+            error,
+            type,
+            count: collection.length,
+            filename,
+            graphDataPath,
+          },
+          'Failed to write chunk to disk',
+        );
+        throw error;
+      }
     },
     { concurrency: 3 },
   );
+
+  logger?.info(
+    {
+      stepId: storageDirectoryPath,
+      collectionType,
+      chunksWritten: results.length,
+      totalObjectsWritten: results.reduce(
+        (sum, r) => sum + r.collection.length,
+        0,
+      ),
+    },
+    'Successfully flushed all chunks to disk',
+  );
+
+  return results;
 }
 
 function generateJsonFilename() {
