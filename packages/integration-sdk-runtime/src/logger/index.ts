@@ -376,6 +376,10 @@ export class IntegrationLogger
 
   stepFailure(step: StepMetadata, err: Error) {
     const eventName = 'step_failure';
+    this._logger.info(
+      { errconstructorname: err.constructor?.name },
+      'Error Constructorname',
+    );
     const { errorId, description } = createErrorEventDescription(
       err,
       `Step "${step.name}" failed to complete due to error.`,
@@ -409,6 +413,10 @@ export class IntegrationLogger
 
   validationFailure(err: Error) {
     const eventName = 'validation_failure';
+    this._logger.info(
+      { errconstructorname: err.constructor?.name },
+      'Error Constructorname',
+    );
     const { errorId, description } = createErrorEventDescription(
       err,
       `Error occurred while validating integration configuration.`,
