@@ -13,7 +13,6 @@ import {
   visualizeDependencies,
   generateIntegrationGraphSchemaCommand,
   generateIngestionSourcesConfigCommand,
-  troubleshootLocalExecution,
   generate,
   bocchi,
 } from './commands';
@@ -32,7 +31,6 @@ export function createCli() {
     .addCommand(visualizeDependencies())
     .addCommand(generateIntegrationGraphSchemaCommand())
     .addCommand(generateIngestionSourcesConfigCommand())
-    .addCommand(troubleshootLocalExecution())
     .addCommand(generate())
     .addCommand(bocchi());
 }
