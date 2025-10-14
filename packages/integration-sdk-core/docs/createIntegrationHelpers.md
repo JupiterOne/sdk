@@ -111,7 +111,7 @@ export const { createEntityType, createEntityMetadata } =
 ```
 
 3. Replace INTEGRATION_NAME with the name of your integration
-4. Create a file named entities.ts in the src folder of your integration and add
+4. Create a file named entity-definition.ts in the src folder of your integration and add
    all entities as the following EXAMPLE code:
 
 ```typescript
