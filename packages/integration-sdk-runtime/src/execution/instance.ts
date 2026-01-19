@@ -14,6 +14,26 @@ export const LOCAL_INTEGRATION_INSTANCE: IntegrationInstance = {
   config: {},
 } as const;
 
+/**
+ * Parses the DISABLED_INGESTION_SOURCES environment variable.
+ * Expects a comma-separated list of ingestion source IDs, e.g. "permissions,vulnerabilities"
+ */
+function parseDisabledIngestionSourcesFromEnv():
+  | { ingestionSourceId: string }[]
+  | undefined {
+  const raw = process.env.DISABLED_INGESTION_SOURCES;
+  if (!raw) return undefined;
+
+  const sourceIds = raw
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+
+  if (sourceIds.length === 0) return undefined;
+
+  return sourceIds.map((ingestionSourceId) => ({ ingestionSourceId }));
+}
+
 export function createIntegrationInstanceForLocalExecution(
   config: IntegrationInvocationConfig,
 ): IntegrationInstance {
@@ -35,5 +55,6 @@ export function createIntegrationInstanceForLocalExecution(
     config: config.instanceConfigFields
       ? loadConfigFromEnvironmentVariables(config.instanceConfigFields)
       : {},
+    disabledSources: parseDisabledIngestionSourcesFromEnv(),
   };
 }
