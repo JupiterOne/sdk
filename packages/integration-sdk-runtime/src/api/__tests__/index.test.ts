@@ -6,7 +6,7 @@ import {
   getApiKeyFromEnvironment,
   createApiClient,
   getAccountFromEnvironment,
-  compressRequest,
+  isUploadCompressionEnabled,
 } from '../index';
 
 // Mock createRequestClient to return a mock client
@@ -160,78 +160,49 @@ describe('createApiClient', () => {
     expect(mockInterceptors.response.use).toHaveBeenCalled();
   });
 
-  test('registers request interceptor when compressUploads is true', () => {
-    createApiClient({
+  test('sets _compressUploads flag when compressUploads is true', () => {
+    const client = createApiClient({
       apiBaseUrl: 'https://api.example.com',
       account: 'test-account',
       accessToken: 'test-key',
       compressUploads: true,
     });
 
-    expect(mockInterceptors.request.use).toHaveBeenCalled();
+    expect(client._compressUploads).toBe(true);
+    expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 
-  test('does not register request interceptor when compressUploads is false', () => {
-    jest.clearAllMocks();
-
-    createApiClient({
+  test('does not set _compressUploads flag when compressUploads is false', () => {
+    const client = createApiClient({
       apiBaseUrl: 'https://api.example.com',
       account: 'test-account',
       accessToken: 'test-key',
       compressUploads: false,
     });
 
-    expect(mockInterceptors.request.use).not.toHaveBeenCalled();
+    expect(client._compressUploads).toBeUndefined();
+    expect(isUploadCompressionEnabled(client)).toBe(false);
   });
 });
 
-describe('compressRequest', () => {
-  it('should add gzip header when the URL matches entities endpoint', async () => {
-    const config = {
-      method: 'POST' as const,
-      url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
-      headers: {},
-    };
+describe('isUploadCompressionEnabled', () => {
+  it('should return true when _compressUploads is true', () => {
+    const client = createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      compressUploads: true,
+    });
 
-    const result = await compressRequest(config);
-
-    expect(result.headers!['Content-Encoding']).toBe('gzip');
+    expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 
-  it('should add gzip header when the URL matches relationships endpoint', async () => {
-    const config = {
-      method: 'POST' as const,
-      url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/relationships',
-      headers: {},
-    };
+  it('should return false when _compressUploads is undefined', () => {
+    const client = createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+    });
 
-    const result = await compressRequest(config);
-
-    expect(result.headers!['Content-Encoding']).toBe('gzip');
-  });
-
-  it('should not add gzip header when the URL does not match', async () => {
-    const config = {
-      method: 'POST' as const,
-      url: '/other-url',
-      headers: {},
-    };
-
-    const result = await compressRequest(config);
-
-    expect(result.headers!['Content-Encoding']).toBeUndefined();
-  });
-
-  it('should not add gzip header for non-POST methods', async () => {
-    const config = {
-      method: 'GET' as const,
-      url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
-      headers: {},
-    };
-
-    const result = await compressRequest(config);
-
-    expect(result.headers!['Content-Encoding']).toBeUndefined();
+    expect(isUploadCompressionEnabled(client)).toBe(false);
   });
 });
 

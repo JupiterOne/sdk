@@ -21,8 +21,9 @@ import { ExecuteIntegrationResult } from '../execution';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../fileSystem';
 import { synchronizationApiError } from './error';
-import { ApiClient } from '../api';
+import { ApiClient, isUploadCompressionEnabled } from '../api';
 import { timeOperation } from '../metrics';
+import { gzipData } from './util';
 import { FlushedGraphObjectData } from '../storage/types';
 import { AttemptContext, retry } from '@lifeomic/attempt';
 import { randomUUID as uuid } from 'crypto';
@@ -495,6 +496,7 @@ export async function uploadDataChunk<
   K extends keyof T,
 >({ logger, apiClient, jobId, type, batch }: UploadDataChunkParams<T, K>) {
   const uploadCorrelationId = uuid();
+  const shouldCompress = isUploadCompressionEnabled(apiClient);
 
   await retry(
     async (ctx) => {
@@ -506,23 +508,36 @@ export async function uploadDataChunk<
           uploadType: type,
           attemptNum: ctx.attemptNum,
           batchSize: batch.length,
+          compressed: shouldCompress,
         },
         'Uploading data...',
       );
       try {
-        await apiClient.post(
-          `/persister/synchronization/jobs/${jobId}/${type as string}`,
-          {
-            [type]: batch,
-          },
-          {
+        const url = `/persister/synchronization/jobs/${jobId}/${type as string}`;
+        const data = { [type]: batch };
+        const baseHeaders = {
+          // NOTE: Other headers that were applied when the client was created,
+          // are still maintained
+          [RequestHeaders.CorrelationId]: uploadCorrelationId,
+        };
+
+        if (shouldCompress) {
+          // Compress data and send via rawBody
+          // Note: rawBody is a new property in platform-sdk-fetch that allows sending
+          // pre-serialized/compressed data. Type assertion used for forward compatibility.
+          const compressedData = await gzipData(data);
+          await apiClient.post(url, undefined, {
             headers: {
-              // NOTE: Other headers that were applied when the client was created,
-              // are still maintained
-              [RequestHeaders.CorrelationId]: uploadCorrelationId,
+              ...baseHeaders,
+              'Content-Encoding': 'gzip',
             },
-          },
-        );
+            rawBody: compressedData,
+          } as any);
+        } else {
+          await apiClient.post(url, data, {
+            headers: baseHeaders,
+          });
+        }
       } catch (err) {
         cleanRequestError(err);
         throw err;

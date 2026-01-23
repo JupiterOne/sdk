@@ -2,7 +2,6 @@ import {
   createRequestClient,
   RequestClient,
   RequestClientConfig,
-  RequestInterceptor,
 } from '@jupiterone/platform-sdk-fetch';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
@@ -13,7 +12,16 @@ import {
   IntegrationApiKeyRequiredError,
 } from './error';
 
-export type ApiClient = RequestClient;
+/**
+ * Extended RequestClient with compression flag
+ */
+export interface ApiClient extends RequestClient {
+  /**
+   * Internal flag indicating whether uploads should be compressed.
+   * @internal
+   */
+  _compressUploads?: boolean;
+}
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
@@ -105,37 +113,21 @@ export function createApiClient({
     },
   );
 
+  // Store compression flag on client for use by upload functions
+  const apiClient = client as ApiClient;
   if (compressUploads) {
-    client.interceptors.request.use(compressRequest);
+    apiClient._compressUploads = true;
   }
 
-  return client;
+  return apiClient;
 }
 
 /**
- * Request interceptor that compresses upload data for synchronization endpoints
+ * Helper to check if an API client has upload compression enabled
  */
-export const compressRequest: RequestInterceptor = function (config) {
-  if (
-    config.method === 'POST' &&
-    config.url &&
-    /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/.test(
-      config.url,
-    )
-  ) {
-    // Note: Compression is handled differently in RequestClient
-    // The data compression would need to be applied at the request level
-    // For now, we mark the headers - actual compression may need additional handling
-    return {
-      ...config,
-      headers: {
-        ...config.headers,
-        'Content-Encoding': 'gzip',
-      },
-    };
-  }
-  return config;
-};
+export function isUploadCompressionEnabled(client: ApiClient): boolean {
+  return client._compressUploads === true;
+}
 
 interface GetApiBaseUrlInput {
   dev: boolean;
