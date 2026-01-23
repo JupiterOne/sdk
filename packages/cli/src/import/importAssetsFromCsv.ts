@@ -101,12 +101,14 @@ export async function importAssetsFromCsv({
       account,
       accessToken: apiKey,
     });
-    const {
-      data: { job },
-    } = await apiClient.post('/persister/synchronization/jobs', {
-      source: 'api',
-      scope,
-    });
+    const response = await apiClient.post<{ job: { id: string } }>(
+      '/persister/synchronization/jobs',
+      {
+        source: 'api',
+        scope,
+      },
+    );
+    const { job } = response.data;
 
     const generateProgressTracker = (
       assetType: 'entities' | 'relationships',

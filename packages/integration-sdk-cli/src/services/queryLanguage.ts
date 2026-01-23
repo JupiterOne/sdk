@@ -35,9 +35,12 @@ export async function validateQueries(
   let overallResults: ParseAndValidateRawQueriesResults = [];
 
   for (const queryBatch of queryBatches) {
-    const result = await apiClient.post('/j1ql/validate', {
-      queries: queryBatch,
-    });
+    const result = await apiClient.post<ParseAndValidateRawQueriesResults>(
+      '/j1ql/validate',
+      {
+        queries: queryBatch,
+      },
+    );
 
     overallResults = overallResults.concat(result.data);
   }

@@ -13,7 +13,7 @@ export function createMockIntegrationLogger(): IntegrationLogger {
       {
         level: 'trace',
         type: 'raw',
-        stream: ringbuffer,
+        stream: ringbuffer as unknown as NodeJS.WritableStream,
       },
     ],
   });
