@@ -138,6 +138,12 @@ jobs:
           # Version bump with canary prerelease
           npx lerna version prerelease --preid "$PRERELEASE_ID" --no-git-tag-version --no-push --yes
 
+          # Commit version changes locally to satisfy lerna publish
+          # These changes won't be pushed back to the PR
+          # Only stage lerna-modified files (package.json, lerna.json, package-lock.json)
+          git add lerna.json package-lock.json packages/*/package.json
+          git commit -m "chore: canary version bump [skip ci]" --no-verify
+
           # Publish with canary tag
           npx lerna publish from-package --dist-tag canary --yes 2>&1 | tee publish-output.txt
 
@@ -150,43 +156,34 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           GH_TOKEN: ${{ secrets.AUTO_GITHUB_PAT_TOKEN }}
 
-      - name: Get published versions
-        id: versions
-        if: steps.changed.outputs.has_changes == 'true'
-        run: |
-          # Get the canary versions from package.json files
-          VERSIONS=""
-          for pkg in $(echo '${{ steps.changed.outputs.packages }}' | jq -r '.[].name'); do
-            PKG_PATH=$(echo '${{ steps.changed.outputs.packages }}' | jq -r ".[] | select(.name == \"$pkg\") | .location")
-            VERSION=$(jq -r '.version' "$PKG_PATH/package.json")
-            VERSIONS="$VERSIONS\n- \`$pkg@$VERSION\`"
-          done
-
-          echo "versions<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$VERSIONS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Comment with published versions
         if: steps.changed.outputs.has_changes == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const versions = `${{ steps.versions.outputs.versions }}`;
             const packages = JSON.parse('${{ steps.changed.outputs.packages }}');
 
-            let installCommands = packages.map(pkg => {
+            // Build versions list and install commands from package.json files
+            let versionsList = [];
+            let installCommands = [];
+
+            for (const pkg of packages) {
               const pkgPath = pkg.location.startsWith(process.env.GITHUB_WORKSPACE)
                 ? pkg.location
                 : `${process.env.GITHUB_WORKSPACE}/${pkg.location}`;
               const pkgJson = require(`${pkgPath}/package.json`);
-              return `npm install ${pkg.name}@${pkgJson.version}`;
-            }).join('\n');
+              versionsList.push(`- \`${pkg.name}@${pkgJson.version}\``);
+              installCommands.push(`npm install ${pkg.name}@${pkgJson.version}`);
+            }
+
+            const versionsText = versionsList.join('\n');
+            const installText = installCommands.join('\n');
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `✅ **Canary release published successfully!**\n\n**Published packages:**\n${versions}\n\n**Install with:**\n\`\`\`bash\n${installCommands}\n\`\`\``
+              body: `✅ **Canary release published successfully!**\n\n**Published packages:**\n${versionsText}\n\n**Install with:**\n\`\`\`bash\n${installText}\n\`\`\``
             });
 
       - name: Comment if no changes
