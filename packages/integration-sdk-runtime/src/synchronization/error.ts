@@ -1,17 +1,29 @@
-import { AxiosError } from 'axios';
-
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import { SynchronizationApiErrorResponse } from './types';
 
+/**
+ * Error structure from RequestClient that contains response data
+ */
+interface RequestClientError {
+  response?: {
+    data?: SynchronizationApiErrorResponse;
+    status?: number;
+    statusText?: string;
+  };
+}
+
 export function synchronizationApiError(
-  err: AxiosError<SynchronizationApiErrorResponse>,
+  err: RequestClientError | Error | unknown,
   errorMessage: string,
 ) {
-  if (err.response?.data?.error) {
-    // Looks like Axios error response with data
-    const responseData: SynchronizationApiErrorResponse = err.response.data;
-    const code = responseData!.error!.code || err.response.status;
-    const message = responseData!.error!.message || err.response.statusText;
+  const requestError = err as RequestClientError;
+  if (requestError?.response?.data?.error) {
+    // Looks like RequestClient error response with data
+    const responseData: SynchronizationApiErrorResponse =
+      requestError.response.data;
+    const code = responseData!.error!.code || requestError.response.status;
+    const message =
+      responseData!.error!.message || requestError.response.statusText;
 
     return new IntegrationError({
       code: 'SYNCHRONIZATION_API_RESPONSE_ERROR',
@@ -23,7 +35,7 @@ export function synchronizationApiError(
     return new IntegrationError({
       code: 'UNEXPECTED_SYNCRONIZATION_ERROR',
       message: errorMessage,
-      cause: err,
+      cause: err instanceof Error ? err : undefined,
     });
   }
 }

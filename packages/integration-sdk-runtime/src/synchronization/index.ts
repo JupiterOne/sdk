@@ -10,7 +10,10 @@ import {
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
 
-import { AxiosError } from 'axios';
+// Response type for synchronization job API calls
+interface SynchronizationJobResponse {
+  job: SynchronizationJob;
+}
 
 import { IntegrationLogger } from '../logger';
 
@@ -27,7 +30,7 @@ import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes } from './batchBySize';
-import type { Alpha } from '@lifeomic/alpha';
+import type { RequestClient } from '@jupiterone/platform-sdk-fetch';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -179,7 +182,7 @@ export async function initiateSynchronization(
 
   let job: SynchronizationJob;
   try {
-    const response = await apiClient.post(
+    const response = await apiClient.post<SynchronizationJobResponse>(
       '/persister/synchronization/jobs',
       jobConfiguration,
     );
@@ -219,7 +222,7 @@ export async function synchronizationStatus({
   let status: SynchronizationJob;
 
   try {
-    const response = await apiClient.get(
+    const response = await apiClient.get<SynchronizationJobResponse>(
       `/persister/synchronization/jobs/${job.id}`,
     );
     status = response.data.job;
@@ -251,7 +254,7 @@ export async function finalizeSynchronization({
 
   return await retry(
     async () => {
-      const response = await apiClient.post(
+      const response = await apiClient.post<SynchronizationJobResponse>(
         `/persister/synchronization/jobs/${job.id}/finalize`,
         {
           partialDatasets,
@@ -391,7 +394,7 @@ export interface UploadDataLookup {
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   logger: IntegrationLogger;
-  apiClient: Alpha;
+  apiClient: RequestClient;
   jobId: string;
   type: K;
   batch: T[K][];
@@ -521,7 +524,7 @@ export async function uploadDataChunk<
           },
         );
       } catch (err) {
-        cleanAxiosError(err);
+        cleanRequestError(err);
         throw err;
       }
     },
@@ -599,7 +602,7 @@ export async function abortSynchronization({
     'Aborting synchronization job...',
   );
 
-  const response = await apiClient.post(
+  const response = await apiClient.post<SynchronizationJobResponse>(
     `/persister/synchronization/jobs/${job.id}/abort`,
     { reason, terminalStatus },
   );
@@ -607,7 +610,7 @@ export async function abortSynchronization({
   return response.data.job;
 }
 
-function cleanAxiosError(err: AxiosError) {
+function cleanRequestError(err: any) {
   if (err.config?.headers?.Authorization) {
     delete err.config.headers.Authorization;
   }

@@ -1,5 +1,5 @@
 import { IntegrationEvent } from '@jupiterone/integration-sdk-core';
-import { AxiosRequestConfig } from 'axios';
+import type { RequestClientRequestConfig } from '@jupiterone/platform-sdk-fetch';
 import PromiseQueue from 'p-queue';
 
 import {
@@ -14,7 +14,7 @@ type EventPublishingQueue = {
 
 export const createEventPublishingQueue = (
   { apiClient, logger, job }: SynchronizationJobContext,
-  config?: AxiosRequestConfig,
+  config?: RequestClientRequestConfig,
 ): EventPublishingQueue => {
   if (!job.integrationJobId) {
     return createNoopEventPublishingQueue();
