@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 import { createCli } from '..';
 import { TEST_API_KEY, TEST_ACCOUNT } from './utils';
@@ -7,7 +6,6 @@ import { vol } from 'memfs';
 import { createEntity, createRelationship } from '../export/__tests__/utils';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
-jest.mock('axios');
 jest.mock('fs');
 jest.mock('../log');
 
@@ -22,19 +20,32 @@ jest.mock('ora', () => {
   };
 });
 
-const mockedAxios = jest.mocked(axios);
+const mockGet = jest.fn();
+const mockApiClient = {
+  get: mockGet,
+  post: jest.fn(),
+  put: jest.fn(),
+  patch: jest.fn(),
+  delete: jest.fn(),
+  head: jest.fn(),
+  options: jest.fn(),
+  interceptors: {
+    request: { use: jest.fn(), eject: jest.fn() },
+    response: { use: jest.fn(), eject: jest.fn() },
+  },
+};
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 
 beforeEach(() => {
-  mockedCreateApiClient.mockReturnValue(axios);
-  mockedAxios.get.mockReset();
+  mockedCreateApiClient.mockReturnValue(mockApiClient as any);
+  mockGet.mockReset();
   delete process.env.JUPITERONE_API_KEY;
   jest.clearAllMocks();
   vol.reset();
 });
 
 test('should export assets', async () => {
-  mockedAxios.get
+  mockGet
     .mockResolvedValueOnce({
       data: {
         items: [
@@ -93,7 +104,7 @@ test('should export assets', async () => {
 });
 
 test('should only export relationships when specified', async () => {
-  mockedAxios.get
+  mockGet
     .mockResolvedValueOnce({
       data: {
         items: [
@@ -141,7 +152,7 @@ test('should only export relationships when specified', async () => {
 });
 
 test('should only export entities when specified', async () => {
-  mockedAxios.get
+  mockGet
     .mockResolvedValueOnce({
       data: {
         items: [
@@ -193,7 +204,7 @@ test('should only export entities when specified', async () => {
 
 test('should log error when export fails', async () => {
   const error = new Error();
-  mockedAxios.get.mockRejectedValue(error);
+  mockGet.mockRejectedValue(error);
 
   await expect(
     createCli().parseAsync([

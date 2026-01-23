@@ -167,7 +167,10 @@ test('should use JUPITERONE_API_KEY value in Authorization request header', asyn
     job,
     baseUrl: 'https://api.us.jupiterone.io',
     onSyncJobCreateResponse(req, res) {
-      expect(req.headers['Authorization']).toEqual('Bearer testing-key');
+      // node-fetch used by platform-sdk-fetch stores headers as arrays
+      const authHeader = req.headers['Authorization'];
+      const authValue = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+      expect(authValue).toEqual('Bearer testing-key');
     },
   });
 
