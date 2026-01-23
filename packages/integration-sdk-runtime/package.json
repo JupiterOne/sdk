@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@jupiterone/integration-sdk-core": "^17.2.1",
-    "@lifeomic/alpha": "^5.2.0",
+    "@jupiterone/platform-sdk-fetch": "6.0.3-canary-487-1.0",
     "@lifeomic/attempt": "^3.0.3",
     "async-sema": "^3.1.0",
     "bunyan": "^1.8.12",

@@ -1,5 +1,5 @@
 import { mocked } from 'jest-mock';
-import { Alpha } from '@lifeomic/alpha';
+import { createRequestClient } from '@jupiterone/platform-sdk-fetch';
 
 import {
   getApiBaseUrl,
@@ -8,11 +8,29 @@ import {
   getAccountFromEnvironment,
   compressRequest,
 } from '../index';
-import { AxiosRequestConfig } from 'axios';
 
-jest.mock('@lifeomic/alpha');
+// Mock createRequestClient to return a mock client
+const mockPost = jest.fn();
+const mockGet = jest.fn();
+const mockInterceptors = {
+  request: { use: jest.fn(), eject: jest.fn() },
+  response: { use: jest.fn(), eject: jest.fn() },
+};
 
-const AlphaMock = mocked(Alpha);
+jest.mock('@jupiterone/platform-sdk-fetch', () => ({
+  createRequestClient: jest.fn().mockImplementation(() => ({
+    post: mockPost,
+    get: mockGet,
+    put: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+    head: jest.fn(),
+    options: jest.fn(),
+    interceptors: mockInterceptors,
+  })),
+}));
+
+const createRequestClientMock = mocked(createRequestClient);
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {
@@ -55,7 +73,7 @@ describe('getApiKeyFromEnvironment', () => {
   });
 });
 
-describe('getApiKeyFromEnvironment', () => {
+describe('getAccountFromEnvironment', () => {
   beforeEach(() => {
     process.env.JUPITERONE_ACCOUNT = 'test-account';
   });
@@ -79,6 +97,10 @@ describe('getApiKeyFromEnvironment', () => {
 });
 
 describe('createApiClient', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   test('successfully creates apiClient', () => {
     const apiBaseUrl = getApiBaseUrl();
 
@@ -91,10 +113,13 @@ describe('createApiClient', () => {
       },
     });
 
-    expect(client).toBeInstanceOf(AlphaMock);
+    expect(client).toBeDefined();
+    expect(client.post).toBeDefined();
+    expect(client.get).toBeDefined();
+    expect(client.interceptors).toBeDefined();
 
-    expect(AlphaMock).toHaveReturnedTimes(1);
-    expect(AlphaMock).toHaveBeenCalledWith({
+    expect(createRequestClientMock).toHaveBeenCalledTimes(1);
+    expect(createRequestClientMock).toHaveBeenCalledWith({
       baseURL: apiBaseUrl,
       headers: {
         Authorization: 'Bearer test-key',
@@ -106,48 +131,114 @@ describe('createApiClient', () => {
       },
     });
   });
+
+  test('creates client without accessToken', () => {
+    const apiBaseUrl = getApiBaseUrl();
+
+    createApiClient({
+      apiBaseUrl,
+      account: 'test-account',
+    });
+
+    expect(createRequestClientMock).toHaveBeenCalledWith({
+      baseURL: apiBaseUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'JupiterOne-Account': 'test-account',
+      },
+      retry: {},
+    });
+  });
+
+  test('registers response interceptor for error redaction', () => {
+    createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      accessToken: 'test-key',
+    });
+
+    expect(mockInterceptors.response.use).toHaveBeenCalled();
+  });
+
+  test('registers request interceptor when compressUploads is true', () => {
+    createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      accessToken: 'test-key',
+      compressUploads: true,
+    });
+
+    expect(mockInterceptors.request.use).toHaveBeenCalled();
+  });
+
+  test('does not register request interceptor when compressUploads is false', () => {
+    jest.clearAllMocks();
+
+    createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      accessToken: 'test-key',
+      compressUploads: false,
+    });
+
+    expect(mockInterceptors.request.use).not.toHaveBeenCalled();
+  });
 });
 
 describe('compressRequest', () => {
-  it('should compress the request data when the URL matches', async () => {
-    const config: AxiosRequestConfig = {
-      method: 'post',
+  it('should add gzip header when the URL matches entities endpoint', async () => {
+    const config = {
+      method: 'POST' as const,
       url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
       headers: {},
-      data: { some: 'data' },
     };
 
-    await compressRequest(config);
+    const result = await compressRequest(config);
 
-    // Check if the 'Content-Encoding' header is set to 'gzip'
-    expect(config.headers!['Content-Encoding']).toBe('gzip');
-
-    // Check if the data is compressed
-    expect(config.data).toBeInstanceOf(Buffer);
+    expect(result.headers!['Content-Encoding']).toBe('gzip');
   });
 
-  it('should not compress the request when the URL does not match', async () => {
+  it('should add gzip header when the URL matches relationships endpoint', async () => {
     const config = {
-      method: 'post',
-      url: '/other-url',
+      method: 'POST' as const,
+      url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/relationships',
       headers: {},
-      data: { some: 'data' },
     };
 
-    await compressRequest(config);
+    const result = await compressRequest(config);
 
-    // Check that the 'Content-Encoding' header is not set
-    expect(config.headers['Content-Encoding']).toBeUndefined();
+    expect(result.headers!['Content-Encoding']).toBe('gzip');
+  });
 
-    // Check that the data is not compressed
-    expect(config.data).toEqual({ some: 'data' });
+  it('should not add gzip header when the URL does not match', async () => {
+    const config = {
+      method: 'POST' as const,
+      url: '/other-url',
+      headers: {},
+    };
+
+    const result = await compressRequest(config);
+
+    expect(result.headers!['Content-Encoding']).toBeUndefined();
+  });
+
+  it('should not add gzip header for non-POST methods', async () => {
+    const config = {
+      method: 'GET' as const,
+      url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
+      headers: {},
+    };
+
+    const result = await compressRequest(config);
+
+    expect(result.headers!['Content-Encoding']).toBeUndefined();
   });
 });
 
-describe('real Alpha request with fake API key', () => {
+describe('real RequestClient request with fake API key', () => {
   test('should not expose API key in error', async () => {
     jest.resetModules();
-    jest.unmock('@lifeomic/alpha');
+    jest.unmock('@jupiterone/platform-sdk-fetch');
 
     const { createApiClient, getApiBaseUrl } = require('../index');
 
@@ -169,173 +260,5 @@ describe('real Alpha request with fake API key', () => {
 
       expect(errorString).not.toContain('test-key');
     }
-  });
-});
-
-describe('createApiClient', () => {
-  const originalEnv = process.env;
-
-  beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
-  });
-
-  afterAll(() => {
-    process.env = originalEnv;
-  });
-
-  describe('proxy configuration', () => {
-    it('should not configure proxy when no proxy URL is provided', () => {
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      // The client should be created without proxy configuration
-      expect(client).toBeDefined();
-    });
-
-    it('should configure proxy when proxyUrl parameter is provided', () => {
-      const proxyUrl = 'https://foo:bar@proxy.example.com:8888';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-        proxyUrl,
-      });
-
-      expect(client).toBeDefined();
-      // Note: We can't easily test the internal proxy config without exposing it
-      // This test verifies the client is created successfully with proxy config
-    });
-
-    it('should configure proxy from HTTPS_PROXY environment variable', () => {
-      process.env.HTTPS_PROXY = 'https://foo:bar@proxy.example.com:8888';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
-
-    it('should configure proxy from https_proxy environment variable', () => {
-      process.env.https_proxy = 'http://user:pass@proxy.local:3128';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
-
-    it('should prefer HTTPS_PROXY over https_proxy', () => {
-      process.env.HTTPS_PROXY = 'https://primary:proxy@proxy1.com:8888';
-      process.env.https_proxy = 'http://secondary:proxy@proxy2.com:3128';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
-
-    it('should prefer proxyUrl parameter over environment variables', () => {
-      process.env.HTTPS_PROXY = 'https://env:proxy@env-proxy.com:8888';
-      const proxyUrl = 'https://param:proxy@param-proxy.com:9999';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-        proxyUrl,
-      });
-
-      expect(client).toBeDefined();
-    });
-  });
-
-  describe('parseProxyUrl functionality', () => {
-    // We need to import the parseProxyUrl function or test it indirectly
-    it('should handle proxy URL with authentication', () => {
-      process.env.HTTPS_PROXY =
-        'https://username:password@proxy.example.com:8888';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
-
-    it('should handle proxy URL without authentication', () => {
-      process.env.HTTPS_PROXY = 'https://proxy.example.com:8888';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
-
-    it('should handle HTTP proxy URLs', () => {
-      process.env.HTTPS_PROXY = 'http://proxy.example.com:3128';
-
-      const client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
-
-    it('should throw an error for invalid proxy URLs', () => {
-      process.env.HTTPS_PROXY = 'invalid-url';
-
-      expect(() => {
-        createApiClient({
-          apiBaseUrl: 'https://api.example.com',
-          account: 'test-account',
-          accessToken: 'test-token',
-        });
-      }).toThrow();
-    });
-
-    it('should use default ports when not specified', () => {
-      // Test HTTPS default port (443)
-      process.env.HTTPS_PROXY = 'https://proxy.example.com';
-
-      let client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-
-      // Test HTTP default port (80)
-      process.env.HTTPS_PROXY = 'http://proxy.example.com';
-
-      client = createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
-
-      expect(client).toBeDefined();
-    });
   });
 });

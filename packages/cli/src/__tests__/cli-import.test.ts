@@ -1,5 +1,4 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
-import axios from 'axios';
 import { vol } from 'memfs';
 import { randomUUID as uuid } from 'crypto';
 import globby from 'globby';
@@ -18,7 +17,6 @@ import * as log from '../log';
 import { createCli } from '..';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
-jest.mock('axios');
 jest.mock('fs');
 jest.mock('globby');
 jest.mock('../pause');
@@ -36,8 +34,24 @@ jest.mock('ora', () => {
 });
 
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
-const mockedAxios = jest.mocked(axios);
 const mockedGlobby = jest.mocked(globby);
+
+// Mock RequestClient
+const mockPost = jest.fn();
+const mockGet = jest.fn();
+const mockApiClient = {
+  post: mockPost,
+  get: mockGet,
+  put: jest.fn(),
+  patch: jest.fn(),
+  delete: jest.fn(),
+  head: jest.fn(),
+  options: jest.fn(),
+  interceptors: {
+    request: { use: jest.fn(), eject: jest.fn() },
+    response: { use: jest.fn(), eject: jest.fn() },
+  },
+};
 
 const type1Entities = [
   createEntity({
@@ -67,7 +81,9 @@ const type1Relationships = [
 ];
 
 beforeEach(async () => {
-  mockedCreateApiClient.mockReturnValue(axios);
+  mockedCreateApiClient.mockReturnValue(mockApiClient as any);
+  mockPost.mockReset();
+  mockGet.mockReset();
   vol.reset();
   vol.fromJSON({
     [`${TEST_STORAGE_LOCATION}/csv/entities/entity_type_1/${uuid()}.csv`]:
@@ -96,8 +112,8 @@ beforeEach(async () => {
 
 test('should import json assets', async () => {
   const jobId = uuid();
-  mockedAxios.post.mockResolvedValue({ data: { job: { id: jobId } } });
-  mockedAxios.get.mockResolvedValue({
+  mockPost.mockResolvedValue({ data: { job: { id: jobId } } });
+  mockGet.mockResolvedValue({
     data: { job: { id: jobId, status: 'FINISHED' } },
   });
 
@@ -112,35 +128,32 @@ test('should import json assets', async () => {
     `--api-base-url=https://api.TEST.jupiterone.io`,
   ]);
 
-  expect(mockedAxios.post).toHaveBeenCalledWith(
-    '/persister/synchronization/jobs',
-    {
-      source: 'api',
-      scope,
-    },
-  );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+    source: 'api',
+    scope,
+  });
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/relationships?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     await parseToCsv(type1Relationships),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/entities?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     await parseToCsv(type1Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/entities?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     await parseToCsv(type2Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/finalize`,
   );
   expect(mockedCreateApiClient).toBeCalledWith({
@@ -152,8 +165,8 @@ test('should import json assets', async () => {
 
 test('should exclude relationships when specified', async () => {
   const jobId = uuid();
-  mockedAxios.post.mockResolvedValue({ data: { job: { id: jobId } } });
-  mockedAxios.get.mockResolvedValue({
+  mockPost.mockResolvedValue({ data: { job: { id: jobId } } });
+  mockGet.mockResolvedValue({
     data: { job: { id: jobId, status: 'FINISHED' } },
   });
 
@@ -168,43 +181,40 @@ test('should exclude relationships when specified', async () => {
     `--no-include-relationships`,
   ]);
 
-  expect(mockedAxios.post).toHaveBeenCalledWith(
-    '/persister/synchronization/jobs',
-    {
-      source: 'api',
-      scope,
-    },
-  );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+    source: 'api',
+    scope,
+  });
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/entities?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     await parseToCsv(type1Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/entities?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     await parseToCsv(type2Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).not.toHaveBeenCalledWith(
+  expect(mockPost).not.toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/relationships?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     expect.anything(),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/finalize`,
   );
 });
 
 test('should exclude relationships when specified', async () => {
   const jobId = uuid();
-  mockedAxios.post.mockResolvedValue({ data: { job: { id: jobId } } });
-  mockedAxios.get.mockResolvedValue({
+  mockPost.mockResolvedValue({ data: { job: { id: jobId } } });
+  mockGet.mockResolvedValue({
     data: { job: { id: jobId, status: 'FINISHED' } },
   });
 
@@ -219,28 +229,25 @@ test('should exclude relationships when specified', async () => {
     `--no-include-entities`,
   ]);
 
-  expect(mockedAxios.post).toHaveBeenCalledWith(
-    '/persister/synchronization/jobs',
-    {
-      source: 'api',
-      scope,
-    },
-  );
-  expect(mockedAxios.post).not.toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith('/persister/synchronization/jobs', {
+    source: 'api',
+    scope,
+  });
+  expect(mockPost).not.toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/entities?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     expect.anything(),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/relationships?ignoreDuplicates=true&ignoreIllegalProperties=true`,
     await parseToCsv(type1Relationships),
     {
       headers: { 'Content-Type': 'text/csv' },
     },
   );
-  expect(mockedAxios.post).toHaveBeenCalledWith(
+  expect(mockPost).toHaveBeenCalledWith(
     `/persister/synchronization/jobs/${jobId}/finalize`,
   );
 });
@@ -276,7 +283,7 @@ test('should throw error when missing account', async () => {
 
 test('should log error when import fails', async () => {
   const error = new Error();
-  mockedAxios.post.mockRejectedValue(error);
+  mockPost.mockRejectedValue(error);
 
   await expect(
     createCli().parseAsync([
