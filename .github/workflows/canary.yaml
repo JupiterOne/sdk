@@ -6,53 +6,10 @@ on:
       - created
 
 jobs:
-  # Gate job to check authorization before running the main workflow
-  check-authorization:
-    name: Check Authorization
-    runs-on: ubuntu-latest
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/canary-release') }}
-    outputs:
-      is-authorized: ${{ steps.check.outputs.authorized }}
-    steps:
-      - name: Check if user is authorized
-        id: check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const authorAssociation = context.payload.comment.author_association;
-            const authorizedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-            const isAuthorized = authorizedRoles.includes(authorAssociation);
-
-            console.log(`Author: ${context.payload.comment.user.login}`);
-            console.log(`Association: ${authorAssociation}`);
-            console.log(`Authorized: ${isAuthorized}`);
-
-            core.setOutput('authorized', isAuthorized ? 'true' : 'false');
-
-            if (!isAuthorized) {
-              await github.rest.reactions.createForIssueComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: context.payload.comment.id,
-                content: '-1',
-              });
-
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: `⛔ **Unauthorized**: Only organization members can trigger canary releases.\n\n` +
-                      `User \`${context.payload.comment.user.login}\` has association: \`${authorAssociation}\``
-              });
-            }
-
   canary-release:
     name: Canary Release
     runs-on: ubuntu-latest
-    needs: check-authorization
-    if: ${{ needs.check-authorization.outputs.is-authorized == 'true' }}
-    # Environment with protection rules - configure in GitHub Settings > Environments
-    environment: canary-publish
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/canary-release') }}
     permissions:
       contents: write
       pull-requests: write
