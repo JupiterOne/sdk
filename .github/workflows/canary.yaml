@@ -1,0 +1,12 @@
+name: SDK Monorepo Canary Release
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  trigger-deploy:
+    name: Canary Deploy
+    uses: jupiterone/github-internal/.github/workflows/monorepo-canary-release.yaml@v1
+    secrets: inherit
