@@ -92,10 +92,10 @@ jobs:
         id: publish
         if: steps.changed.outputs.has_changes == 'true'
         run: |
-          PREID="canary-${{ github.event.issue.number }}-${{ github.run_attempt }}"
+          PRERELEASE_ID="canary-${{ github.event.issue.number }}-${{ github.run_attempt }}"
 
           # Version bump with canary prerelease
-          npx lerna version prerelease --preid "$PREID" --no-git-tag-version --no-push --yes
+          npx lerna version prerelease --preid "$PRERELEASE_ID" --no-git-tag-version --no-push --yes
 
           # Publish with canary tag
           npx lerna publish from-package --dist-tag canary --yes 2>&1 | tee publish-output.txt
@@ -134,7 +134,10 @@ jobs:
             const packages = JSON.parse('${{ steps.changed.outputs.packages }}');
 
             let installCommands = packages.map(pkg => {
-              const pkgJson = require(`${process.env.GITHUB_WORKSPACE}/${pkg.location.replace(process.env.GITHUB_WORKSPACE + '/', '')}/package.json`);
+              const pkgPath = pkg.location.startsWith(process.env.GITHUB_WORKSPACE)
+                ? pkg.location
+                : `${process.env.GITHUB_WORKSPACE}/${pkg.location}`;
+              const pkgJson = require(`${pkgPath}/package.json`);
               return `npm install ${pkg.name}@${pkgJson.version}`;
             }).join('\n');
 
