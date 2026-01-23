@@ -140,7 +140,8 @@ jobs:
 
           # Commit version changes locally to satisfy lerna publish
           # These changes won't be pushed back to the PR
-          git add -A
+          # Only stage lerna-modified files (package.json, lerna.json, package-lock.json)
+          git add lerna.json package-lock.json packages/*/package.json
           git commit -m "chore: canary version bump [skip ci]" --no-verify
 
           # Publish with canary tag
