@@ -6,7 +6,184 @@ on:
       - created
 
 jobs:
-  trigger-deploy:
-    name: Canary Deploy
-    uses: jupiterone/github-internal/.github/workflows/monorepo-canary-release.yaml@v1
-    secrets: inherit
+  canary-release:
+    name: Canary Release
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/canary-release') }}
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Add reaction to comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+
+      - name: Post starting comment
+        id: start-comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `🚀 Canary release workflow has been triggered.\n\nYou can follow the progress [here](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}).`
+            });
+            return comment.data.id;
+          result-encoding: string
+
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+          fetch-depth: 0
+          token: ${{ secrets.AUTO_GITHUB_PAT_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure npm for JupiterOne packages
+        run: |
+          echo "@jupiterone:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> .npmrc
+
+      - name: Install dependencies
+        run: npm ci --include=optional
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config --global user.email "automation@jupiterone.com"
+          git config --global user.name "Automation"
+
+      - name: Get changed packages
+        id: changed
+        run: |
+          # Get list of packages changed since main
+          CHANGED=$(npx lerna changed --json 2>/dev/null || echo "[]")
+          echo "Changed packages: $CHANGED"
+          echo "packages=$CHANGED" >> $GITHUB_OUTPUT
+
+          # Check if there are any changed packages
+          if [ "$CHANGED" = "[]" ]; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build packages
+        if: steps.changed.outputs.has_changes == 'true'
+        run: npm run build:dist
+
+      - name: Publish canary versions
+        id: publish
+        if: steps.changed.outputs.has_changes == 'true'
+        run: |
+          PREID="canary-${{ github.event.issue.number }}-${{ github.run_attempt }}"
+
+          # Version bump with canary prerelease
+          npx lerna version prerelease --preid "$PREID" --no-git-tag-version --no-push --yes
+
+          # Publish with canary tag
+          npx lerna publish from-package --dist-tag canary --yes 2>&1 | tee publish-output.txt
+
+          # Extract published versions
+          PUBLISHED=$(grep -E "Successfully published" publish-output.txt || echo "")
+          echo "published<<EOF" >> $GITHUB_OUTPUT
+          echo "$PUBLISHED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTO_GITHUB_PAT_TOKEN }}
+
+      - name: Get published versions
+        id: versions
+        if: steps.changed.outputs.has_changes == 'true'
+        run: |
+          # Get the canary versions from package.json files
+          VERSIONS=""
+          for pkg in $(echo '${{ steps.changed.outputs.packages }}' | jq -r '.[].name'); do
+            PKG_PATH=$(echo '${{ steps.changed.outputs.packages }}' | jq -r ".[] | select(.name == \"$pkg\") | .location")
+            VERSION=$(cat "$PKG_PATH/package.json" | jq -r '.version')
+            VERSIONS="$VERSIONS\n- \`$pkg@$VERSION\`"
+          done
+
+          echo "versions<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$VERSIONS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment with published versions
+        if: steps.changed.outputs.has_changes == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const versions = `${{ steps.versions.outputs.versions }}`;
+            const packages = JSON.parse('${{ steps.changed.outputs.packages }}');
+
+            let installCommands = packages.map(pkg => {
+              const pkgJson = require(`${process.env.GITHUB_WORKSPACE}/${pkg.location.replace(process.env.GITHUB_WORKSPACE + '/', '')}/package.json`);
+              return `npm install ${pkg.name}@${pkgJson.version}`;
+            }).join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `✅ **Canary release published successfully!**\n\n**Published packages:**\n${versions}\n\n**Install with:**\n\`\`\`bash\n${installCommands}\n\`\`\``
+            });
+
+      - name: Comment if no changes
+        if: steps.changed.outputs.has_changes == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `⚠️ **No packages to publish.**\n\nNo changes detected compared to main branch.`
+            });
+
+      - name: Add success reaction
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'rocket',
+            });
+
+      - name: Add failure reaction
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'confused',
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `❌ **Canary release failed.**\n\nCheck the [workflow run](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}) for details.`
+            });
