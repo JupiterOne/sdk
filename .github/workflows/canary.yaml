@@ -112,7 +112,11 @@ jobs:
           # Get list of packages changed since main
           CHANGED=$(npx lerna changed --json 2>/dev/null || echo "[]")
           echo "Changed packages: $CHANGED"
-          echo "packages=$CHANGED" >> $GITHUB_OUTPUT
+
+          # Use heredoc for multiline JSON output
+          echo "packages<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
           # Check if there are any changed packages
           if [ "$CHANGED" = "[]" ]; then
