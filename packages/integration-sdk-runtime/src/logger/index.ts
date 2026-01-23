@@ -226,10 +226,10 @@ export class IntegrationLogger
   }
 
   debug(...params: any[]) {
-    return this._logger.debug(...params);
+    return (this._logger.debug as Function).apply(this._logger, params);
   }
   info(...params: any[]) {
-    return this._logger.info(...params);
+    return (this._logger.info as Function).apply(this._logger, params);
   }
 
   warn(...params: any[]) {
@@ -245,11 +245,11 @@ export class IntegrationLogger
       },
     );
 
-    return this._logger.warn(...params);
+    return (this._logger.warn as Function).apply(this._logger, params);
   }
 
   fatal(...params: any[]) {
-    return this._logger.fatal(...params);
+    return (this._logger.fatal as Function).apply(this._logger, params);
   }
 
   trace(...params: any[]) {
@@ -268,7 +268,8 @@ export class IntegrationLogger
       remainingArgs = params.slice(1);
     }
 
-    return this._logger.trace(
+    return (this._logger.trace as Function).call(
+      this._logger,
       { verbose: true, ...additionalFields },
       ...remainingArgs,
     );
@@ -287,7 +288,7 @@ export class IntegrationLogger
       },
     );
 
-    this._logger.error(...params);
+    (this._logger.error as Function).apply(this._logger, params);
   }
 
   child(options: object = {}, simple?: boolean) {
