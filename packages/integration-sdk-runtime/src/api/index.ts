@@ -114,8 +114,9 @@ export function createApiClient({
   );
 
   // Store compression flag on client for use by upload functions
+  // Default to true to match previous Alpha behavior where uploads were always compressed
   const apiClient = client as ApiClient;
-  if (compressUploads) {
+  if (compressUploads !== false) {
     apiClient._compressUploads = true;
   }
 
