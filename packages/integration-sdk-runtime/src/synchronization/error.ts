@@ -12,10 +12,7 @@ interface RequestClientError {
   };
 }
 
-export function synchronizationApiError(
-  err: RequestClientError | Error | unknown,
-  errorMessage: string,
-) {
+export function synchronizationApiError(err: unknown, errorMessage: string) {
   const requestError = err as RequestClientError;
   if (requestError?.response?.data?.error) {
     // Looks like RequestClient error response with data
@@ -33,7 +30,7 @@ export function synchronizationApiError(
     });
   } else {
     return new IntegrationError({
-      code: 'UNEXPECTED_SYNCRONIZATION_ERROR',
+      code: 'UNEXPECTED_SYNCHRONIZATION_ERROR',
       message: errorMessage,
       cause: err instanceof Error ? err : undefined,
     });
