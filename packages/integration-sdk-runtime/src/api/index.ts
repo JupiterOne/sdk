@@ -30,12 +30,13 @@ interface CreateApiClientInput {
   retryOptions?: RetryOptions;
   compressUploads?: boolean;
   /**
-   * @deprecated RequestClient does not support alphaOptions. Use retryOptions instead.
+   * @deprecated RequestClient does not support alphaOptions and this option is ignored.
+   * Use retryOptions instead for retry configuration.
    */
   alphaOptions?: Partial<RequestClientConfig>;
   /**
-   * @deprecated Proxy configuration is not supported by RequestClient.
-   * Use environment-level proxy configuration instead.
+   * @deprecated Proxy configuration is not supported by RequestClient and this option is ignored.
+   * Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.
    */
   proxyUrl?: string;
 }
@@ -62,7 +63,23 @@ export function createApiClient({
   accessToken,
   retryOptions,
   compressUploads,
+  alphaOptions,
+  proxyUrl,
 }: CreateApiClientInput): ApiClient {
+  // Emit deprecation warnings for removed options
+  if (alphaOptions !== undefined) {
+    process.emitWarning(
+      'alphaOptions is no longer supported and will be ignored. Use retryOptions instead.',
+      'DeprecationWarning',
+    );
+  }
+  if (proxyUrl !== undefined) {
+    process.emitWarning(
+      'proxyUrl is no longer supported and will be ignored. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
+      'DeprecationWarning',
+    );
+  }
+
   const headers: Record<string, string> = {
     'JupiterOne-Account': account,
     'Content-Type': 'application/json',
