@@ -17,7 +17,7 @@ export function createMockResponse<T>(data: T): RequestClientResponse<T> {
     data,
     status: 200,
     statusText: 'OK',
-    headers: {},
-    config: {},
+    headers: {} as any,
+    config: {} as any,
   };
 }

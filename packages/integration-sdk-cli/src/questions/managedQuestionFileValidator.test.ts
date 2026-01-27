@@ -2,8 +2,19 @@ import {
   createApiClient,
   getApiBaseUrl,
 } from '@jupiterone/integration-sdk-runtime';
+import type { RequestClientResponse } from '@jupiterone/platform-sdk-fetch';
 import path from 'path';
 import { validateManagedQuestionFile } from './managedQuestionFileValidator';
+
+function createMockResponse<T>(data: T): RequestClientResponse<T> {
+  return {
+    data,
+    status: 200,
+    statusText: 'OK',
+    headers: {} as any,
+    config: {} as any,
+  };
+}
 
 function getFixturePath(fixtureName: string) {
   return path.join(
@@ -112,8 +123,8 @@ describe('#validateManagedQuestionFile non-dryRun', () => {
       account: 'test-account',
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: [
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue(
+      createMockResponse([
         {
           query: 'find google_user with email $="@{{domain}}"',
           valid: true,
@@ -122,8 +133,8 @@ describe('#validateManagedQuestionFile non-dryRun', () => {
           query: 'find google_user with email !$="@{{domain}}"',
           valid: true,
         },
-      ],
-    });
+      ]),
+    );
 
     await validateManagedQuestionFile({
       apiClient,
@@ -147,8 +158,8 @@ describe('#validateManagedQuestionFile non-dryRun', () => {
 
     const invalidQueryResult = 'find google_user with email $="@{{domain}}"';
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: [
+    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue(
+      createMockResponse([
         {
           query: invalidQueryResult,
           // NOTE: Mock invalid query response!
@@ -158,8 +169,8 @@ describe('#validateManagedQuestionFile non-dryRun', () => {
           query: 'find google_user with email !$="@{{domain}}"',
           valid: true,
         },
-      ],
-    });
+      ]),
+    );
 
     await expect(() =>
       validateManagedQuestionFile({
