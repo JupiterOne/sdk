@@ -29,11 +29,12 @@ import { createIntegrationLogger } from '../../logger';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../../fileSystem';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
-import { getExpectedRequestHeaders } from '../../../test/util/request';
+import {
+  getExpectedRequestHeaders,
+  createMockResponse,
+} from '../../../test/util/request';
 
 import * as shrinkBatchRawData from '../shrinkBatchRawData';
-import { AxiosError } from 'axios';
-import { SynchronizationApiErrorResponse } from '../types';
 
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
@@ -46,11 +47,9 @@ describe('initiateSynchronization', () => {
 
     const context = createTestContext();
     const { apiClient } = context;
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const synchronizationContext = await initiateSynchronization(context);
 
@@ -73,9 +72,9 @@ describe('initiateSynchronization', () => {
     context.integrationJobId = mockIntegrationJobId;
     const { apiClient } = context;
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: { job: mockSyncJob },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job: mockSyncJob }));
     const loggerSpy = jest
       .spyOn(context.logger, 'child')
       .mockImplementation(noop as any);
@@ -102,11 +101,9 @@ describe('initiateSynchronization', () => {
 
     const context = createTestContext({ source: 'api', scope: 'test' });
     const { apiClient } = context;
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const synchronizationContext = await initiateSynchronization(context);
 
@@ -152,11 +149,9 @@ describe('uploadCollectedData', () => {
     const context = createTestContext();
     const { apiClient } = context;
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const loggerUploadStartSpy = jest
       .spyOn(context.logger, 'synchronizationUploadStart')
@@ -224,11 +219,9 @@ describe('uploadCollectedData', () => {
     const context = createTestContext();
     const { apiClient } = context;
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const loggerUploadStartSpy = jest
       .spyOn(context.logger, 'synchronizationUploadStart')
@@ -296,11 +289,9 @@ describe('finalizeSynchronization', () => {
     const context = createTestContext();
     const { apiClient } = context;
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const partialDatasets: PartialDatasets = {
       types: ['partial_type_a', 'partial_type_a'],
@@ -332,11 +323,9 @@ describe('synchronizationStatus', () => {
     const context = createTestContext();
     const { apiClient } = context;
 
-    const getSpy = jest.spyOn(apiClient, 'get').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const getSpy = jest
+      .spyOn(apiClient, 'get')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const returnedJob = await synchronizationStatus({
       ...context,
@@ -360,11 +349,9 @@ describe('abortSynchronization', () => {
     const context = createTestContext();
     const { apiClient } = context;
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({
-      data: {
-        job,
-      },
-    });
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({ job }));
 
     const returnedJob = await abortSynchronization({
       ...context,
@@ -396,25 +383,18 @@ describe('synchronizeCollectedData', () => {
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
-      .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => ({ data: { job } }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
+      .mockImplementationOnce((): any => createMockResponse({ job }))
       .mockImplementationOnce((): any => {
-        const error: AxiosError<SynchronizationApiErrorResponse> = {
-          name: '',
-          message: '',
-          config: undefined as any,
-          isAxiosError: false,
-          toJSON: () => ({}),
-        };
-        throw error;
+        throw new Error('Simulated error for retry test');
       })
       .mockImplementationOnce((): any => {
-        return { data: { job: finalizedJob } };
+        return createMockResponse({ job: finalizedJob });
       });
 
     const summary = await readJsonFromPath<ExecuteIntegrationResult>(
@@ -479,11 +459,7 @@ describe('synchronizeCollectedData', () => {
           throw new Error('Failed to finalize');
         }
 
-        return {
-          data: {
-            job,
-          },
-        };
+        return createMockResponse({ job });
       });
 
     await expect(synchronizeCollectedData(context)).rejects.toThrow(
@@ -519,11 +495,7 @@ describe('uploadDataChunk', () => {
         if (path === `/persister/synchronization/jobs/${job.id}/${type}`) {
           throw requestTooLargeError;
         }
-        return {
-          data: {
-            job,
-          },
-        };
+        return createMockResponse({ job });
       });
 
     // don't allow shrinkBatchRawData throw error due to unshrinkable payload
@@ -565,11 +537,7 @@ describe('uploadDataChunk', () => {
         if (path === `/persister/synchronization/jobs/${job.id}/${type}`) {
           throw jobNotAwaitingUploadsError;
         }
-        return {
-          data: {
-            job,
-          },
-        };
+        return createMockResponse({ job });
       });
 
     let uploadDataChunkErr: any;

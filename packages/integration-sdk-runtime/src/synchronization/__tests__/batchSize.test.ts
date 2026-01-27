@@ -7,6 +7,7 @@ import { randomUUID as uuid } from 'crypto';
 import { createApiClient, getApiBaseUrl } from '../../api';
 import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../../test/util/fixtures';
+import { createMockResponse } from '../../../test/util/request';
 import {
   Entity,
   EntityRawData,
@@ -46,7 +47,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
 
     const postSpy = jest.spyOn(apiClient, 'post') as any;
 
-    postSpy.mockResolvedValue({});
+    postSpy.mockResolvedValue(createMockResponse({}));
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
@@ -81,7 +82,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     });
 
     const postSpy = jest.spyOn(apiClient, 'post') as any;
-    postSpy.mockResolvedValue({});
+    postSpy.mockResolvedValue(createMockResponse({}));
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
@@ -116,7 +117,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     for (let i = 1; i < 100; i++) {
       const postSpy = jest.spyOn(apiClient, 'post') as any;
 
-      postSpy.mockResolvedValue({});
+      postSpy.mockResolvedValue(createMockResponse({}));
 
       const job = generateSynchronizationJob();
       const synchronizationJobContext: SynchronizationJobContext = {
@@ -156,7 +157,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const bigObjectData = createFlushedGraphObjectData(50000, 50000);
     const postSpy = jest.spyOn(apiClient, 'post');
 
-    postSpy.mockResolvedValue({});
+    postSpy.mockResolvedValue(createMockResponse({}));
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
@@ -225,7 +226,7 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
 
     const postSpy = jest.spyOn(apiClient, 'post') as any;
 
-    postSpy.mockResolvedValue({});
+    postSpy.mockResolvedValue(createMockResponse({}));
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {

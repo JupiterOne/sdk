@@ -15,7 +15,10 @@ import { SynchronizationJobContext } from '../synchronization';
 import { createApiClient, getApiBaseUrl } from '../api';
 import { generateSynchronizationJob } from '../synchronization/__tests__/util/generateSynchronizationJob';
 import { createMockIntegrationLogger } from '../../test/util/fixtures';
-import { getExpectedRequestHeaders } from '../../test/util/request';
+import {
+  getExpectedRequestHeaders,
+  createMockResponse,
+} from '../../test/util/request';
 import { UploadError } from '@jupiterone/integration-sdk-core';
 
 function createFlushedGraphObjectData(): FlushedGraphObjectData {
@@ -205,7 +208,9 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       account: accountId,
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue(createMockResponse({}));
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
