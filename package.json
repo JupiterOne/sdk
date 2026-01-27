@@ -57,5 +57,8 @@
   },
   "resolutions": {
     "@types/node": "^18"
+  },
+  "overrides": {
+    "@jupiterone/platform-sdk-logging": "5.1.1"
   }
 }
