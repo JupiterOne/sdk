@@ -45,7 +45,7 @@
     "jest-extended": "^4.0.0",
     "lerna": "^7.1.4",
     "lint-staged": "^10.2.6",
-    "prettier": "^3.0.0",
+    "prettier": "3.2.5",
     "ts-jest": "^29.1.1",
     "typescript": "^5.5.2"
   },
@@ -57,5 +57,8 @@
   },
   "resolutions": {
     "@types/node": "^18"
+  },
+  "overrides": {
+    "@sinclair/typebox@^0.32": "0.32.30"
   }
 }

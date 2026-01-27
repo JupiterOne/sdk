@@ -127,6 +127,7 @@ function createTestContext() {
   const apiClient = createApiClient({
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
+    compressUploads: false, // Disable compression for these tests
   });
 
   return { job, logger, apiClient };

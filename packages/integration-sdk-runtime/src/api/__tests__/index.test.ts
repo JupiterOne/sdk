@@ -196,13 +196,13 @@ describe('isUploadCompressionEnabled', () => {
     expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 
-  it('should return false when _compressUploads is undefined', () => {
+  it('should return true when _compressUploads is undefined (default enabled)', () => {
     const client = createApiClient({
       apiBaseUrl: 'https://api.example.com',
       account: 'test-account',
     });
 
-    expect(isUploadCompressionEnabled(client)).toBe(false);
+    expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 });
 
@@ -231,5 +231,5 @@ describe('real RequestClient request with fake API key', () => {
 
       expect(errorString).not.toContain('test-key');
     }
-  });
+  }, 30000); // 30 second timeout for real network request
 });

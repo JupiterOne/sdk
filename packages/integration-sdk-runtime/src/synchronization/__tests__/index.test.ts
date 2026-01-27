@@ -620,6 +620,7 @@ function createTestContext(
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
     accessToken: 'fake-token',
+    compressUploads: false, // Disable compression for these tests
   });
 
   const logger = createIntegrationLogger({
