@@ -37,6 +37,7 @@
     "upath": "^1.2.0"
   },
   "devDependencies": {
+    "@jupiterone/integration-sdk-testing": "^17.2.1",
     "@types/json2csv": "^5.0.1",
     "@types/lodash": "^4.14.155",
     "csvtojson": "^2.0.10",

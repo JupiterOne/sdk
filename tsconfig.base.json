@@ -14,7 +14,6 @@
     "alwaysStrict": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "allowJs": false,
-    "skipLibCheck": true
+    "allowJs": false
   }
 }

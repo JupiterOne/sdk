@@ -36,7 +36,8 @@ jest.mock('ora', () => {
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 const mockedGlobby = jest.mocked(globby);
 
-// Mock RequestClient
+// Inline mock: can't use @jupiterone/integration-sdk-testing barrel import
+// because jest.mock('fs') conflicts with polly's graceful-fs patching
 const mockPost = jest.fn();
 const mockGet = jest.fn();
 const mockApiClient = {

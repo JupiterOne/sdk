@@ -10,6 +10,7 @@ import {
 import { DEFAULT_EXPORT_DIRECTORY } from '../../commands';
 import { Entity } from '@jupiterone/integration-sdk-core';
 import { TEST_API_KEY, TEST_ACCOUNT } from '../../__tests__/utils';
+import { createMockApiClient } from '@jupiterone/integration-sdk-testing';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
 jest.mock('../../fileSystem');
@@ -17,20 +18,8 @@ jest.mock('../../fileSystem');
 const mockedRuntime = jest.mocked(runtime);
 const mockedFileSystem = jest.mocked(fileSystem);
 
-const mockGet = jest.fn();
-const mockApiClient = {
-  get: mockGet,
-  post: jest.fn(),
-  put: jest.fn(),
-  patch: jest.fn(),
-  delete: jest.fn(),
-  head: jest.fn(),
-  options: jest.fn(),
-  interceptors: {
-    request: { use: jest.fn(), eject: jest.fn() },
-    response: { use: jest.fn(), eject: jest.fn() },
-  },
-};
+const mock = createMockApiClient();
+const mockGet = mock.get;
 
 const options: BulkDownloadParams = {
   apiBaseUrl: '',
@@ -55,7 +44,7 @@ function createEntity(id: string, type: string): Entity {
 
 beforeEach(() => {
   mockGet.mockReset();
-  mockedRuntime.createApiClient.mockReturnValue(mockApiClient as any);
+  mockedRuntime.createApiClient.mockReturnValue(mock.apiClient);
 });
 
 test('should write assets to json file', async () => {
