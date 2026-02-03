@@ -172,24 +172,30 @@ describe('createApiClient', () => {
     expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 
-  test('throws error when alphaOptions is provided', () => {
-    expect(() =>
-      createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        alphaOptions: {},
-      }),
-    ).toThrow('alphaOptions is no longer supported');
+  test('warns when alphaOptions is provided', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      alphaOptions: {},
+    });
+    expect(warnSpy).toHaveBeenCalledWith(
+      'DEPRECATION: alphaOptions is no longer supported and will be ignored. Use retryOptions instead.',
+    );
+    warnSpy.mockRestore();
   });
 
-  test('throws error when proxyUrl is provided', () => {
-    expect(() =>
-      createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        proxyUrl: 'http://proxy:8080',
-      }),
-    ).toThrow('proxyUrl is no longer supported');
+  test('warns when proxyUrl is provided', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      proxyUrl: 'http://proxy:8080',
+    });
+    expect(warnSpy).toHaveBeenCalledWith(
+      'DEPRECATION: proxyUrl is no longer supported and will be ignored. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
+    );
+    warnSpy.mockRestore();
   });
 
   test('does not set _compressUploads flag when compressUploads is false', () => {

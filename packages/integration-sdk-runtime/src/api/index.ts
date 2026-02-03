@@ -66,13 +66,13 @@ export function createApiClient({
   proxyUrl,
 }: CreateApiClientInput & UnsupportedCreateApiClientInput): ApiClient {
   if (alphaOptions !== undefined) {
-    throw new Error(
-      'alphaOptions is no longer supported. Use retryOptions instead.',
+    console.warn(
+      'DEPRECATION: alphaOptions is no longer supported and will be ignored. Use retryOptions instead.',
     );
   }
   if (proxyUrl !== undefined) {
-    throw new Error(
-      'proxyUrl is no longer supported. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
+    console.warn(
+      'DEPRECATION: proxyUrl is no longer supported and will be ignored. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
     );
   }
 
