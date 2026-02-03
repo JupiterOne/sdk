@@ -17,7 +17,8 @@ export function createMockResponse<T>(data: T): RequestClientResponse<T> {
     data,
     status: 200,
     statusText: 'OK',
-    headers: new Headers(),
+    // @ts-expect-error - Headers type differs between node-fetch and DOM
+    headers: {},
     config: {},
   };
 }
