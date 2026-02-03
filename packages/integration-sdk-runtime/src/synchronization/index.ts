@@ -637,12 +637,23 @@ export async function abortSynchronization({
   return response.data.job;
 }
 
-function cleanRequestError(err: any) {
-  if (err.config?.headers?.Authorization) {
-    delete err.config.headers.Authorization;
+/**
+ * Shape of error objects that may contain sensitive request config data
+ */
+interface ErrorWithRequestConfig {
+  config?: {
+    headers?: Record<string, unknown>;
+    data?: unknown;
+  };
+}
+
+function cleanRequestError(err: unknown) {
+  const error = err as ErrorWithRequestConfig;
+  if (error?.config?.headers?.Authorization) {
+    delete error.config.headers.Authorization;
   }
 
-  if (err.config?.data) {
-    delete err.config.data;
+  if (error?.config?.data) {
+    delete error.config.data;
   }
 }
