@@ -32,7 +32,7 @@ export function synchronizationApiError(err: unknown, errorMessage: string) {
     return new IntegrationError({
       code: 'UNEXPECTED_SYNCHRONIZATION_ERROR',
       message: errorMessage,
-      cause: err instanceof Error ? err : undefined,
+      cause: err instanceof Error ? err : new Error(String(err)),
     });
   }
 }

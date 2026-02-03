@@ -414,7 +414,7 @@ interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   batch: T[K][];
 }
 
-function isRequestUploadTooLargeError(err): boolean {
+function isRequestUploadTooLargeError(err: Record<string, any>): boolean {
   return (
     err.code === 'RequestEntityTooLargeException' ||
     err.response?.status === 413
