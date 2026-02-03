@@ -35,6 +35,7 @@ import type {
   RequestClient,
   RequestClientRequestConfig,
 } from '@jupiterone/platform-sdk-fetch';
+import { isRequestClientError } from '@jupiterone/platform-sdk-fetch';
 
 /**
  * Extended request config that includes rawBody for sending pre-serialized/compressed data.
@@ -637,23 +638,8 @@ export async function abortSynchronization({
   return response.data.job;
 }
 
-/**
- * Shape of error objects that may contain sensitive request config data
- */
-interface ErrorWithRequestConfig {
-  config?: {
-    headers?: Record<string, unknown>;
-    data?: unknown;
-  };
-}
-
 function cleanRequestError(err: unknown) {
-  const error = err as ErrorWithRequestConfig;
-  if (error?.config?.headers?.Authorization) {
-    delete error.config.headers.Authorization;
-  }
-
-  if (error?.config?.data) {
-    delete error.config.data;
+  if (isRequestClientError(err) && err.config?.headers?.Authorization) {
+    delete err.config.headers.Authorization;
   }
 }

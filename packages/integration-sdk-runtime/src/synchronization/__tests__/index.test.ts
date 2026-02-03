@@ -34,6 +34,7 @@ import {
   createMockResponse,
 } from '../../../test/util/request';
 
+import { RequestClientError } from '@jupiterone/platform-sdk-fetch';
 import * as shrinkBatchRawData from '../shrinkBatchRawData';
 
 afterEach(() => {
@@ -580,22 +581,20 @@ describe('uploadDataChunk', () => {
     };
 
     jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
-      const err = new Error('thing went bad');
-      Object.assign(err, {
+      throw new RequestClientError('thing went bad', {
         config: {
-          data: 'Stuff',
           headers: {
-            Authroization: 'some fake token',
+            Authorization: 'some fake token',
             'content-type': 'application/json',
           },
         },
       });
-      throw err;
     });
 
     await expect(
       uploadDataChunk({
-        logger: mockLogger as any,
+        // @ts-expect-error - Using a partial mock logger in test
+        logger: mockLogger,
         apiClient: context.apiClient,
         jobId: job.id,
         type,
@@ -604,9 +603,11 @@ describe('uploadDataChunk', () => {
     ).rejects.toBeInstanceOf(Error);
     const firstInfoCall = mockLogger.info.mock.calls[0];
     const args = firstInfoCall[0];
-    const axiosError = args['err'];
-    expect(axiosError.config.data).toBeUndefined();
-    expect(axiosError.config.headers.Authorization).toBeUndefined();
+    const requestError = args['err'];
+    expect(requestError.config.headers.Authorization).toBeUndefined();
+    expect(requestError.config.headers['content-type']).toBe(
+      'application/json',
+    );
   });
 });
 
