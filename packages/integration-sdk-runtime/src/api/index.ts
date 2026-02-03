@@ -23,22 +23,21 @@ export interface ApiClient extends RequestClient {
   _compressUploads?: boolean;
 }
 
-interface CreateApiClientInput {
+export interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
   retryOptions?: RetryOptions;
   compressUploads?: boolean;
-  /**
-   * @deprecated RequestClient does not support alphaOptions and this option is ignored.
-   * Use retryOptions instead for retry configuration.
-   */
-  alphaOptions?: Partial<RequestClientConfig>;
-  /**
-   * @deprecated Proxy configuration is not supported by RequestClient and this option is ignored.
-   * Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.
-   */
-  proxyUrl?: string;
+}
+
+/**
+ * Internal-only type for detecting removed options and throwing clear errors.
+ * Not exported — callers should not see these fields in the public API.
+ */
+interface UnsupportedCreateApiClientInput {
+  alphaOptions?: unknown;
+  proxyUrl?: unknown;
 }
 
 interface RetryOptions {
@@ -65,18 +64,15 @@ export function createApiClient({
   compressUploads,
   alphaOptions,
   proxyUrl,
-}: CreateApiClientInput): ApiClient {
-  // Emit deprecation warnings for removed options
+}: CreateApiClientInput & UnsupportedCreateApiClientInput): ApiClient {
   if (alphaOptions !== undefined) {
-    process.emitWarning(
-      'alphaOptions is no longer supported and will be ignored. Use retryOptions instead.',
-      'DeprecationWarning',
+    throw new Error(
+      'alphaOptions is no longer supported. Use retryOptions instead.',
     );
   }
   if (proxyUrl !== undefined) {
-    process.emitWarning(
-      'proxyUrl is no longer supported and will be ignored. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
-      'DeprecationWarning',
+    throw new Error(
+      'proxyUrl is no longer supported. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
     );
   }
 

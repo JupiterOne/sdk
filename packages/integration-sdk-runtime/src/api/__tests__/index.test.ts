@@ -172,6 +172,26 @@ describe('createApiClient', () => {
     expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 
+  test('throws error when alphaOptions is provided', () => {
+    expect(() =>
+      createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        alphaOptions: {},
+      } as any),
+    ).toThrow('alphaOptions is no longer supported');
+  });
+
+  test('throws error when proxyUrl is provided', () => {
+    expect(() =>
+      createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        proxyUrl: 'http://proxy:8080',
+      } as any),
+    ).toThrow('proxyUrl is no longer supported');
+  });
+
   test('does not set _compressUploads flag when compressUploads is false', () => {
     const client = createApiClient({
       apiBaseUrl: 'https://api.example.com',
