@@ -11,8 +11,8 @@ function createMockResponse<T>(data: T): RequestClientResponse<T> {
     data,
     status: 200,
     statusText: 'OK',
-    headers: {} as any,
-    config: {} as any,
+    headers: new Headers(),
+    config: {},
   };
 }
 

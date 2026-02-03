@@ -82,7 +82,8 @@ const type1Relationships = [
 ];
 
 beforeEach(async () => {
-  mockedCreateApiClient.mockReturnValue(mockApiClient as any);
+  // @ts-expect-error - Mock object satisfies ApiClient shape at runtime
+  mockedCreateApiClient.mockReturnValue(mockApiClient);
   mockPost.mockReset();
   mockGet.mockReset();
   vol.reset();

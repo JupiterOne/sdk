@@ -39,7 +39,8 @@ const mockApiClient = {
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 
 beforeEach(() => {
-  mockedCreateApiClient.mockReturnValue(mockApiClient as any);
+  // @ts-expect-error - Mock object satisfies ApiClient shape at runtime
+  mockedCreateApiClient.mockReturnValue(mockApiClient);
   mockGet.mockReset();
   delete process.env.JUPITERONE_API_KEY;
   jest.clearAllMocks();

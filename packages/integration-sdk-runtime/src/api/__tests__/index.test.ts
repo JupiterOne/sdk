@@ -174,21 +174,27 @@ describe('createApiClient', () => {
 
   test('throws error when alphaOptions is provided', () => {
     expect(() =>
-      createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        alphaOptions: {},
-      } as any),
+      createApiClient(
+        // @ts-expect-error - Testing that deprecated alphaOptions throws at runtime
+        {
+          apiBaseUrl: 'https://api.example.com',
+          account: 'test-account',
+          alphaOptions: {},
+        },
+      ),
     ).toThrow('alphaOptions is no longer supported');
   });
 
   test('throws error when proxyUrl is provided', () => {
     expect(() =>
-      createApiClient({
-        apiBaseUrl: 'https://api.example.com',
-        account: 'test-account',
-        proxyUrl: 'http://proxy:8080',
-      } as any),
+      createApiClient(
+        // @ts-expect-error - Testing that deprecated proxyUrl throws at runtime
+        {
+          apiBaseUrl: 'https://api.example.com',
+          account: 'test-account',
+          proxyUrl: 'http://proxy:8080',
+        },
+      ),
     ).toThrow('proxyUrl is no longer supported');
   });
 

@@ -77,7 +77,8 @@ describe('initiateSynchronization', () => {
       .mockResolvedValue(createMockResponse({ job: mockSyncJob }));
     const loggerSpy = jest
       .spyOn(context.logger, 'child')
-      .mockImplementation(noop as any);
+      // @ts-expect-error - Stubbing child() to return void in test
+      .mockImplementation(noop);
 
     const synchronizationContext = await initiateSynchronization(context);
 
@@ -383,19 +384,15 @@ describe('synchronizeCollectedData', () => {
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => createMockResponse({ job }))
-      .mockImplementationOnce((): any => {
-        throw new Error('Simulated error for retry test');
-      })
-      .mockImplementationOnce((): any => {
-        return createMockResponse({ job: finalizedJob });
-      });
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockResolvedValueOnce(createMockResponse({ job }))
+      .mockRejectedValueOnce(new Error('Simulated error for retry test'))
+      .mockResolvedValueOnce(createMockResponse({ job: finalizedJob }));
 
     const summary = await readJsonFromPath<ExecuteIntegrationResult>(
       path.resolve(getRootStorageDirectory(), 'summary.json'),
