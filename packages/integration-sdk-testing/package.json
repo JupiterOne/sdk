@@ -4,6 +4,16 @@
   "description": "Testing utilities for JupiterOne integrations",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./mockApiClient": {
+      "types": "./dist/src/mockApiClient.d.ts",
+      "default": "./dist/src/mockApiClient.js"
+    }
+  },
   "repository": "git@github.com:JupiterOne/sdk.git",
   "author": "JupiterOne <dev@jupiterone.io>",
   "license": "MPL-2.0",

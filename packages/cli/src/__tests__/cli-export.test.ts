@@ -1,4 +1,5 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
+import { createMockApiClient } from '@jupiterone/integration-sdk-testing/mockApiClient';
 import { createCli } from '..';
 import { TEST_API_KEY, TEST_ACCOUNT } from './utils';
 import * as log from '../log';
@@ -20,26 +21,10 @@ jest.mock('ora', () => {
   };
 });
 
-// Inline mock: can't use @jupiterone/integration-sdk-testing barrel import
-// because jest.mock('fs') conflicts with polly's graceful-fs patching
-const mockGet = jest.fn();
-const mockApiClient = {
-  get: mockGet,
-  post: jest.fn(),
-  put: jest.fn(),
-  patch: jest.fn(),
-  delete: jest.fn(),
-  head: jest.fn(),
-  options: jest.fn(),
-  interceptors: {
-    request: { use: jest.fn(), eject: jest.fn() },
-    response: { use: jest.fn(), eject: jest.fn() },
-  },
-};
+const { apiClient: mockApiClient, get: mockGet } = createMockApiClient();
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 
 beforeEach(() => {
-  // @ts-expect-error - Mock object satisfies ApiClient shape at runtime
   mockedCreateApiClient.mockReturnValue(mockApiClient);
   mockGet.mockReset();
   delete process.env.JUPITERONE_API_KEY;

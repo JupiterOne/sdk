@@ -1,4 +1,5 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
+import { createMockApiClient } from '@jupiterone/integration-sdk-testing/mockApiClient';
 import { vol } from 'memfs';
 import { randomUUID as uuid } from 'crypto';
 import globby from 'globby';
@@ -36,23 +37,11 @@ jest.mock('ora', () => {
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 const mockedGlobby = jest.mocked(globby);
 
-// Inline mock: can't use @jupiterone/integration-sdk-testing barrel import
-// because jest.mock('fs') conflicts with polly's graceful-fs patching
-const mockPost = jest.fn();
-const mockGet = jest.fn();
-const mockApiClient = {
+const {
+  apiClient: mockApiClient,
   post: mockPost,
   get: mockGet,
-  put: jest.fn(),
-  patch: jest.fn(),
-  delete: jest.fn(),
-  head: jest.fn(),
-  options: jest.fn(),
-  interceptors: {
-    request: { use: jest.fn(), eject: jest.fn() },
-    response: { use: jest.fn(), eject: jest.fn() },
-  },
-};
+} = createMockApiClient();
 
 const type1Entities = [
   createEntity({
@@ -82,7 +71,6 @@ const type1Relationships = [
 ];
 
 beforeEach(async () => {
-  // @ts-expect-error - Mock object satisfies ApiClient shape at runtime
   mockedCreateApiClient.mockReturnValue(mockApiClient);
   mockPost.mockReset();
   mockGet.mockReset();
