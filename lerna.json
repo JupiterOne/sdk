@@ -1,0 +1,6 @@
+{
+  "npmClient": "npm",
+  "packages": ["packages/integration-sdk-*", "packages/cli"],
+  "version": "17.2.1",
+  "$comment": "Retained for backward compatibility with canary workflow on main branch. NX is the primary build system. Remove after merging NX migration to main."
+}
