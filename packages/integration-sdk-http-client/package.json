@@ -38,5 +38,12 @@
   "bugs": {
     "url": "https://github.com/JupiterOne/sdk/issues"
   },
-  "homepage": "https://github.com/JupiterOne/sdk#readme"
+  "homepage": "https://github.com/JupiterOne/sdk#readme",
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:public"
+    ]
+  },
+  "deploy": "library"
 }

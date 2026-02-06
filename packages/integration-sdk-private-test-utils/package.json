@@ -20,5 +20,12 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149"
-  }
+  },
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:internal"
+    ]
+  },
+  "deploy": "none"
 }

@@ -42,5 +42,12 @@
     "@types/lodash": "^4.14.155",
     "csvtojson": "^2.0.10",
     "memfs": "^3.2.0"
-  }
+  },
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:public"
+    ]
+  },
+  "deploy": "library"
 }

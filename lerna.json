@@ -1,8 +1,0 @@
-{
-  "npmClient": "npm",
-  "packages": [
-    "packages/integration-sdk-*",
-    "packages/cli"
-  ],
-  "version": "17.3.0"
-}

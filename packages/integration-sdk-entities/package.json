@@ -17,7 +17,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "prebuild:dist": "rm -rf dist && mkdir dist",
     "build:dist": "tsc -p tsconfig.dist.json --declaration",
     "prepack": "npm run build:dist",
@@ -34,5 +34,12 @@
   },
   "peerDependencies": {
     "@jupiterone/data-model": ">= 0.62.0"
-  }
+  },
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:public"
+    ]
+  },
+  "deploy": "library"
 }

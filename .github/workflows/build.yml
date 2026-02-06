@@ -59,7 +59,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
           cache: npm
           registry-url: https://registry.npmjs.org
 
@@ -83,5 +83,6 @@ jobs:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > .npmrc
-          npm ci
-          npm exec -c "lerna publish from-package --no-verify-access --yes"
+          npm ci --include=optional
+          npx nx run-many -t build:dist
+          npx nx release publish

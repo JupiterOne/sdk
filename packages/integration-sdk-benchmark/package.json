@@ -18,5 +18,12 @@
     "@jupiterone/integration-sdk-core": "^17.3.0",
     "@jupiterone/integration-sdk-runtime": "^17.3.0",
     "benchmark": "^2.1.4"
-  }
+  },
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:internal"
+    ]
+  },
+  "deploy": "none"
 }

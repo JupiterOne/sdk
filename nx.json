@@ -1,0 +1,66 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "nx/presets/npm.json",
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/tsconfig*.json",
+        "{projectRoot}/package.json",
+        "{workspaceRoot}/tsconfig.base.json",
+        "^default"
+      ],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:dist": {
+      "cache": true,
+      "dependsOn": ["^build:dist"],
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/tsconfig*.json",
+        "{projectRoot}/package.json",
+        "{workspaceRoot}/tsconfig.base.json",
+        "^default"
+      ],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "lint": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/.eslintrc*",
+        "{workspaceRoot}/.eslintrc*",
+        "{projectRoot}/package.json"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/tsconfig*.json",
+        "{projectRoot}/package.json",
+        "{projectRoot}/jest.config.*",
+        "{workspaceRoot}/jest.config.base.js",
+        "^default"
+      ],
+      "outputs": ["{projectRoot}/coverage"]
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**/*",
+      "!{projectRoot}/coverage/**/*",
+      "!{projectRoot}/**/*.tsbuildinfo"
+    ]
+  },
+  "defaultBase": "origin/main"
+}

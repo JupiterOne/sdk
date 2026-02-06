@@ -16,3 +16,7 @@ yarn-error.log
 *.bak.*
 
 tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# NX
+.nx/

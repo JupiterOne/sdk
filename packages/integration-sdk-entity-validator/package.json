@@ -31,5 +31,12 @@
     "ajv": "^8.12.0",
     "ajv-formats": "^3.0.1",
     "prettier": "^3.2.5"
-  }
+  },
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:public"
+    ]
+  },
+  "deploy": "library"
 }

@@ -35,5 +35,12 @@
   },
   "resolutions": {
     "@types/node": "^18"
-  }
+  },
+  "nx": {
+    "tags": [
+      "type:library",
+      "scope:public"
+    ]
+  },
+  "deploy": "library"
 }
