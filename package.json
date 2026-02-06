@@ -59,9 +59,5 @@
   },
   "resolutions": {
     "@types/node": "^18"
-  },
-  "overrides": {
-    "@sinclair/typebox@^0.32": "0.32.30",
-    "fast-xml-parser": "5.3.4"
   }
 }
