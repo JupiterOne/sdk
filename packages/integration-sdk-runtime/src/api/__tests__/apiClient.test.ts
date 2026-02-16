@@ -244,7 +244,7 @@ describe('JupiterOneApiClient', () => {
       );
 
       // rawBody should be undefined (not present) when not passed
-      const callArgs = requestSpy.mock.calls[0][1];
+      const callArgs = requestSpy.mock.calls[0][1] as Record<string, unknown>;
       expect(callArgs.rawBody).toBeUndefined();
     });
   });

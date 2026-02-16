@@ -22,7 +22,7 @@
     "clean": "npx nx run-many -t clean && npm run clean:build && rm -rf node_modules",
     "clean:build": "npx nx run-many --target=clean --all 2>/dev/null; for dir in packages/*/dist; do [ -d \"$dir\" ] && rm -rf \"$dir\"; done; find packages -name '*.tsbuildinfo' -maxdepth 2 -delete 2>/dev/null; true",
     "prebuild": "npm run clean:build",
-    "build": "tsc -b packages/integration-sdk-entity-validator packages/integration-sdk-core packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing packages/integration-sdk-http-client packages/integration-sdk-entities",
+    "build": "tsc -b packages/integration-sdk-entity-validator packages/integration-sdk-core packages/integration-sdk-http-client packages/integration-sdk-runtime packages/integration-sdk-private-test-utils packages/integration-sdk-cli packages/integration-sdk-testing packages/integration-sdk-entities",
     "prebuild:dist": "npm run clean:build",
     "build:dist": "npx nx run-many -t build:dist",
     "format": "prettier --write \"**/*.{ts,js,json,md,yml}\"",
