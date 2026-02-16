@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Headers } from 'node-fetch';
 import { JupiterOneApiClient } from '../apiClient';
 
 const mockLogger = {
@@ -11,35 +13,55 @@ const mockLogger = {
   isHandledError: jest.fn(),
 } as any;
 
+function createClient(overrides?: Partial<any>) {
+  return new JupiterOneApiClient({
+    baseUrl: 'https://api.example.com',
+    logger: mockLogger,
+    account: 'test-account',
+    accessToken: 'test-token',
+    ...overrides,
+  });
+}
+
+function createMockResponse(
+  body: any,
+  status = 200,
+  headers?: Record<string, string>,
+) {
+  const responseHeaders = new Headers(headers);
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: responseHeaders,
+    json: jest.fn().mockResolvedValue(body),
+    body: {
+      [Symbol.asyncIterator]: async function* () {
+        // empty body
+      },
+    },
+  };
+}
+
 describe('JupiterOneApiClient', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('constructor', () => {
     it('sets _compressUploads to true by default', () => {
-      const client = new JupiterOneApiClient({
-        baseUrl: 'https://api.example.com',
-        logger: mockLogger,
-        account: 'test-account',
-        accessToken: 'test-token',
-      });
+      const client = createClient();
       expect(client._compressUploads).toBe(true);
     });
 
     it('sets _compressUploads to false when explicitly disabled', () => {
-      const client = new JupiterOneApiClient({
-        baseUrl: 'https://api.example.com',
-        logger: mockLogger,
-        account: 'test-account',
-        accessToken: 'test-token',
-        compressUploads: false,
-      });
+      const client = createClient({ compressUploads: false });
       expect(client._compressUploads).toBe(false);
     });
   });
 
   describe('getAuthorizationHeaders', () => {
     it('returns correct headers with Bearer token', () => {
-      const client = new JupiterOneApiClient({
-        baseUrl: 'https://api.example.com',
-        logger: mockLogger,
+      const client = createClient({
         account: 'my-account',
         accessToken: 'my-token',
       });
@@ -52,10 +74,9 @@ describe('JupiterOneApiClient', () => {
     });
 
     it('omits Authorization header when no accessToken provided', () => {
-      const client = new JupiterOneApiClient({
-        baseUrl: 'https://api.example.com',
-        logger: mockLogger,
+      const client = createClient({
         account: 'my-account',
+        accessToken: undefined,
       });
       const headers = (client as any).getAuthorizationHeaders();
       expect(headers).toEqual({
@@ -63,6 +84,133 @@ describe('JupiterOneApiClient', () => {
         'Content-Type': 'application/json',
       });
       expect(headers.Authorization).toBeUndefined();
+    });
+  });
+
+  describe('post', () => {
+    it('returns { data, status, headers } shape', async () => {
+      const responseBody = { id: '123', type: 'entity' };
+      const client = createClient();
+
+      jest
+        .spyOn(client as any, 'retryableRequest')
+        .mockResolvedValue(
+          createMockResponse(responseBody, 200, { 'x-request-id': 'req-abc' }),
+        );
+
+      const result = await client.post<{ id: string; type: string }>(
+        '/entities',
+        { name: 'test-entity' },
+      );
+
+      expect(result).toEqual({
+        data: responseBody,
+        status: 200,
+        headers: expect.objectContaining({
+          'x-request-id': 'req-abc',
+        }),
+      });
+    });
+
+    it('sends POST method with body', async () => {
+      const client = createClient();
+      const spy = jest
+        .spyOn(client as any, 'retryableRequest')
+        .mockResolvedValue(createMockResponse({ ok: true }));
+
+      await client.post('/some-endpoint', { key: 'value' });
+
+      expect(spy).toHaveBeenCalledWith(
+        '/some-endpoint',
+        expect.objectContaining({
+          method: 'POST',
+          body: { key: 'value' },
+        }),
+      );
+    });
+  });
+
+  describe('get', () => {
+    it('returns { data, status, headers } shape', async () => {
+      const responseBody = { items: [1, 2, 3] };
+      const client = createClient();
+
+      jest.spyOn(client as any, 'retryableRequest').mockResolvedValue(
+        createMockResponse(responseBody, 200, {
+          'content-type': 'application/json',
+        }),
+      );
+
+      const result = await client.get<{ items: number[] }>('/items');
+
+      expect(result).toEqual({
+        data: responseBody,
+        status: 200,
+        headers: expect.objectContaining({
+          'content-type': 'application/json',
+        }),
+      });
+    });
+
+    it('sends GET method without body', async () => {
+      const client = createClient();
+      const spy = jest
+        .spyOn(client as any, 'retryableRequest')
+        .mockResolvedValue(createMockResponse({ ok: true }));
+
+      await client.get('/some-endpoint');
+
+      expect(spy).toHaveBeenCalledWith(
+        '/some-endpoint',
+        expect.objectContaining({
+          method: 'GET',
+        }),
+      );
+    });
+  });
+
+  describe('redactAuthHeaders', () => {
+    it('redacts headers from error config and response config', () => {
+      const client = createClient();
+      const err: any = {
+        config: {
+          headers: { Authorization: 'Bearer secret-token' },
+        },
+        response: {
+          config: {
+            headers: { Authorization: 'Bearer secret-token' },
+          },
+        },
+      };
+
+      (client as any).redactAuthHeaders(err);
+
+      expect(err.config.headers).toBe('[REDACTED]');
+      expect(err.response.config.headers).toBe('[REDACTED]');
+    });
+
+    it('handles missing config/response gracefully', () => {
+      const client = createClient();
+      const err: any = {};
+
+      expect(() => (client as any).redactAuthHeaders(err)).not.toThrow();
+    });
+  });
+
+  describe('executeRequest error handling', () => {
+    it('redacts auth headers on error and re-throws', async () => {
+      const client = createClient();
+      const error: any = new Error('request failed');
+      error.config = { headers: { Authorization: 'Bearer secret' } };
+      error.response = {
+        config: { headers: { Authorization: 'Bearer secret' } },
+      };
+
+      jest.spyOn(client as any, 'retryableRequest').mockRejectedValue(error);
+
+      await expect(client.get('/fail')).rejects.toThrow('request failed');
+      expect(error.config.headers).toBe('[REDACTED]');
+      expect(error.response.config.headers).toBe('[REDACTED]');
     });
   });
 });
