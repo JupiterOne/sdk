@@ -2,18 +2,15 @@ import {
   createApiClient,
   getApiBaseUrl,
 } from '@jupiterone/integration-sdk-runtime';
-import type { RequestClientResponse } from '@jupiterone/platform-sdk-fetch';
+import type { ApiClientResponse } from '@jupiterone/integration-sdk-runtime';
 import path from 'path';
 import { validateManagedQuestionFile } from './managedQuestionFileValidator';
 
-function createMockResponse<T>(data: T): RequestClientResponse<T> {
+function createMockResponse<T>(data: T): ApiClientResponse<T> {
   return {
     data,
     status: 200,
-    statusText: 'OK',
-    // @ts-expect-error - Headers type differs between node-fetch and DOM
     headers: {},
-    config: {},
   };
 }
 

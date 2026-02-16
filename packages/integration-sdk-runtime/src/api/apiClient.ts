@@ -94,7 +94,7 @@ export class JupiterOneApiClient extends BaseAPIClient {
 
   async post<T>(
     url: string,
-    data?: Record<string, unknown>,
+    data?: Record<string, unknown> | string,
     config?: ApiClientRequestConfig,
   ): Promise<ApiClientResponse<T>> {
     return this.executeRequest<T>(url, {
