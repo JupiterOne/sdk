@@ -13,7 +13,6 @@ export function createMockIntegrationLogger(): IntegrationLogger {
       {
         level: 'trace',
         type: 'raw',
-        // @ts-expect-error - @types/bunyan RingBuffer.end() returns void instead of this
         stream: ringbuffer,
       },
     ],
