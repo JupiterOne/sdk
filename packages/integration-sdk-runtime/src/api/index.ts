@@ -1,8 +1,3 @@
-import {
-  createRequestClient,
-  RequestClient,
-  RequestClientConfig,
-} from '@jupiterone/platform-sdk-fetch';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -12,22 +7,23 @@ import {
   IntegrationApiKeyRequiredError,
 } from './error';
 
+import {
+  JupiterOneApiClient,
+  ApiClientResponse,
+  ApiClientRequestConfig,
+} from './apiClient';
+
+export type { ApiClientResponse, ApiClientRequestConfig };
+
 /**
- * Extended RequestClient with compression flag
+ * Public API client type exposed by the runtime.
  */
-export interface ApiClient extends RequestClient {
-  /**
-   * Internal flag indicating whether uploads should be compressed.
-   * @internal
-   */
-  _compressUploads?: boolean;
-}
+export type ApiClient = JupiterOneApiClient;
 
 export interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
-  retryOptions?: RetryOptions;
   compressUploads?: boolean;
 }
 
@@ -40,12 +36,19 @@ interface UnsupportedCreateApiClientInput {
   proxyUrl?: unknown;
 }
 
-interface RetryOptions {
-  attempts?: number;
-  factor?: number;
-  maxTimeout?: number;
-  retryCondition?: (err: Error) => boolean;
-}
+/**
+ * Minimal noop logger for use when no logger is provided.
+ */
+const noopLogger = {
+  trace: () => {},
+  debug: () => {},
+  info: () => {},
+  warn: () => {},
+  error: () => {},
+  fatal: () => {},
+  child: () => noopLogger,
+  isHandledError: () => false,
+} as any;
 
 /**
  * Configures an api client for hitting JupiterOne APIs.
@@ -60,7 +63,6 @@ export function createApiClient({
   apiBaseUrl,
   account,
   accessToken,
-  retryOptions,
   compressUploads,
   alphaOptions,
   proxyUrl,
@@ -78,64 +80,13 @@ export function createApiClient({
     );
   }
 
-  const headers: Record<string, string> = {
-    'JupiterOne-Account': account,
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  const opts: RequestClientConfig = {
-    baseURL: apiBaseUrl,
-    headers,
-    retry: retryOptions ?? {},
-  };
-
-  const client = createRequestClient(opts);
-
-  // Redact Authorization header from error response
-  client.interceptors.response.use(
-    (response) => response,
-    async (error: any) => {
-      if (error?.config?.headers) {
-        error.config.headers = '[REDACTED]';
-      }
-
-      if (error?.response?.config?.headers) {
-        error.response.config.headers = '[REDACTED]';
-      }
-
-      if (typeof error?.request?._header === 'string') {
-        error.request._header = error.request._header.replace(
-          /Authorization: Bearer\s[^\r\n]+/i,
-          'Authorization: [REDACTED]',
-        );
-      }
-
-      const outHeadersSym = Object.getOwnPropertySymbols(
-        error.request || {},
-      ).find((sym) => String(sym).includes('kOutHeaders'));
-      if (outHeadersSym) {
-        const outHeaders = (error.request as any)[outHeadersSym];
-        if (outHeaders?.authorization) {
-          outHeaders.authorization = '[REDACTED]';
-        }
-      }
-
-      return Promise.reject(error);
-    },
-  );
-
-  // Store compression flag on client for use by upload functions
-  // Default to true to match previous Alpha behavior where uploads were always compressed
-  const apiClient = client as ApiClient;
-  if (compressUploads !== false) {
-    apiClient._compressUploads = true;
-  }
-
-  return apiClient;
+  return new JupiterOneApiClient({
+    baseUrl: apiBaseUrl,
+    logger: noopLogger,
+    account,
+    accessToken,
+    compressUploads,
+  });
 }
 
 /**

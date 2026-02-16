@@ -31,21 +31,6 @@ import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes } from './batchBySize';
-import type {
-  RequestClient,
-  RequestClientRequestConfig,
-} from '@jupiterone/platform-sdk-fetch';
-import { isRequestClientError } from '@jupiterone/platform-sdk-fetch';
-
-/**
- * Extended request config that includes rawBody for sending pre-serialized/compressed data.
- * This extends the standard RequestClientRequestConfig to support gzip-compressed uploads.
- *
- * TODO: Remove this interface once platform-sdk-fetch officially exports rawBody in its types.
- */
-interface RequestConfigWithRawBody extends RequestClientRequestConfig {
-  rawBody?: Buffer;
-}
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -409,7 +394,7 @@ export interface UploadDataLookup {
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   logger: IntegrationLogger;
-  apiClient: RequestClient;
+  apiClient: ApiClient;
   jobId: string;
   type: K;
   batch: T[K][];
@@ -545,7 +530,7 @@ export async function uploadDataChunk<
               'Content-Encoding': 'gzip',
             },
             rawBody: compressedData,
-          } as RequestConfigWithRawBody);
+          });
         } else {
           await apiClient.post(url, data, {
             headers: baseHeaders,
@@ -639,7 +624,8 @@ export async function abortSynchronization({
 }
 
 function cleanRequestError(err: unknown) {
-  if (isRequestClientError(err) && err.config?.headers?.Authorization) {
-    delete err.config.headers.Authorization;
+  const error = err as any;
+  if (error?.config?.headers?.Authorization) {
+    delete error.config.headers.Authorization;
   }
 }

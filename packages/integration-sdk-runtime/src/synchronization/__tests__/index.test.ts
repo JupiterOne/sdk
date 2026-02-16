@@ -34,7 +34,6 @@ import {
   createMockResponse,
 } from '../../../test/util/request';
 
-import { RequestClientError } from '@jupiterone/platform-sdk-fetch';
 import * as shrinkBatchRawData from '../shrinkBatchRawData';
 
 afterEach(() => {
@@ -581,14 +580,14 @@ describe('uploadDataChunk', () => {
     };
 
     jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
-      throw new RequestClientError('thing went bad', {
-        config: {
-          headers: {
-            Authorization: 'some fake token',
-            'content-type': 'application/json',
-          },
+      const error: any = new Error('thing went bad');
+      error.config = {
+        headers: {
+          Authorization: 'some fake token',
+          'content-type': 'application/json',
         },
-      });
+      };
+      throw error;
     });
 
     await expect(

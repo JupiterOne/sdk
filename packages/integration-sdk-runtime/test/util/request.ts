@@ -1,5 +1,5 @@
 import { RequestHeaders } from '../../src';
-import type { RequestClientResponse } from '@jupiterone/platform-sdk-fetch';
+import type { ApiClientResponse } from '../../src/api/apiClient';
 
 export function getExpectedRequestHeaders() {
   return {
@@ -10,15 +10,12 @@ export function getExpectedRequestHeaders() {
 }
 
 /**
- * Creates a mock RequestClientResponse for use in tests
+ * Creates a mock ApiClientResponse for use in tests
  */
-export function createMockResponse<T>(data: T): RequestClientResponse<T> {
+export function createMockResponse<T>(data: T): ApiClientResponse<T> {
   return {
     data,
     status: 200,
-    statusText: 'OK',
-    // @ts-expect-error - Headers type differs between node-fetch and DOM
     headers: {},
-    config: {},
   };
 }

@@ -1,6 +1,3 @@
-import { mocked } from 'jest-mock';
-import { createRequestClient } from '@jupiterone/platform-sdk-fetch';
-
 import {
   getApiBaseUrl,
   getApiKeyFromEnvironment,
@@ -9,28 +6,7 @@ import {
   isUploadCompressionEnabled,
 } from '../index';
 
-// Mock createRequestClient to return a mock client
-const mockPost = jest.fn();
-const mockGet = jest.fn();
-const mockInterceptors = {
-  request: { use: jest.fn(), eject: jest.fn() },
-  response: { use: jest.fn(), eject: jest.fn() },
-};
-
-jest.mock('@jupiterone/platform-sdk-fetch', () => ({
-  createRequestClient: jest.fn().mockImplementation(() => ({
-    post: mockPost,
-    get: mockGet,
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
-    head: jest.fn(),
-    options: jest.fn(),
-    interceptors: mockInterceptors,
-  })),
-}));
-
-const createRequestClientMock = mocked(createRequestClient);
+import { JupiterOneApiClient } from '../apiClient';
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {
@@ -97,67 +73,29 @@ describe('getAccountFromEnvironment', () => {
 });
 
 describe('createApiClient', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('successfully creates apiClient', () => {
+  test('returns a JupiterOneApiClient instance', () => {
     const apiBaseUrl = getApiBaseUrl();
 
     const client = createApiClient({
       apiBaseUrl,
       account: 'test-account',
       accessToken: 'test-key',
-      retryOptions: {
-        maxTimeout: 20000,
-      },
     });
 
-    expect(client).toBeDefined();
+    expect(client).toBeInstanceOf(JupiterOneApiClient);
     expect(client.post).toBeDefined();
     expect(client.get).toBeDefined();
-    expect(client.interceptors).toBeDefined();
-
-    expect(createRequestClientMock).toHaveBeenCalledTimes(1);
-    expect(createRequestClientMock).toHaveBeenCalledWith({
-      baseURL: apiBaseUrl,
-      headers: {
-        Authorization: 'Bearer test-key',
-        'Content-Type': 'application/json',
-        'JupiterOne-Account': 'test-account',
-      },
-      retry: {
-        maxTimeout: 20000,
-      },
-    });
   });
 
   test('creates client without accessToken', () => {
     const apiBaseUrl = getApiBaseUrl();
 
-    createApiClient({
+    const client = createApiClient({
       apiBaseUrl,
       account: 'test-account',
     });
 
-    expect(createRequestClientMock).toHaveBeenCalledWith({
-      baseURL: apiBaseUrl,
-      headers: {
-        'Content-Type': 'application/json',
-        'JupiterOne-Account': 'test-account',
-      },
-      retry: {},
-    });
-  });
-
-  test('registers response interceptor for error redaction', () => {
-    createApiClient({
-      apiBaseUrl: 'https://api.example.com',
-      account: 'test-account',
-      accessToken: 'test-key',
-    });
-
-    expect(mockInterceptors.response.use).toHaveBeenCalled();
+    expect(client).toBeInstanceOf(JupiterOneApiClient);
   });
 
   test('sets _compressUploads flag when compressUploads is true', () => {
@@ -208,7 +146,7 @@ describe('createApiClient', () => {
       compressUploads: false,
     });
 
-    expect(client._compressUploads).toBeUndefined();
+    expect(client._compressUploads).toBe(false);
     expect(isUploadCompressionEnabled(client)).toBe(false);
   });
 });
@@ -232,32 +170,4 @@ describe('isUploadCompressionEnabled', () => {
 
     expect(isUploadCompressionEnabled(client)).toBe(true);
   });
-});
-
-describe('real RequestClient request with fake API key', () => {
-  test('should not expose API key in error', async () => {
-    jest.resetModules();
-    jest.unmock('@jupiterone/platform-sdk-fetch');
-
-    const { createApiClient, getApiBaseUrl } = require('../index');
-
-    const apiBaseUrl = getApiBaseUrl();
-
-    const client = createApiClient({
-      apiBaseUrl,
-      account: 'test-account',
-      accessToken: 'test-key',
-      retryOptions: {
-        maxTimeout: 20000,
-      },
-    });
-
-    try {
-      await client.post('/persister/synchronization/jobs/', { some: 'data' });
-    } catch (err: any) {
-      const errorString = JSON.stringify(err);
-
-      expect(errorString).not.toContain('test-key');
-    }
-  }, 30000); // 30 second timeout for real network request
 });

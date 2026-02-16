@@ -1,5 +1,5 @@
 import { IntegrationEvent } from '@jupiterone/integration-sdk-core';
-import type { RequestClientRequestConfig } from '@jupiterone/platform-sdk-fetch';
+import type { ApiClientRequestConfig } from '../api/apiClient';
 import PromiseQueue from 'p-queue';
 
 import {
@@ -14,7 +14,7 @@ type EventPublishingQueue = {
 
 export const createEventPublishingQueue = (
   { apiClient, logger, job }: SynchronizationJobContext,
-  config?: RequestClientRequestConfig,
+  config?: ApiClientRequestConfig,
 ): EventPublishingQueue => {
   if (!job.integrationJobId) {
     return createNoopEventPublishingQueue();
