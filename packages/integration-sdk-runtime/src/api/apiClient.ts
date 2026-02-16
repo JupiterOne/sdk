@@ -68,7 +68,7 @@ export class JupiterOneApiClient extends BaseAPIClient {
   ): Promise<Response> {
     if (options?.rawBody) {
       if (!this.authorizationHeaders) {
-        this.authorizationHeaders = await this.getAuthorizationHeaders();
+        this.authorizationHeaders = this.getAuthorizationHeaders();
       }
 
       let url: string;
