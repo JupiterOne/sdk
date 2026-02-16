@@ -197,6 +197,58 @@ describe('JupiterOneApiClient', () => {
     });
   });
 
+  describe('post with rawBody (gzip)', () => {
+    it('passes rawBody through to request override', async () => {
+      const client = createClient();
+      const gzipBuffer = Buffer.from('fake-gzip-data');
+      const mockResponse = createMockResponse({ ok: true });
+
+      // Spy on request() to see what options it receives and short-circuit
+      const requestSpy = jest
+        .spyOn(client as any, 'request')
+        .mockResolvedValue(mockResponse);
+
+      await client.post('/upload', undefined, {
+        rawBody: gzipBuffer,
+        headers: { 'Content-Encoding': 'gzip' },
+      });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        '/upload',
+        expect.objectContaining({
+          method: 'POST',
+          rawBody: gzipBuffer,
+          headers: expect.objectContaining({
+            'Content-Encoding': 'gzip',
+          }),
+        }),
+      );
+    });
+
+    it('does not include rawBody when not provided', async () => {
+      const client = createClient();
+      const mockResponse = createMockResponse({ ok: true });
+
+      const requestSpy = jest
+        .spyOn(client as any, 'request')
+        .mockResolvedValue(mockResponse);
+
+      await client.post('/normal', { key: 'value' });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        '/normal',
+        expect.objectContaining({
+          method: 'POST',
+          body: { key: 'value' },
+        }),
+      );
+
+      // rawBody should be undefined (not present) when not passed
+      const callArgs = requestSpy.mock.calls[0][1];
+      expect(callArgs.rawBody).toBeUndefined();
+    });
+  });
+
   describe('executeRequest error handling', () => {
     it('redacts auth headers on error and re-throws', async () => {
       const client = createClient();
