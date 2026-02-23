@@ -571,17 +571,17 @@ describe('uploadDataChunk', () => {
     const batch = [];
 
     const mockLogger = {
-      trace: jest.fn(),
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      fatal: jest.fn(),
+      publishErrorEvent: jest.fn(),
     };
 
     jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
       const error: any = new Error('thing went bad');
       error.config = {
+        data: 'Stuff',
         headers: {
           Authorization: 'some fake token',
           'content-type': 'application/json',
@@ -592,7 +592,6 @@ describe('uploadDataChunk', () => {
 
     await expect(
       uploadDataChunk({
-        // @ts-expect-error - Using a partial mock logger in test
         logger: mockLogger,
         apiClient: context.apiClient,
         jobId: job.id,
@@ -603,6 +602,7 @@ describe('uploadDataChunk', () => {
     const firstInfoCall = mockLogger.info.mock.calls[0];
     const args = firstInfoCall[0];
     const requestError = args['err'];
+    expect(requestError.config.data).toBeUndefined();
     expect(requestError.config.headers.Authorization).toBeUndefined();
     expect(requestError.config.headers['content-type']).toBe(
       'application/json',
@@ -617,7 +617,6 @@ function createTestContext(
     apiBaseUrl: getApiBaseUrl(),
     account: 'test-account',
     accessToken: 'fake-token',
-    compressUploads: false, // Disable compression for these tests
   });
 
   const logger = createIntegrationLogger({

@@ -1,4 +1,7 @@
-import { IntegrationError } from '@jupiterone/integration-sdk-core';
+import {
+  IntegrationError,
+  IntegrationLogger,
+} from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 
@@ -13,6 +16,8 @@ import {
   ApiClientRequestConfig,
 } from './apiClient';
 
+import { createIntegrationLogger } from '../logger';
+
 export type { ApiClientResponse, ApiClientRequestConfig };
 
 /**
@@ -25,6 +30,7 @@ export interface CreateApiClientInput {
   account: string;
   accessToken?: string;
   compressUploads?: boolean;
+  logger?: IntegrationLogger;
 }
 
 /**
@@ -35,20 +41,6 @@ interface UnsupportedCreateApiClientInput {
   alphaOptions?: unknown;
   proxyUrl?: unknown;
 }
-
-/**
- * Minimal noop logger for use when no logger is provided.
- */
-const noopLogger = {
-  trace: () => {},
-  debug: () => {},
-  info: () => {},
-  warn: () => {},
-  error: () => {},
-  fatal: () => {},
-  child: () => noopLogger,
-  isHandledError: () => false,
-} as any;
 
 /**
  * Configures an api client for hitting JupiterOne APIs.
@@ -64,6 +56,7 @@ export function createApiClient({
   account,
   accessToken,
   compressUploads,
+  logger,
   alphaOptions,
   proxyUrl,
 }: CreateApiClientInput & UnsupportedCreateApiClientInput): ApiClient {
@@ -82,18 +75,11 @@ export function createApiClient({
 
   return new JupiterOneApiClient({
     baseUrl: apiBaseUrl,
-    logger: noopLogger,
+    logger: logger ?? createIntegrationLogger({ name: 'api-client' }),
     account,
     accessToken,
     compressUploads,
   });
-}
-
-/**
- * Helper to check if an API client has upload compression enabled
- */
-export function isUploadCompressionEnabled(client: ApiClient): boolean {
-  return client._compressUploads === true;
 }
 
 interface GetApiBaseUrlInput {

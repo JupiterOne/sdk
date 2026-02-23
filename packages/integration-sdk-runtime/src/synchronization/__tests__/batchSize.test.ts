@@ -43,7 +43,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
-      compressUploads: false, // Disable compression to test batching logic
     });
 
     const postSpy = jest.spyOn(apiClient, 'post') as any;
@@ -80,7 +79,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
-      compressUploads: false, // Disable compression to test batching logic
     });
 
     const postSpy = jest.spyOn(apiClient, 'post') as any;
@@ -114,7 +112,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
-      compressUploads: false, // Disable compression to test batching logic
     });
 
     for (let i = 1; i < 100; i++) {
@@ -156,7 +153,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
-      compressUploads: false, // Disable compression to test batching logic
     });
     const bigObjectData = createFlushedGraphObjectData(50000, 50000);
     const postSpy = jest.spyOn(apiClient, 'post');
@@ -217,7 +213,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: uuid(),
-      compressUploads: false, // Disable compression to test batching logic
     });
     const bigObjectData = createFlushedGraphObjectData(10, 0);
     for (const entity of bigObjectData.entities) {

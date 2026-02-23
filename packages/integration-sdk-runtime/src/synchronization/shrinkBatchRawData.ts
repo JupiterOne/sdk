@@ -4,8 +4,7 @@ import {
   IntegrationError,
   IntegrationErrorEventName,
 } from '@jupiterone/integration-sdk-core';
-import { UploadDataLookup } from '.';
-import { IntegrationLogger } from '../logger';
+import { ILogger, UploadDataLookup } from '.';
 
 // TODO [INT-3707]: uncomment and use when implementing method
 // to shrink single entity's rawData until that entity is < 1MB
@@ -20,7 +19,7 @@ import { IntegrationLogger } from '../logger';
  */
 export function shrinkBatchRawData(
   batchData: UploadDataLookup[keyof UploadDataLookup][],
-  logger: IntegrationLogger,
+  logger: ILogger,
   maxBatchSize: number,
 ): void {
   logger.info(`Attempting to shrink rawData`);

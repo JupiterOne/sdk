@@ -3,7 +3,6 @@ import {
   getApiKeyFromEnvironment,
   createApiClient,
   getAccountFromEnvironment,
-  isUploadCompressionEnabled,
 } from '../index';
 
 import { JupiterOneApiClient } from '../apiClient';
@@ -107,7 +106,6 @@ describe('createApiClient', () => {
     });
 
     expect(client._compressUploads).toBe(true);
-    expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 
   test('warns when alphaOptions is provided', () => {
@@ -147,27 +145,5 @@ describe('createApiClient', () => {
     });
 
     expect(client._compressUploads).toBe(false);
-    expect(isUploadCompressionEnabled(client)).toBe(false);
-  });
-});
-
-describe('isUploadCompressionEnabled', () => {
-  it('should return true when _compressUploads is true', () => {
-    const client = createApiClient({
-      apiBaseUrl: 'https://api.example.com',
-      account: 'test-account',
-      compressUploads: true,
-    });
-
-    expect(isUploadCompressionEnabled(client)).toBe(true);
-  });
-
-  it('should return true when _compressUploads is undefined (default enabled)', () => {
-    const client = createApiClient({
-      apiBaseUrl: 'https://api.example.com',
-      account: 'test-account',
-    });
-
-    expect(isUploadCompressionEnabled(client)).toBe(true);
   });
 });

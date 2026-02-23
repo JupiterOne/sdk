@@ -226,12 +226,10 @@ export class IntegrationLogger
   }
 
   debug(...params: any[]) {
-    // eslint-disable-next-line prefer-spread -- spread causes TS2556 with bunyan's overloaded signatures
-    return this._logger.debug.apply(this._logger, params);
+    return this._logger.debug(...params);
   }
   info(...params: any[]) {
-    // eslint-disable-next-line prefer-spread -- spread causes TS2556 with bunyan's overloaded signatures
-    return this._logger.info.apply(this._logger, params);
+    return this._logger.info(...params);
   }
 
   warn(...params: any[]) {
@@ -247,13 +245,11 @@ export class IntegrationLogger
       },
     );
 
-    // eslint-disable-next-line prefer-spread -- spread causes TS2556 with bunyan's overloaded signatures
-    return this._logger.warn.apply(this._logger, params);
+    return this._logger.warn(...params);
   }
 
   fatal(...params: any[]) {
-    // eslint-disable-next-line prefer-spread -- spread causes TS2556 with bunyan's overloaded signatures
-    return this._logger.fatal.apply(this._logger, params);
+    return this._logger.fatal(...params);
   }
 
   trace(...params: any[]) {
@@ -291,8 +287,7 @@ export class IntegrationLogger
       },
     );
 
-    // eslint-disable-next-line prefer-spread -- spread causes TS2556 with bunyan's overloaded signatures
-    this._logger.error.apply(this._logger, params);
+    this._logger.error(...params);
   }
 
   child(options: object = {}, simple?: boolean) {

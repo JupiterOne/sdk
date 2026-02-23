@@ -1,10 +1,14 @@
 import fetch from 'node-fetch';
 import type { Response } from 'node-fetch';
+import { promisify } from 'util';
+import { gzip } from 'zlib';
 import {
   BaseAPIClient,
   RequestOptions,
 } from '@jupiterone/integration-sdk-http-client';
 import type { IntegrationLogger } from '@jupiterone/integration-sdk-core';
+
+const gzipData = promisify(gzip);
 
 export interface ApiClientResponse<T> {
   data: T;
@@ -97,6 +101,19 @@ export class JupiterOneApiClient extends BaseAPIClient {
     data?: Record<string, unknown> | string,
     config?: ApiClientRequestConfig,
   ): Promise<ApiClientResponse<T>> {
+    if (this._compressUploads && data && !config?.rawBody) {
+      const serialized = typeof data === 'string' ? data : JSON.stringify(data);
+      const compressed = await gzipData(Buffer.from(serialized));
+      return this.executeRequest<T>(url, {
+        method: 'POST',
+        headers: {
+          ...config?.headers,
+          'Content-Encoding': 'gzip',
+        },
+        rawBody: compressed,
+      });
+    }
+
     return this.executeRequest<T>(url, {
       method: 'POST',
       body: data,

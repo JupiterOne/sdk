@@ -21,9 +21,8 @@ import { ExecuteIntegrationResult } from '../execution';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../fileSystem';
 import { synchronizationApiError } from './error';
-import { ApiClient, isUploadCompressionEnabled } from '../api';
+import { ApiClient } from '../api';
 import { timeOperation } from '../metrics';
-import { gzipData } from './util';
 import { FlushedGraphObjectData } from '../storage/types';
 import { AttemptContext, retry } from '@lifeomic/attempt';
 import { randomUUID as uuid } from 'crypto';
@@ -392,8 +391,20 @@ export interface UploadDataLookup {
   relationships: Relationship;
 }
 
+/**
+ * Minimal logger interface for the upload path.
+ * Accepts both IntegrationLogger (runtime) and simple mocks (testing).
+ */
+export interface ILogger {
+  debug(...args: any[]): boolean | void;
+  info(...args: any[]): boolean | void;
+  warn(...args: any[]): boolean | void;
+  error(...args: any[]): boolean | void;
+  publishErrorEvent(event: { name: string; description: string }): void;
+}
+
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
-  logger: IntegrationLogger;
+  logger: ILogger;
   apiClient: ApiClient;
   jobId: string;
   type: K;
@@ -439,7 +450,7 @@ export function getSystemErrorResponseData(
 type HandleUploadDataChunkErrorParams = {
   err: any;
   attemptContext: AttemptContext;
-  logger: IntegrationLogger;
+  logger: ILogger;
   batch: any;
   uploadCorrelationId: string;
 };
@@ -495,7 +506,6 @@ export async function uploadDataChunk<
   K extends keyof T,
 >({ logger, apiClient, jobId, type, batch }: UploadDataChunkParams<T, K>) {
   const uploadCorrelationId = uuid();
-  const shouldCompress = isUploadCompressionEnabled(apiClient);
 
   await retry(
     async (ctx) => {
@@ -507,35 +517,17 @@ export async function uploadDataChunk<
           uploadType: type,
           attemptNum: ctx.attemptNum,
           batchSize: batch.length,
-          compressed: shouldCompress,
         },
         'Uploading data...',
       );
       try {
         const url = `/persister/synchronization/jobs/${jobId}/${type as string}`;
         const data = { [type]: batch };
-        const baseHeaders = {
-          // NOTE: Other headers that were applied when the client was created,
-          // are still maintained
-          [RequestHeaders.CorrelationId]: uploadCorrelationId,
-        };
-
-        if (shouldCompress) {
-          // Compress data and send via rawBody
-          // rawBody allows sending pre-serialized/compressed data without JSON.stringify
-          const compressedData = await gzipData(data);
-          await apiClient.post(url, undefined, {
-            headers: {
-              ...baseHeaders,
-              'Content-Encoding': 'gzip',
-            },
-            rawBody: compressedData,
-          });
-        } else {
-          await apiClient.post(url, data, {
-            headers: baseHeaders,
-          });
-        }
+        await apiClient.post(url, data, {
+          headers: {
+            [RequestHeaders.CorrelationId]: uploadCorrelationId,
+          },
+        });
       } catch (err) {
         cleanRequestError(err);
         throw err;
@@ -625,7 +617,10 @@ export async function abortSynchronization({
 
 function cleanRequestError(err: unknown) {
   const error = err as any;
-  if (error?.config?.headers?.Authorization) {
-    delete error.config.headers.Authorization;
+  if (error?.config) {
+    delete error.config.data;
+    if (error.config.headers?.Authorization) {
+      delete error.config.headers.Authorization;
+    }
   }
 }

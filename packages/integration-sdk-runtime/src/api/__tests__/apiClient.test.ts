@@ -19,6 +19,7 @@ function createClient(overrides?: Partial<any>) {
     logger: mockLogger,
     account: 'test-account',
     accessToken: 'test-token',
+    compressUploads: false,
     ...overrides,
   });
 }
@@ -49,7 +50,12 @@ describe('JupiterOneApiClient', () => {
 
   describe('constructor', () => {
     it('sets _compressUploads to true by default', () => {
-      const client = createClient();
+      const client = new JupiterOneApiClient({
+        baseUrl: 'https://api.example.com',
+        logger: mockLogger,
+        account: 'test-account',
+        accessToken: 'test-token',
+      });
       expect(client._compressUploads).toBe(true);
     });
 
@@ -194,6 +200,30 @@ describe('JupiterOneApiClient', () => {
       const err: any = {};
 
       expect(() => (client as any).redactAuthHeaders(err)).not.toThrow();
+    });
+  });
+
+  describe('post with compression enabled', () => {
+    it('compresses data and sends via rawBody when compressUploads is true', async () => {
+      const client = createClient({ compressUploads: true });
+      const mockResponse = createMockResponse({ ok: true });
+
+      const requestSpy = jest
+        .spyOn(client as any, 'request')
+        .mockResolvedValue(mockResponse);
+
+      await client.post('/upload', { key: 'value' });
+
+      expect(requestSpy).toHaveBeenCalledWith(
+        '/upload',
+        expect.objectContaining({
+          method: 'POST',
+          rawBody: expect.any(Buffer),
+          headers: expect.objectContaining({
+            'Content-Encoding': 'gzip',
+          }),
+        }),
+      );
     });
   });
 
