@@ -1,5 +1,9 @@
 import { Entity } from './entity';
-import { GraphObjectFilter, GraphObjectIteratee } from './jobState';
+import {
+  GraphObjectFilter,
+  GraphObjectIteratee,
+  GraphObjectIterateeOptions,
+} from './jobState';
 import { Relationship } from './relationship';
 import { GraphObjectIndexMetadata } from '../types/step';
 
@@ -33,11 +37,13 @@ export interface GraphObjectStore {
   iterateEntities<T extends Entity = Entity>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: GraphObjectIterateeOptions,
   ): Promise<void>;
 
   iterateRelationships<T extends Relationship = Relationship>(
     filter: GraphObjectFilter,
     iteratee: GraphObjectIteratee<T>,
+    options?: GraphObjectIterateeOptions,
   ): Promise<void>;
 
   flush(
