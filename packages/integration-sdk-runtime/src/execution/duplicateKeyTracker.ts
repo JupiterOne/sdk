@@ -71,7 +71,7 @@ export async function createDuplicateEntityReport({
   payload,
   indexOfDuplicateKey,
   graphObjectStore,
-}: DuplicateKeyReportParams): Promise<DuplicateEntityReport> {
+}: DuplicateKeyReportParams): Promise<DuplicateEntityReport | {}> {
   const originalEntityFromPayload = getOriginalEntityFromPayload(
     payload,
     duplicateEntity._key,
@@ -83,10 +83,7 @@ export async function createDuplicateEntityReport({
   } else {
     const originalEntityFromGraphObjectStore =
       await graphObjectStore.findEntity(duplicateEntity._key);
-    return compareEntities(
-      originalEntityFromGraphObjectStore!,
-      duplicateEntity,
-    );
+    return compareEntities(originalEntityFromGraphObjectStore, duplicateEntity);
   }
 }
 
@@ -130,8 +127,8 @@ function isDeepStrictEqual(a: any, b: any): boolean {
 
 export type DuplicateEntityReport = {
   _key: string;
-  rawDataMatch: boolean;
-  entityPropertiesMatch: boolean;
+  rawDataMatch?: boolean;
+  entityPropertiesMatch?: boolean;
   rawDataDiff?: string;
   entityPropertiesDiff?: string;
   diffErrors?: { rawData?: string; entityProperties?: string };
@@ -233,7 +230,16 @@ export function diffObjects(
  * @param b
  * @returns
  */
-function compareEntities(a: Entity, b: Entity): DuplicateEntityReport {
+function compareEntities(
+  a: Entity | undefined,
+  b: Entity,
+): DuplicateEntityReport {
+  if (a === undefined) {
+    return {
+      _key: b._key,
+    };
+  }
+
   const aClone = JSON.parse(JSON.stringify(a));
   const bClone = JSON.parse(JSON.stringify(b));
   delete aClone._rawData;

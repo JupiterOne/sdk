@@ -164,7 +164,9 @@ export function createStepJobState({
           indexOfDuplicateKey: index,
           graphObjectStore,
         });
-        onDuplicateEntityKey(duplicateEntityReport);
+        if ('_key' in duplicateEntityReport) {
+          onDuplicateEntityKey(duplicateEntityReport);
+        }
         throw err;
       }
 
