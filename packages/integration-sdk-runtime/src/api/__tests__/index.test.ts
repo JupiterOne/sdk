@@ -122,18 +122,61 @@ describe('createApiClient', () => {
     warnSpy.mockRestore();
   });
 
-  test('warns when proxyUrl is provided', () => {
+  test('warns when retryCondition is provided', () => {
     const warnSpy = jest.spyOn(process, 'emitWarning').mockImplementation();
     createApiClient({
       apiBaseUrl: 'https://api.example.com',
       account: 'test-account',
-      proxyUrl: 'http://proxy:8080',
+      retryOptions: {
+        retryCondition: () => true,
+      },
     });
     expect(warnSpy).toHaveBeenCalledWith(
-      'proxyUrl is no longer supported and will be ignored. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
+      'retryCondition is not supported by the new http-client and will be ignored. Override retryErrorHandler on the client instead.',
       'DeprecationWarning',
     );
     warnSpy.mockRestore();
+  });
+
+  test('passes retryOptions mapped to http-client shape', () => {
+    const client = createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      accessToken: 'test-key',
+      retryOptions: {
+        attempts: 5,
+        factor: 2,
+        maxTimeout: 30000,
+      },
+    });
+
+    expect(client).toBeInstanceOf(JupiterOneApiClient);
+  });
+
+  test('creates client with proxy agent when proxyUrl is provided', () => {
+    const client = createApiClient({
+      apiBaseUrl: 'https://api.example.com',
+      account: 'test-account',
+      accessToken: 'test-key',
+      proxyUrl: 'http://proxy.example.com:8080',
+    });
+
+    expect(client).toBeInstanceOf(JupiterOneApiClient);
+  });
+
+  test('creates client with proxy agent from HTTPS_PROXY env var', () => {
+    process.env.HTTPS_PROXY = 'http://env-proxy:3128';
+    try {
+      const client = createApiClient({
+        apiBaseUrl: 'https://api.example.com',
+        account: 'test-account',
+        accessToken: 'test-key',
+      });
+
+      expect(client).toBeInstanceOf(JupiterOneApiClient);
+    } finally {
+      delete process.env.HTTPS_PROXY;
+    }
   });
 
   test('does not set _compressUploads flag when compressUploads is false', () => {

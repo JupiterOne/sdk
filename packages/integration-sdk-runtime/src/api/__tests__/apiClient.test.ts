@@ -1,19 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Headers } from 'node-fetch';
 import { JupiterOneApiClient } from '../apiClient';
+import { createIntegrationLogger } from '../../logger';
 
-const mockLogger = {
-  trace: jest.fn(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  fatal: jest.fn(),
-  child: jest.fn().mockReturnThis(),
-  isHandledError: jest.fn(),
-} as any;
+const mockLogger = createIntegrationLogger({ name: 'test' });
 
-function createClient(overrides?: Partial<any>) {
+interface ClientOverrides {
+  baseUrl?: string;
+  account?: string;
+  accessToken?: string;
+  compressUploads?: boolean;
+}
+
+function createClient(overrides?: ClientOverrides) {
   return new JupiterOneApiClient({
     baseUrl: 'https://api.example.com',
     logger: mockLogger,
@@ -25,7 +23,7 @@ function createClient(overrides?: Partial<any>) {
 }
 
 function createMockResponse(
-  body: any,
+  body: Record<string, unknown>,
   status = 200,
   headers?: Record<string, string>,
 ) {
@@ -71,6 +69,7 @@ describe('JupiterOneApiClient', () => {
         account: 'my-account',
         accessToken: 'my-token',
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const headers = (client as any).getAuthorizationHeaders();
       expect(headers).toEqual({
         Authorization: 'Bearer my-token',
@@ -84,6 +83,7 @@ describe('JupiterOneApiClient', () => {
         account: 'my-account',
         accessToken: undefined,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const headers = (client as any).getAuthorizationHeaders();
       expect(headers).toEqual({
         'JupiterOne-Account': 'my-account',
@@ -98,6 +98,7 @@ describe('JupiterOneApiClient', () => {
       const responseBody = { id: '123', type: 'entity' };
       const client = createClient();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest
         .spyOn(client as any, 'retryableRequest')
         .mockResolvedValue(
@@ -120,6 +121,7 @@ describe('JupiterOneApiClient', () => {
 
     it('sends POST method with body', async () => {
       const client = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const spy = jest
         .spyOn(client as any, 'retryableRequest')
         .mockResolvedValue(createMockResponse({ ok: true }));
@@ -141,6 +143,7 @@ describe('JupiterOneApiClient', () => {
       const responseBody = { items: [1, 2, 3] };
       const client = createClient();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(client as any, 'retryableRequest').mockResolvedValue(
         createMockResponse(responseBody, 200, {
           'content-type': 'application/json',
@@ -160,6 +163,7 @@ describe('JupiterOneApiClient', () => {
 
     it('sends GET method without body', async () => {
       const client = createClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const spy = jest
         .spyOn(client as any, 'retryableRequest')
         .mockResolvedValue(createMockResponse({ ok: true }));
@@ -178,7 +182,7 @@ describe('JupiterOneApiClient', () => {
   describe('redactAuthHeaders', () => {
     it('redacts headers from error config and response config', () => {
       const client = createClient();
-      const err: any = {
+      const err = {
         config: {
           headers: { Authorization: 'Bearer secret-token' },
         },
@@ -189,6 +193,7 @@ describe('JupiterOneApiClient', () => {
         },
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (client as any).redactAuthHeaders(err);
 
       expect(err.config.headers).toBe('[REDACTED]');
@@ -197,8 +202,9 @@ describe('JupiterOneApiClient', () => {
 
     it('handles missing config/response gracefully', () => {
       const client = createClient();
-      const err: any = {};
+      const err = {};
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => (client as any).redactAuthHeaders(err)).not.toThrow();
     });
   });
@@ -208,6 +214,7 @@ describe('JupiterOneApiClient', () => {
       const client = createClient({ compressUploads: true });
       const mockResponse = createMockResponse({ ok: true });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const requestSpy = jest
         .spyOn(client as any, 'request')
         .mockResolvedValue(mockResponse);
@@ -233,7 +240,7 @@ describe('JupiterOneApiClient', () => {
       const gzipBuffer = Buffer.from('fake-gzip-data');
       const mockResponse = createMockResponse({ ok: true });
 
-      // Spy on request() to see what options it receives and short-circuit
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const requestSpy = jest
         .spyOn(client as any, 'request')
         .mockResolvedValue(mockResponse);
@@ -259,6 +266,7 @@ describe('JupiterOneApiClient', () => {
       const client = createClient();
       const mockResponse = createMockResponse({ ok: true });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const requestSpy = jest
         .spyOn(client as any, 'request')
         .mockResolvedValue(mockResponse);
@@ -273,7 +281,6 @@ describe('JupiterOneApiClient', () => {
         }),
       );
 
-      // rawBody should be undefined (not present) when not passed
       const callArgs = requestSpy.mock.calls[0][1] as Record<string, unknown>;
       expect(callArgs.rawBody).toBeUndefined();
     });
@@ -282,12 +289,16 @@ describe('JupiterOneApiClient', () => {
   describe('executeRequest error handling', () => {
     it('redacts auth headers on error and re-throws', async () => {
       const client = createClient();
-      const error: any = new Error('request failed');
+      const error = new Error('request failed') as Error & {
+        config: { headers: string | Record<string, string> };
+        response: { config: { headers: string | Record<string, string> } };
+      };
       error.config = { headers: { Authorization: 'Bearer secret' } };
       error.response = {
         config: { headers: { Authorization: 'Bearer secret' } },
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(client as any, 'retryableRequest').mockRejectedValue(error);
 
       await expect(client.get('/fail')).rejects.toThrow('request failed');

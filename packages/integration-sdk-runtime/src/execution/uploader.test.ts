@@ -206,7 +206,6 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
     const apiClient = createApiClient({
       apiBaseUrl: getApiBaseUrl(),
       account: accountId,
-      compressUploads: false, // Disable compression to test upload behavior
     });
 
     const postSpy = jest

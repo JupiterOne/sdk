@@ -77,8 +77,7 @@ describe('initiateSynchronization', () => {
       .mockResolvedValue(createMockResponse({ job: mockSyncJob }));
     const loggerSpy = jest
       .spyOn(context.logger, 'child')
-      // @ts-expect-error - Stubbing child() to return void in test
-      .mockImplementation(noop);
+      .mockReturnValue(context.logger);
 
     const synchronizationContext = await initiateSynchronization(context);
 

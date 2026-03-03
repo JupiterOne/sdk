@@ -186,9 +186,21 @@ interface IntegrationLoggerInput {
   onFailure?: OnFailureFunction;
 }
 
+/**
+ * Minimal logger interface for the upload path.
+ * Accepts both IntegrationLogger (runtime) and simple mocks (testing).
+ */
+export interface ILogger {
+  debug(...args: any[]): boolean | void;
+  info(...args: any[]): boolean | void;
+  warn(...args: any[]): boolean | void;
+  error(...args: any[]): boolean | void;
+  publishErrorEvent(event: { name: string; description: string }): void;
+}
+
 export class IntegrationLogger
   extends EventEmitter
-  implements IntegrationLoggerType
+  implements IntegrationLoggerType, ILogger
 {
   private _logger: Logger;
   private _errorSet: Set<Error>;

@@ -4,7 +4,8 @@ import {
   IntegrationError,
   IntegrationErrorEventName,
 } from '@jupiterone/integration-sdk-core';
-import { ILogger, UploadDataLookup } from '.';
+import { ILogger } from '../logger';
+import { UploadDataLookup } from '.';
 
 // TODO [INT-3707]: uncomment and use when implementing method
 // to shrink single entity's rawData until that entity is < 1MB

@@ -4,6 +4,7 @@ import {
 } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 import {
   IntegrationAccountRequiredError,
@@ -25,11 +26,28 @@ export type { ApiClientResponse, ApiClientRequestConfig };
  */
 export type ApiClient = JupiterOneApiClient;
 
+/**
+ * Retry options matching the original @lifeomic/alpha shape for backwards
+ * compatibility. Mapped to the http-client's RetryOptions internally.
+ */
+export interface RetryOptions {
+  attempts?: number;
+  factor?: number;
+  maxTimeout?: number;
+  /**
+   * @deprecated retryCondition is not supported by the new http-client.
+   * Custom retry logic should be implemented via retryErrorHandler override.
+   */
+  retryCondition?: (err: Error) => boolean;
+}
+
 export interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
+  retryOptions?: RetryOptions;
   compressUploads?: boolean;
+  proxyUrl?: string;
   logger?: IntegrationLogger;
 }
 
@@ -39,7 +57,6 @@ export interface CreateApiClientInput {
  */
 interface UnsupportedCreateApiClientInput {
   alphaOptions?: unknown;
-  proxyUrl?: unknown;
 }
 
 /**
@@ -55,10 +72,11 @@ export function createApiClient({
   apiBaseUrl,
   account,
   accessToken,
+  retryOptions,
   compressUploads,
+  proxyUrl,
   logger,
   alphaOptions,
-  proxyUrl,
 }: CreateApiClientInput & UnsupportedCreateApiClientInput): ApiClient {
   if (alphaOptions !== undefined) {
     process.emitWarning(
@@ -66,12 +84,32 @@ export function createApiClient({
       'DeprecationWarning',
     );
   }
-  if (proxyUrl !== undefined) {
+  if (retryOptions?.retryCondition !== undefined) {
     process.emitWarning(
-      'proxyUrl is no longer supported and will be ignored. Use environment-level proxy configuration (e.g., HTTPS_PROXY) instead.',
+      'retryCondition is not supported by the new http-client and will be ignored. Override retryErrorHandler on the client instead.',
       'DeprecationWarning',
     );
   }
+
+  // Map old RetryOptions shape to http-client's Partial<RetryOptions>
+  const mappedRetryOptions = retryOptions
+    ? {
+        ...(retryOptions.attempts !== undefined && {
+          maxAttempts: retryOptions.attempts,
+        }),
+        ...(retryOptions.factor !== undefined && {
+          factor: retryOptions.factor,
+        }),
+        ...(retryOptions.maxTimeout !== undefined && {
+          timeout: retryOptions.maxTimeout,
+        }),
+      }
+    : undefined;
+
+  const proxyUrlString = proxyUrl || getProxyFromEnvironment();
+  const agent = proxyUrlString
+    ? new HttpsProxyAgent(proxyUrlString)
+    : undefined;
 
   return new JupiterOneApiClient({
     baseUrl: apiBaseUrl,
@@ -79,7 +117,14 @@ export function createApiClient({
     account,
     accessToken,
     compressUploads,
+    retryOptions: mappedRetryOptions,
+    agent,
   });
+}
+
+function getProxyFromEnvironment(): string | undefined {
+  dotenvExpand(dotenv.config());
+  return process.env.HTTPS_PROXY || process.env.https_proxy;
 }
 
 interface GetApiBaseUrlInput {

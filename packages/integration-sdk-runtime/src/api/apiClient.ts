@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import type { Response } from 'node-fetch';
+import type { Agent } from 'https';
 import { promisify } from 'util';
 import { gzip } from 'zlib';
 import {
@@ -31,6 +32,13 @@ interface JupiterOneApiClientConfig {
   account: string;
   accessToken?: string;
   compressUploads?: boolean;
+  retryOptions?: Partial<{
+    maxAttempts: number;
+    delay: number;
+    factor: number;
+    timeout: number;
+  }>;
+  agent?: Agent;
 }
 
 export class JupiterOneApiClient extends BaseAPIClient {
@@ -38,16 +46,19 @@ export class JupiterOneApiClient extends BaseAPIClient {
 
   private account: string;
   private accessToken?: string;
+  private _proxyAgent?: Agent;
 
   constructor(config: JupiterOneApiClientConfig) {
     super({
       baseUrl: config.baseUrl,
       logger: config.logger,
       integrationConfig: {},
+      retryOptions: config.retryOptions,
     });
     this.account = config.account;
     this.accessToken = config.accessToken;
     this._compressUploads = config.compressUploads !== false;
+    this._proxyAgent = config.agent;
   }
 
   protected getAuthorizationHeaders(): Record<string, string> {
@@ -62,9 +73,10 @@ export class JupiterOneApiClient extends BaseAPIClient {
   }
 
   /**
-   * Override request() to support rawBody (Buffer) for gzip-compressed uploads.
-   * When rawBody is present, call node-fetch directly (BaseAPIClient's body
-   * serialization doesn't support Buffer). Otherwise delegate to super.request().
+   * Override request() to support rawBody (Buffer) for gzip-compressed uploads
+   * and proxy agent injection. When rawBody is present, call node-fetch directly
+   * (BaseAPIClient's body serialization doesn't support Buffer).
+   * Otherwise delegate to super.request().
    */
   protected async request(
     endpoint: string,
@@ -89,8 +101,17 @@ export class JupiterOneApiClient extends BaseAPIClient {
           ...options.headers,
         },
         body: options.rawBody,
+        agent: this._proxyAgent,
       });
       return response;
+    }
+
+    // Inject proxy agent into request options for super.request()
+    if (this._proxyAgent) {
+      return super.request(endpoint, {
+        ...(options ?? {}),
+        agent: this._proxyAgent,
+      });
     }
 
     return super.request(endpoint, options);

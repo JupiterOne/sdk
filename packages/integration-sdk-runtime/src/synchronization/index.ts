@@ -15,7 +15,7 @@ interface SynchronizationJobResponse {
   job: SynchronizationJob;
 }
 
-import { IntegrationLogger } from '../logger';
+import { IntegrationLogger, ILogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
 
@@ -389,18 +389,6 @@ export async function uploadCollectedData(context: SynchronizationJobContext) {
 export interface UploadDataLookup {
   entities: Entity;
   relationships: Relationship;
-}
-
-/**
- * Minimal logger interface for the upload path.
- * Accepts both IntegrationLogger (runtime) and simple mocks (testing).
- */
-export interface ILogger {
-  debug(...args: any[]): boolean | void;
-  info(...args: any[]): boolean | void;
-  warn(...args: any[]): boolean | void;
-  error(...args: any[]): boolean | void;
-  publishErrorEvent(event: { name: string; description: string }): void;
 }
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
