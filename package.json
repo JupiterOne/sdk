@@ -49,13 +49,17 @@
     "lint-staged": "^10.2.6",
     "prettier": "^3.2.5",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.2",
+    "minimatch": "10.2.4"
   },
   "optionalDependencies": {
     "@nx/nx-darwin-arm64": "22.5.3",
     "@nx/nx-darwin-x64": "22.5.3",
     "@nx/nx-linux-x64-gnu": "22.5.3",
     "@nx/nx-win32-x64-msvc": "22.5.3"
+  },
+  "overrides": {
+    "minimatch": "$minimatch"
   },
   "resolutions": {
     "@types/node": "^18"
