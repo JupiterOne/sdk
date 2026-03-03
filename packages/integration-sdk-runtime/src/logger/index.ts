@@ -55,12 +55,12 @@ interface CreateLoggerInput<
 }
 
 interface CreateIntegrationLoggerInput<
-  TIntegrationConfig extends
-    IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends IntegrationInstanceConfig =
+    IntegrationInstanceConfig,
 > extends CreateLoggerInput<
-    IntegrationExecutionContext<TIntegrationConfig>,
-    IntegrationStepExecutionContext<TIntegrationConfig>
-  > {
+  IntegrationExecutionContext<TIntegrationConfig>,
+  IntegrationStepExecutionContext<TIntegrationConfig>
+> {
   invocationConfig?: IntegrationInvocationConfig<TIntegrationConfig>;
 }
 
@@ -117,8 +117,8 @@ export function createLogger<
  * serializers common to all integrations.
  */
 export function createIntegrationLogger<
-  TIntegrationConfig extends
-    IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends IntegrationInstanceConfig =
+    IntegrationInstanceConfig,
 >({
   name,
   invocationConfig,

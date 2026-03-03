@@ -1046,7 +1046,6 @@ Skipped step "Fetch Issues". Beta feature, please contact support to enable.
 ### Changed
 
 - The following packages have been upgraded:
-
   - `@pollyjs/adapter-node-http`
   - `@pollyjs/core`
   - `@pollyjs/persister-fs`
@@ -1283,7 +1282,6 @@ RETURN account, repo, user
   ```
 
 - Updated jest matchers in the following way:
-
   - added optional `_type` argument to `.toMatchGraphObjectSchema` matcher
   - added optional `_type` and `_class` arguments to
     `.toMatchDirectRelationshipSchema` matcher

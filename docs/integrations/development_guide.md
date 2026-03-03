@@ -36,7 +36,6 @@ in this SDK project.
 You'll need:
 
 - Node.js
-
   - It's recommended to use a Node version manager. Both
     [fnm](https://github.com/Schniz/fnm) and
     [nvm](https://github.com/nvm-sh/nvm) are great choices.

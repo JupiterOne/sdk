@@ -187,8 +187,7 @@ export interface StepRelationshipMetadata extends StepGraphObjectMetadata {
   targetType: string;
 }
 
-export interface StepMappedRelationshipMetadata
-  extends StepGraphObjectMetadata {
+export interface StepMappedRelationshipMetadata extends StepGraphObjectMetadata {
   sourceType: string;
   _class: RelationshipClass;
   targetType: string;

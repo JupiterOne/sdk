@@ -16,8 +16,9 @@ interface BaseIterateCollectionIndexParams<GraphObject> {
   options?: BaseIterateCollectionIndexOptionsParams;
 }
 
-interface IterateCollectionIndexParams<GraphObject>
-  extends BaseIterateCollectionIndexParams<GraphObject> {
+interface IterateCollectionIndexParams<
+  GraphObject,
+> extends BaseIterateCollectionIndexParams<GraphObject> {
   collectionType: 'entities' | 'relationships';
 }
 

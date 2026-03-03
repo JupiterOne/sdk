@@ -3,11 +3,12 @@ import { IntegrationStepExecutionContext } from './context';
 import { IntegrationInstanceConfig } from './instance';
 import { Step } from './step';
 
-export interface StepSpec<TConfig extends IntegrationInstanceConfig>
-  extends Omit<
-    Step<IntegrationStepExecutionContext<TConfig>>,
-    'executionHandler'
-  > {
+export interface StepSpec<
+  TConfig extends IntegrationInstanceConfig,
+> extends Omit<
+  Step<IntegrationStepExecutionContext<TConfig>>,
+  'executionHandler'
+> {
   implemented: boolean;
 }
 

@@ -72,8 +72,8 @@ async function getSortedLocalGraphData(): Promise<
 }
 
 export interface InstanceConfigurationData<
-  TIntegrationConfig extends
-    IntegrationInstanceConfig = IntegrationInstanceConfig,
+  TIntegrationConfig extends IntegrationInstanceConfig =
+    IntegrationInstanceConfig,
 > {
   validateInvocation: IntegrationInvocationValidationFunction<TIntegrationConfig>;
   instance: IntegrationInstance<TIntegrationConfig>;
@@ -90,8 +90,8 @@ describe('executeIntegrationInstance', () => {
   const executionStartedOn = Date.now();
 
   async function executeIntegrationInstanceWithConfig<
-    TIntegrationConfig extends
-      IntegrationInstanceConfig = IntegrationInstanceConfig,
+    TIntegrationConfig extends IntegrationInstanceConfig =
+      IntegrationInstanceConfig,
   >(
     config: InstanceConfigurationData<TIntegrationConfig>,
     options: ExecuteIntegrationOptions = {},
@@ -501,8 +501,7 @@ describe('executeIntegrationInstance', () => {
 
     await executeIntegrationInstanceWithConfig(config);
 
-    interface FlushedGraphObjectDataWithFilePath
-      extends FlushedGraphObjectData {
+    interface FlushedGraphObjectDataWithFilePath extends FlushedGraphObjectData {
       filePath;
     }
 
@@ -625,8 +624,7 @@ describe('executeIntegrationInstance', () => {
 
     await executeIntegrationInstanceWithConfig(config);
 
-    interface FlushedGraphObjectDataWithFilePath
-      extends FlushedGraphObjectData {
+    interface FlushedGraphObjectDataWithFilePath extends FlushedGraphObjectData {
       filePath;
     }
 
