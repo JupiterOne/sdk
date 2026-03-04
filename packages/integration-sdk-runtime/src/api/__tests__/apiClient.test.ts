@@ -19,14 +19,14 @@ class TestableApiClient extends JupiterOneApiClient {
     return this.redactAuthHeaders(err);
   }
 
-  public override async retryableRequest(
+  public override retryableRequest(
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
     return super.retryableRequest(endpoint, options);
   }
 
-  public override async request(
+  public override request(
     endpoint: string,
     options?: RequestOptions & { rawBody?: Buffer },
   ): Promise<Response> {
