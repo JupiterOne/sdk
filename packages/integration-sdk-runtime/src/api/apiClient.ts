@@ -171,12 +171,16 @@ export class JupiterOneApiClient extends BaseAPIClient {
     }
   }
 
-  private redactAuthHeaders(err: any): void {
-    if (err?.config?.headers) {
-      err.config.headers = '[REDACTED]';
+  protected redactAuthHeaders(err: unknown): void {
+    const e = err as Record<string, Record<string, unknown>> | undefined;
+    if (e?.config?.headers) {
+      e.config.headers = '[REDACTED]';
     }
-    if (err?.response?.config?.headers) {
-      err.response.config.headers = '[REDACTED]';
+    const response = e?.response as
+      | Record<string, Record<string, unknown>>
+      | undefined;
+    if (response?.config?.headers) {
+      response.config.headers = '[REDACTED]';
     }
   }
 }
