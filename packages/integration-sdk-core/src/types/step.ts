@@ -252,6 +252,11 @@ export interface StepAuthorization {
    * Product licenses or SKUs required in the target environment.
    */
   licenses?: string[];
+
+  /**
+   * Links to provider documentation relevant to this step's setup or configuration.
+   */
+  documentationLinks?: string[];
 }
 
 export type StepMetadata = StepGraphObjectMetadataProperties & {
