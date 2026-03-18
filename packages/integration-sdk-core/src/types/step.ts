@@ -215,6 +215,35 @@ export interface StepGraphObjectMetadataProperties {
   mappedRelationships?: StepMappedRelationshipMetadata[];
 }
 
+/**
+ * Describes the external authorization requirements that must be satisfied
+ * for an integration step to execute successfully.
+ *
+ * Each property represents a specific type of authorization requirement.
+ * Integrations declare only the properties that apply to their provider.
+ */
+export interface StepAuthorization {
+  /**
+   * IAM permissions granted to the integration principal.
+   */
+  permissions?: string[];
+
+  /**
+   * RBAC role assignments bound to the integration principal.
+   */
+  roles?: string[];
+
+  /**
+   * OAuth scopes granted to the application or service principal.
+   */
+  oauthScopes?: string[];
+
+  /**
+   * APIs or services that must be enabled in the target environment.
+   */
+  apis?: string[];
+}
+
 export type StepMetadata = StepGraphObjectMetadataProperties & {
   /*
    * Identifier used to reference and track steps
@@ -259,6 +288,25 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    *
    */
   ingestionSourceId?: string;
+
+  /**
+   * An optional array of provider API permissions required
+   * for this step to execute successfully. Used to document
+   * and communicate required API token scopes to users.
+   *
+   * @deprecated Use `authorization` instead for structured permission declarations.
+   */
+  permissions?: string[];
+
+  /**
+   * Describes the external authorization requirements that must be satisfied
+   * for this step to execute successfully. Each property represents a
+   * specific type of authorization requirement and is optional, allowing
+   * integrations to declare only what applies to their provider.
+   *
+   * Used to generate documentation and communicate setup requirements to users.
+   */
+  authorization?: StepAuthorization;
 };
 
 export type StepExecutionHandlerWrapperFunction<
