@@ -293,8 +293,6 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
    * An optional array of provider API permissions required
    * for this step to execute successfully. Used to document
    * and communicate required API token scopes to users.
-   *
-   * @deprecated Use `authorization` instead for structured permission declarations.
    */
   permissions?: string[];
 
