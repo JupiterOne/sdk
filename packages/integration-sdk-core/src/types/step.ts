@@ -242,6 +242,16 @@ export interface StepAuthorization {
    * APIs or services that must be enabled in the target environment.
    */
   apis?: string[];
+
+  /**
+   * API endpoints that this step makes requests to.
+   */
+  endpoints?: string[];
+
+  /**
+   * Product licenses or SKUs required in the target environment.
+   */
+  licenses?: string[];
 }
 
 export type StepMetadata = StepGraphObjectMetadataProperties & {
