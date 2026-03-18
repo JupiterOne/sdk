@@ -305,13 +305,6 @@ export type StepMetadata = StepGraphObjectMetadataProperties & {
   ingestionSourceId?: string;
 
   /**
-   * An optional array of provider API permissions required
-   * for this step to execute successfully. Used to document
-   * and communicate required API token scopes to users.
-   */
-  permissions?: string[];
-
-  /**
    * Describes the external authorization requirements that must be satisfied
    * for this step to execute successfully. Each property represents a
    * specific type of authorization requirement and is optional, allowing
