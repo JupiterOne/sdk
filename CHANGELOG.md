@@ -9,6 +9,15 @@ and this project adheres to
 
 # Unreleased
 
+# 17.3.0 - 2026-03-19
+
+- core: add `StepAuthorization` interface to `StepMetadata` with `endpoints`,
+  `licenses`, and `documentationLinks` fields
+- core: remove unused `permissions` field from `StepMetadata`
+- runtime: support `DISABLED_INGESTION_SOURCES` environment variable
+- cli: remove deprecated Cortex files
+- ci: add canary release workflow for SDK monorepo
+
 # 16.2.2 - 2025-03-25
 
 - http-client: use only one Agent instance for all requests
