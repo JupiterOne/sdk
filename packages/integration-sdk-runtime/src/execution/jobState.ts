@@ -164,7 +164,9 @@ export function createStepJobState({
           indexOfDuplicateKey: index,
           graphObjectStore,
         });
-        onDuplicateEntityKey(duplicateEntityReport);
+        if ('_key' in duplicateEntityReport) {
+          onDuplicateEntityKey(duplicateEntityReport);
+        }
         throw err;
       }
 
@@ -274,11 +276,11 @@ export function createStepJobState({
       return duplicateKeyTracker.hasKey(_key);
     },
 
-    iterateEntities: (filter, iteratee) =>
-      graphObjectStore.iterateEntities(filter, iteratee),
+    iterateEntities: (filter, iteratee, options) =>
+      graphObjectStore.iterateEntities(filter, iteratee, options),
 
-    iterateRelationships: (filter, iteratee) =>
-      graphObjectStore.iterateRelationships(filter, iteratee),
+    iterateRelationships: (filter, iteratee, options) =>
+      graphObjectStore.iterateRelationships(filter, iteratee, options),
 
     flush: () =>
       graphObjectStore.flush(
