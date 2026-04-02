@@ -71,7 +71,7 @@ export class JupiterOneApiClient extends BaseAPIClient {
    * Override request() to inject the proxy agent when configured.
    * rawBody support is handled by BaseAPIClient.request().
    */
-  protected async request(
+  protected request(
     endpoint: string,
     options?: RequestOptions,
   ): Promise<Response> {
