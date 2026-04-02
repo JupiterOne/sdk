@@ -1,11 +1,10 @@
-import fetch from 'node-fetch';
-import type { Response } from 'node-fetch';
 import type { Agent } from 'https';
 import { promisify } from 'util';
 import { gzip } from 'zlib';
 import {
   BaseAPIClient,
   RequestOptions,
+  Response,
 } from '@jupiterone/integration-sdk-http-client';
 import type { IntegrationLogger } from '@jupiterone/integration-sdk-core';
 
@@ -19,10 +18,6 @@ export interface ApiClientResponse<T> {
 
 export interface ApiClientRequestConfig {
   headers?: Record<string, string>;
-  rawBody?: Buffer;
-}
-
-interface ExtendedRequestOptions extends RequestOptions {
   rawBody?: Buffer;
 }
 
@@ -73,40 +68,13 @@ export class JupiterOneApiClient extends BaseAPIClient {
   }
 
   /**
-   * Override request() to support rawBody (Buffer) for gzip-compressed uploads
-   * and proxy agent injection. When rawBody is present, call node-fetch directly
-   * (BaseAPIClient's body serialization doesn't support Buffer).
-   * Otherwise delegate to super.request().
+   * Override request() to inject the proxy agent when configured.
+   * rawBody support is handled by BaseAPIClient.request().
    */
   protected async request(
     endpoint: string,
-    options?: ExtendedRequestOptions,
+    options?: RequestOptions,
   ): Promise<Response> {
-    if (options?.rawBody) {
-      if (!this.authorizationHeaders) {
-        this.authorizationHeaders = this.getAuthorizationHeaders();
-      }
-
-      let url: string;
-      try {
-        url = new URL(endpoint).toString();
-      } catch {
-        url = this.withBaseUrl(endpoint);
-      }
-
-      const response = await fetch(url, {
-        method: options.method ?? 'POST',
-        headers: {
-          ...this.authorizationHeaders,
-          ...options.headers,
-        },
-        body: options.rawBody,
-        agent: this._proxyAgent,
-      });
-      return response;
-    }
-
-    // Inject proxy agent into request options for super.request()
     if (this._proxyAgent) {
       return super.request(endpoint, {
         ...(options ?? {}),
@@ -155,7 +123,7 @@ export class JupiterOneApiClient extends BaseAPIClient {
 
   private async executeRequest<T>(
     url: string,
-    options: ExtendedRequestOptions,
+    options: RequestOptions,
   ): Promise<ApiClientResponse<T>> {
     try {
       const response = await this.retryableRequest(url, options);

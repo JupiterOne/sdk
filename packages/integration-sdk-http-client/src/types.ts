@@ -17,6 +17,7 @@ export interface RequestOptions {
   authorize?: boolean;
   bucketTokens?: number;
   agent?: Agent;
+  rawBody?: Buffer;
 }
 
 export interface RetryOptions {

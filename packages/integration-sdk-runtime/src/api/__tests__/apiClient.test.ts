@@ -1,8 +1,11 @@
-import { Headers, Response } from 'node-fetch';
 import { Readable } from 'stream';
 import { JupiterOneApiClient } from '../apiClient';
 import { createIntegrationLogger } from '../../logger';
-import { RequestOptions } from '@jupiterone/integration-sdk-http-client';
+import {
+  Headers,
+  RequestOptions,
+  Response,
+} from '@jupiterone/integration-sdk-http-client';
 
 const mockLogger = createIntegrationLogger({ name: 'test' });
 
@@ -28,7 +31,7 @@ class TestableApiClient extends JupiterOneApiClient {
 
   public override request(
     endpoint: string,
-    options?: RequestOptions & { rawBody?: Buffer },
+    options?: RequestOptions,
   ): Promise<Response> {
     return super.request(endpoint, options);
   }

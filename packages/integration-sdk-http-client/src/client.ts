@@ -232,6 +232,7 @@ export abstract class BaseAPIClient {
       headers,
       authorize = true,
       agent,
+      rawBody,
     } = options ?? {};
     if (authorize && !this.authorizationHeaders) {
       this.authorizationHeaders = await this.getAuthorizationHeaders();
@@ -242,6 +243,21 @@ export abstract class BaseAPIClient {
     } catch (e) {
       // If the path is not a valid URL, assume it's a path and prepend the base URL
       url = this.withBaseUrl(endpoint);
+    }
+
+    // When rawBody is provided (e.g. gzip-compressed Buffer), skip body
+    // serialization and pass it directly to fetch.
+    if (rawBody) {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          ...(authorize && this.authorizationHeaders),
+          ...headers,
+        },
+        body: rawBody,
+        agent: agent ?? this.internalGetDefaultAgent(),
+      });
+      return response;
     }
 
     let fmtBody: string | FormData | URLSearchParams | undefined;
