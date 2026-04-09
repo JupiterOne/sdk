@@ -3,6 +3,7 @@ import {
   IntegrationIngestionConfigFieldMap,
   IntegrationSourceId,
   Step,
+  StepAuthorization,
   StepExecutionContext,
   StepMetadata,
 } from '@jupiterone/integration-sdk-core';
@@ -70,7 +71,9 @@ export function generateIngestionSourcesConfigCommand() {
 export type EnhancedIntegrationIngestionConfigFieldMap = Record<
   IntegrationSourceId,
   IntegrationIngestionConfigField & { childIngestionSources?: StepMetadata[] }
->;
+> & {
+  authorization?: StepAuthorization;
+};
 
 /**
  * Generates an ingestionConfig with childIngestionSources taking into account
@@ -119,5 +122,47 @@ export function generateIngestionSourcesConfig<
       log.warn(`The key ${key} does not exist in the ingestionConfig`);
     }
   });
+
+  const aggregatedAuth = aggregateAuthorization(integrationSteps);
+  if (aggregatedAuth) {
+    newIngestionConfig.authorization = aggregatedAuth;
+  }
+
   return newIngestionConfig;
+}
+
+function aggregateAuthorization<
+  TStepExecutionContext extends StepExecutionContext,
+>(steps: Step<TStepExecutionContext>[]): StepAuthorization | undefined {
+  const collected: Record<keyof StepAuthorization, Set<string>> = {
+    permissions: new Set(),
+    roles: new Set(),
+    oauthScopes: new Set(),
+    apis: new Set(),
+    endpoints: new Set(),
+    licenses: new Set(),
+    documentationLinks: new Set(),
+  };
+
+  for (const step of steps) {
+    if (!step.authorization) continue;
+    for (const [key, values] of Object.entries(step.authorization)) {
+      if (Array.isArray(values)) {
+        for (const v of values) {
+          if (v) collected[key as keyof StepAuthorization].add(v);
+        }
+      }
+    }
+  }
+
+  const auth: StepAuthorization = {};
+  let hasAny = false;
+  for (const [key, set] of Object.entries(collected)) {
+    if (set.size > 0) {
+      auth[key as keyof StepAuthorization] = [...set].sort();
+      hasAny = true;
+    }
+  }
+
+  return hasAny ? auth : undefined;
 }
