@@ -190,4 +190,71 @@ describe('#generateIngestionSourcesConfig', () => {
       ingestionSourcesConfig[INGESTION_SOURCE_IDS.TEST_SOURCE],
     ).toBeUndefined();
   });
+
+  it('should aggregate authorization from all steps into a top-level field', () => {
+    const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
+      {
+        id: 'fetch-account',
+        name: 'Fetch Account',
+        entities: [],
+        relationships: [],
+        dependsOn: [],
+        executionHandler: jest.fn(),
+        authorization: {
+          permissions: ['account:read'],
+          apis: ['accounts.googleapis.com'],
+        },
+      },
+      {
+        id: 'fetch-repos',
+        name: 'Fetch Repos',
+        entities: [],
+        relationships: [],
+        dependsOn: ['fetch-account'],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FETCH_REPOS,
+        executionHandler: jest.fn(),
+        authorization: {
+          permissions: ['repo:read', 'account:read'],
+          apis: ['repos.googleapis.com'],
+          oauthScopes: ['repo:read'],
+        },
+      },
+      {
+        id: 'fetch-teams',
+        name: 'Fetch Teams',
+        entities: [],
+        relationships: [],
+        dependsOn: ['fetch-account'],
+        executionHandler: jest.fn(),
+      },
+    ];
+    const ingestionSourcesConfig = generateIngestionSourcesConfig(
+      ingestionConfig,
+      integrationSteps,
+    );
+    expect(ingestionSourcesConfig.authorization).toEqual({
+      permissions: ['account:read', 'repo:read'],
+      apis: ['accounts.googleapis.com', 'repos.googleapis.com'],
+      oauthScopes: ['repo:read'],
+    });
+  });
+
+  it('should not include authorization when no steps have it', () => {
+    const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
+      {
+        id: 'fetch-repos',
+        name: 'Fetch Repos',
+        entities: [],
+        relationships: [],
+        dependsOn: [],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FETCH_REPOS,
+        executionHandler: jest.fn(),
+      },
+    ];
+    const ingestionSourcesConfig = generateIngestionSourcesConfig(
+      ingestionConfig,
+      integrationSteps,
+    );
+    expect(ingestionSourcesConfig.authorization).toBeUndefined();
+  });
 });
