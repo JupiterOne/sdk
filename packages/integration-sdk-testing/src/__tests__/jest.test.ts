@@ -667,7 +667,7 @@ describe('#toMatchDataModelSchema', () => {
         { $ref: '#Entity' },
         {
           properties: {
-            _nhiType: {
+            nhiType: {
               type: 'string',
               enum: [
                 'service_account',
@@ -681,14 +681,13 @@ describe('#toMatchDataModelSchema', () => {
                 'ci_cd_identity',
               ],
             },
-            _isAi: { type: 'boolean' },
-            _aiConfidence: {
+            isAi: { type: 'boolean' },
+            aiConfidence: {
               type: 'string',
               enum: ['confirmed', 'high', 'medium', 'low'],
             },
-            _aiPlatform: { type: 'string' },
-            _nhiOwner: { type: 'string' },
-            _nhiOwnerStatus: {
+            aiPlatform: { type: 'string' },
+            nhiOwnerStatus: {
               type: 'string',
               enum: ['assigned', 'unassigned', 'orphaned'],
             },
@@ -753,10 +752,10 @@ describe('#toMatchDataModelSchema', () => {
         shortLoginId: ['gh-actions'],
         username: ['gh-actions'],
         // NHI-class metadata
-        _nhiType: 'service_account',
-        _isAi: false,
-        _aiConfidence: 'low',
-        _nhiOwnerStatus: 'assigned',
+        nhiType: 'service_account',
+        isAi: false,
+        aiConfidence: 'low',
+        nhiOwnerStatus: 'assigned',
       };
 
       const result = toMatchDataModelSchema(entity, SVC_USER_METADATA);

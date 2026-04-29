@@ -22,7 +22,7 @@ const NHI_CLASS_SCHEMA = {
     { $ref: '#Entity' },
     {
       properties: {
-        _nhiType: {
+        nhiType: {
           type: 'string',
           enum: [
             'service_account',
@@ -36,14 +36,13 @@ const NHI_CLASS_SCHEMA = {
             'ci_cd_identity',
           ],
         },
-        _isAi: { type: 'boolean' },
-        _aiConfidence: {
+        isAi: { type: 'boolean' },
+        aiConfidence: {
           type: 'string',
           enum: ['confirmed', 'high', 'medium', 'low'],
         },
-        _aiPlatform: { type: 'string' },
-        _nhiOwner: { type: 'string' },
-        _nhiOwnerStatus: {
+        aiPlatform: { type: 'string' },
+        nhiOwnerStatus: {
           type: 'string',
           enum: ['assigned', 'unassigned', 'orphaned'],
         },
@@ -429,12 +428,11 @@ describe('schema validation off', () => {
 // behavior so future refactors don't regress it.
 describe('AIASM-14: multi-class NHI combinations', () => {
   const NHI_PROPERTIES = [
-    '_nhiType',
-    '_isAi',
-    '_aiConfidence',
-    '_aiPlatform',
-    '_nhiOwner',
-    '_nhiOwnerStatus',
+    'nhiType',
+    'isAi',
+    'aiConfidence',
+    'aiPlatform',
+    'nhiOwnerStatus',
   ];
 
   describe('schemaWhitelistedPropertyNames unions properties from each class', () => {
@@ -463,7 +461,7 @@ describe('AIASM-14: multi-class NHI combinations', () => {
   });
 
   describe('createIntegrationEntity preserves NHI properties for multi-class entities (BDD 14.5)', () => {
-    test('User + NHI: keeps _nhiType plus standard User fields (BDD 14.1)', () => {
+    test('User + NHI: keeps nhiType plus standard User fields (BDD 14.1)', () => {
       const entity = createIntegrationEntity({
         entityData: {
           assign: {
@@ -477,11 +475,10 @@ describe('AIASM-14: multi-class NHI combinations', () => {
             username: 'gh-actions',
             email: 'bot@example.com',
             active: true,
-            _nhiType: 'service_account',
-            _isAi: false,
-            _aiConfidence: 'low',
-            _nhiOwner: 'platform-team',
-            _nhiOwnerStatus: 'assigned',
+            nhiType: 'service_account',
+            isAi: false,
+            aiConfidence: 'low',
+            nhiOwnerStatus: 'assigned',
           },
         },
       });
@@ -490,15 +487,14 @@ describe('AIASM-14: multi-class NHI combinations', () => {
       expect(entity).toMatchObject({
         username: 'gh-actions',
         email: 'bot@example.com',
-        _nhiType: 'service_account',
-        _isAi: false,
-        _aiConfidence: 'low',
-        _nhiOwner: 'platform-team',
-        _nhiOwnerStatus: 'assigned',
+        nhiType: 'service_account',
+        isAi: false,
+        aiConfidence: 'low',
+        nhiOwnerStatus: 'assigned',
       });
     });
 
-    test('AccessKey + NHI: keeps _nhiType=credential plus AccessKey-specific fingerprint (BDD 14.2)', () => {
+    test('AccessKey + NHI: keeps nhiType=credential plus AccessKey-specific fingerprint (BDD 14.2)', () => {
       const entity = createIntegrationEntity({
         entityData: {
           assign: {
@@ -511,8 +507,8 @@ describe('AIASM-14: multi-class NHI combinations', () => {
             name: 'service-key',
             fingerprint: 'sha256:deadbeef',
             usage: 'signing',
-            _nhiType: 'credential',
-            _isAi: false,
+            nhiType: 'credential',
+            isAi: false,
           },
         },
       });
@@ -521,12 +517,12 @@ describe('AIASM-14: multi-class NHI combinations', () => {
       expect(entity).toMatchObject({
         fingerprint: 'sha256:deadbeef',
         usage: 'signing',
-        _nhiType: 'credential',
-        _isAi: false,
+        nhiType: 'credential',
+        isAi: false,
       });
     });
 
-    test('Application + NHI: keeps _nhiType=oauth_app and AI metadata', () => {
+    test('Application + NHI: keeps nhiType=oauth_app and AI metadata', () => {
       const entity = createIntegrationEntity({
         entityData: {
           assign: {
@@ -539,10 +535,10 @@ describe('AIASM-14: multi-class NHI combinations', () => {
             name: 'Anthropic Claude Bot',
             SaaS: true,
             license: 'commercial',
-            _nhiType: 'oauth_app',
-            _isAi: true,
-            _aiConfidence: 'confirmed',
-            _aiPlatform: 'anthropic',
+            nhiType: 'oauth_app',
+            isAi: true,
+            aiConfidence: 'confirmed',
+            aiPlatform: 'anthropic',
           },
         },
       });
@@ -551,14 +547,14 @@ describe('AIASM-14: multi-class NHI combinations', () => {
       expect(entity).toMatchObject({
         SaaS: true,
         license: 'commercial',
-        _nhiType: 'oauth_app',
-        _isAi: true,
-        _aiConfidence: 'confirmed',
-        _aiPlatform: 'anthropic',
+        nhiType: 'oauth_app',
+        isAi: true,
+        aiConfidence: 'confirmed',
+        aiPlatform: 'anthropic',
       });
     });
 
-    test('Certificate + NHI: keeps _nhiType=certificate alongside Entity-base properties', () => {
+    test('Certificate + NHI: keeps nhiType=certificate alongside Entity-base properties', () => {
       const entity = createIntegrationEntity({
         entityData: {
           assign: {
@@ -570,7 +566,7 @@ describe('AIASM-14: multi-class NHI combinations', () => {
             id: 'cert-1',
             name: 'service.example.com',
             description: 'TLS cert for service',
-            _nhiType: 'certificate',
+            nhiType: 'certificate',
           },
         },
       });
@@ -579,11 +575,11 @@ describe('AIASM-14: multi-class NHI combinations', () => {
       expect(entity).toMatchObject({
         name: 'service.example.com',
         description: 'TLS cert for service',
-        _nhiType: 'certificate',
+        nhiType: 'certificate',
       });
     });
 
-    test('Secret + NHI: keeps _nhiType=secret alongside Entity-base properties', () => {
+    test('Secret + NHI: keeps nhiType=secret alongside Entity-base properties', () => {
       const entity = createIntegrationEntity({
         entityData: {
           assign: {
@@ -595,8 +591,8 @@ describe('AIASM-14: multi-class NHI combinations', () => {
             id: 'secret-1',
             name: 'db-password',
             description: 'Production database password',
-            _nhiType: 'secret',
-            _nhiOwnerStatus: 'orphaned',
+            nhiType: 'secret',
+            nhiOwnerStatus: 'orphaned',
           },
         },
       });
@@ -605,8 +601,8 @@ describe('AIASM-14: multi-class NHI combinations', () => {
       expect(entity).toMatchObject({
         name: 'db-password',
         description: 'Production database password',
-        _nhiType: 'secret',
-        _nhiOwnerStatus: 'orphaned',
+        nhiType: 'secret',
+        nhiOwnerStatus: 'orphaned',
       });
     });
 

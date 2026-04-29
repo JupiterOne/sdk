@@ -12,7 +12,7 @@ import { SchemaType } from '../..';
 // declared as optional.
 const NHI_TYPEBOX = Type.Object(
   {
-    _nhiType: Type.Optional(
+    nhiType: Type.Optional(
       Type.Union([
         Type.Literal('service_account'),
         Type.Literal('credential'),
@@ -25,8 +25,8 @@ const NHI_TYPEBOX = Type.Object(
         Type.Literal('ci_cd_identity'),
       ]),
     ),
-    _isAi: Type.Optional(Type.Boolean()),
-    _aiConfidence: Type.Optional(
+    isAi: Type.Optional(Type.Boolean()),
+    aiConfidence: Type.Optional(
       Type.Union([
         Type.Literal('confirmed'),
         Type.Literal('high'),
@@ -34,9 +34,8 @@ const NHI_TYPEBOX = Type.Object(
         Type.Literal('low'),
       ]),
     ),
-    _aiPlatform: Type.Optional(Type.String()),
-    _nhiOwner: Type.Optional(Type.String()),
-    _nhiOwnerStatus: Type.Optional(
+    aiPlatform: Type.Optional(Type.String()),
+    nhiOwnerStatus: Type.Optional(
       Type.Union([
         Type.Literal('assigned'),
         Type.Literal('unassigned'),
@@ -445,10 +444,10 @@ describe('createIntegrationHelpers', () => {
       email: ['bot@example.com'],
       shortLoginId: ['gh-actions'],
       username: ['gh-actions'],
-      _nhiType: 'service_account',
-      _isAi: false,
-      _aiConfidence: 'low',
-      _nhiOwnerStatus: 'assigned',
+      nhiType: 'service_account',
+      isAi: false,
+      aiConfidence: 'low',
+      nhiOwnerStatus: 'assigned',
     });
     expect(entity._class).toEqual(['User', 'NHI']);
     expect(entity._type).toBe('gh_service_user');
@@ -484,9 +483,9 @@ describe('createIntegrationHelpers', () => {
       id: 'AKIA-EXAMPLE',
       name: 'service-key',
       _key: 'aws:ak:1',
-      _nhiType: 'credential',
+      nhiType: 'credential',
     });
     expect(entity._class).toEqual(['AccessKey', 'NHI']);
-    expect(entity._nhiType).toBe('credential');
+    expect(entity.nhiType).toBe('credential');
   });
 });
