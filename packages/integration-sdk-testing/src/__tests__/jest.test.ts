@@ -13,7 +13,9 @@ import {
   createIntegrationHelpers,
   SchemaType,
 } from '@jupiterone/integration-sdk-core';
+import * as dataModel from '@jupiterone/data-model';
 import { typeboxClassSchemaMap as classSchemaMap } from '@jupiterone/data-model';
+import { getValidatorSync } from '@jupiterone/integration-sdk-entity-validator';
 import { getMockIntegrationStep } from '@jupiterone/integration-sdk-private-test-utils';
 import { randomUUID as uuid } from 'crypto';
 import { toMatchStepMetadata } from '..';
@@ -651,6 +653,115 @@ describe('#toMatchDataModelSchema', () => {
     const result = toMatchDataModelSchema(entity, API_SERVICE);
 
     expect(result.pass).toBe(false);
+  });
+
+  // AIASM-14 / BDD 14.4: toMatchDataModelSchema validates a User+NHI
+  // multi-class entity. Both class schemas must be exercised, and the
+  // entity must pass.
+  describe('AIASM-14: multi-class NHI', () => {
+    const NHI_JSON_SCHEMA = {
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: '#NHI',
+      type: 'object',
+      allOf: [
+        { $ref: '#Entity' },
+        {
+          properties: {
+            _nhiType: {
+              type: 'string',
+              enum: [
+                'service_account',
+                'credential',
+                'secret',
+                'oauth_app',
+                'bot',
+                'certificate',
+                'api_key',
+                'webhook',
+                'ci_cd_identity',
+              ],
+            },
+            _isAi: { type: 'boolean' },
+            _aiConfidence: {
+              type: 'string',
+              enum: ['confirmed', 'high', 'medium', 'low'],
+            },
+            _aiPlatform: { type: 'string' },
+            _nhiOwner: { type: 'string' },
+            _nhiOwnerStatus: {
+              type: 'string',
+              enum: ['assigned', 'unassigned', 'orphaned'],
+            },
+          },
+          required: [],
+        },
+      ],
+    };
+
+    beforeAll(() => {
+      // Register the inline NHI schema with both the data-model singleton and
+      // the validator singleton used by toMatchDataModelSchema. The published
+      // @jupiterone/data-model 0.62.0 does not yet ship NHI (AIASM-15).
+      if (!dataModel.getSchema('NHI')) {
+        dataModel.IntegrationSchema.addSchema(NHI_JSON_SCHEMA);
+      }
+      getValidatorSync().addSchemas(NHI_JSON_SCHEMA);
+    });
+
+    test('passes for User + NHI multi-class entity (BDD 14.4)', () => {
+      const SVC_USER_METADATA = {
+        resourceName: 'ServiceUser',
+        _type: 'gh_service_user_match',
+        _class: ['User', 'NHI'],
+        schema: {
+          $id: '#gh_service_user_match',
+          description: 'GitHub service user — multi-class User + NHI',
+          allOf: [
+            { $ref: '#User' },
+            { $ref: '#NHI' },
+            {
+              properties: {
+                _class: {
+                  type: 'array',
+                  items: [
+                    { const: 'User', type: 'string' },
+                    { const: 'NHI', type: 'string' },
+                  ],
+                  additionalItems: false,
+                  maxItems: 2,
+                  minItems: 2,
+                },
+                _type: { const: 'gh_service_user_match', type: 'string' },
+              },
+              type: 'object',
+              required: ['_class', '_type'],
+            },
+          ],
+        },
+      };
+
+      const entity: Entity = {
+        _key: 'gh:svc:account:match:1',
+        _type: 'gh_service_user_match',
+        _class: ['User', 'NHI'],
+        name: 'github-actions-bot',
+        // User-class required fields
+        displayName: 'GitHub Actions',
+        firstName: 'GitHub',
+        lastName: 'Actions',
+        email: ['bot@example.com'],
+        shortLoginId: ['gh-actions'],
+        username: ['gh-actions'],
+        // NHI-class metadata
+        _nhiType: 'service_account',
+        _isAi: false,
+        _aiConfidence: 'low',
+        _nhiOwnerStatus: 'assigned',
+      };
+
+      const result = toMatchDataModelSchema(entity, SVC_USER_METADATA);
+      expect(result.pass).toBe(true);
+    });
   });
 });
 

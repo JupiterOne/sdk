@@ -1,8 +1,51 @@
+import { Type } from '@sinclair/typebox';
 import { typeboxClassSchemaMap } from '@jupiterone/data-model';
 import { createIntegrationHelpers } from '../createIntegrationHelpers';
 import { EntityValidator } from '@jupiterone/integration-sdk-entity-validator';
 import { entitySchemas } from '@jupiterone/data-model';
 import { SchemaType } from '../..';
+
+// Inline NHI typebox schema used to verify multi-class+NHI behavior. The
+// published @jupiterone/data-model 0.62.0 does not yet include NHI in
+// typeboxClassSchemaMap (publishing is AIASM-15). Mirrors the JSON
+// equivalent at data-model/.../class_schemas/NHI.json with NHI metadata
+// declared as optional.
+const NHI_TYPEBOX = Type.Object(
+  {
+    _nhiType: Type.Optional(
+      Type.Union([
+        Type.Literal('service_account'),
+        Type.Literal('credential'),
+        Type.Literal('secret'),
+        Type.Literal('oauth_app'),
+        Type.Literal('bot'),
+        Type.Literal('certificate'),
+        Type.Literal('api_key'),
+        Type.Literal('webhook'),
+        Type.Literal('ci_cd_identity'),
+      ]),
+    ),
+    _isAi: Type.Optional(Type.Boolean()),
+    _aiConfidence: Type.Optional(
+      Type.Union([
+        Type.Literal('confirmed'),
+        Type.Literal('high'),
+        Type.Literal('medium'),
+        Type.Literal('low'),
+      ]),
+    ),
+    _aiPlatform: Type.Optional(Type.String()),
+    _nhiOwner: Type.Optional(Type.String()),
+    _nhiOwnerStatus: Type.Optional(
+      Type.Union([
+        Type.Literal('assigned'),
+        Type.Literal('unassigned'),
+        Type.Literal('orphaned'),
+      ]),
+    ),
+  },
+  { $id: '#NHI' },
+);
 
 describe('createIntegrationHelpers', () => {
   const {
@@ -361,5 +404,89 @@ describe('createIntegrationHelpers', () => {
     );
 
     expect(errors).toEqual(null);
+  });
+
+  // AIASM-14: createMultiClassEntityMetadata works with NHI as a secondary
+  // class. Verifies BDD scenario 14.3 — that the helper accepts an NHI
+  // schema, produces a multi-class JSON schema, and the resulting
+  // createEntity callable returns an entity that validates against the
+  // combined schema.
+  test('createMultiClassEntityMetadata with NHI: User + NHI multi-class entity validates (BDD 14.3, 14.1)', () => {
+    const [SVC_USER, createSvcUser] = createMultiClassEntityMetadata({
+      resourceName: 'ServiceUser',
+      _type: 'gh_service_user',
+      _class: [typeboxClassSchemaMap['User'], NHI_TYPEBOX],
+      description: 'GitHub service user (User + NHI)',
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
+      }),
+    });
+
+    expect(SVC_USER._class).toEqual(['User', 'NHI']);
+    expect(SVC_USER._type).toBe('gh_service_user');
+    // Schema is a JSON-Schema-shaped object with allOf containing $refs to
+    // each class plus the literal _class/_type and the user-supplied schema.
+    expect(SVC_USER.schema).toMatchObject({
+      $id: '#gh_service_user',
+      allOf: expect.arrayContaining([{ $ref: '#User' }, { $ref: '#NHI' }]),
+    });
+
+    const entity = createSvcUser({
+      id: 'svc-1',
+      name: 'github-actions-bot',
+      // Satisfy User-schema required fields. Bots/service-accounts in the
+      // wild don't always have firstName/lastName — that schema rigidity
+      // is a data-model concern, not in scope for AIASM-14.
+      _key: 'gh:svc:account:1',
+      displayName: 'GitHub Actions',
+      firstName: 'GitHub',
+      lastName: 'Actions',
+      email: ['bot@example.com'],
+      shortLoginId: ['gh-actions'],
+      username: ['gh-actions'],
+      _nhiType: 'service_account',
+      _isAi: false,
+      _aiConfidence: 'low',
+      _nhiOwnerStatus: 'assigned',
+    });
+    expect(entity._class).toEqual(['User', 'NHI']);
+    expect(entity._type).toBe('gh_service_user');
+
+    // Validate against the produced schema. The validator needs both class
+    // schemas registered so the $refs resolve.
+    const validator = new EntityValidator({
+      schemas: [...Object.values(entitySchemas), NHI_TYPEBOX as never],
+    });
+    validator.addSchemas(SVC_USER.schema);
+    const { errors } = validator.validateEntity(entity);
+    expect(errors).toEqual(null);
+  });
+
+  test('createMultiClassEntityMetadata with NHI: AccessKey + NHI variant (BDD 14.2)', () => {
+    const [SVC_KEY, createSvcKey] = createMultiClassEntityMetadata({
+      resourceName: 'ServiceKey',
+      _type: 'aws_iam_access_key',
+      _class: [typeboxClassSchemaMap['AccessKey'], NHI_TYPEBOX],
+      description: 'AWS IAM access key for an automated workload',
+      schema: SchemaType.Object({
+        id: SchemaType.String(),
+        name: SchemaType.String(),
+      }),
+    });
+
+    expect(SVC_KEY._class).toEqual(['AccessKey', 'NHI']);
+    expect(SVC_KEY.schema).toMatchObject({
+      allOf: expect.arrayContaining([{ $ref: '#AccessKey' }, { $ref: '#NHI' }]),
+    });
+
+    const entity = createSvcKey({
+      id: 'AKIA-EXAMPLE',
+      name: 'service-key',
+      _key: 'aws:ak:1',
+      _nhiType: 'credential',
+    });
+    expect(entity._class).toEqual(['AccessKey', 'NHI']);
+    expect(entity._nhiType).toBe('credential');
   });
 });
