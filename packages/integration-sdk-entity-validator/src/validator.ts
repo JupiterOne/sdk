@@ -63,6 +63,33 @@ const convertUnknownErrorToEntityValidationError = (
   };
 };
 
+/**
+ * Validates entities against AJV-compiled JSON schemas keyed by `_type` and
+ * `_class`. Returns `{ isValid, errors, warnings, skippedSchemas }`.
+ *
+ * Enum violations on properties listed in `permissiveEnumProperties` (default:
+ * {@link DEFAULT_PERMISSIVE_ENUM_PROPERTIES}) are routed to `warnings` and do
+ * **not** flip `isValid` to `false`. Every other violation — including type
+ * mismatches on those same properties, missing required fields, and enum
+ * violations on properties outside the permissive set — still hard-fails.
+ *
+ * The `warnings` field is purely additive: callers that previously inspected
+ * only `isValid`/`errors` continue to behave identically. To opt out of
+ * permissive behavior entirely, pass `permissiveEnumProperties: []`.
+ *
+ * @example
+ * ```ts
+ * const validator = new EntityValidator({ schemas });
+ *
+ * // Unknown NHI subtype → warning, entity accepted.
+ * validator.validateEntity({ _type: 'svc_account', _class: 'User', _nhiType: 'novel_kind' });
+ * // → { isValid: true, errors: null, warnings: [{ property: '_nhiType', ... }], ... }
+ *
+ * // Type mismatch on the same property → hard error.
+ * validator.validateEntity({ _type: 'svc_account', _class: 'User', _nhiType: 42 });
+ * // → { isValid: false, errors: [{ property: '_nhiType', validation: 'type', ... }], ... }
+ * ```
+ */
 export class EntityValidator {
   private ajvInstance: Ajv;
   private permissiveEnumProperties: ReadonlySet<string>;

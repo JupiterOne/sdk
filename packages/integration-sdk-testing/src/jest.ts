@@ -77,6 +77,16 @@ declare global {
        * });
        *
        * expect(collectedEntities).toMatchDataModelSchema(USER_ENTITY);
+       * ```
+       *
+       * Permissive enum violations on `_nhiType`, `_nhiOwnerStatus`, and
+       * `_aiConfidence` (the defaults configured on the underlying
+       * `EntityValidator`) are emitted via a single `console.warn` and do **not**
+       * fail the assertion. Hard errors — type mismatches, missing required
+       * fields, and enum violations on any other property — fail as before.
+       *
+       * To assert on the warning in tests, spy on it:
+       * `jest.spyOn(console, 'warn').mockImplementation(() => {})`.
        */
 
       toMatchDataModelSchema(metadata: StepEntityMetadata): R;
@@ -188,6 +198,19 @@ declare global {
   }
 }
 
+/**
+ * Jest matcher implementation that delegates to `EntityValidator` to validate
+ * one or more entities against the schema declared on `StepEntityMetadata`.
+ *
+ * Permissive enum violations (default: `_nhiType`, `_nhiOwnerStatus`,
+ * `_aiConfidence`) are surfaced via a single `console.warn` per assertion and
+ * the matcher still passes. Hard errors (type mismatches, missing required
+ * fields, enum violations on non-permissive properties) cause the matcher to
+ * fail with the aggregated error list.
+ *
+ * Tests that want to assert on the warning should
+ * `jest.spyOn(console, 'warn')` before invoking the matcher.
+ */
 export function toMatchDataModelSchema<T extends Entity>(
   received: T | T[],
   metadata: StepEntityMetadata,
