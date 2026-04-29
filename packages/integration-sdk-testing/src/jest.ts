@@ -205,17 +205,39 @@ export function toMatchDataModelSchema<T extends Entity>(
 
   received = Array.isArray(received) ? received : [received];
 
+  const allErrors: string[] = [];
+  const allWarnings: string[] = [];
+
   for (let i = 0; i < received.length; i++) {
-    // if valid
-    const { isValid, errors = [] } = entityValidator.validateEntity(
-      received[i],
+    const { errors, warnings } = entityValidator.validateEntity(received[i]);
+
+    if (errors) {
+      for (const e of errors) {
+        allErrors.push(
+          `[${i}] ${e.schemaId}:${String(e.property)}:${e.message}`,
+        );
+      }
+    }
+    if (warnings) {
+      for (const w of warnings) {
+        allWarnings.push(
+          `[${i}] ${w.schemaId}:${String(w.property)}:${w.message}`,
+        );
+      }
+    }
+  }
+
+  if (allWarnings.length) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `toMatchDataModelSchema: permissive enum violations (entity will be accepted): ${allWarnings.join(', ')}`,
     );
+  }
 
-    if (isValid) continue;
-
+  if (allErrors.length) {
     return {
       message: () =>
-        `Error validating object with data model schema: ${errors?.map((e) => `${e.schemaId}:${String(e.property)}:${e.message}`).join(', ')}`,
+        `Error validating object with data model schema: ${allErrors.join(', ')}`,
       pass: false,
     };
   }

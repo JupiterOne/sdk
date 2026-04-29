@@ -652,6 +652,115 @@ describe('#toMatchDataModelSchema', () => {
 
     expect(result.pass).toBe(false);
   });
+
+  test('should pass and emit a console.warn when entity violates a permissive enum (_aiConfidence)', () => {
+    const StringEnum = <T extends string[]>(values: [...T]) =>
+      SchemaType.Unsafe<T[number]>({
+        type: 'string',
+        enum: values,
+      });
+    const [METADATA, createTestEntity] = createEntityMetadata({
+      resourceName: 'AI Tool',
+      _class: ['Service'],
+      _type: 'permissive_enum_warning_test_pass',
+      description: 'Schema with a permissive enum property.',
+      schema: SchemaType.Object({
+        _aiConfidence: StringEnum(['high', 'medium', 'low']),
+      }),
+    });
+
+    const entity = createTestEntity({
+      name: 'thing',
+      function: ['other'],
+      _key: 'permissive-warn-pass-1',
+      displayName: 'Thing',
+      category: ['software'],
+      _aiConfidence: 'extreme' as unknown as 'high' | 'medium' | 'low',
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const result = toMatchDataModelSchema(entity, METADATA);
+      expect(result.pass).toBe(true);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const warnMessage = warnSpy.mock.calls[0][0] as string;
+      expect(warnMessage).toContain('_aiConfidence');
+      expect(warnMessage).toContain('permissive enum violations');
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  test('should fail when entity has a hard error even if it also has a permissive warning', () => {
+    const StringEnum = <T extends string[]>(values: [...T]) =>
+      SchemaType.Unsafe<T[number]>({
+        type: 'string',
+        enum: values,
+      });
+    const [METADATA, createTestEntity] = createEntityMetadata({
+      resourceName: 'AI Tool',
+      _class: ['Service'],
+      _type: 'permissive_enum_warning_test_mixed',
+      description: 'Schema with both a strict enum and a permissive enum.',
+      schema: SchemaType.Object({
+        state: StringEnum(['ENABLED', 'DISABLED']),
+        _aiConfidence: StringEnum(['high', 'medium', 'low']),
+      }),
+    });
+
+    const entity = createTestEntity({
+      name: 'thing',
+      function: ['other'],
+      _key: 'permissive-warn-mixed-1',
+      displayName: 'Thing',
+      category: ['software'],
+      state: 'BOGUS' as unknown as 'ENABLED' | 'DISABLED',
+      _aiConfidence: 'extreme' as unknown as 'high' | 'medium' | 'low',
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const result = toMatchDataModelSchema(entity, METADATA);
+      expect(result.pass).toBe(false);
+      const message = (result.message as () => string)();
+      expect(message).toContain('state');
+      // warning is still surfaced even though we fail
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain('_aiConfidence');
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  test('should not emit a console.warn when entity is fully clean', () => {
+    const [API_SERVICE, createApiService] = createEntityMetadata({
+      resourceName: 'Google Cloud API Service',
+      _class: ['Service'],
+      _type: 'permissive_enum_clean_test',
+      description: 'Clean entity should produce no warnings.',
+      schema: SchemaType.Object({
+        enabled: SchemaType.Boolean(),
+      }),
+    });
+
+    const entity = createApiService({
+      name: 'clean',
+      function: ['other'],
+      _key: 'permissive-warn-clean-1',
+      displayName: 'Clean',
+      category: ['infrastructure'],
+      enabled: true,
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const result = toMatchDataModelSchema(entity, API_SERVICE);
+      expect(result.pass).toBe(true);
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
 });
 
 describe('#toMatchDirectRelationshipSchema', () => {
@@ -1402,7 +1511,7 @@ describe('#toMatchEntityStepMetadata', () => {
 
     expect(result1).toMatchObject({ pass: false });
     expect(result1.message()).toMatch(
-      'Error validating object with data model schema: #google_cloud_api_service:usageRequirements:must be array',
+      'Error validating object with data model schema: [0] #google_cloud_api_service:usageRequirements:must be array',
     );
 
     const entity2 = createApiService({
@@ -1435,7 +1544,7 @@ describe('#toMatchEntityStepMetadata', () => {
     );
     expect(result2).toMatchObject({ pass: false });
     expect(result2.message()).toMatch(
-      "Error validating object with data model schema: #google_cloud_api_service:category:must have required property 'category'",
+      "Error validating object with data model schema: [0] #google_cloud_api_service:category:must have required property 'category'",
     );
   });
 });

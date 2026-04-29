@@ -12,6 +12,7 @@ import { assertEntity } from './assertEntity';
 type ValidateEntityResult = {
   isValid: boolean;
   errors: EntityValidationError[] | null;
+  warnings: EntityValidationError[] | null;
   skippedSchemas: SkippedSchema[] | null;
 };
 
@@ -24,6 +25,19 @@ type SkippedSchema = {
 type ValidateEntityOptions = {
   forceClassValidationWithValidatedType?: boolean;
 };
+
+/**
+ * Properties whose `enum` violations are reclassified as warnings instead of
+ * errors by default. New NHI subtypes, AI platforms, and ownership statuses
+ * appear in real integrations before the data-model is published, so a strict
+ * enum failure here would block ingestion. Type mismatches on these same
+ * properties still hard-fail.
+ */
+export const DEFAULT_PERMISSIVE_ENUM_PROPERTIES: readonly string[] = [
+  '_nhiType',
+  '_nhiOwnerStatus',
+  '_aiConfidence',
+];
 
 const convertUnknownErrorToEntityValidationError = (
   error: unknown,
@@ -51,8 +65,20 @@ const convertUnknownErrorToEntityValidationError = (
 
 export class EntityValidator {
   private ajvInstance: Ajv;
+  private permissiveEnumProperties: ReadonlySet<string>;
 
-  constructor({ schemas }: { schemas?: AnySchema[] }) {
+  constructor({
+    schemas,
+    permissiveEnumProperties = DEFAULT_PERMISSIVE_ENUM_PROPERTIES,
+  }: {
+    schemas?: AnySchema[];
+    /**
+     * Property names whose `enum` violations are partitioned into
+     * `warnings` instead of `errors`. Pass `[]` to opt out of permissive
+     * behavior entirely. Defaults to {@link DEFAULT_PERMISSIVE_ENUM_PROPERTIES}.
+     */
+    permissiveEnumProperties?: readonly string[];
+  }) {
     this.ajvInstance = addJ1Formats(
       addFormats(
         new Ajv({
@@ -61,6 +87,7 @@ export class EntityValidator {
         }),
       ),
     );
+    this.permissiveEnumProperties = new Set(permissiveEnumProperties);
 
     if (schemas) {
       this.addSchemas(schemas);
@@ -87,6 +114,7 @@ export class EntityValidator {
     }: ValidateEntityOptions = {},
   ): ValidateEntityResult {
     const errors: EntityValidationError[] = [];
+    const warnings: EntityValidationError[] = [];
     const skippedSchemas: SkippedSchema[] = [];
 
     try {
@@ -126,11 +154,21 @@ export class EntityValidator {
         const isValid = validator(entity);
 
         if (!isValid) {
-          errors.push(
-            ...(validator.errors?.map((error) =>
-              ajvErrorToEntityValidationError(schemaId, error),
-            ) ?? []),
-          );
+          for (const ajvError of validator.errors ?? []) {
+            const validationError = ajvErrorToEntityValidationError(
+              schemaId,
+              ajvError,
+            );
+            if (
+              ajvError.keyword === 'enum' &&
+              typeof validationError.property === 'string' &&
+              this.permissiveEnumProperties.has(validationError.property)
+            ) {
+              warnings.push(validationError);
+            } else {
+              errors.push(validationError);
+            }
+          }
         }
 
         if (type === 'type' && !forceClassValidationWithValidatedType) {
@@ -155,6 +193,7 @@ export class EntityValidator {
     return {
       isValid: errors.length === 0,
       errors: errors.length ? errors : null,
+      warnings: warnings.length ? warnings : null,
       skippedSchemas: skippedSchemas.length ? skippedSchemas : null,
     };
   }

@@ -4,4 +4,8 @@ export {
   isEntityValidationError,
   type EntityValidationError,
 } from './entityValidationError';
-export { getValidator, getValidatorSync } from './singleton';
+export {
+  getValidator,
+  getValidatorSync,
+  setSchemaSingleton,
+} from './singleton';
