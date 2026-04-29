@@ -34,9 +34,9 @@ type ValidateEntityOptions = {
  * properties still hard-fail.
  */
 export const DEFAULT_PERMISSIVE_ENUM_PROPERTIES: readonly string[] = [
-  '_nhiType',
-  '_nhiOwnerStatus',
-  '_aiConfidence',
+  'nhiType',
+  'nhiOwnerStatus',
+  'aiConfidence',
 ];
 
 const convertUnknownErrorToEntityValidationError = (
@@ -82,12 +82,12 @@ const convertUnknownErrorToEntityValidationError = (
  * const validator = new EntityValidator({ schemas });
  *
  * // Unknown NHI subtype → warning, entity accepted.
- * validator.validateEntity({ _type: 'svc_account', _class: 'User', _nhiType: 'novel_kind' });
- * // → { isValid: true, errors: null, warnings: [{ property: '_nhiType', ... }], ... }
+ * validator.validateEntity({ _type: 'svc_account', _class: 'User', nhiType: 'novel_kind' });
+ * // → { isValid: true, errors: null, warnings: [{ property: 'nhiType', ... }], ... }
  *
  * // Type mismatch on the same property → hard error.
- * validator.validateEntity({ _type: 'svc_account', _class: 'User', _nhiType: 42 });
- * // → { isValid: false, errors: [{ property: '_nhiType', validation: 'type', ... }], ... }
+ * validator.validateEntity({ _type: 'svc_account', _class: 'User', nhiType: 42 });
+ * // → { isValid: false, errors: [{ property: 'nhiType', validation: 'type', ... }], ... }
  * ```
  */
 export class EntityValidator {

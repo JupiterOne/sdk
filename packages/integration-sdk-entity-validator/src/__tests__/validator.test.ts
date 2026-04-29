@@ -377,8 +377,8 @@ describe('validator', () => {
 
 describe('validator — permissive enum properties', () => {
   // In-memory NHI-shaped schema. The shape mirrors the data-model's NHI class
-  // additions in M001/S02: `_nhiType`, `_nhiOwnerStatus`, `_aiConfidence` are
-  // enum-constrained; `_isAi` is a bare boolean (type, not enum).
+  // additions in M001/S02: `nhiType`, `nhiOwnerStatus`, `aiConfidence` are
+  // enum-constrained; `isAi` is a bare boolean (type, not enum).
   const NHI_SCHEMA = {
     $schema: 'http://json-schema.org/draft-07/schema#',
     $id: '#NHI',
@@ -396,19 +396,19 @@ describe('validator — permissive enum properties', () => {
         ],
       },
       _type: { type: 'string', minLength: 3 },
-      _nhiType: {
+      nhiType: {
         type: 'string',
         enum: ['service_account', 'api_key', 'workload_identity'],
       },
-      _nhiOwnerStatus: {
+      nhiOwnerStatus: {
         type: 'string',
         enum: ['active', 'inactive', 'orphaned'],
       },
-      _aiConfidence: {
+      aiConfidence: {
         type: 'string',
         enum: ['high', 'medium', 'low'],
       },
-      _isAi: { type: 'boolean' },
+      isAi: { type: 'boolean' },
     },
     required: ['_key', '_class', '_type'],
   };
@@ -417,10 +417,10 @@ describe('validator — permissive enum properties', () => {
     _class: ['NHI'],
     _type: 'NHI',
     _key: '0123456789',
-    _nhiType: 'service_account',
-    _nhiOwnerStatus: 'active',
-    _aiConfidence: 'high',
-    _isAi: true,
+    nhiType: 'service_account',
+    nhiOwnerStatus: 'active',
+    aiConfidence: 'high',
+    isAi: true,
   };
 
   test('valid NHI entity produces no errors and no warnings', () => {
@@ -435,63 +435,63 @@ describe('validator — permissive enum properties', () => {
     });
   });
 
-  test('unknown _nhiType becomes a warning, not an error', () => {
+  test('unknown nhiType becomes a warning, not an error', () => {
     const validator = new EntityValidator({ schemas: [NHI_SCHEMA] });
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _nhiType: 'unknown_subtype',
+      nhiType: 'unknown_subtype',
     });
     expect(result.isValid).toBe(true);
     expect(result.errors).toBeNull();
     expect(result.warnings).toEqual([
       {
         schemaId: '#NHI',
-        property: '_nhiType',
+        property: 'nhiType',
         message: expect.stringContaining('must be equal to one of'),
         validation: 'enum',
       },
     ]);
   });
 
-  test('unknown _nhiOwnerStatus becomes a warning', () => {
+  test('unknown nhiOwnerStatus becomes a warning', () => {
     const validator = new EntityValidator({ schemas: [NHI_SCHEMA] });
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _nhiOwnerStatus: 'mystery',
+      nhiOwnerStatus: 'mystery',
     });
     expect(result.isValid).toBe(true);
     expect(result.errors).toBeNull();
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings![0].property).toBe('_nhiOwnerStatus');
+    expect(result.warnings![0].property).toBe('nhiOwnerStatus');
     expect(result.warnings![0].validation).toBe('enum');
   });
 
-  test('unknown _aiConfidence becomes a warning', () => {
+  test('unknown aiConfidence becomes a warning', () => {
     const validator = new EntityValidator({ schemas: [NHI_SCHEMA] });
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _aiConfidence: 'extremely high',
+      aiConfidence: 'extremely high',
     });
     expect(result.isValid).toBe(true);
     expect(result.warnings).toHaveLength(1);
-    expect(result.warnings![0].property).toBe('_aiConfidence');
+    expect(result.warnings![0].property).toBe('aiConfidence');
   });
 
   test('type mismatch on a permissive property still hard-errors', () => {
-    // _isAi: 'yes' is a string where boolean is required. The property is not
+    // isAi: 'yes' is a string where boolean is required. The property is not
     // in the permissive set anyway, but the point is: keyword === 'type' is
     // not 'enum', so even a permissive property would still hard-fail here.
     const validator = new EntityValidator({ schemas: [NHI_SCHEMA] });
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _isAi: 'yes',
+      isAi: 'yes',
     });
     expect(result.isValid).toBe(false);
     expect(result.warnings).toBeNull();
     expect(result.errors).toEqual([
       {
         schemaId: '#NHI',
-        property: '_isAi',
+        property: 'isAi',
         message: expect.stringContaining('must be boolean'),
         validation: 'type',
       },
@@ -499,18 +499,18 @@ describe('validator — permissive enum properties', () => {
   });
 
   test('type mismatch on a permissive enum property is still an error', () => {
-    // _nhiType is in the permissive set, but a number-shaped value triggers
+    // nhiType is in the permissive set, but a number-shaped value triggers
     // keyword === 'type' (not 'enum'), so it must hard-error.
     const validator = new EntityValidator({ schemas: [NHI_SCHEMA] });
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _nhiType: 42,
+      nhiType: 42,
     });
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual([
       {
         schemaId: '#NHI',
-        property: '_nhiType',
+        property: 'nhiType',
         message: expect.stringContaining('must be string'),
         validation: 'type',
       },
@@ -522,7 +522,7 @@ describe('validator — permissive enum properties', () => {
     const { _key, ...entityWithoutKey } = validNhiEntity;
     const result = validator.validateEntity({
       ...entityWithoutKey,
-      _nhiType: 'unknown_subtype',
+      nhiType: 'unknown_subtype',
     });
     expect(result.isValid).toBe(false);
     expect(result.errors).toEqual([
@@ -536,7 +536,7 @@ describe('validator — permissive enum properties', () => {
     expect(result.warnings).toEqual([
       {
         schemaId: '#NHI',
-        property: '_nhiType',
+        property: 'nhiType',
         message: expect.stringContaining('must be equal to one of'),
         validation: 'enum',
       },
@@ -550,14 +550,14 @@ describe('validator — permissive enum properties', () => {
     });
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _nhiType: 'unknown_subtype',
+      nhiType: 'unknown_subtype',
     });
     expect(result.isValid).toBe(false);
     expect(result.warnings).toBeNull();
     expect(result.errors).toEqual([
       {
         schemaId: '#NHI',
-        property: '_nhiType',
+        property: 'nhiType',
         message: expect.stringContaining('must be equal to one of'),
         validation: 'enum',
       },
@@ -567,16 +567,16 @@ describe('validator — permissive enum properties', () => {
   test('permissiveEnumProperties can be extended with additional properties', () => {
     const validator = new EntityValidator({
       schemas: [NHI_SCHEMA],
-      permissiveEnumProperties: ['_nhiType', '_aiConfidence', '_customField'],
+      permissiveEnumProperties: ['nhiType', 'aiConfidence', 'customField'],
     });
-    // _nhiOwnerStatus is no longer permissive in this configuration.
+    // nhiOwnerStatus is no longer permissive in this configuration.
     const result = validator.validateEntity({
       ...validNhiEntity,
-      _nhiOwnerStatus: 'mystery',
+      nhiOwnerStatus: 'mystery',
     });
     expect(result.isValid).toBe(false);
     expect(result.errors).toHaveLength(1);
-    expect(result.errors![0].property).toBe('_nhiOwnerStatus');
+    expect(result.errors![0].property).toBe('nhiOwnerStatus');
     expect(result.errors![0].validation).toBe('enum');
   });
 });

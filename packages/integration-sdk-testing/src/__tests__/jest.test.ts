@@ -653,7 +653,7 @@ describe('#toMatchDataModelSchema', () => {
     expect(result.pass).toBe(false);
   });
 
-  test('should pass and emit a console.warn when entity violates a permissive enum (_aiConfidence)', () => {
+  test('should pass and emit a console.warn when entity violates a permissive enum (aiConfidence)', () => {
     const StringEnum = <T extends string[]>(values: [...T]) =>
       SchemaType.Unsafe<T[number]>({
         type: 'string',
@@ -665,7 +665,7 @@ describe('#toMatchDataModelSchema', () => {
       _type: 'permissive_enum_warning_test_pass',
       description: 'Schema with a permissive enum property.',
       schema: SchemaType.Object({
-        _aiConfidence: StringEnum(['high', 'medium', 'low']),
+        aiConfidence: StringEnum(['high', 'medium', 'low']),
       }),
     });
 
@@ -675,7 +675,7 @@ describe('#toMatchDataModelSchema', () => {
       _key: 'permissive-warn-pass-1',
       displayName: 'Thing',
       category: ['software'],
-      _aiConfidence: 'extreme' as unknown as 'high' | 'medium' | 'low',
+      aiConfidence: 'extreme' as unknown as 'high' | 'medium' | 'low',
     });
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -684,7 +684,7 @@ describe('#toMatchDataModelSchema', () => {
       expect(result.pass).toBe(true);
       expect(warnSpy).toHaveBeenCalledTimes(1);
       const warnMessage = warnSpy.mock.calls[0][0] as string;
-      expect(warnMessage).toContain('_aiConfidence');
+      expect(warnMessage).toContain('aiConfidence');
       expect(warnMessage).toContain('permissive enum violations');
     } finally {
       warnSpy.mockRestore();
@@ -704,7 +704,7 @@ describe('#toMatchDataModelSchema', () => {
       description: 'Schema with both a strict enum and a permissive enum.',
       schema: SchemaType.Object({
         state: StringEnum(['ENABLED', 'DISABLED']),
-        _aiConfidence: StringEnum(['high', 'medium', 'low']),
+        aiConfidence: StringEnum(['high', 'medium', 'low']),
       }),
     });
 
@@ -715,7 +715,7 @@ describe('#toMatchDataModelSchema', () => {
       displayName: 'Thing',
       category: ['software'],
       state: 'BOGUS' as unknown as 'ENABLED' | 'DISABLED',
-      _aiConfidence: 'extreme' as unknown as 'high' | 'medium' | 'low',
+      aiConfidence: 'extreme' as unknown as 'high' | 'medium' | 'low',
     });
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -726,7 +726,7 @@ describe('#toMatchDataModelSchema', () => {
       expect(message).toContain('state');
       // warning is still surfaced even though we fail
       expect(warnSpy).toHaveBeenCalledTimes(1);
-      expect(warnSpy.mock.calls[0][0]).toContain('_aiConfidence');
+      expect(warnSpy.mock.calls[0][0]).toContain('aiConfidence');
     } finally {
       warnSpy.mockRestore();
     }
