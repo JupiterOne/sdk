@@ -20,6 +20,8 @@ afterEach(() => {
   delete process.env.STRING_VARIABLE;
   delete process.env.BOOLEAN_VARIABLE;
   delete process.env.STRING_ARRAY_VARIABLE;
+  delete process.env.CA_CERTIFICATE;
+  delete process.env.DISABLE_TLS_VERIFICATION;
 
   vol.reset();
 });
@@ -106,6 +108,51 @@ test('throws error if expected environment boolean field does not match "true" o
   ).toThrow(
     'Expected boolean value for field "booleanVariable" but received "mochi".',
   );
+});
+
+test('loads CA_CERTIFICATE and DISABLE_TLS_VERIFICATION even when not declared in instanceConfigFields', () => {
+  process.env.CA_CERTIFICATE =
+    '-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----';
+  process.env.DISABLE_TLS_VERIFICATION = 'true';
+
+  const config = loadConfigFromEnvironmentVariables({});
+
+  expect(config).toEqual({
+    caCertificate:
+      '-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----',
+    disableTlsVerification: true,
+  });
+});
+
+test('treats CA_CERTIFICATE and DISABLE_TLS_VERIFICATION as optional when env is not set', () => {
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<'stringVariable', IntegrationInstanceConfigField>
+  > = {
+    stringVariable: {
+      type: 'string',
+    },
+  };
+
+  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
+
+  expect(config).toEqual({
+    stringVariable: 'string',
+  });
+});
+
+test('respects integration-declared caCertificate / disableTlsVerification over implicit defaults', () => {
+  process.env.CA_CERTIFICATE = 'cert-value';
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<'caCertificate', IntegrationInstanceConfigField>
+  > = {
+    caCertificate: {
+      type: 'string',
+    },
+  };
+
+  const config = loadConfigFromEnvironmentVariables(instanceConfigFields);
+
+  expect(config).toEqual({ caCertificate: 'cert-value' });
 });
 
 test('loads environment variables from .env', () => {

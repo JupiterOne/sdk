@@ -52,9 +52,13 @@ export function createIntegrationInstanceForLocalExecution(
       process.env.INTEGRATION_INSTANCE_ACCOUNT_ID ||
       process.env.JUPITERONE_LOCAL_INTEGRATION_INSTANCE_ACCOUNT_ID ||
       LOCAL_INTEGRATION_INSTANCE.accountId,
-    config: config.instanceConfigFields
-      ? loadConfigFromEnvironmentVariables(config.instanceConfigFields)
-      : {},
+    // Always call `loadConfigFromEnvironmentVariables` so that the implicit
+    // agent-configuration fields (caCertificate / disableTlsVerification) are
+    // picked up from the environment even when an integration does not declare
+    // any `instanceConfigFields` of its own.
+    config: loadConfigFromEnvironmentVariables(
+      config.instanceConfigFields ?? {},
+    ),
     disabledSources: parseDisabledIngestionSourcesFromEnv(),
   };
 }
