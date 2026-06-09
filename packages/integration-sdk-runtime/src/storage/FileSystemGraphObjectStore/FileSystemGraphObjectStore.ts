@@ -142,6 +142,8 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     GraphObjectLocationOnDisk
   >(ENTITY_LOCATION_ON_DISK_DEFAULT_MAP_KEY_SPACE);
   private readonly logger?: IntegrationLogger;
+  private entityFileCache = new Map<string, FlushedEntityData>();
+  private static readonly ENTITY_FILE_CACHE_MAX_SIZE = 50;
 
   constructor(params?: FileSystemGraphObjectStoreParams) {
     this.semaphore = new Sema(BINARY_SEMAPHORE_CONCURRENCY);
@@ -209,10 +211,22 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     const filePath = getRootStorageAbsolutePath(
       entityLocationOnDisk.graphDataPath,
     );
-    const { entities } = await readGraphObjectFile<FlushedEntityData>({
-      filePath,
-    });
-    return entities[entityLocationOnDisk.index];
+
+    let fileData = this.entityFileCache.get(filePath);
+    if (!fileData) {
+      fileData = await readGraphObjectFile<FlushedEntityData>({ filePath });
+
+      if (
+        this.entityFileCache.size >=
+        FileSystemGraphObjectStore.ENTITY_FILE_CACHE_MAX_SIZE
+      ) {
+        const oldestKey = this.entityFileCache.keys().next().value;
+        this.entityFileCache.delete(oldestKey!);
+      }
+      this.entityFileCache.set(filePath, fileData);
+    }
+
+    return fileData.entities[entityLocationOnDisk.index];
   }
 
   async iterateEntities<T extends Entity = Entity>(
@@ -303,6 +317,7 @@ export class FileSystemGraphObjectStore implements GraphObjectStore {
     onEntitiesFlushed?: (entities: Entity[]) => Promise<void>,
     force: Boolean = false,
   ) {
+    this.entityFileCache.clear();
     await this.lockOperation(async () => {
       // This code rechecks the condition that triggers the flushing process to avoid unnecessary uploads
       // During concurrent steps, we might be deleting items from memory while a step is adding new items. This could cause the threshold
