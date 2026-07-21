@@ -9,6 +9,16 @@ and this project adheres to
 
 # Unreleased
 
+# 17.5.0 - 2026-07-21
+
+- runtime: always expose `caCertificate` and `disableTlsVerification` from the
+  environment for integrations with `supportsAgentConfigurations` enabled,
+  without requiring them to be re-declared in `instanceConfigFields`
+
+# 17.4.0 - 2026-04-09
+
+- cli: aggregate step authorization into top-level config field
+
 # 17.3.0 - 2026-03-19
 
 - core: add `StepAuthorization` interface to `StepMetadata` with `endpoints`,
