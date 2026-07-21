@@ -12,6 +12,21 @@ import {
 const dotenvExpand = require('dotenv-expand');
 
 /**
+ * Global "agent configurations" that are exposed to every integration whose
+ * `integrationPlatformFeatures.supportsAgentConfigurations` is enabled. They
+ * are intentionally NOT required to be declared in `instanceConfigFields` so
+ * that integrations can opt in without per-integration schema changes.
+ *
+ * The values are consumed by `BaseAPIClient.getDefaultAgent()` in
+ * `@jupiterone/integration-sdk-http-client` and by the equivalent helper in
+ * `@private/http-client` inside the integrations monorepo.
+ */
+const IMPLICIT_AGENT_CONFIG_FIELDS: IntegrationInstanceConfigFieldMap = {
+  caCertificate: { type: 'string', optional: true },
+  disableTlsVerification: { type: 'boolean', optional: true },
+};
+
+/**
  * Reads integration configuration from environment variables
  */
 export function loadConfigFromEnvironmentVariables<
@@ -20,7 +35,14 @@ export function loadConfigFromEnvironmentVariables<
   // pull in environment variables from .env file if available
   dotenvExpand(dotenv.config());
 
-  return Object.entries(configMap)
+  // Merge implicit agent-configuration fields without overriding any
+  // declarations the integration may have already made for the same key.
+  const mergedConfigMap = {
+    ...IMPLICIT_AGENT_CONFIG_FIELDS,
+    ...configMap,
+  } as IntegrationInstanceConfigFieldMap<TConfig>;
+
+  return Object.entries(mergedConfigMap)
     .map(([field, config]): [string, string | object | boolean | undefined] => {
       const environmentVariableName = snakeCase(field).toUpperCase();
 
