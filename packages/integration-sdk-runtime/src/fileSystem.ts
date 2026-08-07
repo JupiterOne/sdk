@@ -56,7 +56,11 @@ function exitIfOutOfDisk(error: unknown, fullPath: string): void {
   try {
     writeSync(
       2,
+      // Shaped as a bunyan record so it lands in the log pipeline alongside
+      // everything else the integration emitted, rather than as loose text.
       `${JSON.stringify({
+        v: 0,
+        name: 'integration-sdk-runtime',
         level: 60,
         msg: 'Out of disk space while writing collected data. Exiting so the task can be retried with a larger volume.',
         path: fullPath,

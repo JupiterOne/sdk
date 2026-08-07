@@ -42,7 +42,12 @@ function mockProcessExit() {
   }) as never);
 }
 
-afterEach(() => vol.reset());
+afterEach(() => {
+  vol.reset();
+  // `clearMocks` only clears recorded calls, so an implementation installed by
+  // one test would otherwise leak into the next.
+  mockedFs.writeSync.mockReset();
+});
 
 test('claims the exit code the ECS state machine treats as "retry on a bigger disk"', () => {
   // Changing this breaks the contract with `handleTaskFailure` in
