@@ -4,7 +4,7 @@
  * This module exports utilities for writing data
  * relative to the .j1-integration root storage directoryPath.
  */
-import { promises as fs } from 'fs';
+import { promises as fs, writeSync } from 'fs';
 import path from 'path';
 
 import rimraf from 'rimraf';
@@ -19,6 +19,58 @@ const brotliCompress = promisify(zlib.brotliCompress);
 const brotliDecompress = promisify(zlib.brotliDecompress);
 
 export const DEFAULT_STORAGE_DIRECTORY_NAME = '.j1-integration';
+
+/**
+ * Exit code claimed for "the volume backing the storage directory is full".
+ *
+ * The managed ECS state machine treats it as a request to retry the task on a
+ * larger disk (see `handleTaskFailure` in jupiter-integration-service). Any
+ * other non-zero code is classified as a permanent failure, so this has to stay
+ * in sync with that handler.
+ */
+export const OUT_OF_DISK_EXIT_CODE = 77;
+
+function isOutOfDiskError(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | undefined)?.code === 'ENOSPC';
+}
+
+/**
+ * Kills the process when a write fails because the disk is full.
+ *
+ * Every graph object the integration collects lands on disk before it is
+ * uploaded, so once the volume is full nothing downstream can succeed. Letting
+ * the ENOSPC propagate as a normal error is actively harmful: the step executor
+ * catches it, marks that one step failed, and carries on to the next step,
+ * which fails the same way. The job then finishes "with errors" and exits 0 —
+ * a clean task exit that the state machine never catches, so the disk is never
+ * scaled and the retry never happens. Publishing a partial graph also looks to
+ * the customer like their data disappeared rather than like a failed run.
+ *
+ * Writes the diagnostic synchronously because `process.exit` does not flush
+ * pending async stdout writes, and this line is the only evidence of why the
+ * task died.
+ */
+function exitIfOutOfDisk(error: unknown, fullPath: string): void {
+  if (!isOutOfDiskError(error)) return;
+
+  try {
+    writeSync(
+      2,
+      `${JSON.stringify({
+        level: 60,
+        msg: 'Out of disk space while writing collected data. Exiting so the task can be retried with a larger volume.',
+        path: fullPath,
+        storageDirectory: getRootStorageDirectory(),
+        exitCode: OUT_OF_DISK_EXIT_CODE,
+        time: new Date().toISOString(),
+      })}\n`,
+    );
+  } catch {
+    // Nothing useful to do if even stderr is unavailable; still exit below.
+  }
+
+  process.exit(OUT_OF_DISK_EXIT_CODE);
+}
 
 export function getRootStorageDirectory() {
   return (
@@ -81,12 +133,19 @@ export async function writeFileToPath({
   const directory = getRootStorageDirectory();
   const fullPath = path.resolve(directory, relativePath);
 
-  await ensurePathCanBeWrittenTo(fullPath);
+  try {
+    await ensurePathCanBeWrittenTo(fullPath);
 
-  if (isCompressionEnabled()) {
-    await fs.writeFile(fullPath, await brotliCompress(content), 'utf8');
-  } else {
-    await fs.writeFile(fullPath, content, 'utf8');
+    if (isCompressionEnabled()) {
+      await fs.writeFile(fullPath, await brotliCompress(content), 'utf8');
+    } else {
+      await fs.writeFile(fullPath, content, 'utf8');
+    }
+  } catch (error) {
+    // Every write of collected data funnels through here, so this is the one
+    // place that has to notice the volume filling up.
+    exitIfOutOfDisk(error, fullPath);
+    throw error;
   }
 }
 
@@ -129,15 +188,22 @@ export async function symlink({ sourcePath, destinationPath }: SymlinkInput) {
   const fullSourcePath = path.resolve(directory, sourcePath);
   const fullDestinationPath = path.resolve(directory, destinationPath);
 
-  await ensurePathCanBeWrittenTo(fullDestinationPath);
-  // On Windows, we need to perform hardlinks for files
-  if (
-    process.platform === 'win32' &&
-    (await fs.lstat(fullSourcePath)).isFile()
-  ) {
-    await fs.link(fullSourcePath, fullDestinationPath);
-  } else {
-    await fs.symlink(fullSourcePath, fullDestinationPath, 'junction');
+  try {
+    await ensurePathCanBeWrittenTo(fullDestinationPath);
+    // On Windows, we need to perform hardlinks for files
+    if (
+      process.platform === 'win32' &&
+      (await fs.lstat(fullSourcePath)).isFile()
+    ) {
+      await fs.link(fullSourcePath, fullDestinationPath);
+    } else {
+      await fs.symlink(fullSourcePath, fullDestinationPath, 'junction');
+    }
+  } catch (error) {
+    // The index symlinks are written per flush alongside the graph object
+    // files, so they hit ENOSPC on the same boundary.
+    exitIfOutOfDisk(error, fullDestinationPath);
+    throw error;
   }
 }
 
