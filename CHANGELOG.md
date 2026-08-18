@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+# 17.6.1 - 2026-08-18
+
 - runtime: treat a blank `CA_CERTIFICATE` / `DISABLE_TLS_VERIFICATION` as unset
   when the integration did not declare the field, so an empty value written by
   the platform cannot abort the run
