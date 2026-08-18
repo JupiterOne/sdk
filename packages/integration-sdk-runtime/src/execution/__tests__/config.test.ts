@@ -155,6 +155,65 @@ test('respects integration-declared caCertificate / disableTlsVerification over 
   expect(config).toEqual({ caCertificate: 'cert-value' });
 });
 
+test('a declared caCertificate replaces the implicit one, so it is no longer optional', () => {
+  // The implicit definition is optional, so an unset CA_CERTIFICATE would
+  // resolve to undefined. Declaring the field without `optional` has to win,
+  // which is only observable when the environment variable is missing.
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<'caCertificate', IntegrationInstanceConfigField>
+  > = {
+    caCertificate: {
+      type: 'string',
+    },
+  };
+
+  expect(() =>
+    loadConfigFromEnvironmentVariables(instanceConfigFields),
+  ).toThrow(
+    'Expected environment variable "CA_CERTIFICATE" for config field "caCertificate" to be set.',
+  );
+});
+
+test('treats a blank implicit agent-configuration variable as unset', () => {
+  // The platform writes these for every integration, none of which declared
+  // them. A blank value must not fail the boolean conversion and abort the run.
+  process.env.CA_CERTIFICATE = '';
+  process.env.DISABLE_TLS_VERIFICATION = '';
+
+  const config = loadConfigFromEnvironmentVariables({});
+
+  expect(config).toEqual({});
+});
+
+test('treats a whitespace-only implicit agent-configuration variable as unset', () => {
+  process.env.CA_CERTIFICATE = '  ';
+  process.env.DISABLE_TLS_VERIFICATION = ' ';
+
+  const config = loadConfigFromEnvironmentVariables({});
+
+  expect(config).toEqual({});
+});
+
+test('still rejects a blank value for an agent-configuration field the integration declared', () => {
+  // Once the integration declares the field it owns it, and a value the
+  // integration cannot parse stays an error rather than being ignored.
+  process.env.DISABLE_TLS_VERIFICATION = '';
+  const instanceConfigFields: IntegrationInstanceConfigFieldMap<
+    Record<'disableTlsVerification', IntegrationInstanceConfigField>
+  > = {
+    disableTlsVerification: {
+      type: 'boolean',
+      optional: true,
+    },
+  };
+
+  expect(() =>
+    loadConfigFromEnvironmentVariables(instanceConfigFields),
+  ).toThrow(
+    'Expected boolean value for field "disableTlsVerification" but received "".',
+  );
+});
+
 test('loads environment variables from .env', () => {
   vol.fromJSON({
     [path.join(process.cwd(), '.env')]: 'MY_ENV_VAR=mochi',
