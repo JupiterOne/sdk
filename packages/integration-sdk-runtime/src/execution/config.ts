@@ -48,7 +48,19 @@ export function loadConfigFromEnvironmentVariables<
 
       const environmentVariableValue = process.env[environmentVariableName];
 
-      if (environmentVariableValue === undefined) {
+      // An implicit field is present only because the platform may have written
+      // it into the environment; the integration never asked for it. A blank
+      // value there means "not configured", not "malformed" — without this, a
+      // stray `DISABLE_TLS_VERIFICATION=` would fail the boolean conversion and
+      // abort the run of every integration rather than only the ones that
+      // declared the field.
+      const isUndeclaredImplicitField =
+        field in IMPLICIT_AGENT_CONFIG_FIELDS && !(field in configMap);
+
+      if (
+        environmentVariableValue === undefined ||
+        (isUndeclaredImplicitField && environmentVariableValue.trim() === '')
+      ) {
         if (config.optional) {
           return [field, undefined];
         } else {
