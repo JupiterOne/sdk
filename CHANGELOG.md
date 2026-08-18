@@ -9,6 +9,21 @@ and this project adheres to
 
 # Unreleased
 
+# 17.6.0 - 2026-08-18
+
+- runtime: always expose `caCertificate` and `disableTlsVerification` from the
+  environment for integrations with `supportsAgentConfigurations` enabled,
+  without requiring them to be re-declared in `instanceConfigFields`
+- runtime: exit with code `77` when collected data cannot be written because the
+  volume is full, so the managed task is retried on a larger disk instead of
+  exiting cleanly with a partial graph
+
+Note: `17.5.0` was tagged but never published. Its change ships in `17.6.0`.
+
+# 17.4.0 - 2026-04-09
+
+- cli: aggregate step authorization into top-level config field
+
 # 17.3.0 - 2026-03-19
 
 - core: add `StepAuthorization` interface to `StepMetadata` with `endpoints`,
