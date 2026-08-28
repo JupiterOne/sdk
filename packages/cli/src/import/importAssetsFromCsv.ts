@@ -1,7 +1,6 @@
 import globby from 'globby';
 import upath from 'upath';
 import createSpinner from 'ora';
-import type { Alpha } from '@lifeomic/alpha';
 import path from 'path';
 import pMap from 'p-map';
 import { retry } from '@lifeomic/attempt';
@@ -10,6 +9,7 @@ import * as log from '../log';
 import { ImportAssetsParams } from './importAssets';
 import { readFileFromPath, getCsvAssetsDirectory } from '../fileSystem';
 import {
+  ApiClient,
   createApiClient,
   getApiBaseUrl,
 } from '@jupiterone/integration-sdk-runtime';
@@ -33,7 +33,7 @@ async function waitForSyncCompletion({ jobId, apiClient, progress }) {
 
 interface ImportAssetsTypeParams {
   storageDirectory: string;
-  apiClient: Alpha;
+  apiClient: ApiClient;
   jobId: string;
   assetType: 'entities' | 'relationships';
   progress: (currentFile: string) => void;

@@ -1,5 +1,4 @@
-import { mocked } from 'jest-mock';
-import { Alpha } from '@lifeomic/alpha';
+import axios, { AxiosHeaders, InternalAxiosRequestConfig } from 'axios';
 
 import {
   getApiBaseUrl,
@@ -8,11 +7,6 @@ import {
   getAccountFromEnvironment,
   compressRequest,
 } from '../index';
-import { AxiosRequestConfig } from 'axios';
-
-jest.mock('@lifeomic/alpha');
-
-const AlphaMock = mocked(Alpha);
 
 describe('getApiBaseUrl', () => {
   test('returns development base url if dev option is set to true', () => {
@@ -81,6 +75,7 @@ describe('getApiKeyFromEnvironment', () => {
 describe('createApiClient', () => {
   test('successfully creates apiClient', () => {
     const apiBaseUrl = getApiBaseUrl();
+    const createSpy = jest.spyOn(axios, 'create');
 
     const client = createApiClient({
       apiBaseUrl,
@@ -91,10 +86,9 @@ describe('createApiClient', () => {
       },
     });
 
-    expect(client).toBeInstanceOf(AlphaMock);
-
-    expect(AlphaMock).toHaveReturnedTimes(1);
-    expect(AlphaMock).toHaveBeenCalledWith({
+    expect(client).toBeDefined();
+    expect(createSpy).toHaveBeenCalledTimes(1);
+    expect(createSpy).toHaveBeenCalledWith({
       baseURL: apiBaseUrl,
       headers: {
         Authorization: 'Bearer test-key',
@@ -105,22 +99,24 @@ describe('createApiClient', () => {
         maxTimeout: 20000,
       },
     });
+
+    createSpy.mockRestore();
   });
 });
 
 describe('compressRequest', () => {
   it('should compress the request data when the URL matches', async () => {
-    const config: AxiosRequestConfig = {
+    const config = {
       method: 'post',
       url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
-      headers: {},
+      headers: new AxiosHeaders(),
       data: { some: 'data' },
-    };
+    } as InternalAxiosRequestConfig;
 
     await compressRequest(config);
 
     // Check if the 'Content-Encoding' header is set to 'gzip'
-    expect(config.headers!['Content-Encoding']).toBe('gzip');
+    expect(config.headers.get('Content-Encoding')).toBe('gzip');
 
     // Check if the data is compressed
     expect(config.data).toBeInstanceOf(Buffer);
@@ -130,24 +126,23 @@ describe('compressRequest', () => {
     const config = {
       method: 'post',
       url: '/other-url',
-      headers: {},
+      headers: new AxiosHeaders(),
       data: { some: 'data' },
-    };
+    } as InternalAxiosRequestConfig;
 
     await compressRequest(config);
 
     // Check that the 'Content-Encoding' header is not set
-    expect(config.headers['Content-Encoding']).toBeUndefined();
+    expect(config.headers.get('Content-Encoding')).toBeUndefined();
 
     // Check that the data is not compressed
     expect(config.data).toEqual({ some: 'data' });
   });
 });
 
-describe('real Alpha request with fake API key', () => {
+describe('real axios request with fake API key', () => {
   test('should not expose API key in error', async () => {
     jest.resetModules();
-    jest.unmock('@lifeomic/alpha');
 
     const { createApiClient, getApiBaseUrl } = require('../index');
 
