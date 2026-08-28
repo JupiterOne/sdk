@@ -32,12 +32,17 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 
 /**
  * Retries connection-level failures and 5xx responses, but never a request
- * that was aborted (`ECONNABORTED` covers both explicit aborts and timeouts).
+ * that was aborted (`ECONNABORTED` covers both explicit aborts and timeouts)
+ * and never a non-axios error.
  *
  * A missing `response` means the request never completed a round trip
  * (DNS failure, connection reset, socket hang up), which is retryable.
  */
 export const isRetryableError = (err: any): boolean =>
+  // Guard on `isAxiosError` so a programming error thrown from a downstream
+  // interceptor (which also has no `response`) is surfaced immediately rather
+  // than replayed with backoff.
+  err?.isAxiosError === true &&
   err.code !== 'ECONNABORTED' &&
   (!err.response || (err.response.status >= 500 && err.response.status <= 599));
 
@@ -102,8 +107,11 @@ export function attachRetryInterceptor(client: AxiosInstance): void {
     if (typeof config.retry === 'boolean') {
       config.retry = {};
     }
+    // Clone before applying defaults: `createApiClient` puts the caller's own
+    // `retryOptions` object here, and mutating it would leak state across
+    // clients that share one options object.
     config.retry = applyDefaults(
-      config.retry as Record<string, any>,
+      { ...(config.retry as Record<string, any>) },
       RETRY_DEFAULTS,
     ) as RetryOptions;
     config.__retryCount = config.__retryCount || 0;

@@ -208,6 +208,32 @@ describe('upload compression', () => {
     });
   });
 
+  test('compresses exactly once when a synchronization upload is retried', async () => {
+    // A retry replays the same config object through the request interceptor
+    // chain. Compressing again would produce a doubly-gzipped body sent under a
+    // single `Content-Encoding: gzip`, which the server cannot decode.
+    server = await startServer((count) => (count < 3 ? 500 : 200));
+
+    const client = createApiClient({
+      apiBaseUrl: server.baseUrl,
+      account: 'test-account',
+      accessToken: 'test-key',
+      compressUploads: true,
+      retryOptions: FAST_RETRY,
+    });
+
+    await client.post(syncUrl, { some: 'data' });
+
+    expect(server.requests).toHaveLength(3);
+    for (const request of server.requests) {
+      expect(request.headers['content-encoding']).toEqual('gzip');
+      // Single gunzip must yield the original payload, not another gzip stream.
+      expect(JSON.parse(gunzipSync(request.body).toString())).toEqual({
+        some: 'data',
+      });
+    }
+  });
+
   test('leaves non-synchronization requests uncompressed', async () => {
     server = await startServer(() => 200);
 

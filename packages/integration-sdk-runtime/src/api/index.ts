@@ -39,10 +39,15 @@ interface CreateApiClientInput {
    *
    * @deprecated The client is now a plain axios instance; prefer
    * `axiosOptions`. This alias is retained for backwards compatibility and
-   * will be removed in a future major version.
+   * will be removed in a future major version. Where both set the same key,
+   * `axiosOptions` wins.
    */
   alphaOptions?: ApiClientRequestConfig;
-  /** Additional request configuration merged into the client's defaults. */
+  /**
+   * Additional request configuration merged into the client's defaults.
+   *
+   * Takes precedence over `alphaOptions` where both set the same key.
+   */
   axiosOptions?: ApiClientRequestConfig;
   proxyUrl?: string;
 }
@@ -133,6 +138,11 @@ export function createApiClient({
   return client;
 }
 
+/** A request config carrying the gzip-compression marker. */
+interface CompressibleRequestConfig extends InternalAxiosRequestConfig {
+  __compressed?: boolean;
+}
+
 export const compressRequest = async function (
   config: InternalAxiosRequestConfig,
 ): Promise<InternalAxiosRequestConfig> {
@@ -143,6 +153,13 @@ export const compressRequest = async function (
       config.url,
     )
   ) {
+    // A retry replays this exact config object through the full interceptor
+    // chain, so `config.data` may already hold the gzip buffer from a previous
+    // attempt. Compressing again would advertise `Content-Encoding: gzip` for a
+    // doubly-compressed body that the server cannot decode.
+    if ((config as CompressibleRequestConfig).__compressed) {
+      return config;
+    }
     // axios >=1 hands request interceptors an AxiosHeaders instance, which
     // exposes `set`. Fall back to plain assignment so hand-built config
     // objects (as used in tests) keep working.
@@ -155,6 +172,7 @@ export const compressRequest = async function (
       config.headers = { 'Content-Encoding': 'gzip' } as any;
     }
     config.data = await gzipData(config.data);
+    (config as CompressibleRequestConfig).__compressed = true;
   }
   return config;
 };
