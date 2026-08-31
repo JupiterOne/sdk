@@ -221,5 +221,41 @@ describe('executeStepWithDependencies', () => {
 
       expect(stepTwoExecutionHandlerDidExecute).toBe(true);
     });
+
+    test('should work with normalizeGraphObjectKey', async () => {
+      const e1 = getMockEntity();
+      const e2 = getMockEntity();
+      e2._key = 'KeY2';
+      const r1 = createDirectRelationship({
+        from: e1,
+        _class: RelationshipClass.HAS,
+        to: e2,
+      });
+
+      const stepOne = getMockIntegrationStep({
+        id: 'step-1',
+        executionHandler: async ({ jobState }) => {
+          await jobState.addEntity(e1);
+          await jobState.addEntity(e2);
+          if (jobState.hasKey('key2')) {
+            await jobState.addRelationship(r1);
+          }
+        },
+      });
+
+      await expect(
+        executeStepWithDependencies({
+          stepId: stepOne.id,
+          invocationConfig: getMockInvocationConfig({
+            integrationSteps: [stepOne],
+            normalizeGraphObjectKey: (_key) => _key.toLowerCase(),
+          }),
+          instanceConfig: getMockInstanceConfig(),
+        }),
+      ).resolves.toMatchObject({
+        collectedEntities: [e1, e2],
+        collectedRelationships: [r1],
+      });
+    });
   });
 });
