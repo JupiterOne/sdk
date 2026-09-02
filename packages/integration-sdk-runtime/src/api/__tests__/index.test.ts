@@ -138,6 +138,27 @@ describe('compressRequest', () => {
     // Check that the data is not compressed
     expect(config.data).toEqual({ some: 'data' });
   });
+
+  it('should not label the body as gzip when compression fails', async () => {
+    // A payload that cannot be serialised makes gzipData throw. The header must
+    // not already be set at that point, or the request would advertise
+    // `Content-Encoding: gzip` for a body that was never compressed.
+    const circular: any = {};
+    circular.self = circular;
+
+    const config = {
+      method: 'post',
+      url: '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities',
+      headers: new AxiosHeaders(),
+      data: circular,
+    } as InternalAxiosRequestConfig;
+
+    await expect(compressRequest(config)).rejects.toThrow();
+
+    expect(config.headers.get('Content-Encoding')).toBeUndefined();
+    expect(config.data).toBe(circular);
+    expect((config as any).__compressed).toBeUndefined();
+  });
 });
 
 describe('real axios request with fake API key', () => {

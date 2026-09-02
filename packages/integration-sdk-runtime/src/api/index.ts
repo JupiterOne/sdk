@@ -160,6 +160,11 @@ export const compressRequest = async function (
     if ((config as CompressibleRequestConfig).__compressed) {
       return config;
     }
+    // Compress first. Advertising `Content-Encoding: gzip` before the body is
+    // actually compressed would leave a plaintext body labelled as gzip if
+    // `gzipData` threw.
+    const compressed = await gzipData(config.data);
+
     // axios >=1 hands request interceptors an AxiosHeaders instance, which
     // exposes `set`. Fall back to plain assignment so hand-built config
     // objects (as used in tests) keep working.
@@ -171,7 +176,7 @@ export const compressRequest = async function (
     } else {
       config.headers = { 'Content-Encoding': 'gzip' } as any;
     }
-    config.data = await gzipData(config.data);
+    config.data = compressed;
     (config as CompressibleRequestConfig).__compressed = true;
   }
   return config;
