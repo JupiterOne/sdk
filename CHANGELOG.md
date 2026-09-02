@@ -9,6 +9,49 @@ and this project adheres to
 
 # Unreleased
 
+## BREAKING
+
+- runtime: replace `@lifeomic/alpha` with `axios`. `ApiClient` is now an
+  `AxiosInstance` rather than an `Alpha` instance, and `alphaOptions` is typed
+  `AxiosRequestConfig & { retry?: RetryOptions }`. Callers passing `lambda`,
+  `Lambda` or a custom `adapter` will no longer compile. The SDK never used
+  alpha's `lambda://` transport, so there is no runtime equivalent to migrate.
+
+- runtime: **redirects no longer forward the `Authorization` header across
+  hosts.** Alpha re-issued redirects itself and carried every header to the
+  target. `axios` delegates to `follow-redirects`, which strips `Authorization`
+  whenever the redirect changes host or port; same-host relative redirects are
+  unaffected. No JupiterOne API endpoint currently answers with a redirect, so
+  this is latent rather than active — but a request that is redirected
+  cross-host will now arrive unauthenticated and fail with a 401, which the
+  retry layer deliberately does not retry. The default `maxRedirects` also
+  changes from alpha's 5 to axios's 21, and alpha's
+  `Exceeded maximum number of redirects.` error no longer exists.
+
+## Fixed
+
+- runtime: retried synchronization uploads are no longer gzipped twice. Alpha
+  replayed the failed request's config through the full interceptor chain, so
+  each retry re-compressed an already-compressed body and advertised
+  `Content-Encoding: gzip` for a payload the server could not decode. Requests
+  now carry a marker so compression runs exactly once per request.
+
+- runtime: `Content-Encoding: gzip` is set only after compression succeeds, so a
+  failure while compressing can no longer leave a plaintext body labelled as
+  gzipped.
+
+- runtime: `axios` is now a declared dependency of `integration-sdk-runtime` and
+  `cli`. Both packages already imported it directly while relying on it being
+  present as a transitive dependency of `@lifeomic/alpha`.
+
+## Changed
+
+- runtime: alpha's retry behaviour is reimplemented in
+  `integration-sdk-runtime/src/api/retry.ts`, preserving its defaults (3
+  attempts, factor 2, 10s max delay), its exponential backoff with jitter, and
+  its policy of retrying only connection failures and 5xx responses. Timeouts
+  (`ECONNABORTED`) and 4xx responses are still not retried.
+
 # 17.6.1 - 2026-08-18
 
 - runtime: treat a blank `CA_CERTIFICATE` / `DISABLE_TLS_VERIFICATION` as unset

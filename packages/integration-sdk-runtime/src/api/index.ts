@@ -1,5 +1,9 @@
-import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
-import { AxiosProxyConfig } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosProxyConfig,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -9,8 +13,20 @@ import {
   IntegrationApiKeyRequiredError,
 } from './error';
 import { gzipData } from '../synchronization/util';
+import { attachRetryInterceptor, RetryOptions } from './retry';
 
-export type ApiClient = Alpha;
+export type { RetryOptions } from './retry';
+export { isRetryableError } from './retry';
+
+export type ApiClient = AxiosInstance;
+
+/**
+ * Request configuration accepted by {@link createApiClient}, including the
+ * `retry` options honored by the client's retry interceptor.
+ */
+export type ApiClientRequestConfig = AxiosRequestConfig & {
+  retry?: RetryOptions | boolean;
+};
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
@@ -18,15 +34,22 @@ interface CreateApiClientInput {
   accessToken?: string;
   retryOptions?: RetryOptions;
   compressUploads?: boolean;
-  alphaOptions?: AlphaOptions;
+  /**
+   * Additional request configuration merged into the client's defaults.
+   *
+   * @deprecated The client is now a plain axios instance; prefer
+   * `axiosOptions`. This alias is retained for backwards compatibility and
+   * will be removed in a future major version. Where both set the same key,
+   * `axiosOptions` wins.
+   */
+  alphaOptions?: ApiClientRequestConfig;
+  /**
+   * Additional request configuration merged into the client's defaults.
+   *
+   * Takes precedence over `alphaOptions` where both set the same key.
+   */
+  axiosOptions?: ApiClientRequestConfig;
   proxyUrl?: string;
-}
-
-interface RetryOptions {
-  attempts?: number;
-  factor?: number;
-  maxTimeout?: number;
-  retryCondition?: (err: Error) => boolean;
 }
 
 /**
@@ -45,6 +68,7 @@ export function createApiClient({
   retryOptions,
   compressUploads,
   alphaOptions,
+  axiosOptions,
   proxyUrl,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
@@ -59,15 +83,20 @@ export function createApiClient({
   const proxyUrlString = proxyUrl || getProxyFromEnvironment();
   const proxy = proxyUrlString ? parseProxyUrl(proxyUrlString) : undefined;
 
-  const opts: AlphaOptions = {
+  const opts: ApiClientRequestConfig = {
     baseURL: apiBaseUrl,
     headers,
     retry: retryOptions ?? {},
     ...(proxy && { proxy }),
     ...alphaOptions,
+    ...axiosOptions,
   };
 
-  const client = new Alpha(opts) as ApiClient;
+  const client = axios.create(opts);
+
+  // Retry must be registered before the redaction interceptor below: it
+  // replays `error.config`, which redaction overwrites.
+  attachRetryInterceptor(client);
 
   // Redact Authorization header from error response
   client.interceptors?.response?.use(
@@ -103,18 +132,20 @@ export function createApiClient({
   );
 
   if (compressUploads) {
-    // interceptors is incorrectly typed even without the case to ApiClient.
-    // an AxiosInterceptor doesn't work here. You must use the AlphaInterceptor
-    // as we are registering these interceptors on the Alpha instance.
-    // AlphaInterceptors _must_ return the config or a Promise for the config.
+    // Request interceptors must return the config (or a promise for it).
     client.interceptors.request.use(compressRequest);
   }
   return client;
 }
 
-export const compressRequest: AlphaInterceptor = async function (
-  config: AlphaOptions,
-) {
+/** A request config carrying the gzip-compression marker. */
+interface CompressibleRequestConfig extends InternalAxiosRequestConfig {
+  __compressed?: boolean;
+}
+
+export const compressRequest = async function (
+  config: InternalAxiosRequestConfig,
+): Promise<InternalAxiosRequestConfig> {
   if (
     config.method === 'post' &&
     config.url &&
@@ -122,14 +153,31 @@ export const compressRequest: AlphaInterceptor = async function (
       config.url,
     )
   ) {
-    if (config.headers) {
-      config.headers['Content-Encoding'] = 'gzip';
-    } else {
-      config.headers = {
-        'Content-Encoding': 'gzip',
-      };
+    // A retry replays this exact config object through the full interceptor
+    // chain, so `config.data` may already hold the gzip buffer from a previous
+    // attempt. Compressing again would advertise `Content-Encoding: gzip` for a
+    // doubly-compressed body that the server cannot decode.
+    if ((config as CompressibleRequestConfig).__compressed) {
+      return config;
     }
-    config.data = await gzipData(config.data);
+    // Compress first. Advertising `Content-Encoding: gzip` before the body is
+    // actually compressed would leave a plaintext body labelled as gzip if
+    // `gzipData` threw.
+    const compressed = await gzipData(config.data);
+
+    // axios >=1 hands request interceptors an AxiosHeaders instance, which
+    // exposes `set`. Fall back to plain assignment so hand-built config
+    // objects (as used in tests) keep working.
+    const headers = config.headers as any;
+    if (typeof headers?.set === 'function') {
+      headers.set('Content-Encoding', 'gzip');
+    } else if (headers) {
+      headers['Content-Encoding'] = 'gzip';
+    } else {
+      config.headers = { 'Content-Encoding': 'gzip' } as any;
+    }
+    config.data = compressed;
+    (config as CompressibleRequestConfig).__compressed = true;
   }
   return config;
 };

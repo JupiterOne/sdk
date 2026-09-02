@@ -27,7 +27,6 @@ import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes } from './batchBySize';
-import type { Alpha } from '@lifeomic/alpha';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -391,7 +390,7 @@ export interface UploadDataLookup {
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   logger: IntegrationLogger;
-  apiClient: Alpha;
+  apiClient: ApiClient;
   jobId: string;
   type: K;
   batch: T[K][];
