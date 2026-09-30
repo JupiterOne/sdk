@@ -3,6 +3,8 @@ import { inspect } from 'util';
 import { EventEmitter } from 'events';
 import { randomUUID as uuid } from 'crypto';
 
+import { sanitizeError } from './sanitizeError';
+
 import {
   ExecutionContext,
   IntegrationError,
@@ -85,7 +87,11 @@ export function createLogger<
         return {
           message: err.message,
           name: err.name,
-          stack: inspect(err, false, 10),
+          // Sanitize before the depth-10 inspect: axios/gaxios errors keep a
+          // live TLS socket whose Symbol(connect-options) exposes the request
+          // Authorization header. sanitizeError tags transport objects and
+          // redacts credential-bearing keys so they cannot reach the logs.
+          stack: inspect(sanitizeError(err), false, 10),
           code: err.code,
           signal: err.signal,
         };

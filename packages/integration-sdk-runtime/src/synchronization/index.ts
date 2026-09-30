@@ -615,4 +615,18 @@ function cleanAxiosError(err: AxiosError) {
   if (err.config?.data) {
     delete err.config.data;
   }
+
+  // Detach live transport references so a deep inspect of this error cannot
+  // walk into the TLS socket and reach the request Authorization header via
+  // Symbol(connect-options). Defense-in-depth alongside the logger's
+  // sanitizeError serializer (see logger/sanitizeError.ts).
+  const request = err.request as { socket?: unknown; connection?: unknown };
+  if (request) {
+    delete request.socket;
+    delete request.connection;
+  }
+  const response = err.response as { request?: unknown } | undefined;
+  if (response) {
+    delete response.request;
+  }
 }
