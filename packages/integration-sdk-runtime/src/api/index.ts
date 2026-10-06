@@ -1,5 +1,4 @@
-import { Alpha, AlphaInterceptor, AlphaOptions } from '@lifeomic/alpha';
-import { AxiosProxyConfig } from 'axios';
+import { Dispatcher, ProxyAgent, request } from 'undici';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -10,23 +9,171 @@ import {
 } from './error';
 import { gzipData } from '../synchronization/util';
 
-export type ApiClient = Alpha;
+export interface ApiClientResponse<T = any> {
+  data: T;
+  status?: number;
+  statusText?: string;
+}
+
+export interface ApiRequestConfig {
+  headers?: Record<string, string>;
+}
+
+/**
+ * Error thrown for non-2xx responses. Shape mirrors the fields consumers read
+ * from the previous axios client (`response.status/statusText/data`, `config`),
+ * but carries no live socket or request object, so it cannot leak credentials.
+ */
+export class ApiResponseError extends Error {
+  readonly response: { status: number; statusText: string; data: any };
+  readonly config: { url: string; method: string };
+
+  constructor(
+    method: string,
+    url: string,
+    status: number,
+    statusText: string,
+    data: any,
+  ) {
+    super(`Request failed with status code ${status}`);
+    this.name = 'ApiResponseError';
+    this.response = { status, statusText, data };
+    this.config = { method, url };
+  }
+}
+
+const PERSISTER_UPLOAD_PATH =
+  /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/;
+
+const STATUS_TEXT: Record<number, string> = {
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not Found',
+  413: 'Payload Too Large',
+  422: 'Unprocessable Entity',
+  429: 'Too Many Requests',
+  500: 'Internal Server Error',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
+};
+
+function parseBody(text: string, contentType?: string): any {
+  if (!text) return undefined;
+  const isJson = contentType?.includes('application/json');
+  if (isJson || text.startsWith('{') || text.startsWith('[')) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+  return text;
+}
+
+/**
+ * Minimal JupiterOne API client backed by undici. Exposes the `.get`/`.post`
+ * surface the SDK and CLI rely on. Retry is handled by callers via
+ * `@lifeomic/attempt`; this client performs single requests.
+ */
+export class ApiClient {
+  private readonly baseURL: string;
+  private readonly defaultHeaders: Record<string, string>;
+  private readonly compressUploads: boolean;
+  private readonly dispatcher?: Dispatcher;
+
+  constructor(opts: {
+    baseURL: string;
+    headers: Record<string, string>;
+    compressUploads?: boolean;
+    dispatcher?: Dispatcher;
+  }) {
+    this.baseURL = opts.baseURL;
+    this.defaultHeaders = opts.headers;
+    this.compressUploads = opts.compressUploads ?? false;
+    this.dispatcher = opts.dispatcher;
+  }
+
+  get<T = any>(
+    url: string,
+    config?: ApiRequestConfig,
+  ): Promise<ApiClientResponse<T>> {
+    return this.request<T>('GET', url, undefined, config);
+  }
+
+  post<T = any>(
+    url: string,
+    body?: unknown,
+    config?: ApiRequestConfig,
+  ): Promise<ApiClientResponse<T>> {
+    return this.request<T>('POST', url, body, config);
+  }
+
+  private async request<T>(
+    method: 'GET' | 'POST',
+    url: string,
+    bodyObj: unknown,
+    config?: ApiRequestConfig,
+  ): Promise<ApiClientResponse<T>> {
+    const fullUrl = new URL(url, this.baseURL).toString();
+    const headers: Record<string, string> = {
+      ...this.defaultHeaders,
+      ...config?.headers,
+    };
+
+    let body: string | Buffer | undefined;
+    if (bodyObj !== undefined) {
+      // Gzip only the large persister entity/relationship uploads.
+      if (
+        this.compressUploads &&
+        method === 'POST' &&
+        PERSISTER_UPLOAD_PATH.test(url)
+      ) {
+        headers['Content-Encoding'] = 'gzip';
+        body = await gzipData(bodyObj as object);
+      } else {
+        body = JSON.stringify(bodyObj);
+      }
+    }
+
+    const res = await request(fullUrl, {
+      method,
+      headers,
+      body,
+      ...(this.dispatcher && { dispatcher: this.dispatcher }),
+    });
+
+    const text = await res.body.text();
+    const contentType = res.headers['content-type'] as string | undefined;
+    const data = parseBody(text, contentType);
+
+    if (res.statusCode >= 400) {
+      throw new ApiResponseError(
+        method,
+        fullUrl,
+        res.statusCode,
+        STATUS_TEXT[res.statusCode] ?? '',
+        data,
+      );
+    }
+
+    return {
+      data: data as T,
+      status: res.statusCode,
+      statusText: STATUS_TEXT[res.statusCode] ?? '',
+    };
+  }
+}
 
 interface CreateApiClientInput {
   apiBaseUrl: string;
   account: string;
   accessToken?: string;
-  retryOptions?: RetryOptions;
   compressUploads?: boolean;
-  alphaOptions?: AlphaOptions;
   proxyUrl?: string;
-}
-
-interface RetryOptions {
-  attempts?: number;
-  factor?: number;
-  maxTimeout?: number;
-  retryCondition?: (err: Error) => boolean;
+  /** Custom undici dispatcher (e.g. a test Agent or ProxyAgent override). */
+  dispatcher?: Dispatcher;
 }
 
 /**
@@ -42,10 +189,9 @@ export function createApiClient({
   apiBaseUrl,
   account,
   accessToken,
-  retryOptions,
   compressUploads,
-  alphaOptions,
   proxyUrl,
+  dispatcher,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
     'JupiterOne-Account': account,
@@ -57,82 +203,17 @@ export function createApiClient({
   }
 
   const proxyUrlString = proxyUrl || getProxyFromEnvironment();
-  const proxy = proxyUrlString ? parseProxyUrl(proxyUrlString) : undefined;
+  const resolvedDispatcher =
+    dispatcher ??
+    (proxyUrlString ? createProxyAgent(proxyUrlString) : undefined);
 
-  const opts: AlphaOptions = {
+  return new ApiClient({
     baseURL: apiBaseUrl,
     headers,
-    retry: retryOptions ?? {},
-    ...(proxy && { proxy }),
-    ...alphaOptions,
-  };
-
-  const client = new Alpha(opts) as ApiClient;
-
-  // Redact Authorization header from error response
-  client.interceptors?.response?.use(
-    (response) => response,
-    (error: any) => {
-      if (error?.config?.headers) {
-        error.config.headers = '[REDACTED]';
-      }
-
-      if (error?.response?.config?.headers) {
-        error.response.config.headers = '[REDACTED]';
-      }
-
-      if (typeof error?.request?._header === 'string') {
-        error.request._header = error.request._header.replace(
-          /Authorization: Bearer\s[^\r\n]+/i,
-          'Authorization: [REDACTED]',
-        );
-      }
-
-      const outHeadersSym = Object.getOwnPropertySymbols(
-        error.request || {},
-      ).find((sym) => String(sym).includes('kOutHeaders'));
-      if (outHeadersSym) {
-        const outHeaders = (error.request as any)[outHeadersSym];
-        if (outHeaders?.authorization) {
-          outHeaders.authorization = '[REDACTED]';
-        }
-      }
-
-      return Promise.reject(error);
-    },
-  );
-
-  if (compressUploads) {
-    // interceptors is incorrectly typed even without the case to ApiClient.
-    // an AxiosInterceptor doesn't work here. You must use the AlphaInterceptor
-    // as we are registering these interceptors on the Alpha instance.
-    // AlphaInterceptors _must_ return the config or a Promise for the config.
-    client.interceptors.request.use(compressRequest);
-  }
-  return client;
+    compressUploads,
+    dispatcher: resolvedDispatcher,
+  });
 }
-
-export const compressRequest: AlphaInterceptor = async function (
-  config: AlphaOptions,
-) {
-  if (
-    config.method === 'post' &&
-    config.url &&
-    /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/.test(
-      config.url,
-    )
-  ) {
-    if (config.headers) {
-      config.headers['Content-Encoding'] = 'gzip';
-    } else {
-      config.headers = {
-        'Content-Encoding': 'gzip',
-      };
-    }
-    config.data = await gzipData(config.data);
-  }
-  return config;
-};
 
 interface GetApiBaseUrlInput {
   dev: boolean;
@@ -170,22 +251,22 @@ export const getApiKeyFromEnvironment = () =>
 export const getAccountFromEnvironment = () =>
   getFromEnv('JUPITERONE_ACCOUNT', IntegrationAccountRequiredError);
 
-function parseProxyUrl(proxyUrl: string) {
+/** Builds an undici ProxyAgent from a proxy URL, including Basic auth. */
+export function createProxyAgent(proxyUrl: string): ProxyAgent {
   const url = new URL(proxyUrl);
-  const proxy: AxiosProxyConfig = {
-    host: url.hostname,
-    port: parseInt(url.port) || (url.protocol === 'https:' ? 443 : 80),
-    protocol: url.protocol.replace(':', ''),
-  };
+  const token =
+    url.username && url.password
+      ? `Basic ${Buffer.from(
+          `${decodeURIComponent(url.username)}:${decodeURIComponent(
+            url.password,
+          )}`,
+        ).toString('base64')}`
+      : undefined;
 
-  if (url.username && url.password) {
-    proxy.auth = {
-      username: decodeURIComponent(url.username),
-      password: decodeURIComponent(url.password),
-    };
-  }
-
-  return proxy;
+  return new ProxyAgent({
+    uri: `${url.protocol}//${url.host}`,
+    ...(token && { token }),
+  });
 }
 
 function getProxyFromEnvironment(): string | undefined {

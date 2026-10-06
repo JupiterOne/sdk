@@ -10,8 +10,6 @@ import {
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
 
-import { AxiosError } from 'axios';
-
 import { IntegrationLogger } from '../logger';
 
 import { ExecuteIntegrationResult } from '../execution';
@@ -27,7 +25,6 @@ import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
 import { shrinkBatchRawData } from './shrinkBatchRawData';
 import { batchGraphObjectsBySizeInBytes } from './batchBySize';
-import type { Alpha } from '@lifeomic/alpha';
 
 export { synchronizationApiError };
 export { createEventPublishingQueue } from './events';
@@ -391,7 +388,7 @@ export interface UploadDataLookup {
 
 interface UploadDataChunkParams<T extends UploadDataLookup, K extends keyof T> {
   logger: IntegrationLogger;
-  apiClient: Alpha;
+  apiClient: ApiClient;
   jobId: string;
   type: K;
   batch: T[K][];
@@ -506,24 +503,18 @@ export async function uploadDataChunk<
         },
         'Uploading data...',
       );
-      try {
-        await apiClient.post(
-          `/persister/synchronization/jobs/${jobId}/${type as string}`,
-          {
-            [type]: batch,
+      await apiClient.post(
+        `/persister/synchronization/jobs/${jobId}/${type as string}`,
+        {
+          [type]: batch,
+        },
+        {
+          headers: {
+            // Other headers applied at client creation are still maintained.
+            [RequestHeaders.CorrelationId]: uploadCorrelationId,
           },
-          {
-            headers: {
-              // NOTE: Other headers that were applied when the client was created,
-              // are still maintained
-              [RequestHeaders.CorrelationId]: uploadCorrelationId,
-            },
-          },
-        );
-      } catch (err) {
-        cleanAxiosError(err);
-        throw err;
-      }
+        },
+      );
     },
     {
       maxAttempts: 5,
@@ -605,14 +596,4 @@ export async function abortSynchronization({
   );
 
   return response.data.job;
-}
-
-function cleanAxiosError(err: AxiosError) {
-  if (err.config?.headers?.Authorization) {
-    delete err.config.headers.Authorization;
-  }
-
-  if (err.config?.data) {
-    delete err.config.data;
-  }
 }

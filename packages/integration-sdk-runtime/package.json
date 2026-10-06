@@ -37,7 +37,8 @@
     "lodash": "^4.17.15",
     "p-map": "^4.0.0",
     "p-queue": "^6.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "undici": "^6.21.0"
   },
   "devDependencies": {
     "@jupiterone/integration-sdk-private-test-utils": "^17.6.1",

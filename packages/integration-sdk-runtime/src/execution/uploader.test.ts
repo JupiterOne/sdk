@@ -205,7 +205,9 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       account: accountId,
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue({ data: {} });
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {
