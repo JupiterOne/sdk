@@ -147,6 +147,7 @@ describe('createIntegrationLogger', () => {
       level: 'info',
       serializers: {
         err: expect.any(Function),
+        'err.$response': expect.any(Function),
       },
     });
   });
@@ -164,6 +165,7 @@ describe('createIntegrationLogger', () => {
       level: 'info',
       serializers: {
         err: expect.any(Function),
+        'err.$response': expect.any(Function),
       },
       streams: [{ stream: expect.any(Writable) }],
     });

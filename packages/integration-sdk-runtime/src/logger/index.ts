@@ -83,19 +83,27 @@ export function createLogger<
     level: (process.env.LOG_LEVEL || 'info') as Logger.LogLevel,
     serializers: {
       err: function (err) {
-        if (!err || !err.stack) return err;
+        // Pass through primitives (nothing to redact or walk).
+        if (err === null || typeof err !== 'object') return err;
+        // Always sanitize error-like objects, even without a stack: axios/alpha
+        // errors can lack `.stack` yet still hold a live TLS socket whose
+        // Symbol(connect-options) exposes the request Authorization header.
+        const safe = sanitizeError(err) as any;
         return {
-          message: err.message,
-          name: err.name,
-          // Sanitize before the depth-10 inspect: axios/gaxios errors keep a
-          // live TLS socket whose Symbol(connect-options) exposes the request
-          // Authorization header. sanitizeError tags transport objects and
-          // redacts credential-bearing keys so they cannot reach the logs.
-          stack: inspect(sanitizeError(err), false, 10),
+          message: safe?.message ?? err.message,
+          name: safe?.name ?? err.name,
+          // Depth-10 inspect of the sanitized clone: transport objects are
+          // tagged and credential-bearing keys redacted before this point.
+          stack: inspect(safe, false, 10),
           code: err.code,
           signal: err.signal,
         };
       },
+      // The synchronization upload path logs the raw response object under this
+      // dedicated field (e.g. handleUploadDataChunkError). It bypasses the `err`
+      // serializer, so sanitize it here too — it can carry request headers and a
+      // live socket for HTTP clients that attach a `$response`.
+      'err.$response': (response) => sanitizeError(response),
     },
   };
 
