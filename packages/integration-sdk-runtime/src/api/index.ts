@@ -1,3 +1,4 @@
+import { STATUS_CODES } from 'http';
 import { Dispatcher, ProxyAgent, request } from 'undici';
 import { retry } from '@lifeomic/attempt';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
@@ -60,20 +61,6 @@ export class ApiResponseError extends Error {
 // legacy `/persister` path prefix).
 const INGESTION_UPLOAD_PATH =
   /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/;
-
-const STATUS_TEXT: Record<number, string> = {
-  400: 'Bad Request',
-  401: 'Unauthorized',
-  403: 'Forbidden',
-  404: 'Not Found',
-  413: 'Payload Too Large',
-  422: 'Unprocessable Entity',
-  429: 'Too Many Requests',
-  500: 'Internal Server Error',
-  502: 'Bad Gateway',
-  503: 'Service Unavailable',
-  504: 'Gateway Timeout',
-};
 
 function parseBody(text: string, contentType?: string): any {
   if (!text) return undefined;
@@ -152,7 +139,12 @@ export class ApiClient {
     bodyObj: unknown,
     config?: ApiRequestConfig,
   ): Promise<ApiClientResponse<T>> {
-    const fullUrl = new URL(url, this.baseURL).toString();
+    // Concatenate (not new URL(url, base)) so a path prefix on the base URL —
+    // e.g. a gateway/ingress prefix — is preserved rather than dropped.
+    const fullUrl = `${this.baseURL.replace(/\/+$/, '')}/${url.replace(
+      /^\/+/,
+      '',
+    )}`;
     const headers: Record<string, string> = {
       ...this.defaultHeaders,
       ...config?.headers,
@@ -184,13 +176,16 @@ export class ApiClient {
       const text = await res.body.text();
       const contentType = res.headers['content-type'] as string | undefined;
       const data = parseBody(text, contentType);
+      const statusText = STATUS_CODES[res.statusCode] ?? '';
 
-      if (res.statusCode >= 400) {
+      // undici does not follow redirects; treat any non-2xx (incl. 3xx) as an
+      // error rather than returning an unusable body as success.
+      if (res.statusCode < 200 || res.statusCode >= 300) {
         throw new ApiResponseError(
           method,
           fullUrl,
           res.statusCode,
-          STATUS_TEXT[res.statusCode] ?? '',
+          statusText,
           data,
         );
       }
@@ -198,7 +193,7 @@ export class ApiClient {
       return {
         data: data as T,
         status: res.statusCode,
-        statusText: STATUS_TEXT[res.statusCode] ?? '',
+        statusText,
       };
     };
 

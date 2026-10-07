@@ -1,5 +1,4 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
-import axios from 'axios';
 import { vol } from 'memfs';
 import { randomUUID as uuid } from 'crypto';
 import globby from 'globby';
@@ -18,7 +17,6 @@ import * as log from '../log';
 import { createCli } from '..';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
-jest.mock('axios');
 jest.mock('fs');
 jest.mock('globby');
 jest.mock('../pause');
@@ -36,7 +34,7 @@ jest.mock('ora', () => {
 });
 
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
-const mockedAxios = jest.mocked(axios);
+const mockedAxios = { get: jest.fn(), post: jest.fn() };
 const mockedGlobby = jest.mocked(globby);
 
 const type1Entities = [
@@ -67,7 +65,9 @@ const type1Relationships = [
 ];
 
 beforeEach(async () => {
-  mockedCreateApiClient.mockReturnValue(axios as unknown as runtime.ApiClient);
+  mockedCreateApiClient.mockReturnValue(
+    mockedAxios as unknown as runtime.ApiClient,
+  );
   vol.reset();
   vol.fromJSON({
     [`${TEST_STORAGE_LOCATION}/csv/entities/entity_type_1/${uuid()}.csv`]:

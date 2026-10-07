@@ -9,6 +9,31 @@ and this project adheres to
 
 # Unreleased
 
+## BREAKING
+
+- runtime: the JupiterOne API client (`createApiClient` / `ApiClient`) is now
+  backed by `undici` instead of `@lifeomic/alpha` (axios). This removes the
+  credential-leak vector where a deep inspect of an axios error walked the live
+  TLS socket and exposed the request `Authorization` header. The public surface
+  narrows accordingly:
+  - `ApiClient` is a `GET`/`POST`-only class (no `put`/`patch`/`delete`/
+    `request`/`interceptors`/`defaults`).
+  - `createApiClient` no longer accepts `alphaOptions`; `retryOptions` is
+    retained and a `dispatcher` option is added. The exported `compressRequest`
+    interceptor is removed (gzip is applied internally for upload routes).
+  - errors are thrown as `ApiResponseError`
+    (`response.{status,statusText,data}`, `config.{method,url}`) for any
+    non-2xx, carrying no socket or request object.
+  - `@lifeomic/alpha` is dropped as a dependency.
+- runtime: the minimum Node version is raised to `>=18.17.0` (required by
+  `undici@6`).
+
+## Added
+
+- runtime: `ApiClient` has built-in retry (3 attempts, backoff) on `429`/`5xx`
+  and transport errors; callers with their own retry loop pass
+  `config.retry = false`.
+
 # 17.6.1 - 2026-08-18
 
 - runtime: treat a blank `CA_CERTIFICATE` / `DISABLE_TLS_VERIFICATION` as unset

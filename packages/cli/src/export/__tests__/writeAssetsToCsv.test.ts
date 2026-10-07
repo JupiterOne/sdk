@@ -5,7 +5,6 @@ import { groupJsonAssetsByType } from '../groupJsonAssetsByType';
 import { TEST_STORAGE_LOCATION } from '../../__tests__/utils';
 import { writeAssetsToCsv } from '../writeAssetsToCsv';
 import { createEntity } from './utils/createEntity';
-import { sanitizeContent } from '../util';
 
 jest.mock('fs');
 

@@ -1,4 +1,5 @@
 import * as http from 'http';
+import * as net from 'net';
 import { AddressInfo } from 'net';
 import { inspect } from 'util';
 import { gunzipSync } from 'zlib';
@@ -323,4 +324,52 @@ describe('proxy configuration', () => {
       }),
     ).toThrow();
   });
+
+  it('routes requests through the proxy with URL-decoded Basic auth', async () => {
+    // Origin server reached through the proxy tunnel.
+    let targetPath: string | undefined;
+    const target = http.createServer((req, res) => {
+      targetPath = req.url;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ proxied: true }));
+    });
+    await new Promise<void>((resolve) => target.listen(0, resolve));
+    const targetPort = (target.address() as AddressInfo).port;
+
+    // undici ProxyAgent tunnels via CONNECT, carrying Proxy-Authorization.
+    let proxyAuth: string | undefined;
+    const proxy = http.createServer();
+    proxy.on('connect', (req, clientSocket, head) => {
+      proxyAuth = req.headers['proxy-authorization'] as string;
+      const [host, port] = (req.url ?? '').split(':');
+      const serverSocket = net.connect(Number(port), host, () => {
+        clientSocket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+        serverSocket.write(head);
+        serverSocket.pipe(clientSocket);
+        clientSocket.pipe(serverSocket);
+      });
+      serverSocket.on('error', () => clientSocket.destroy());
+    });
+    await new Promise<void>((resolve) => proxy.listen(0, resolve));
+    const proxyPort = (proxy.address() as AddressInfo).port;
+
+    // Credentials are URL-encoded in the proxy URL; the header must be decoded.
+    const client = createApiClient({
+      apiBaseUrl: `http://localhost:${targetPort}/api`,
+      account: 'a',
+      accessToken: 't',
+      proxyUrl: `http://user%40corp:p%40ss@localhost:${proxyPort}`,
+    });
+
+    const res = await client.get('/things');
+    proxy.close();
+    target.close();
+
+    expect(res.data).toEqual({ proxied: true });
+    // The base path prefix is preserved on the request to the origin.
+    expect(targetPath).toBe('/api/things');
+    const expected =
+      'Basic ' + Buffer.from('user@corp:p@ss').toString('base64');
+    expect(proxyAuth).toBe(expected);
+  }, 15000);
 });
