@@ -113,7 +113,8 @@ jobs:
       - name: Detect affected packages
         id: changed
         run: |
-          AFFECTED=$(npx nx show projects --affected --base=origin/main --json 2>/dev/null || echo "[]")
+          set -o pipefail
+          AFFECTED=$(npx nx show projects --affected --base=origin/main --json | jq -c .)
           echo "Affected packages: $AFFECTED"
           echo "packages=$AFFECTED" >> $GITHUB_OUTPUT
 
