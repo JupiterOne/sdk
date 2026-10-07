@@ -1,103 +1,104 @@
-import { Polly, Request, Response } from '@pollyjs/core';
+import * as http from 'http';
+import { AddressInfo } from 'net';
+import { gunzipSync } from 'zlib';
+
 import {
   SynchronizationJob,
   SynchronizationJobStatus,
 } from '@jupiterone/integration-sdk-core';
-import { gunzipSync } from 'zlib';
+
+export interface SynchronizerApi {
+  /** Base URL to pass to the CLI via `--api-base-url`. */
+  baseUrl: string;
+  job: SynchronizationJob;
+  readonly finalized: boolean;
+  readonly aborted: boolean;
+  readonly eventsPublished: boolean;
+  close: () => Promise<void>;
+}
 
 interface SetupOptions {
-  baseUrl: string;
-  polly: Polly;
   job: SynchronizationJob;
-  onSyncJobCreateResponse?: (req: Request<{}>, res: Response) => void;
+  /** Receives the parsed create-job request body and the raw request. */
+  onCreateJob?: (body: any, req: http.IncomingMessage) => void;
 }
 
-export function setupSynchronizerApi({
-  polly,
+/**
+ * Starts a local HTTP server that emulates the ingestion-service sync routes,
+ * returning its base URL. Replaces Polly, which cannot intercept the undici
+ * api client.
+ */
+export async function startSynchronizerApi({
   job,
-  baseUrl,
-  onSyncJobCreateResponse,
-}: SetupOptions) {
-  polly.server
-    .post(`${baseUrl}/persister/synchronization/jobs`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      res.status(200).json({ job });
+  onCreateJob,
+}: SetupOptions): Promise<SynchronizerApi> {
+  const state = { finalized: false, aborted: false, eventsPublished: false };
 
-      if (onSyncJobCreateResponse) onSyncJobCreateResponse(req, res);
-    });
+  const server = http.createServer((req, res) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (c) => chunks.push(c));
+    req.on('end', () => {
+      const url = req.url ?? '';
+      const raw = Buffer.concat(chunks);
+      const parseBody = () => {
+        const buf =
+          req.headers['content-encoding'] === 'gzip' ? gunzipSync(raw) : raw;
+        return buf.length ? JSON.parse(buf.toString()) : {};
+      };
+      const json = (obj: unknown) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(obj));
+      };
 
-  polly.server
-    .get(`${baseUrl}/persister/synchronization/jobs/${job.id}`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      res.status(200).json({ job });
-    });
-
-  polly.server
-    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/entities`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      if (req.hasHeader('Content-Encoding')) {
-        const result = gunzipSync(Buffer.from(req.body!));
-        const data = JSON.parse(result.toString());
-        job.numEntitiesUploaded += data.entities.length;
+      if (url.endsWith(`/jobs/${job.id}/entities`)) {
+        job.numEntitiesUploaded += parseBody().entities?.length ?? 0;
+        json({ job });
+      } else if (url.endsWith(`/jobs/${job.id}/relationships`)) {
+        job.numRelationshipsUploaded += parseBody().relationships?.length ?? 0;
+        json({ job });
+      } else if (url.endsWith(`/jobs/${job.id}/events`)) {
+        state.eventsPublished = true;
+        json({});
+      } else if (url.endsWith(`/jobs/${job.id}/finalize`)) {
+        state.finalized = true;
+        job.status = SynchronizationJobStatus.FINALIZE_PENDING;
+        json({ job });
+      } else if (url.endsWith(`/jobs/${job.id}/abort`)) {
+        state.aborted = true;
+        job.status = SynchronizationJobStatus.ABORTED;
+        json({ job });
+      } else if (req.method === 'GET' && url.endsWith(`/jobs/${job.id}`)) {
+        json({ job });
+      } else if (
+        req.method === 'POST' &&
+        url.endsWith('/synchronization/jobs')
+      ) {
+        if (onCreateJob) onCreateJob(parseBody(), req);
+        json({ job });
       } else {
-        job.numEntitiesUploaded += JSON.parse(req.body!).entities.length;
+        res.statusCode = 404;
+        json({ error: { code: 'NOT_FOUND' } });
       }
-      res.status(200).json({ job });
     });
-
-  polly.server
-    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/events`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      res.status(200).json({});
-    });
-
-  polly.server
-    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/relationships`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      if (req.hasHeader('Content-Encoding')) {
-        const result = gunzipSync(Buffer.from(req.body!));
-        const data = JSON.parse(result.toString());
-        job.numRelationshipsUploaded += data.relationships.length;
-      } else {
-        job.numRelationshipsUploaded += JSON.parse(
-          req.body!,
-        ).relationships.length;
-      }
-      res.status(200).json({ job });
-    });
-
-  polly.server
-    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/finalize`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      job.status = SynchronizationJobStatus.FINALIZE_PENDING;
-      res.status(200).json({ job });
-    });
-
-  polly.server
-    .post(`${baseUrl}/persister/synchronization/jobs/${job.id}/abort`)
-    .intercept((req, res) => {
-      allowCrossOrigin(req, res);
-      job.status = SynchronizationJobStatus.ABORTED;
-      res.status(200).json({ job });
-    });
-}
-
-function allowCrossOrigin(req, res) {
-  res.setHeaders({
-    'Access-Control-Allow-Origin': req.getHeader('origin'),
-    'Access-Control-Allow-Method': req.getHeader(
-      'access-control-request-method',
-    ),
-    'Access-Control-Allow-Headers': req.getHeader(
-      'access-control-request-headers',
-    ),
   });
+
+  await new Promise<void>((resolve) => server.listen(0, resolve));
+  const { port } = server.address() as AddressInfo;
+
+  return {
+    baseUrl: `http://localhost:${port}`,
+    job,
+    get finalized() {
+      return state.finalized;
+    },
+    get aborted() {
+      return state.aborted;
+    },
+    get eventsPublished() {
+      return state.eventsPublished;
+    },
+    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+  };
 }
 
 export function generateSynchronizationJob(

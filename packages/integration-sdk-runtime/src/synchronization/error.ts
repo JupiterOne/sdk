@@ -1,14 +1,20 @@
-import { AxiosError } from 'axios';
-
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import { SynchronizationApiErrorResponse } from './types';
 
+interface ApiErrorLike extends Error {
+  response?: {
+    data?: SynchronizationApiErrorResponse;
+    status?: number;
+    statusText?: string;
+  };
+}
+
 export function synchronizationApiError(
-  err: AxiosError<SynchronizationApiErrorResponse>,
+  err: ApiErrorLike,
   errorMessage: string,
 ) {
   if (err.response?.data?.error) {
-    // Looks like Axios error response with data
+    // API error response carrying a structured error body.
     const responseData: SynchronizationApiErrorResponse = err.response.data;
     const code = responseData!.error!.code || err.response.status;
     const message = responseData!.error!.message || err.response.statusText;

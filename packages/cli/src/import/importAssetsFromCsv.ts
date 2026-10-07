@@ -1,15 +1,14 @@
 import globby from 'globby';
 import upath from 'upath';
 import createSpinner from 'ora';
-import type { Alpha } from '@lifeomic/alpha';
 import path from 'path';
 import pMap from 'p-map';
-import { retry } from '@lifeomic/attempt';
 
 import * as log from '../log';
 import { ImportAssetsParams } from './importAssets';
 import { readFileFromPath, getCsvAssetsDirectory } from '../fileSystem';
 import {
+  ApiClient,
   createApiClient,
   getApiBaseUrl,
 } from '@jupiterone/integration-sdk-runtime';
@@ -33,7 +32,7 @@ async function waitForSyncCompletion({ jobId, apiClient, progress }) {
 
 interface ImportAssetsTypeParams {
   storageDirectory: string;
-  apiClient: Alpha;
+  apiClient: ApiClient;
   jobId: string;
   assetType: 'entities' | 'relationships';
   progress: (currentFile: string) => void;
@@ -56,18 +55,15 @@ async function importAssetTypeFromCsv({
     async (assetFile) => {
       const assets = sanitizeContent(await readFileFromPath(assetFile));
       try {
-        await retry(
-          () =>
-            apiClient.post(
-              `/persister/synchronization/jobs/${jobId}/${assetType}?ignoreDuplicates=true&ignoreIllegalProperties=true`,
-              assets,
-              {
-                headers: {
-                  'Content-Type': 'text/csv',
-                },
-              },
-            ),
-          { delay: 500 },
+        // Retry/backoff is handled by the api client's built-in retry.
+        await apiClient.post(
+          `/persister/synchronization/jobs/${jobId}/${assetType}?ignoreDuplicates=true&ignoreIllegalProperties=true`,
+          assets,
+          {
+            headers: {
+              'Content-Type': 'text/csv',
+            },
+          },
         );
       } catch (e) {
         if (e?.response?.data.error) {

@@ -197,7 +197,7 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
 });
 
 describe('#createPersisterApiStepGraphObjectDataUploader', () => {
-  test('should upload to persister API', async () => {
+  test('should upload to ingestion-service API', async () => {
     const accountId = uuid();
 
     const apiClient = createApiClient({
@@ -205,7 +205,9 @@ describe('#createPersisterApiStepGraphObjectDataUploader', () => {
       account: accountId,
     });
 
-    const postSpy = jest.spyOn(apiClient, 'post').mockResolvedValue({});
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue({ data: {} });
 
     const job = generateSynchronizationJob();
     const synchronizationJobContext: SynchronizationJobContext = {

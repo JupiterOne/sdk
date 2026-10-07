@@ -1,5 +1,4 @@
 import * as runtime from '@jupiterone/integration-sdk-runtime';
-import axios, { AxiosInstance } from 'axios';
 import { randomUUID as uuid } from 'crypto';
 
 import * as fileSystem from '../../fileSystem';
@@ -12,12 +11,11 @@ import { DEFAULT_EXPORT_DIRECTORY } from '../../commands';
 import { Entity } from '@jupiterone/integration-sdk-core';
 import { TEST_API_KEY, TEST_ACCOUNT } from '../../__tests__/utils';
 
-jest.mock('axios');
 jest.mock('@jupiterone/integration-sdk-runtime');
 jest.mock('../../fileSystem');
 
 const mockedRuntime = jest.mocked(runtime);
-const mockedAxios = jest.mocked<AxiosInstance>(axios);
+const mockedAxios = { get: jest.fn(), post: jest.fn() };
 const mockedFileSystem = jest.mocked(fileSystem);
 
 const options: BulkDownloadParams = {
@@ -42,7 +40,11 @@ function createEntity(id: string, type: string): Entity {
 }
 
 beforeEach(() => {
-  mockedRuntime.createApiClient.mockReturnValue(axios);
+  mockedRuntime.createApiClient.mockReturnValue(
+    mockedAxios as unknown as runtime.ApiClient,
+  );
+  mockedAxios.get.mockReset();
+  mockedAxios.post.mockReset();
 });
 
 test('should write assets to json file', async () => {

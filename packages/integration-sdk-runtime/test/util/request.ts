@@ -1,11 +1,11 @@
-import { AxiosRequestConfig } from 'axios';
-import { RequestHeaders } from '../../src';
+import { ApiRequestConfig, RequestHeaders } from '../../src';
 
 export function getExpectedRequestHeaders() {
-  const expectedRequestConfig: AxiosRequestConfig = {
+  const expectedRequestConfig: ApiRequestConfig = {
     headers: {
       [RequestHeaders.CorrelationId]: expect.any(String),
     },
+    retry: false,
   };
 
   return expectedRequestConfig;

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import * as runtime from '@jupiterone/integration-sdk-runtime';
 import { createCli } from '..';
 import { TEST_API_KEY, TEST_ACCOUNT } from './utils';
@@ -7,7 +6,6 @@ import { vol } from 'memfs';
 import { createEntity, createRelationship } from '../export/__tests__/utils';
 
 jest.mock('@jupiterone/integration-sdk-runtime');
-jest.mock('axios');
 jest.mock('fs');
 jest.mock('../log');
 
@@ -22,11 +20,13 @@ jest.mock('ora', () => {
   };
 });
 
-const mockedAxios = jest.mocked(axios);
+const mockedAxios = { get: jest.fn(), post: jest.fn() };
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 
 beforeEach(() => {
-  mockedCreateApiClient.mockReturnValue(axios);
+  mockedCreateApiClient.mockReturnValue(
+    mockedAxios as unknown as runtime.ApiClient,
+  );
   mockedAxios.get.mockReset();
   delete process.env.JUPITERONE_API_KEY;
   jest.clearAllMocks();

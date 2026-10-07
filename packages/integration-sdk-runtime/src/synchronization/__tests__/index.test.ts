@@ -32,8 +32,6 @@ import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { getExpectedRequestHeaders } from '../../../test/util/request';
 
 import * as shrinkBatchRawData from '../shrinkBatchRawData';
-import { AxiosError } from 'axios';
-import { SynchronizationApiErrorResponse } from '../types';
 
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
@@ -385,7 +383,7 @@ describe('abortSynchronization', () => {
 });
 
 describe('synchronizeCollectedData', () => {
-  test('creates job, uploads collected data, and starts finalization with successful retry', async () => {
+  test('creates job, uploads collected data, and finalizes', async () => {
     loadProjectStructure('synchronization');
     const context = createTestContext();
     const job = generateSynchronizationJob();
@@ -396,6 +394,8 @@ describe('synchronizeCollectedData', () => {
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
+      // 1 create-job + 6 upload calls return the job; the final finalize call
+      // returns the finalized job.
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
@@ -403,19 +403,7 @@ describe('synchronizeCollectedData', () => {
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => {
-        const error: AxiosError<SynchronizationApiErrorResponse> = {
-          name: '',
-          message: '',
-          config: undefined as any,
-          isAxiosError: false,
-          toJSON: () => ({}),
-        };
-        throw error;
-      })
-      .mockImplementationOnce((): any => {
-        return { data: { job: finalizedJob } };
-      });
+      .mockImplementationOnce((): any => ({ data: { job: finalizedJob } }));
 
     const summary = await readJsonFromPath<ExecuteIntegrationResult>(
       path.resolve(getRootStorageDirectory(), 'summary.json'),
@@ -427,7 +415,7 @@ describe('synchronizeCollectedData', () => {
 
     const expectedRequestHeaders = getExpectedRequestHeaders();
 
-    expect(postSpy).toHaveBeenCalledTimes(9);
+    expect(postSpy).toHaveBeenCalledTimes(8);
 
     expect(postSpy).toHaveBeenNthCalledWith(
       1,
@@ -452,13 +440,6 @@ describe('synchronizeCollectedData', () => {
 
     expect(postSpy).toHaveBeenNthCalledWith(
       8,
-      `/persister/synchronization/jobs/${job.id}/finalize`,
-      {
-        partialDatasets,
-      },
-    );
-    expect(postSpy).toHaveBeenNthCalledWith(
-      9,
       `/persister/synchronization/jobs/${job.id}/finalize`,
       {
         partialDatasets,
@@ -596,52 +577,6 @@ describe('uploadDataChunk', () => {
 
     expect(uploadDataChunkErr).not.toBe(undefined);
     expect(postSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('should clean errors before throwing', async () => {
-    const context = createTestContext();
-    const job = generateSynchronizationJob();
-
-    const type = 'entities';
-    const batch = [];
-
-    const mockLogger = {
-      trace: jest.fn(),
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      fatal: jest.fn(),
-    };
-
-    jest.spyOn(context.apiClient, 'post').mockImplementation(() => {
-      const err = new Error('thing went bad');
-      Object.assign(err, {
-        config: {
-          data: 'Stuff',
-          headers: {
-            Authroization: 'some fake token',
-            'content-type': 'application/json',
-          },
-        },
-      });
-      throw err;
-    });
-
-    await expect(
-      uploadDataChunk({
-        logger: mockLogger as any,
-        apiClient: context.apiClient,
-        jobId: job.id,
-        type,
-        batch,
-      }),
-    ).rejects.toBeInstanceOf(Error);
-    const firstInfoCall = mockLogger.info.mock.calls[0];
-    const args = firstInfoCall[0];
-    const axiosError = args['err'];
-    expect(axiosError.config.data).toBeUndefined();
-    expect(axiosError.config.headers.Authorization).toBeUndefined();
   });
 });
 

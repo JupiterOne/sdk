@@ -1,54 +1,44 @@
-import { Polly } from '@pollyjs/core';
-import NodeHttpAdapter from '@pollyjs/adapter-node-http';
-import FSPersister from '@pollyjs/persister-fs';
 import { loadProjectStructure } from '@jupiterone/integration-sdk-private-test-utils';
-import { generateSynchronizationJob } from './util/synchronization';
+
 import { createCli } from '../index';
-import { setupSynchronizerApi } from './util/synchronization';
-import { createTestPolly } from './util/recording';
+import {
+  generateSynchronizationJob,
+  startSynchronizerApi,
+  SynchronizerApi,
+} from './util/synchronization';
 
 jest.mock('../log');
 
-Polly.register(NodeHttpAdapter);
-Polly.register(FSPersister);
-
-let polly: Polly;
+let api: SynchronizerApi | undefined;
 
 beforeEach(() => {
   process.env.JUPITERONE_API_KEY = 'testing-key';
   process.env.JUPITERONE_ACCOUNT = 'mochi';
   loadProjectStructure('validationFailure');
 
-  polly = createTestPolly('run-cli-failure');
-
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
     throw new Error(`Process exited with code ${code}`);
   });
 });
 
-afterEach(() => {
-  polly.disconnect();
+afterEach(async () => {
+  delete process.env.JUPITERONE_API_KEY;
+  await api?.close();
+  api = undefined;
 });
 
 test('aborts synchronization job if an error occurs', async () => {
-  const job = generateSynchronizationJob();
+  api = await startSynchronizerApi({ job: generateSynchronizationJob() });
 
-  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
-
-  let calledAbort = false;
-  polly.server
-    .post(
-      `https://api.us.jupiterone.io/persister/synchronization/jobs/${job.id}/abort`,
-    )
-    .intercept((req, res) => {
-      calledAbort = true;
-    });
   await createCli().parseAsync([
     'node',
     'j1-integration',
     'run',
     '--integrationInstanceId',
     'test',
+    '--api-base-url',
+    api.baseUrl,
   ]);
-  expect(calledAbort).toBe(true);
+
+  expect(api.aborted).toBe(true);
 });
