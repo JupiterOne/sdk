@@ -3,7 +3,6 @@ import upath from 'upath';
 import createSpinner from 'ora';
 import path from 'path';
 import pMap from 'p-map';
-import { retry } from '@lifeomic/attempt';
 
 import * as log from '../log';
 import { ImportAssetsParams } from './importAssets';
@@ -56,20 +55,15 @@ async function importAssetTypeFromCsv({
     async (assetFile) => {
       const assets = sanitizeContent(await readFileFromPath(assetFile));
       try {
-        await retry(
-          () =>
-            apiClient.post(
-              `/persister/synchronization/jobs/${jobId}/${assetType}?ignoreDuplicates=true&ignoreIllegalProperties=true`,
-              assets,
-              {
-                headers: {
-                  'Content-Type': 'text/csv',
-                },
-                // This loop handles retry; skip the client's retry.
-                retry: false,
-              },
-            ),
-          { delay: 500 },
+        // Retry/backoff is handled by the api client's built-in retry.
+        await apiClient.post(
+          `/persister/synchronization/jobs/${jobId}/${assetType}?ignoreDuplicates=true&ignoreIllegalProperties=true`,
+          assets,
+          {
+            headers: {
+              'Content-Type': 'text/csv',
+            },
+          },
         );
       } catch (e) {
         if (e?.response?.data.error) {

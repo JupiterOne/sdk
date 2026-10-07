@@ -124,7 +124,6 @@ test('should import json assets', async () => {
     await parseToCsv(type1Relationships),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -132,7 +131,6 @@ test('should import json assets', async () => {
     await parseToCsv(type1Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -140,7 +138,6 @@ test('should import json assets', async () => {
     await parseToCsv(type2Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -183,7 +180,6 @@ test('should exclude relationships when specified', async () => {
     await parseToCsv(type1Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -191,7 +187,6 @@ test('should exclude relationships when specified', async () => {
     await parseToCsv(type2Entities),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).not.toHaveBeenCalledWith(
@@ -199,7 +194,6 @@ test('should exclude relationships when specified', async () => {
     expect.anything(),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -237,7 +231,6 @@ test('should exclude relationships when specified', async () => {
     expect.anything(),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -245,7 +238,6 @@ test('should exclude relationships when specified', async () => {
     await parseToCsv(type1Relationships),
     {
       headers: { 'Content-Type': 'text/csv' },
-      retry: false,
     },
   );
   expect(mockedAxios.post).toHaveBeenCalledWith(

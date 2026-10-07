@@ -318,7 +318,6 @@ describe('finalizeSynchronization', () => {
       {
         partialDatasets,
       },
-      { retry: false },
     );
   });
 });
@@ -384,7 +383,7 @@ describe('abortSynchronization', () => {
 });
 
 describe('synchronizeCollectedData', () => {
-  test('creates job, uploads collected data, and starts finalization with successful retry', async () => {
+  test('creates job, uploads collected data, and finalizes', async () => {
     loadProjectStructure('synchronization');
     const context = createTestContext();
     const job = generateSynchronizationJob();
@@ -395,6 +394,8 @@ describe('synchronizeCollectedData', () => {
 
     const postSpy = jest
       .spyOn(context.apiClient, 'post')
+      // 1 create-job + 6 upload calls return the job; the final finalize call
+      // returns the finalized job.
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
@@ -402,12 +403,7 @@ describe('synchronizeCollectedData', () => {
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
       .mockImplementationOnce((): any => ({ data: { job } }))
-      .mockImplementationOnce((): any => {
-        throw new Error('simulated upload failure');
-      })
-      .mockImplementationOnce((): any => {
-        return { data: { job: finalizedJob } };
-      });
+      .mockImplementationOnce((): any => ({ data: { job: finalizedJob } }));
 
     const summary = await readJsonFromPath<ExecuteIntegrationResult>(
       path.resolve(getRootStorageDirectory(), 'summary.json'),
@@ -419,7 +415,7 @@ describe('synchronizeCollectedData', () => {
 
     const expectedRequestHeaders = getExpectedRequestHeaders();
 
-    expect(postSpy).toHaveBeenCalledTimes(9);
+    expect(postSpy).toHaveBeenCalledTimes(8);
 
     expect(postSpy).toHaveBeenNthCalledWith(
       1,
@@ -448,15 +444,6 @@ describe('synchronizeCollectedData', () => {
       {
         partialDatasets,
       },
-      { retry: false },
-    );
-    expect(postSpy).toHaveBeenNthCalledWith(
-      9,
-      `/persister/synchronization/jobs/${job.id}/finalize`,
-      {
-        partialDatasets,
-      },
-      { retry: false },
     );
   });
 

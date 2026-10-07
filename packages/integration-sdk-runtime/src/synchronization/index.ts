@@ -246,52 +246,29 @@ export async function finalizeSynchronization({
 }: FinalizeSynchronizationInput): Promise<SynchronizationJob> {
   logger.info('Finalizing synchronization...');
 
-  return await retry(
-    async () => {
-      const response = await apiClient.post(
-        `/persister/synchronization/jobs/${job.id}/finalize`,
-        {
-          partialDatasets,
-        },
-        // This loop handles retry/backoff; skip the client's retry.
-        { retry: false },
-      );
-
-      return response.data.job;
-    },
-    {
-      maxAttempts: 5,
-      delay: 200,
-      factor: 1.05,
-      handleError(err, context) {
-        if (context.attemptsRemaining > 0) {
-          logger.warn(
-            {
-              err,
-              'err.$response': (err as any)?.$response,
-              context,
-            },
-            'Error occurred while finalizing synchronization job. Retrying request.',
-          );
-        }
-
-        if (context.attemptsRemaining === 0) {
-          logger.error(
-            {
-              err,
-              'err.$response': (err as any)?.$response,
-              context,
-            },
-            'Error occurred while finalizing synchronization job',
-          );
-          throw synchronizationApiError(
-            err,
-            'Error occurred while finalizing synchronization job.',
-          );
-        }
+  // Retry/backoff is handled by the api client's built-in retry.
+  try {
+    const response = await apiClient.post(
+      `/persister/synchronization/jobs/${job.id}/finalize`,
+      {
+        partialDatasets,
       },
-    },
-  );
+    );
+
+    return response.data.job;
+  } catch (err) {
+    logger.error(
+      {
+        err,
+        'err.$response': (err as any)?.$response,
+      },
+      'Error occurred while finalizing synchronization job',
+    );
+    throw synchronizationApiError(
+      err,
+      'Error occurred while finalizing synchronization job.',
+    );
+  }
 }
 
 async function getPartialDatasets() {
