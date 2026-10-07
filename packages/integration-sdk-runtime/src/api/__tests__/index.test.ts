@@ -151,7 +151,7 @@ describe('ApiClient request behavior', () => {
     expect(JSON.parse(lastRequest.body.toString())).toEqual({ name: 'x' });
   });
 
-  test('gzips persister entity uploads when compressUploads is set', async () => {
+  test('gzips ingestion-service entity uploads when compressUploads is set', async () => {
     const url =
       '/persister/synchronization/jobs/478d5718-69a7-4204-90b7-7d9f01de374f/entities';
     await client(true).post(url, { entities: [{ _key: 'a' }] });
@@ -161,7 +161,7 @@ describe('ApiClient request behavior', () => {
     });
   });
 
-  test('does not gzip non-persister posts', async () => {
+  test('does not gzip non-ingestion-service posts', async () => {
     await client(true).post('/other', { some: 'data' });
     expect(lastRequest.headers['content-encoding']).toBeUndefined();
     expect(JSON.parse(lastRequest.body.toString())).toEqual({ some: 'data' });

@@ -56,7 +56,9 @@ export class ApiResponseError extends Error {
   }
 }
 
-const PERSISTER_UPLOAD_PATH =
+// Matches the ingestion-service bulk upload routes (still served under the
+// legacy `/persister` path prefix).
+const INGESTION_UPLOAD_PATH =
   /\/persister\/synchronization\/jobs\/[0-9a-fA-F-]+\/(entities|relationships)/;
 
 const STATUS_TEXT: Record<number, string> = {
@@ -158,11 +160,11 @@ export class ApiClient {
 
     let body: string | Buffer | undefined;
     if (bodyObj !== undefined) {
-      // Gzip only the large persister entity/relationship uploads.
+      // Gzip only the large ingestion-service entity/relationship uploads.
       if (
         this.compressUploads &&
         method === 'POST' &&
-        PERSISTER_UPLOAD_PATH.test(url)
+        INGESTION_UPLOAD_PATH.test(url)
       ) {
         headers['Content-Encoding'] = 'gzip';
         body = await gzipData(bodyObj as object);

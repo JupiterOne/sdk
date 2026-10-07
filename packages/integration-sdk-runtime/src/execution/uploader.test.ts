@@ -197,7 +197,7 @@ describe('#createQueuedStepGraphObjectDataUploader', () => {
 });
 
 describe('#createPersisterApiStepGraphObjectDataUploader', () => {
-  test('should upload to persister API', async () => {
+  test('should upload to ingestion-service API', async () => {
     const accountId = uuid();
 
     const apiClient = createApiClient({
