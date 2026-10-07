@@ -1,7 +1,3 @@
-import { Polly } from '@pollyjs/core';
-import NodeHttpAdapter from '@pollyjs/adapter-node-http';
-import FSPersister from '@pollyjs/persister-fs';
-
 import { loadProjectStructure } from '@jupiterone/integration-sdk-private-test-utils';
 import { SynchronizationJobStatus } from '@jupiterone/integration-sdk-core';
 
@@ -9,24 +5,20 @@ import { createCli } from '../index';
 
 import {
   generateSynchronizationJob,
-  setupSynchronizerApi,
+  startSynchronizerApi,
+  SynchronizerApi,
 } from './util/synchronization';
 
 import * as log from '../log';
-import { createTestPolly } from './util/recording';
 
 jest.mock('../log');
 
-Polly.register(NodeHttpAdapter);
-Polly.register(FSPersister);
-
-let polly: Polly;
+let api: SynchronizerApi | undefined;
 
 beforeEach(() => {
   process.env.JUPITERONE_API_KEY = 'testing-key';
   process.env.JUPITERONE_ACCOUNT = 'mochi';
 
-  polly = createTestPolly('sync-cli');
   loadProjectStructure('synchronization');
 
   jest.spyOn(process, 'exit').mockImplementation((code: number | undefined) => {
@@ -34,16 +26,16 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   delete process.env.JUPITERONE_API_KEY;
   delete process.env.JUPITERONE_DEV;
-  polly.disconnect();
+  await api?.close();
+  api = undefined;
 });
 
 test('uploads data to the synchronization api and displays the results', async () => {
   const job = generateSynchronizationJob();
-
-  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+  api = await startSynchronizerApi({ job });
 
   await createCli().parseAsync([
     'node',
@@ -51,6 +43,8 @@ test('uploads data to the synchronization api and displays the results', async (
     'sync',
     '--integrationInstanceId',
     'test',
+    '--api-base-url',
+    api.baseUrl,
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
@@ -66,8 +60,7 @@ test('uploads data to the synchronization api and displays the results', async (
 
 test('skips finalization with skip-finalize', async () => {
   const job = generateSynchronizationJob();
-
-  setupSynchronizerApi({ polly, job, baseUrl: 'https://api.us.jupiterone.io' });
+  api = await startSynchronizerApi({ job });
 
   await createCli().parseAsync([
     'node',
@@ -76,6 +69,8 @@ test('skips finalization with skip-finalize', async () => {
     '--integrationInstanceId',
     'test',
     '--skip-finalize',
+    '--api-base-url',
+    api.baseUrl,
   ]);
 
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
@@ -91,19 +86,7 @@ test('skips finalization with skip-finalize', async () => {
 
 test('does not publish events for source "api" since there is no integrationJobId', async () => {
   const job = generateSynchronizationJob({ source: 'api', scope: 'test' });
-
-  setupSynchronizerApi({
-    polly,
-    job,
-    baseUrl: 'https://api.us.jupiterone.io',
-  });
-
-  let eventsPublished = false;
-  polly.server
-    .post(`https://example.com/persister/synchronization/jobs/${job.id}/events`)
-    .intercept((req, res) => {
-      eventsPublished = true;
-    });
+  api = await startSynchronizerApi({ job });
 
   await createCli().parseAsync([
     'node',
@@ -113,8 +96,10 @@ test('does not publish events for source "api" since there is no integrationJobI
     'api',
     '--scope',
     'test',
+    '--api-base-url',
+    api.baseUrl,
   ]);
 
-  expect(eventsPublished).toBe(false);
+  expect(api.eventsPublished).toBe(false);
   expect(log.displaySynchronizationResults).toHaveBeenCalledTimes(1);
 });
