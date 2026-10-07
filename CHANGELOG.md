@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+# 18.0.0 - 2026-10-07
+
 ## BREAKING
 
 - runtime: the JupiterOne API client (`createApiClient` / `ApiClient`) is now
