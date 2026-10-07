@@ -253,6 +253,8 @@ export async function finalizeSynchronization({
         {
           partialDatasets,
         },
+        // This loop handles retry/backoff; skip the client's retry.
+        { retry: false },
       );
 
       return response.data.job;
@@ -513,6 +515,8 @@ export async function uploadDataChunk<
             // Other headers applied at client creation are still maintained.
             [RequestHeaders.CorrelationId]: uploadCorrelationId,
           },
+          // This loop handles retry/backoff; skip the client's retry.
+          retry: false,
         },
       );
     },

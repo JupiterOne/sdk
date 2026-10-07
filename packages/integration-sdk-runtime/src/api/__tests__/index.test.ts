@@ -221,6 +221,47 @@ describe('ApiClient request behavior', () => {
       expect(dumped).not.toContain('connect-options');
     }
   }, 15000);
+
+  test('retries retryable 5xx then succeeds', async () => {
+    let calls = 0;
+    handler = (_req, res) => {
+      calls += 1;
+      if (calls < 3) {
+        res.statusCode = 503;
+        res.end('try again');
+      } else {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ ok: true }));
+      }
+    };
+    const res = await client().get('/x');
+    expect(res.data).toEqual({ ok: true });
+    expect(calls).toBe(3);
+  });
+
+  test('does not retry non-retryable 4xx', async () => {
+    let calls = 0;
+    handler = (_req, res) => {
+      calls += 1;
+      res.statusCode = 400;
+      res.end('bad');
+    };
+    await expect(client().get('/x')).rejects.toBeInstanceOf(ApiResponseError);
+    expect(calls).toBe(1);
+  });
+
+  test('config.retry=false disables retry', async () => {
+    let calls = 0;
+    handler = (_req, res) => {
+      calls += 1;
+      res.statusCode = 503;
+      res.end('try again');
+    };
+    await expect(
+      client().post('/x', {}, { retry: false }),
+    ).rejects.toBeInstanceOf(ApiResponseError);
+    expect(calls).toBe(1);
+  });
 });
 
 describe('proxy configuration', () => {

@@ -5,6 +5,7 @@ export function getExpectedRequestHeaders() {
     headers: {
       [RequestHeaders.CorrelationId]: expect.any(String),
     },
+    retry: false,
   };
 
   return expectedRequestConfig;

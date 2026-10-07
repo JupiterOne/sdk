@@ -318,6 +318,7 @@ describe('finalizeSynchronization', () => {
       {
         partialDatasets,
       },
+      { retry: false },
     );
   });
 });
@@ -447,6 +448,7 @@ describe('synchronizeCollectedData', () => {
       {
         partialDatasets,
       },
+      { retry: false },
     );
     expect(postSpy).toHaveBeenNthCalledWith(
       9,
@@ -454,6 +456,7 @@ describe('synchronizeCollectedData', () => {
       {
         partialDatasets,
       },
+      { retry: false },
     );
   });
 

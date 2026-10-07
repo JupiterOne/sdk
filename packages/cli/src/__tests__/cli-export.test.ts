@@ -26,7 +26,7 @@ const mockedAxios = jest.mocked(axios);
 const mockedCreateApiClient = jest.mocked(runtime.createApiClient);
 
 beforeEach(() => {
-  mockedCreateApiClient.mockReturnValue(axios);
+  mockedCreateApiClient.mockReturnValue(axios as unknown as runtime.ApiClient);
   mockedAxios.get.mockReset();
   delete process.env.JUPITERONE_API_KEY;
   jest.clearAllMocks();

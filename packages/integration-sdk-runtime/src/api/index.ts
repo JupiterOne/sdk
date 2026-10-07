@@ -1,4 +1,5 @@
 import { Dispatcher, ProxyAgent, request } from 'undici';
+import { retry } from '@lifeomic/attempt';
 import { IntegrationError } from '@jupiterone/integration-sdk-core';
 import dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
@@ -17,6 +18,19 @@ export interface ApiClientResponse<T = any> {
 
 export interface ApiRequestConfig {
   headers?: Record<string, string>;
+  /** Disable the client's built-in retry (for callers with their own retry). */
+  retry?: false;
+}
+
+export interface RetryOptions {
+  /** Total attempts including the first (default 3). */
+  attempts?: number;
+  /** Exponential backoff factor (default 2). */
+  factor?: number;
+  /** Max backoff delay in ms (default 10000). */
+  maxTimeout?: number;
+  /** Decides whether a given error should be retried. */
+  retryCondition?: (err: unknown) => boolean;
 }
 
 /**
@@ -72,27 +86,47 @@ function parseBody(text: string, contentType?: string): any {
   return text;
 }
 
+/** Retry retryable statuses (429, 5xx) and transport errors (no response). */
+function isRetryableError(err: unknown): boolean {
+  if (err instanceof ApiResponseError) {
+    const status = err.response.status;
+    return status === 429 || status >= 500;
+  }
+  // Non-response errors are transport/network failures — retry them.
+  return true;
+}
+
 /**
  * Minimal JupiterOne API client backed by undici. Exposes the `.get`/`.post`
- * surface the SDK and CLI rely on. Retry is handled by callers via
- * `@lifeomic/attempt`; this client performs single requests.
+ * surface the SDK and CLI rely on, with built-in retry on retryable errors
+ * (callers with their own retry loop pass `config.retry = false`).
  */
 export class ApiClient {
   private readonly baseURL: string;
   private readonly defaultHeaders: Record<string, string>;
   private readonly compressUploads: boolean;
   private readonly dispatcher?: Dispatcher;
+  private readonly retryOptions: Required<Omit<RetryOptions, 'maxTimeout'>> & {
+    maxTimeout: number;
+  };
 
   constructor(opts: {
     baseURL: string;
     headers: Record<string, string>;
     compressUploads?: boolean;
     dispatcher?: Dispatcher;
+    retryOptions?: RetryOptions;
   }) {
     this.baseURL = opts.baseURL;
     this.defaultHeaders = opts.headers;
     this.compressUploads = opts.compressUploads ?? false;
     this.dispatcher = opts.dispatcher;
+    this.retryOptions = {
+      attempts: opts.retryOptions?.attempts ?? 3,
+      factor: opts.retryOptions?.factor ?? 2,
+      maxTimeout: opts.retryOptions?.maxTimeout ?? 10_000,
+      retryCondition: opts.retryOptions?.retryCondition ?? isRetryableError,
+    };
   }
 
   get<T = any>(
@@ -137,32 +171,51 @@ export class ApiClient {
       }
     }
 
-    const res = await request(fullUrl, {
-      method,
-      headers,
-      body,
-      ...(this.dispatcher && { dispatcher: this.dispatcher }),
-    });
-
-    const text = await res.body.text();
-    const contentType = res.headers['content-type'] as string | undefined;
-    const data = parseBody(text, contentType);
-
-    if (res.statusCode >= 400) {
-      throw new ApiResponseError(
+    const send = async (): Promise<ApiClientResponse<T>> => {
+      const res = await request(fullUrl, {
         method,
-        fullUrl,
-        res.statusCode,
-        STATUS_TEXT[res.statusCode] ?? '',
-        data,
-      );
+        headers,
+        body,
+        ...(this.dispatcher && { dispatcher: this.dispatcher }),
+      });
+
+      const text = await res.body.text();
+      const contentType = res.headers['content-type'] as string | undefined;
+      const data = parseBody(text, contentType);
+
+      if (res.statusCode >= 400) {
+        throw new ApiResponseError(
+          method,
+          fullUrl,
+          res.statusCode,
+          STATUS_TEXT[res.statusCode] ?? '',
+          data,
+        );
+      }
+
+      return {
+        data: data as T,
+        status: res.statusCode,
+        statusText: STATUS_TEXT[res.statusCode] ?? '',
+      };
+    };
+
+    // Callers with their own retry loop (uploadDataChunk, finalize) opt out to
+    // avoid a nested double-retry.
+    if (config?.retry === false) {
+      return send();
     }
 
-    return {
-      data: data as T,
-      status: res.statusCode,
-      statusText: STATUS_TEXT[res.statusCode] ?? '',
-    };
+    const { attempts, factor, maxTimeout, retryCondition } = this.retryOptions;
+    return retry(send, {
+      maxAttempts: attempts,
+      delay: 200,
+      factor,
+      maxDelay: maxTimeout,
+      handleError: (err, context) => {
+        if (!retryCondition(err)) context.abort();
+      },
+    });
   }
 }
 
@@ -172,6 +225,7 @@ interface CreateApiClientInput {
   accessToken?: string;
   compressUploads?: boolean;
   proxyUrl?: string;
+  retryOptions?: RetryOptions;
   /** Custom undici dispatcher (e.g. a test Agent or ProxyAgent override). */
   dispatcher?: Dispatcher;
 }
@@ -191,6 +245,7 @@ export function createApiClient({
   accessToken,
   compressUploads,
   proxyUrl,
+  retryOptions,
   dispatcher,
 }: CreateApiClientInput): ApiClient {
   const headers: Record<string, string> = {
@@ -212,6 +267,7 @@ export function createApiClient({
     headers,
     compressUploads,
     dispatcher: resolvedDispatcher,
+    retryOptions,
   });
 }
 

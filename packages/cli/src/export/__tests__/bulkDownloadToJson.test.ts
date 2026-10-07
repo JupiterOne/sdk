@@ -42,7 +42,9 @@ function createEntity(id: string, type: string): Entity {
 }
 
 beforeEach(() => {
-  mockedRuntime.createApiClient.mockReturnValue(axios);
+  mockedRuntime.createApiClient.mockReturnValue(
+    axios as unknown as runtime.ApiClient,
+  );
 });
 
 test('should write assets to json file', async () => {

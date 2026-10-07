@@ -65,6 +65,8 @@ async function importAssetTypeFromCsv({
                 headers: {
                   'Content-Type': 'text/csv',
                 },
+                // This loop handles retry; skip the client's retry.
+                retry: false,
               },
             ),
           { delay: 500 },
