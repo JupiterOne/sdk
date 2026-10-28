@@ -10,6 +10,7 @@ export {
   DuplicateKeyTracker,
   InMemoryDuplicateKeyTracker,
 } from './duplicateKeyTracker';
+export { HashedDuplicateKeyTracker } from './hashedDuplicateKeyTracker';
 export { buildStepDependencyGraph } from './dependencyGraph';
 export {
   StepGraphObjectDataUploader,

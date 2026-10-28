@@ -29,6 +29,7 @@ import {
   ExecuteIntegrationOptions,
   ExecuteIntegrationResult,
 } from '../executeIntegration';
+import { HashedDuplicateKeyTracker } from '../hashedDuplicateKeyTracker';
 import { LOCAL_INTEGRATION_INSTANCE } from '../instance';
 import { createInstanceConfiguration } from './utils/createIntegrationConfig';
 
@@ -2031,6 +2032,84 @@ describe('executeIntegrationInstance', () => {
     });
     expect(resultsCallback).toHaveBeenCalledOnce();
     expect(resultsCallback).toHaveBeenCalledWith(expectedResults);
+  });
+
+  describe('USE_HASHED_DKT', () => {
+    beforeEach(() => {
+      process.env.USE_HASHED_DKT = '1';
+    });
+
+    afterEach(() => {
+      delete process.env.USE_HASHED_DKT;
+      jest.restoreAllMocks();
+    });
+
+    function createHashedTrackerConfig(collectEncounteredKeys: boolean) {
+      const observed: { hasKey?: boolean; found?: Entity | null } = {};
+      const config = createInstanceConfiguration({
+        invocationConfig: {
+          collectEncounteredKeys,
+          integrationSteps: [
+            {
+              id: 'fetch-person',
+              name: 'Fetch Person',
+              entities: [
+                {
+                  resourceName: 'Person',
+                  _type: 'test_person',
+                  _class: 'User',
+                },
+              ],
+              relationships: [],
+              async executionHandler({ jobState }) {
+                await jobState.addEntity({
+                  _key: 'person_1',
+                  _type: 'test_person',
+                  _class: 'User',
+                });
+                observed.hasKey = jobState.hasKey('person_1');
+                observed.found = await jobState.findEntity('person_1');
+              },
+            },
+          ],
+        },
+      });
+      return { config, observed };
+    }
+
+    test('tracks keys without retaining them', async () => {
+      const { config, observed } = createHashedTrackerConfig(false);
+      const resultsCallback = jest.fn();
+      const registerKey = jest.spyOn(
+        HashedDuplicateKeyTracker.prototype,
+        'registerKey',
+      );
+
+      await executeIntegrationInstanceWithConfig(config, { resultsCallback });
+
+      expect(registerKey).toHaveBeenCalledWith('person_1');
+      expect(observed.hasKey).toBeTrue();
+      expect(observed.found).toMatchObject({ _key: 'person_1' });
+      expect(resultsCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ encounteredKeys: undefined }),
+      );
+    });
+
+    test('keeps the in-memory tracker when encountered keys are collected', async () => {
+      const { config } = createHashedTrackerConfig(true);
+      const resultsCallback = jest.fn();
+      const registerKey = jest.spyOn(
+        HashedDuplicateKeyTracker.prototype,
+        'registerKey',
+      );
+
+      await executeIntegrationInstanceWithConfig(config, { resultsCallback });
+
+      expect(resultsCallback).toHaveBeenCalledWith(
+        expect.objectContaining({ encounteredKeys: [['person_1']] }),
+      );
+      expect(registerKey).not.toHaveBeenCalled();
+    });
   });
 });
 
