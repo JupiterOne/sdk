@@ -45,6 +45,7 @@ import {
   DuplicateKeyTracker,
   InMemoryDuplicateKeyTracker,
 } from './duplicateKeyTracker';
+import { HashedDuplicateKeyTracker } from './hashedDuplicateKeyTracker';
 import { getIngestionSourceStepStartStates } from './utils/getIngestionSourceStepStartStates';
 
 export interface ExecuteIntegrationResult {
@@ -260,7 +261,12 @@ export async function executeWithContext<
       let duplicateKeyTracker: DuplicateKeyTracker =
         new InMemoryDuplicateKeyTracker(config.normalizeGraphObjectKey);
 
-      if (process.env.USE_ON_DISK_DKT) {
+      // The hashed tracker cannot list encountered keys, so it only applies when they are not collected.
+      if (process.env.USE_HASHED_DKT && !config.collectEncounteredKeys) {
+        duplicateKeyTracker = new HashedDuplicateKeyTracker({
+          normalizationFunction: config.normalizeGraphObjectKey,
+        });
+      } else if (process.env.USE_ON_DISK_DKT) {
         // conditionally require so the dependency can remain optional
         try {
           const {

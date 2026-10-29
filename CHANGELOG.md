@@ -9,6 +9,13 @@ and this project adheres to
 
 # Unreleased
 
+## Added
+
+- runtime: `HashedDuplicateKeyTracker`, selected with `USE_HASHED_DKT`. It
+  stores a 128-bit md5 fingerprint of each key (~16 bytes per key) instead of
+  the key, needs no disk, and cannot list encountered keys, so the in-memory
+  tracker stays in use when `collectEncounteredKeys` is set.
+
 # 18.0.0 - 2026-10-07
 
 ## BREAKING
