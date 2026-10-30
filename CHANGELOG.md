@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+# 18.1.0 - 2026-10-29
+
 ## Added
 
 - runtime: `HashedDuplicateKeyTracker`, selected with `USE_HASHED_DKT`. It
