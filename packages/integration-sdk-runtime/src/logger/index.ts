@@ -499,23 +499,163 @@ export class IntegrationLogger
 
 type NameValuePair = [string, any];
 
+const NAMED_INTEGRATION_ERROR_CLASSES = new Set([
+  'UnaccountedStepStartStatesError',
+  'StepStartStateUnknownStepIdsError',
+  'UploadError',
+]);
+
+function isIntegrationErrorClassName(name: unknown): boolean {
+  return (
+    typeof name === 'string' &&
+    (name.startsWith('Integration') ||
+      NAMED_INTEGRATION_ERROR_CLASSES.has(name))
+  );
+}
+
 /**
  * Checks if an error is an IntegrationError or one of its subclasses.
  * This function is more reliable than instanceof when dealing with multiple
  * module instances that might have different IntegrationError class references.
+ *
+ * The whole prototype chain is checked, so integration-defined subclasses such
+ * as `class RateLimitError extends IntegrationProviderAPIError` are recognized
+ * and show their own code and message instead of `UNEXPECTED_ERROR`.
  */
 function isIntegrationError(err: any): err is IntegrationError {
-  return (
-    err &&
-    typeof err === 'object' &&
-    'code' in err &&
-    typeof err.code === 'string' &&
-    'fatal' in err &&
-    (err.constructor?.name?.startsWith('Integration') ||
-      err.constructor?.name === 'UnaccountedStepStartStatesError' ||
-      err.constructor?.name === 'StepStartStateUnknownStepIdsError' ||
-      err.constructor?.name === 'UploadError')
-  );
+  if (
+    !err ||
+    typeof err !== 'object' ||
+    typeof err.code !== 'string' ||
+    !('fatal' in err)
+  ) {
+    return false;
+  }
+
+  if (err instanceof IntegrationError) {
+    return true;
+  }
+
+  for (
+    let proto = Object.getPrototypeOf(err);
+    proto && proto !== Error.prototype && proto !== Object.prototype;
+    proto = Object.getPrototypeOf(proto)
+  ) {
+    if (isIntegrationErrorClassName(proto.constructor?.name)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export const REQUEST_TIMEOUT_ERROR_CODE = 'REQUEST_TIMEOUT_ERROR';
+export const REQUEST_TIMEOUT_ERROR_REASON =
+  'A request made by the integration timed out before the service responded. This is usually temporary and the next run will try again. If it keeps happening, please contact us at support@jupiterone.com.';
+
+export const NETWORK_CONNECTION_ERROR_CODE = 'NETWORK_CONNECTION_ERROR';
+export const NETWORK_CONNECTION_ERROR_REASON =
+  'A network connection made by the integration failed or was cut off. This is usually temporary and the next run will try again. If it keeps happening, check that the service is reachable from JupiterOne, or contact us at support@jupiterone.com.';
+
+export const HOST_NOT_FOUND_ERROR_CODE = 'HOST_NOT_FOUND_ERROR';
+export const HOST_NOT_FOUND_ERROR_REASON =
+  'The integration could not find the host name of a service it calls. Check that the host name or URL in the integration configuration is correct.';
+
+export const INVALID_RESPONSE_FORMAT_ERROR_CODE =
+  'INVALID_RESPONSE_FORMAT_ERROR';
+export const INVALID_RESPONSE_FORMAT_ERROR_REASON =
+  'A service called by the integration returned a web page instead of the expected data. This often means the URL in the integration configuration is wrong, or a proxy, firewall or sign-in page is in the way. It can also happen when the service is down and returns an error page.';
+
+const REQUEST_TIMEOUT_CODES = new Set([
+  'ATTEMPT_TIMEOUT', // @lifeomic/attempt `timeout` option
+  'ETIMEDOUT',
+  'ESOCKETTIMEDOUT',
+  'TimeoutError', // AWS SDK
+  'UND_ERR_CONNECT_TIMEOUT',
+  'UND_ERR_HEADERS_TIMEOUT',
+  'UND_ERR_BODY_TIMEOUT',
+]);
+
+const NETWORK_CONNECTION_CODES = new Set([
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ECONNABORTED',
+  'EPIPE',
+  'EAI_AGAIN',
+  'ENETUNREACH',
+  'EHOSTUNREACH',
+  'UND_ERR_SOCKET',
+]);
+
+/**
+ * Body of an HTML page parsed as JSON, e.g. `Unexpected token < in JSON at
+ * position 0` (Node 18) or `Unexpected token '<', "<!DOCTYPE "... is not
+ * valid JSON` (Node 20+).
+ */
+const HTML_PARSED_AS_JSON = /Unexpected token '?<'?/;
+
+const MAX_CAUSE_DEPTH = 3;
+
+/**
+ * Maps a well-known, non-`IntegrationError` failure (network timeouts, DNS
+ * failures, HTML returned where JSON was expected) to a code and a fixed,
+ * customer-safe reason. The error's own message is never used, because it may
+ * hold internal addresses or URLs. Returns `undefined` for anything else.
+ */
+function classifyUnexpectedError(
+  err: unknown,
+): { code: string; reason: string } | undefined {
+  let current: any = err;
+  for (let depth = 0; depth <= MAX_CAUSE_DEPTH; depth++) {
+    if (!current || typeof current !== 'object') {
+      return undefined;
+    }
+
+    const code = typeof current.code === 'string' ? current.code : undefined;
+    const name = typeof current.name === 'string' ? current.name : undefined;
+    const message = typeof current.message === 'string' ? current.message : '';
+
+    if (code === 'ENOTFOUND') {
+      return {
+        code: HOST_NOT_FOUND_ERROR_CODE,
+        reason: HOST_NOT_FOUND_ERROR_REASON,
+      };
+    }
+
+    if ((code && REQUEST_TIMEOUT_CODES.has(code)) || name === 'TimeoutError') {
+      return {
+        code: REQUEST_TIMEOUT_ERROR_CODE,
+        reason: REQUEST_TIMEOUT_ERROR_REASON,
+      };
+    }
+
+    if (
+      (code && NETWORK_CONNECTION_CODES.has(code)) ||
+      // undici (Node `fetch`) network failures
+      (name === 'TypeError' &&
+        (message === 'fetch failed' || message === 'terminated'))
+    ) {
+      return {
+        code: NETWORK_CONNECTION_ERROR_CODE,
+        reason: NETWORK_CONNECTION_ERROR_REASON,
+      };
+    }
+
+    if (
+      (name === 'SyntaxError' ||
+        (name === 'FetchError' && current.type === 'invalid-json')) &&
+      HTML_PARSED_AS_JSON.test(message)
+    ) {
+      return {
+        code: INVALID_RESPONSE_FORMAT_ERROR_CODE,
+        reason: INVALID_RESPONSE_FORMAT_ERROR_REASON,
+      };
+    }
+
+    current = current.cause;
+  }
+
+  return undefined;
 }
 
 export function createErrorEventDescription(
@@ -537,8 +677,9 @@ export function createErrorEventDescription(
     errorCode = (err as IntegrationError).code;
     errorReason = err.message;
   } else {
-    errorCode = UNEXPECTED_ERROR_CODE;
-    errorReason = UNEXPECTED_ERROR_REASON;
+    const classified = classifyUnexpectedError(err);
+    errorCode = classified?.code ?? UNEXPECTED_ERROR_CODE;
+    errorReason = classified?.reason ?? UNEXPECTED_ERROR_REASON;
   }
 
   if (isProviderAuthError(err)) {

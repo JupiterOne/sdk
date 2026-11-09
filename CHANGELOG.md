@@ -9,6 +9,25 @@ and this project adheres to
 
 # Unreleased
 
+## Fixed
+
+- runtime: step and validation failure events now show the real error code and
+  message for subclasses of `IntegrationError` whose class name does not start
+  with `Integration` (for example
+  `RateLimitError extends IntegrationProviderAPIError`). They were shown as
+  `UNEXPECTED_ERROR`.
+
+## Changed
+
+- runtime: common errors that are not `IntegrationError`s now get a specific
+  code and a fixed, customer-safe reason instead of `UNEXPECTED_ERROR`:
+  `REQUEST_TIMEOUT_ERROR` (timeouts, including `@lifeomic/attempt`
+  `ATTEMPT_TIMEOUT` and AWS SDK `TimeoutError`), `NETWORK_CONNECTION_ERROR`
+  (`ECONNRESET`, `ECONNREFUSED`, undici `fetch failed`/`terminated`, ...),
+  `HOST_NOT_FOUND_ERROR` (`ENOTFOUND`) and `INVALID_RESPONSE_FORMAT_ERROR` (an
+  HTML page parsed as JSON). The error's `cause` chain is checked too. The
+  error's own message is never shown, and logging is unchanged.
+
 # 18.1.0 - 2026-10-29
 
 ## Added
