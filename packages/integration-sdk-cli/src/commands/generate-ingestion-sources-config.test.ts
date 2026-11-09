@@ -278,6 +278,15 @@ describe('#generateIngestionSourcesConfig', () => {
         },
       },
       {
+        id: 'fetch-repo-languages',
+        name: 'Fetch Repo Languages',
+        entities: [],
+        relationships: [],
+        dependsOn: [],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FETCH_REPOS,
+        executionHandler: jest.fn(),
+      },
+      {
         id: 'fetch-repo-collaborators',
         name: 'Fetch Repo Collaborators',
         entities: [],
