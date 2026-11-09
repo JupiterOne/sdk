@@ -7,6 +7,7 @@ import {
   IntegrationInfoEventName,
   IntegrationInvocationConfig,
   IntegrationLocalConfigFieldMissingError,
+  IntegrationProviderAPIError,
   IntegrationProviderAuthenticationError,
   IntegrationProviderAuthorizationError,
   IntegrationStep,
@@ -21,8 +22,16 @@ import {
 import {
   createErrorEventDescription,
   createIntegrationLogger,
+  HOST_NOT_FOUND_ERROR_CODE,
+  HOST_NOT_FOUND_ERROR_REASON,
   IntegrationLogger,
+  INVALID_RESPONSE_FORMAT_ERROR_CODE,
+  INVALID_RESPONSE_FORMAT_ERROR_REASON,
+  NETWORK_CONNECTION_ERROR_CODE,
+  NETWORK_CONNECTION_ERROR_REASON,
   PROVIDER_AUTH_ERROR_HELP,
+  REQUEST_TIMEOUT_ERROR_CODE,
+  REQUEST_TIMEOUT_ERROR_REASON,
 } from '../../logger';
 
 const invocationConfig = {} as IntegrationInvocationConfig;
@@ -566,6 +575,170 @@ describe('createErrorEventDescription', () => {
     const { description } = createErrorEventDescription(error, 'testing');
     expect(description).toEqual(
       `testing (errorCode="${error.code}", reason="soba")`,
+    );
+  });
+
+  test('displays code and message from a subclass whose name does not start with "Integration"', () => {
+    class RateLimitError extends IntegrationProviderAPIError {}
+    class ServiceNowAPIError extends RateLimitError {}
+    const error = new ServiceNowAPIError({
+      endpoint: '/api/now/table/sys_user',
+      status: 'ENOTFOUND',
+      statusText: 'getaddrinfo ENOTFOUND example.service-now.com',
+    });
+
+    const { description } = createErrorEventDescription(error, 'testing');
+    expect(description).toEqual(
+      `testing (errorCode="PROVIDER_API_ERROR", reason="${error.message}")`,
+    );
+  });
+
+  test('does not treat a non-integration error with a code as an integration error', () => {
+    class VendorError extends Error {
+      code = 'SOME_VENDOR_ERROR';
+      fatal = false;
+    }
+
+    const { description } = createErrorEventDescription(
+      new VendorError('internal detail'),
+      'testing',
+    );
+    expect(description).toEqual(
+      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", reason="${UNEXPECTED_ERROR_REASON}")`,
+    );
+  });
+
+  function errorWith(
+    message: string,
+    props: Record<string, unknown>,
+    ErrorClass: new (message: string) => Error = Error,
+  ) {
+    return Object.assign(new ErrorClass(message), props);
+  }
+
+  test.each([
+    [
+      'lifeomic/attempt timeout',
+      errorWith('Retry timeout (attemptNum: 0, timeout: 182000)', {
+        code: 'ATTEMPT_TIMEOUT',
+      }),
+      REQUEST_TIMEOUT_ERROR_CODE,
+      REQUEST_TIMEOUT_ERROR_REASON,
+    ],
+    [
+      'AWS SDK TimeoutError',
+      errorWith('Connection timed out after 13000ms', {
+        name: 'TimeoutError',
+        code: 'TimeoutError',
+      }),
+      REQUEST_TIMEOUT_ERROR_CODE,
+      REQUEST_TIMEOUT_ERROR_REASON,
+    ],
+    [
+      'ETIMEDOUT',
+      errorWith('connect ETIMEDOUT 10.0.0.1:443', { code: 'ETIMEDOUT' }),
+      REQUEST_TIMEOUT_ERROR_CODE,
+      REQUEST_TIMEOUT_ERROR_REASON,
+    ],
+    [
+      'ECONNRESET',
+      errorWith('read ECONNRESET', { code: 'ECONNRESET' }),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
+      'undici fetch failed with a cause',
+      errorWith(
+        'fetch failed',
+        { cause: errorWith('connect ECONNREFUSED', { code: 'ECONNREFUSED' }) },
+        TypeError,
+      ),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
+      'undici terminated',
+      new TypeError('terminated'),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
+      'ENOTFOUND',
+      errorWith('getaddrinfo ENOTFOUND example.com', { code: 'ENOTFOUND' }),
+      HOST_NOT_FOUND_ERROR_CODE,
+      HOST_NOT_FOUND_ERROR_REASON,
+    ],
+    [
+      'ENOTFOUND in a nested cause',
+      new Error('outer', {
+        cause: new Error('middle', {
+          cause: errorWith('getaddrinfo ENOTFOUND example.com', {
+            code: 'ENOTFOUND',
+          }),
+        }),
+      }),
+      HOST_NOT_FOUND_ERROR_CODE,
+      HOST_NOT_FOUND_ERROR_REASON,
+    ],
+    [
+      'HTML parsed as JSON (Node 18)',
+      new SyntaxError('Unexpected token < in JSON at position 0'),
+      INVALID_RESPONSE_FORMAT_ERROR_CODE,
+      INVALID_RESPONSE_FORMAT_ERROR_REASON,
+    ],
+    [
+      'HTML parsed as JSON (Node 20)',
+      new SyntaxError(
+        `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`,
+      ),
+      INVALID_RESPONSE_FORMAT_ERROR_CODE,
+      INVALID_RESPONSE_FORMAT_ERROR_REASON,
+    ],
+    [
+      'node-fetch invalid json body',
+      errorWith(
+        'invalid json response body at https://example.com reason: Unexpected token < in JSON at position 0',
+        { name: 'FetchError', type: 'invalid-json' },
+      ),
+      INVALID_RESPONSE_FORMAT_ERROR_CODE,
+      INVALID_RESPONSE_FORMAT_ERROR_REASON,
+    ],
+  ])(
+    'maps %s to a specific reason without the error message',
+    (_label, error, expectedCode, expectedReason) => {
+      const { description } = createErrorEventDescription(error, 'testing');
+      expect(description).toEqual(
+        `testing (errorCode="${expectedCode}", reason="${expectedReason}")`,
+      );
+      expect(description).not.toContain(error.message);
+    },
+  );
+
+  test.each([
+    [
+      'a TypeError from a code bug',
+      new TypeError("Cannot read properties of undefined (reading 'x')"),
+    ],
+    [
+      'an unrelated SyntaxError',
+      new SyntaxError('Unexpected end of JSON input'),
+    ],
+    [
+      'a cause chain deeper than the limit',
+      new Error('1', {
+        cause: new Error('2', {
+          cause: new Error('3', {
+            cause: new Error('4', {
+              cause: errorWith('x', { code: 'ENOTFOUND' }),
+            }),
+          }),
+        }),
+      }),
+    ],
+  ])('keeps the generic reason for %s', (_label, error) => {
+    const { description } = createErrorEventDescription(error, 'testing');
+    expect(description).toEqual(
+      `testing (errorCode="${UNEXPECTED_ERROR_CODE}", reason="${UNEXPECTED_ERROR_REASON}")`,
     );
   });
 });
