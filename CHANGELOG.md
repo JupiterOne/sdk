@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+# 18.2.0 - 2026-11-09
+
 ## Added
 
 - cli: `generate-ingestion-sources-config` adds an `authorization` field to each
