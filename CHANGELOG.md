@@ -9,6 +9,14 @@ and this project adheres to
 
 # Unreleased
 
+## Added
+
+- cli: `generate-ingestion-sources-config` adds an `authorization` field to each
+  ingestion source, aggregated from the steps whose `ingestionSourceId` matches
+  it. Those steps are not listed in any `childIngestionSources`, so their
+  authorization was only visible in the top-level aggregate and could not be
+  traced to a data source.
+
 # 18.1.0 - 2026-10-29
 
 ## Added
