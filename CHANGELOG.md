@@ -9,6 +9,8 @@ and this project adheres to
 
 # Unreleased
 
+# 18.3.0 - 2026-11-11
+
 ## Changed
 
 - runtime: longer waits between retries of synchronization API calls, so a run
