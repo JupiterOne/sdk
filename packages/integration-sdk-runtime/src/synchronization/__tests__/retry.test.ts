@@ -5,6 +5,7 @@ import { createIntegrationLogger } from '../../logger';
 import { retryCalls } from '../../../test/util/attemptWithoutDelays';
 
 import {
+  calculateSynchronizationRetryDelay,
   finalizeSynchronization,
   SYNCHRONIZATION_RETRY_OPTIONS,
   uploadDataChunk,
@@ -18,6 +19,10 @@ const { defaultCalculateDelay } = jest.requireActual('@lifeomic/attempt');
 
 beforeEach(() => {
   retryCalls.length = 0;
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 function createTestContext() {
@@ -55,6 +60,63 @@ describe('SYNCHRONIZATION_RETRY_OPTIONS', () => {
 
     expect(waits).toEqual([1000, 2000, 4000, 8000]);
   });
+
+  test('uses the randomized delay', () => {
+    expect(SYNCHRONIZATION_RETRY_OPTIONS.calculateDelay).toBe(
+      calculateSynchronizationRetryDelay,
+    );
+  });
+});
+
+describe('calculateSynchronizationRetryDelay', () => {
+  const options = {
+    minDelay: 0,
+    jitter: false,
+    ...SYNCHRONIZATION_RETRY_OPTIONS,
+  } as any;
+
+  function waits() {
+    const { maxAttempts } = SYNCHRONIZATION_RETRY_OPTIONS;
+    const result: number[] = [];
+    for (let attemptNum = 1; attemptNum < maxAttempts; attemptNum++) {
+      result.push(
+        calculateSynchronizationRetryDelay(
+          {
+            attemptNum,
+            attemptsRemaining: maxAttempts - attemptNum,
+          } as any,
+          options,
+        ),
+      );
+    }
+    return result;
+  }
+
+  test('does not wait before the first attempt', () => {
+    // `retry` calls calculateDelay with attemptNum 0 before the first attempt.
+    jest.spyOn(Math, 'random').mockReturnValue(0.99);
+    expect(
+      calculateSynchronizationRetryDelay(
+        { attemptNum: 0, attemptsRemaining: 5 } as any,
+        options,
+      ),
+    ).toBe(0);
+  });
+
+  test('waits at least 0.75 times the base delay', () => {
+    jest.spyOn(Math, 'random').mockReturnValue(0);
+    expect(waits()).toEqual([750, 1500, 3000, 6000]);
+  });
+
+  test('waits at most 1.25 times the base delay', () => {
+    jest.spyOn(Math, 'random').mockReturnValue(1);
+    expect(waits()).toEqual([1250, 2500, 5000, 10000]);
+  });
+
+  test('waits the base delay at the middle of the range', () => {
+    jest.spyOn(Math, 'random').mockReturnValue(0.5);
+    expect(waits()).toEqual([1000, 2000, 4000, 8000]);
+  });
 });
 
 describe('uploadDataChunk', () => {
@@ -78,6 +140,66 @@ describe('uploadDataChunk', () => {
     expect(postSpy).toHaveBeenCalledTimes(3);
     expect(retryCalls).toHaveLength(1);
     expect(retryCalls[0]).toMatchObject(SYNCHRONIZATION_RETRY_OPTIONS);
+  });
+
+  test.each([400, 401, 403, 404])(
+    'does not retry a %d response',
+    async (status) => {
+      const { job, logger, apiClient } = createTestContext();
+      const error = responseError(status);
+
+      const postSpy = jest.spyOn(apiClient, 'post').mockRejectedValue(error);
+
+      await expect(
+        uploadDataChunk({
+          logger,
+          apiClient,
+          jobId: job.id,
+          type: 'entities',
+          batch: [],
+        }),
+      ).rejects.toBe(error);
+
+      expect(postSpy).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  test.each([408, 429, 500, 503])('retries a %d response', async (status) => {
+    const { job, logger, apiClient } = createTestContext();
+
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockRejectedValueOnce(responseError(status))
+      .mockResolvedValue({ data: {} });
+
+    await uploadDataChunk({
+      logger,
+      apiClient,
+      jobId: job.id,
+      type: 'entities',
+      batch: [],
+    });
+
+    expect(postSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test('retries an error without a response, such as a network error', async () => {
+    const { job, logger, apiClient } = createTestContext();
+
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockRejectedValueOnce(new Error('other side closed'))
+      .mockResolvedValue({ data: {} });
+
+    await uploadDataChunk({
+      logger,
+      apiClient,
+      jobId: job.id,
+      type: 'entities',
+      batch: [],
+    });
+
+    expect(postSpy).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -147,6 +269,20 @@ describe('finalizeSynchronization', () => {
     await finalizeSynchronization({ apiClient, logger, job, partialDatasets });
 
     expect(postSpy).toHaveBeenCalledTimes(2);
+  });
+
+  test('does not post finalize again when a successful response has no body', async () => {
+    const { job, logger, apiClient } = createTestContext();
+
+    const postSpy = jest
+      .spyOn(apiClient, 'post')
+      .mockResolvedValue({ data: undefined } as any);
+
+    await expect(
+      finalizeSynchronization({ apiClient, logger, job, partialDatasets }),
+    ).rejects.toThrow(/while finalizing synchronization job/);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
   });
 
   test('does not retry a response the server will not change, such as a 400', async () => {

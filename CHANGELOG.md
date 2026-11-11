@@ -14,24 +14,31 @@ and this project adheres to
 - runtime: longer waits between retries of synchronization API calls, so a run
   gets through a short outage of the API instead of failing and discarding the
   data it collected.
-  - Entity and relationship uploads, and finalize: 5 attempts, waiting 1s, 2s,
-    4s and 8s between them (15s in total). Before, uploads waited about 0.2s
-    between attempts (0.9s in total) and finalize was tried 3 times within 0.6s.
+  - Entity and relationship uploads, and finalize: 5 attempts, waiting about 1s,
+    2s, 4s and 8s between them (15s on average). Each wait is randomized by up
+    to 25% either way, so runs that failed at the same moment do not all retry
+    at the same moment. Before, uploads waited about 0.2s between attempts (0.9s
+    in total) and finalize was tried 3 times within 0.6s.
+  - An upload that gets a 4xx response other than 408, 413 or 429 (for example
+    400, 401, 403 or 404) is no longer retried: the server would give the same
+    answer again. 413 still shrinks the batch and retries.
   - Every other call made through the API client (starting a job, aborting it,
     reading its status): the wait before the first retry is 1s instead of 0.2s
     (3 attempts, 3s in total).
 - runtime: `finalizeSynchronization` has its own retry loop again. It retries
   429, 5xx and network errors, logs a warning for each failed attempt, and does
-  not retry other responses.
+  not retry other responses. It no longer uses the API client's `retryOptions`:
+  a client created with `retryOptions: { attempts: 1 }` still gets up to 5
+  finalize attempts.
 
 ## Added
 
 - runtime: `RetryOptions.minTimeout` sets the wait before the first retry
   (default 1000 ms). A caller that tuned `factor` and `maxTimeout` against the
   previous fixed 200 ms can pass `minTimeout: 200` to keep its timing.
-- runtime: `isRetryableApiError` (the API client's default retry rule) and
-  `SYNCHRONIZATION_RETRY_OPTIONS` (the upload and finalize schedule) are
-  exported.
+- runtime: `isRetryableApiError` (the API client's default retry rule),
+  `SYNCHRONIZATION_RETRY_OPTIONS` (the upload and finalize schedule) and
+  `calculateSynchronizationRetryDelay` (its randomized wait) are exported.
 
 # 18.2.0 - 2026-11-09
 
