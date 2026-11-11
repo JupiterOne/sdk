@@ -33,6 +33,11 @@ import { getExpectedRequestHeaders } from '../../../test/util/request';
 
 import * as shrinkBatchRawData from '../shrinkBatchRawData';
 
+// Run the upload and finalize retry loops without waiting between attempts.
+jest.mock('@lifeomic/attempt', () =>
+  require('../../../test/util/attemptWithoutDelays'),
+);
+
 afterEach(() => {
   delete process.env.INTEGRATION_FILE_COMPRESSION_ENABLED;
   restoreProjectStructure();
@@ -318,6 +323,7 @@ describe('finalizeSynchronization', () => {
       {
         partialDatasets,
       },
+      { retry: false },
     );
   });
 });
@@ -444,6 +450,7 @@ describe('synchronizeCollectedData', () => {
       {
         partialDatasets,
       },
+      { retry: false },
     );
   });
 

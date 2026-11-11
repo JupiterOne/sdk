@@ -16,7 +16,7 @@ import { ExecuteIntegrationResult } from '../execution';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../fileSystem';
 import { synchronizationApiError } from './error';
-import { ApiClient } from '../api';
+import { ApiClient, isRetryableApiError } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
 import { AttemptContext, retry } from '@lifeomic/attempt';
@@ -77,6 +77,19 @@ export interface SynchronizeInput {
 
   skipFinalize?: boolean;
 }
+
+/**
+ * Backoff shared by the upload and finalize retry loops: up to 5 attempts,
+ * waiting 1s, 2s, 4s and 8s between them (15s in total). That is long enough
+ * for a run to get through a short outage of the synchronization API, such as
+ * a restart, instead of failing and throwing away the data it collected.
+ */
+export const SYNCHRONIZATION_RETRY_OPTIONS = {
+  maxAttempts: 5,
+  delay: 1000,
+  factor: 2,
+  maxDelay: 10_000,
+} as const;
 
 /**
  * Performs synchronization of collected data.
@@ -246,16 +259,41 @@ export async function finalizeSynchronization({
 }: FinalizeSynchronizationInput): Promise<SynchronizationJob> {
   logger.info('Finalizing synchronization...');
 
-  // Retry/backoff is handled by the api client's built-in retry.
   try {
-    const response = await apiClient.post(
-      `/persister/synchronization/jobs/${job.id}/finalize`,
+    return await retry(
+      async () => {
+        const response = await apiClient.post(
+          `/persister/synchronization/jobs/${job.id}/finalize`,
+          {
+            partialDatasets,
+          },
+          // This loop handles retry/backoff; skip the client's retry.
+          { retry: false },
+        );
+
+        return response.data.job;
+      },
       {
-        partialDatasets,
+        ...SYNCHRONIZATION_RETRY_OPTIONS,
+        handleError(err, context) {
+          if (!isRetryableApiError(err)) {
+            context.abort();
+            return;
+          }
+
+          if (context.attemptsRemaining > 0) {
+            logger.warn(
+              {
+                err,
+                attemptNum: context.attemptNum,
+                attemptsRemaining: context.attemptsRemaining,
+              },
+              'Error occurred while finalizing synchronization job. Retrying request.',
+            );
+          }
+        },
       },
     );
-
-    return response.data.job;
   } catch (err) {
     logger.error(
       {
@@ -498,9 +536,7 @@ export async function uploadDataChunk<
       );
     },
     {
-      maxAttempts: 5,
-      delay: 200,
-      factor: 1.05,
+      ...SYNCHRONIZATION_RETRY_OPTIONS,
       handleError(err, attemptContext) {
         try {
           handleUploadDataChunkError({
