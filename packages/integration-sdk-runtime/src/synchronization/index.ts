@@ -530,24 +530,23 @@ function handleUploadDataChunkError({
         'Failed to upload integration data because job has already ended',
     });
   } else if (isPermanentUploadError(err)) {
-    // The server will give the same answer again (a bad request, a revoked
-    // key, a job that no longer exists). Fail now instead of after the whole
-    // backoff.
+    // The server will give the same answer again (a revoked key, a job that
+    // no longer exists). Fail now instead of after the whole backoff.
     attemptContext.abort();
   }
 }
 
 /**
- * A 4xx response that a retry cannot change. 408 (timeout) and 429 (rate
- * limit) can pass on a later attempt; 413 is handled by shrinking the batch.
+ * A response that a retry cannot change: 401, 403 or 404.
+ *
+ * 400 is not in the list: ingestion-service also answers 400 when writing the
+ * upload to S3 or DynamoDB fails, which a later attempt can get through.
  */
 function isPermanentUploadError(err: unknown): boolean {
-  if (!(err instanceof ApiResponseError)) {
-    return false;
-  }
-
-  const { status } = err.response;
-  return status >= 400 && status < 500 && ![408, 413, 429].includes(status);
+  return (
+    err instanceof ApiResponseError &&
+    [401, 403, 404].includes(err.response.status)
+  );
 }
 
 export async function uploadDataChunk<

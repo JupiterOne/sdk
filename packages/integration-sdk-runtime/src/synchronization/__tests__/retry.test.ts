@@ -3,6 +3,7 @@ import { generateSynchronizationJob } from './util/generateSynchronizationJob';
 import { ApiResponseError, createApiClient, getApiBaseUrl } from '../../api';
 import { createIntegrationLogger } from '../../logger';
 import { retryCalls } from '../../../test/util/attemptWithoutDelays';
+import * as shrinkBatchRawData from '../shrinkBatchRawData';
 
 import {
   calculateSynchronizationRetryDelay,
@@ -142,34 +143,58 @@ describe('uploadDataChunk', () => {
     expect(retryCalls[0]).toMatchObject(SYNCHRONIZATION_RETRY_OPTIONS);
   });
 
-  test.each([400, 401, 403, 404])(
-    'does not retry a %d response',
+  test.each([401, 403, 404])('does not retry a %d response', async (status) => {
+    const { job, logger, apiClient } = createTestContext();
+    const error = responseError(status);
+
+    const postSpy = jest.spyOn(apiClient, 'post').mockRejectedValue(error);
+
+    await expect(
+      uploadDataChunk({
+        logger,
+        apiClient,
+        jobId: job.id,
+        type: 'entities',
+        batch: [],
+      }),
+    ).rejects.toBe(error);
+
+    expect(postSpy).toHaveBeenCalledTimes(1);
+  });
+
+  // ingestion-service answers 400 when storing the upload fails, so a 400 can
+  // pass on a later attempt.
+  test.each([400, 408, 429, 500, 503])(
+    'retries a %d response',
     async (status) => {
       const { job, logger, apiClient } = createTestContext();
-      const error = responseError(status);
 
-      const postSpy = jest.spyOn(apiClient, 'post').mockRejectedValue(error);
+      const postSpy = jest
+        .spyOn(apiClient, 'post')
+        .mockRejectedValueOnce(responseError(status))
+        .mockResolvedValue({ data: {} });
 
-      await expect(
-        uploadDataChunk({
-          logger,
-          apiClient,
-          jobId: job.id,
-          type: 'entities',
-          batch: [],
-        }),
-      ).rejects.toBe(error);
+      await uploadDataChunk({
+        logger,
+        apiClient,
+        jobId: job.id,
+        type: 'entities',
+        batch: [],
+      });
 
-      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledTimes(2);
     },
   );
 
-  test.each([408, 429, 500, 503])('retries a %d response', async (status) => {
+  test('shrinks the batch and retries a 413 response', async () => {
     const { job, logger, apiClient } = createTestContext();
+    const shrinkSpy = jest
+      .spyOn(shrinkBatchRawData, 'shrinkBatchRawData')
+      .mockReturnValue();
 
     const postSpy = jest
       .spyOn(apiClient, 'post')
-      .mockRejectedValueOnce(responseError(status))
+      .mockRejectedValueOnce(responseError(413))
       .mockResolvedValue({ data: {} });
 
     await uploadDataChunk({
@@ -180,6 +205,7 @@ describe('uploadDataChunk', () => {
       batch: [],
     });
 
+    expect(shrinkSpy).toHaveBeenCalledTimes(1);
     expect(postSpy).toHaveBeenCalledTimes(2);
   });
 
