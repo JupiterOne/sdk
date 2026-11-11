@@ -4,6 +4,8 @@ import { AddressInfo } from 'net';
 import { inspect } from 'util';
 import { gunzipSync } from 'zlib';
 
+import * as attempt from '@lifeomic/attempt';
+
 import {
   ApiClient,
   ApiResponseError,
@@ -131,6 +133,8 @@ describe('ApiClient request behavior', () => {
       account: 'test-account',
       accessToken: 'test-key',
       compressUploads,
+      // Keep the tests that exercise retries fast.
+      retryOptions: { minTimeout: 1 },
     });
   }
 
@@ -211,6 +215,7 @@ describe('ApiClient request behavior', () => {
       apiBaseUrl: 'http://127.0.0.1:1',
       account: 'test-account',
       accessToken: 'test-key',
+      retryOptions: { minTimeout: 1 },
     });
     try {
       await deadClient.post('/x', { any: 'body' });
@@ -262,6 +267,67 @@ describe('ApiClient request behavior', () => {
       client().post('/x', {}, { retry: false }),
     ).rejects.toBeInstanceOf(ApiResponseError);
     expect(calls).toBe(1);
+  });
+
+  describe('retry backoff', () => {
+    // Runs the client's retry loop without waiting, and returns the options
+    // the client handed to `retry`.
+    function captureRetryOptions() {
+      const realRetry = attempt.retry;
+      const retrySpy = jest
+        .spyOn(attempt, 'retry')
+        .mockImplementation((attemptFunc: any, options: any) =>
+          realRetry(attemptFunc, { ...options, delay: 0 }),
+        );
+      return () => retrySpy.mock.calls.map(([, options]) => options);
+    }
+
+    beforeEach(() => {
+      handler = (_req, res) => {
+        res.statusCode = 503;
+        res.end('try again');
+      };
+    });
+
+    test('waits 1s before the first retry and doubles the wait after each one', async () => {
+      const getRetryOptions = captureRetryOptions();
+      const defaultClient = createApiClient({
+        apiBaseUrl: baseUrl,
+        account: 'test-account',
+        accessToken: 'test-key',
+      });
+
+      await expect(defaultClient.get('/x')).rejects.toBeInstanceOf(
+        ApiResponseError,
+      );
+
+      expect(getRetryOptions()).toEqual([
+        expect.objectContaining({
+          maxAttempts: 3,
+          delay: 1000,
+          factor: 2,
+          maxDelay: 10_000,
+        }),
+      ]);
+    });
+
+    test('minTimeout sets the wait before the first retry', async () => {
+      const getRetryOptions = captureRetryOptions();
+      const customClient = createApiClient({
+        apiBaseUrl: baseUrl,
+        account: 'test-account',
+        accessToken: 'test-key',
+        retryOptions: { minTimeout: 50 },
+      });
+
+      await expect(customClient.get('/x')).rejects.toBeInstanceOf(
+        ApiResponseError,
+      );
+
+      expect(getRetryOptions()).toEqual([
+        expect.objectContaining({ maxAttempts: 3, delay: 50, factor: 2 }),
+      ]);
+    });
   });
 });
 

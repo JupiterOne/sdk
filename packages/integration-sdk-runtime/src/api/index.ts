@@ -26,6 +26,11 @@ export interface ApiRequestConfig {
 export interface RetryOptions {
   /** Total attempts including the first (default 3). */
   attempts?: number;
+  /**
+   * Wait before the first retry in ms (default 1000). Each later retry
+   * multiplies the wait by `factor`, up to `maxTimeout`.
+   */
+  minTimeout?: number;
   /** Exponential backoff factor (default 2). */
   factor?: number;
   /** Max backoff delay in ms (default 10000). */
@@ -75,8 +80,11 @@ function parseBody(text: string, contentType?: string): any {
   return text;
 }
 
-/** Retry retryable statuses (429, 5xx) and transport errors (no response). */
-function isRetryableError(err: unknown): boolean {
+/**
+ * The client's default retry rule: retry retryable statuses (429, 5xx) and
+ * transport errors (no response).
+ */
+export function isRetryableApiError(err: unknown): boolean {
   if (err instanceof ApiResponseError) {
     const status = err.response.status;
     return status === 429 || status >= 500;
@@ -112,9 +120,10 @@ export class ApiClient {
     this.dispatcher = opts.dispatcher;
     this.retryOptions = {
       attempts: opts.retryOptions?.attempts ?? 3,
+      minTimeout: opts.retryOptions?.minTimeout ?? 1000,
       factor: opts.retryOptions?.factor ?? 2,
       maxTimeout: opts.retryOptions?.maxTimeout ?? 10_000,
-      retryCondition: opts.retryOptions?.retryCondition ?? isRetryableError,
+      retryCondition: opts.retryOptions?.retryCondition ?? isRetryableApiError,
     };
   }
 
@@ -203,10 +212,11 @@ export class ApiClient {
       return send();
     }
 
-    const { attempts, factor, maxTimeout, retryCondition } = this.retryOptions;
+    const { attempts, minTimeout, factor, maxTimeout, retryCondition } =
+      this.retryOptions;
     return retry(send, {
       maxAttempts: attempts,
-      delay: 200,
+      delay: minTimeout,
       factor,
       maxDelay: maxTimeout,
       handleError: (err, context) => {

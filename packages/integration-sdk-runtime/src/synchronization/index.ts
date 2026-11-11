@@ -16,10 +16,15 @@ import { ExecuteIntegrationResult } from '../execution';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../fileSystem';
 import { synchronizationApiError } from './error';
-import { ApiClient } from '../api';
+import { ApiClient, isRetryableApiError } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
-import { AttemptContext, retry } from '@lifeomic/attempt';
+import {
+  AttemptContext,
+  AttemptOptions,
+  defaultCalculateDelay,
+  retry,
+} from '@lifeomic/attempt';
 import { randomUUID as uuid } from 'crypto';
 import { createEventPublishingQueue } from './events';
 import { iterateParsedGraphFiles } from '..';
@@ -77,6 +82,41 @@ export interface SynchronizeInput {
 
   skipFinalize?: boolean;
 }
+
+/**
+ * The wait before a retry: 1s, 2s, 4s, 8s (from `delay`, `factor` and
+ * `maxDelay`), each multiplied by a random number between 0.75 and 1.25. The
+ * random part spreads out the retries of runs that failed at the same moment,
+ * for example when an API pod restarts, so they do not all come back at once.
+ */
+export function calculateSynchronizationRetryDelay<T>(
+  context: AttemptContext,
+  options: AttemptOptions<T>,
+): number {
+  // `retry` also calls this once before the first attempt (attemptNum 0).
+  // There is nothing to wait for then.
+  if (context.attemptNum < 1) {
+    return 0;
+  }
+
+  const delay = defaultCalculateDelay(context, options);
+  return Math.round(delay * (0.75 + Math.random() * 0.5));
+}
+
+/**
+ * Backoff shared by the upload and finalize retry loops: up to 5 attempts,
+ * waiting about 1s, 2s, 4s and 8s between them (between 11.25s and 18.75s in
+ * total). That is long enough for a run to get through a short outage of the
+ * synchronization API, such as a restart, instead of failing and throwing away
+ * the data it collected.
+ */
+export const SYNCHRONIZATION_RETRY_OPTIONS = {
+  maxAttempts: 5,
+  delay: 1000,
+  factor: 2,
+  maxDelay: 10_000,
+  calculateDelay: calculateSynchronizationRetryDelay,
+} as const;
 
 /**
  * Performs synchronization of collected data.
@@ -246,16 +286,45 @@ export async function finalizeSynchronization({
 }: FinalizeSynchronizationInput): Promise<SynchronizationJob> {
   logger.info('Finalizing synchronization...');
 
-  // Retry/backoff is handled by the api client's built-in retry.
   try {
-    const response = await apiClient.post(
-      `/persister/synchronization/jobs/${job.id}/finalize`,
+    const data = await retry(
+      async () => {
+        const response = await apiClient.post(
+          `/persister/synchronization/jobs/${job.id}/finalize`,
+          {
+            partialDatasets,
+          },
+          // This loop handles retry/backoff; skip the client's retry.
+          { retry: false },
+        );
+
+        // Read `.job` outside this function: a bad body must not count as a
+        // failed request and post finalize again.
+        return response.data;
+      },
       {
-        partialDatasets,
+        ...SYNCHRONIZATION_RETRY_OPTIONS,
+        handleError(err, context) {
+          if (!isRetryableApiError(err)) {
+            context.abort();
+            return;
+          }
+
+          if (context.attemptsRemaining > 0) {
+            logger.warn(
+              {
+                err,
+                attemptNum: context.attemptNum,
+                attemptsRemaining: context.attemptsRemaining,
+              },
+              'Error occurred while finalizing synchronization job. Retrying request.',
+            );
+          }
+        },
       },
     );
 
-    return response.data.job;
+    return data.job;
   } catch (err) {
     logger.error(
       {
@@ -498,9 +567,7 @@ export async function uploadDataChunk<
       );
     },
     {
-      maxAttempts: 5,
-      delay: 200,
-      factor: 1.05,
+      ...SYNCHRONIZATION_RETRY_OPTIONS,
       handleError(err, attemptContext) {
         try {
           handleUploadDataChunkError({
