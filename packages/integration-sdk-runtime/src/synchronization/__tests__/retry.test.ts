@@ -143,28 +143,10 @@ describe('uploadDataChunk', () => {
     expect(retryCalls[0]).toMatchObject(SYNCHRONIZATION_RETRY_OPTIONS);
   });
 
-  test.each([401, 403, 404])('does not retry a %d response', async (status) => {
-    const { job, logger, apiClient } = createTestContext();
-    const error = responseError(status);
-
-    const postSpy = jest.spyOn(apiClient, 'post').mockRejectedValue(error);
-
-    await expect(
-      uploadDataChunk({
-        logger,
-        apiClient,
-        jobId: job.id,
-        type: 'entities',
-        batch: [],
-      }),
-    ).rejects.toBe(error);
-
-    expect(postSpy).toHaveBeenCalledTimes(1);
-  });
-
-  // ingestion-service answers 400 when storing the upload fails, so a 400 can
-  // pass on a later attempt.
-  test.each([400, 408, 429, 500, 503])(
+  // Every response is retried, 4xx included: ingestion-service answers 400
+  // when storing the upload fails and 401 when its authorizer fails, and both
+  // can pass on a later attempt.
+  test.each([400, 401, 403, 404, 408, 429, 500, 503])(
     'retries a %d response',
     async (status) => {
       const { job, logger, apiClient } = createTestContext();

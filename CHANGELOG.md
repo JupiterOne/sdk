@@ -19,10 +19,6 @@ and this project adheres to
     to 25% either way, so runs that failed at the same moment do not all retry
     at the same moment. Before, uploads waited about 0.2s between attempts (0.9s
     in total) and finalize was tried 3 times within 0.6s.
-  - An upload that gets a 401, 403 or 404 response is no longer retried: the
-    server would give the same answer again. Other responses, including 400
-    (which ingestion-service also sends when storing the upload fails), are
-    retried as before.
   - Every other call made through the API client (starting a job, aborting it,
     reading its status): the wait before the first retry is 1s instead of 0.2s
     (3 attempts, 3s in total).

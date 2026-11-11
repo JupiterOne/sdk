@@ -16,7 +16,7 @@ import { ExecuteIntegrationResult } from '../execution';
 
 import { getRootStorageDirectory, readJsonFromPath } from '../fileSystem';
 import { synchronizationApiError } from './error';
-import { ApiClient, ApiResponseError, isRetryableApiError } from '../api';
+import { ApiClient, isRetryableApiError } from '../api';
 import { timeOperation } from '../metrics';
 import { FlushedGraphObjectData } from '../storage/types';
 import {
@@ -529,24 +529,7 @@ function handleUploadDataChunkError({
       message:
         'Failed to upload integration data because job has already ended',
     });
-  } else if (isPermanentUploadError(err)) {
-    // The server will give the same answer again (a revoked key, a job that
-    // no longer exists). Fail now instead of after the whole backoff.
-    attemptContext.abort();
   }
-}
-
-/**
- * A response that a retry cannot change: 401, 403 or 404.
- *
- * 400 is not in the list: ingestion-service also answers 400 when writing the
- * upload to S3 or DynamoDB fails, which a later attempt can get through.
- */
-function isPermanentUploadError(err: unknown): boolean {
-  return (
-    err instanceof ApiResponseError &&
-    [401, 403, 404].includes(err.response.status)
-  );
 }
 
 export async function uploadDataChunk<
