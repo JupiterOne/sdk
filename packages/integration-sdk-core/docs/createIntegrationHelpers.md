@@ -96,7 +96,8 @@ const [MACHINE_ENTITY, createComputerEntity] = createMultiClassEntityMetadata({
 
 # How to use it in a current graph integration
 
-1. Create a file named helpers.ts in the src folder of your integration
+1. Create a file named entity-defintions.ts in the src folder of your integration 
+
 2. Add the following code to the file:
 
 ```typescript
@@ -111,9 +112,7 @@ export const { createEntityType, createEntityMetadata } =
 ```
 
 3. Replace INTEGRATION_NAME with the name of your integration
-4. Create a file named entities.ts in the src folder of your integration and add
-   all entities as the following EXAMPLE code:
-
+4. Add all entities as the following EXAMPLE code:
 ```typescript
 import { SchemaType } from '@jupiterone/integration-sdk-core';
 import { createEntityType, createEntityMetadata } from './helpers';
