@@ -25,8 +25,10 @@ and this project adheres to
   `ATTEMPT_TIMEOUT` and AWS SDK `TimeoutError`), `NETWORK_CONNECTION_ERROR`
   (`ECONNRESET`, `ECONNREFUSED`, undici `fetch failed`/`terminated`, ...),
   `HOST_NOT_FOUND_ERROR` (`ENOTFOUND`) and `INVALID_RESPONSE_FORMAT_ERROR` (an
-  HTML page parsed as JSON). The error's `cause` chain is checked too. The
-  error's own message is never shown, and logging is unchanged.
+  HTML page parsed as JSON). The error's `cause` chain is checked too; for
+  undici errors a specific cause wins, and an unlisted cause code (TLS,
+  certificate, protocol) keeps `UNEXPECTED_ERROR`. The error's own message is
+  never shown, and logging is unchanged.
 
 # 18.1.0 - 2026-10-29
 

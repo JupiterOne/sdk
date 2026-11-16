@@ -677,6 +677,28 @@ describe('createErrorEventDescription', () => {
       REQUEST_TIMEOUT_ERROR_REASON,
     ],
     [
+      'undici fetch failed without a cause',
+      new TypeError('fetch failed'),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
+      'undici fetch failed with codeless causes past the depth limit',
+      errorWith(
+        'fetch failed',
+        {
+          cause: new Error('1', {
+            cause: new Error('2', {
+              cause: new Error('3', { cause: new Error('4') }),
+            }),
+          }),
+        },
+        TypeError,
+      ),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
       'undici terminated',
       new TypeError('terminated'),
       NETWORK_CONNECTION_ERROR_CODE,
@@ -749,6 +771,14 @@ describe('createErrorEventDescription', () => {
       errorWith(
         'fetch failed',
         { cause: errorWith('x', { code: 'SELF_SIGNED_CERT_IN_CHAIN' }) },
+        TypeError,
+      ),
+    ],
+    [
+      'undici fetch failed with a protocol cause',
+      errorWith(
+        'fetch failed',
+        { cause: errorWith('write EPROTO', { code: 'EPROTO' }) },
         TypeError,
       ),
     ],

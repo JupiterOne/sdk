@@ -594,9 +594,6 @@ const NETWORK_CONNECTION_CODES = new Set([
  */
 const HTML_PARSED_AS_JSON = /Unexpected token '?<'?[\s\S]*JSON/;
 
-/** TLS/certificate failures are not temporary, so they are not network errors. */
-const TLS_ERROR_CODE = /CERT|SIGNATURE|^ERR_TLS_|^ERR_SSL_/;
-
 const MAX_CAUSE_DEPTH = 3;
 
 /**
@@ -621,10 +618,6 @@ function classifyUnexpectedError(
       const message =
         typeof current.message === 'string' ? current.message : '';
 
-      if (code && TLS_ERROR_CODE.test(code)) {
-        return undefined;
-      }
-
       if (code === 'ENOTFOUND') {
         return {
           code: HOST_NOT_FOUND_ERROR_CODE,
@@ -647,6 +640,11 @@ function classifyUnexpectedError(
           code: NETWORK_CONNECTION_ERROR_CODE,
           reason: NETWORK_CONNECTION_ERROR_REASON,
         };
+      }
+
+      // An unlisted code under `fetch failed` (TLS, certificate, protocol) is not known to be temporary.
+      if (code && fallback) {
+        return undefined;
       }
 
       // undici (Node `fetch`) puts the specific failure in `cause`, so keep looking.
