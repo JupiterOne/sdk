@@ -239,6 +239,90 @@ describe('#generateIngestionSourcesConfig', () => {
     });
   });
 
+  it('should aggregate the authorization of the steps matching each ingestion source', () => {
+    const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
+      {
+        id: 'fetch-account',
+        name: 'Fetch Account',
+        entities: [],
+        relationships: [],
+        dependsOn: [],
+        executionHandler: jest.fn(),
+        authorization: {
+          permissions: ['account:read'],
+        },
+      },
+      {
+        id: 'fetch-repos',
+        name: 'Fetch Repos',
+        entities: [],
+        relationships: [],
+        dependsOn: ['fetch-account'],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FETCH_REPOS,
+        executionHandler: jest.fn(),
+        authorization: {
+          permissions: ['repo:read', 'account:read'],
+          oauthScopes: ['repo:read'],
+        },
+      },
+      {
+        id: 'fetch-repo-topics',
+        name: 'Fetch Repo Topics',
+        entities: [],
+        relationships: [],
+        dependsOn: [],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FETCH_REPOS,
+        executionHandler: jest.fn(),
+        authorization: {
+          permissions: ['topic:read'],
+        },
+      },
+      {
+        id: 'fetch-repo-languages',
+        name: 'Fetch Repo Languages',
+        entities: [],
+        relationships: [],
+        dependsOn: [],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FETCH_REPOS,
+        executionHandler: jest.fn(),
+      },
+      {
+        id: 'fetch-repo-collaborators',
+        name: 'Fetch Repo Collaborators',
+        entities: [],
+        relationships: [],
+        dependsOn: ['fetch-repos'],
+        executionHandler: jest.fn(),
+        authorization: {
+          permissions: ['collaborator:read'],
+        },
+      },
+      {
+        id: 'fetch-alerts',
+        name: 'Fetch Alerts',
+        entities: [],
+        relationships: [],
+        dependsOn: ['fetch-repos'],
+        ingestionSourceId: INGESTION_SOURCE_IDS.FINDING_ALERTS,
+        executionHandler: jest.fn(),
+      },
+    ];
+    const ingestionSourcesConfig = generateIngestionSourcesConfig(
+      ingestionConfig,
+      integrationSteps,
+    );
+    // Only the steps whose ingestionSourceId matches, not the dependent steps
+    expect(
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FETCH_REPOS].authorization,
+    ).toEqual({
+      permissions: ['account:read', 'repo:read', 'topic:read'],
+      oauthScopes: ['repo:read'],
+    });
+    expect(
+      ingestionSourcesConfig[INGESTION_SOURCE_IDS.FINDING_ALERTS],
+    ).not.toHaveProperty('authorization');
+  });
+
   it('should not include authorization when no steps have it', () => {
     const integrationSteps: IntegrationStep<IntegrationInstanceConfig>[] = [
       {

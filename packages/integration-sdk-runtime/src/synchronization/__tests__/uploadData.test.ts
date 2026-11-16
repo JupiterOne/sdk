@@ -10,6 +10,11 @@ import { createIntegrationLogger } from '../../logger';
 import { uploadData, uploadGraphObjectData } from '../index';
 import { getExpectedRequestHeaders } from '../../../test/util/request';
 
+// Run the upload retry loop without waiting between attempts.
+jest.mock('@lifeomic/attempt', () =>
+  require('../../../test/util/attemptWithoutDelays'),
+);
+
 test('should retry a failed upload', async () => {
   const { job, logger, apiClient } = createTestContext();
 

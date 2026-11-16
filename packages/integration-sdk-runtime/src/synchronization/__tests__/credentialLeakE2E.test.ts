@@ -7,6 +7,11 @@ import { createApiClient } from '../../api';
 import { createIntegrationLogger } from '../../logger';
 import { uploadDataChunk } from '../index';
 
+// Run the upload retry loop without waiting between attempts.
+jest.mock('@lifeomic/attempt', () =>
+  require('../../../test/util/attemptWithoutDelays'),
+);
+
 const SECRET = 'super-secret-bearer-token-value';
 
 // Self-signed localhost cert (expires 2036) so the client uses a real TLS socket.

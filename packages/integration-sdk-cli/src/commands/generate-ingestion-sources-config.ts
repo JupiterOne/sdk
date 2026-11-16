@@ -70,7 +70,15 @@ export function generateIngestionSourcesConfigCommand() {
 
 export type EnhancedIntegrationIngestionConfigFieldMap = Record<
   IntegrationSourceId,
-  IntegrationIngestionConfigField & { childIngestionSources?: StepMetadata[] }
+  IntegrationIngestionConfigField & {
+    childIngestionSources?: StepMetadata[];
+    /**
+     * Authorization required by the steps that belong to this ingestion source
+     * (`step.ingestionSourceId === key`). Those steps are not part of
+     * `childIngestionSources`, which only lists the steps that depend on them.
+     */
+    authorization?: StepAuthorization;
+  }
 > & {
   authorization?: StepAuthorization;
 };
@@ -80,6 +88,9 @@ export type EnhancedIntegrationIngestionConfigFieldMap = Record<
  * the integration steps that come as argument.
  * The childIngestionSources will be the list of stepIds that have any dependencies
  * on the steps that match the ingestion sources specified.
+ * Each ingestion source also gets an `authorization` field aggregated from the
+ * steps that match it, so the authorization of those steps (which never appear
+ * in any childIngestionSources) can be traced back to the source.
  *
  * @export
  * @template TStepExecutionContext
@@ -96,10 +107,13 @@ export function generateIngestionSourcesConfig<
   const newIngestionConfig: EnhancedIntegrationIngestionConfigFieldMap = {};
   Object.keys(ingestionConfig).forEach((key) => {
     if (ingestionConfig[key]) {
-      // Get the stepIds that match the current ingestionSourceId
-      const matchedIntegrationStepIds = integrationSteps
-        .filter((step) => step.ingestionSourceId === key)
-        .map(({ id }) => id);
+      // Get the steps that match the current ingestionSourceId
+      const matchedIntegrationSteps = integrationSteps.filter(
+        (step) => step.ingestionSourceId === key,
+      );
+      const matchedIntegrationStepIds = matchedIntegrationSteps.map(
+        ({ id }) => id,
+      );
       if (!matchedIntegrationStepIds.length) {
         // Skip iteration if there are no steps pointing to the current ingestionSourceId
         return;
@@ -110,6 +124,9 @@ export function generateIngestionSourcesConfig<
           matchedIntegrationStepIds.includes(value),
         ),
       );
+      const sourceAuthorization = aggregateAuthorization(
+        matchedIntegrationSteps,
+      );
       // Generate ingestionConfig with the childIngestionSources
       newIngestionConfig[key] = {
         ...ingestionConfig[key],
@@ -117,6 +134,7 @@ export function generateIngestionSourcesConfig<
         childIngestionSources: childIngestionSources.map(
           ({ executionHandler, ...keepAttrs }) => keepAttrs,
         ),
+        ...(sourceAuthorization && { authorization: sourceAuthorization }),
       };
     } else {
       log.warn(`The key ${key} does not exist in the ingestionConfig`);
