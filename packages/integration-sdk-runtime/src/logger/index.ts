@@ -585,6 +585,7 @@ const NETWORK_CONNECTION_CODES = new Set([
   'ENETUNREACH',
   'EHOSTUNREACH',
   'UND_ERR_SOCKET',
+  'UND_ERR_RES_CONTENT_LENGTH_MISMATCH', // body cut short
 ]);
 
 /**
@@ -642,7 +643,7 @@ function classifyUnexpectedError(
         };
       }
 
-      // An unlisted code under `fetch failed` (TLS, certificate, protocol) is not known to be temporary.
+      // An unlisted code under an undici wrapper (TLS, certificate, protocol) is not known to be temporary.
       if (code && fallback) {
         return undefined;
       }

@@ -699,6 +699,29 @@ describe('createErrorEventDescription', () => {
       NETWORK_CONNECTION_ERROR_REASON,
     ],
     [
+      'undici terminated with a body cut short',
+      errorWith(
+        'terminated',
+        {
+          cause: errorWith('x', {
+            code: 'UND_ERR_RES_CONTENT_LENGTH_MISMATCH',
+          }),
+        },
+        TypeError,
+      ),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
+      'an axios network error with a connection cause',
+      errorWith('Network Error', {
+        code: 'ERR_NETWORK',
+        cause: errorWith('connect ECONNREFUSED', { code: 'ECONNREFUSED' }),
+      }),
+      NETWORK_CONNECTION_ERROR_CODE,
+      NETWORK_CONNECTION_ERROR_REASON,
+    ],
+    [
       'undici terminated',
       new TypeError('terminated'),
       NETWORK_CONNECTION_ERROR_CODE,
