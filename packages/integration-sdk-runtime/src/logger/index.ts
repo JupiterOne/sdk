@@ -559,7 +559,7 @@ export const NETWORK_CONNECTION_ERROR_REASON =
 
 export const HOST_NOT_FOUND_ERROR_CODE = 'HOST_NOT_FOUND_ERROR';
 export const HOST_NOT_FOUND_ERROR_REASON =
-  'The integration could not find the host name of a service it calls. Check that the host name or URL in the integration configuration is correct.';
+  'Could not resolve the host name of a service the integration calls. If the integration configuration contains a URL or host name, check it.';
 
 export const INVALID_RESPONSE_FORMAT_ERROR_CODE =
   'INVALID_RESPONSE_FORMAT_ERROR';
@@ -592,7 +592,10 @@ const NETWORK_CONNECTION_CODES = new Set([
  * position 0` (Node 18) or `Unexpected token '<', "<!DOCTYPE "... is not
  * valid JSON` (Node 20+).
  */
-const HTML_PARSED_AS_JSON = /Unexpected token '?<'?/;
+const HTML_PARSED_AS_JSON = /Unexpected token '?<'?[\s\S]*JSON/;
+
+/** TLS/certificate failures are not temporary, so they are not network errors. */
+const TLS_ERROR_CODE = /CERT|SIGNATURE|^ERR_TLS_|^ERR_SSL_/;
 
 const MAX_CAUSE_DEPTH = 3;
 
@@ -605,57 +608,76 @@ const MAX_CAUSE_DEPTH = 3;
 function classifyUnexpectedError(
   err: unknown,
 ): { code: string; reason: string } | undefined {
-  let current: any = err;
-  for (let depth = 0; depth <= MAX_CAUSE_DEPTH; depth++) {
-    if (!current || typeof current !== 'object') {
-      return undefined;
+  try {
+    let fallback: { code: string; reason: string } | undefined;
+    let current: any = err;
+    for (let depth = 0; depth <= MAX_CAUSE_DEPTH; depth++) {
+      if (!current || typeof current !== 'object') {
+        return fallback;
+      }
+
+      const code = typeof current.code === 'string' ? current.code : undefined;
+      const name = typeof current.name === 'string' ? current.name : undefined;
+      const message =
+        typeof current.message === 'string' ? current.message : '';
+
+      if (code && TLS_ERROR_CODE.test(code)) {
+        return undefined;
+      }
+
+      if (code === 'ENOTFOUND') {
+        return {
+          code: HOST_NOT_FOUND_ERROR_CODE,
+          reason: HOST_NOT_FOUND_ERROR_REASON,
+        };
+      }
+
+      if (
+        (code && REQUEST_TIMEOUT_CODES.has(code)) ||
+        name === 'TimeoutError'
+      ) {
+        return {
+          code: REQUEST_TIMEOUT_ERROR_CODE,
+          reason: REQUEST_TIMEOUT_ERROR_REASON,
+        };
+      }
+
+      if (code && NETWORK_CONNECTION_CODES.has(code)) {
+        return {
+          code: NETWORK_CONNECTION_ERROR_CODE,
+          reason: NETWORK_CONNECTION_ERROR_REASON,
+        };
+      }
+
+      // undici (Node `fetch`) puts the specific failure in `cause`, so keep looking.
+      if (
+        name === 'TypeError' &&
+        (message === 'fetch failed' || message === 'terminated')
+      ) {
+        fallback ??= {
+          code: NETWORK_CONNECTION_ERROR_CODE,
+          reason: NETWORK_CONNECTION_ERROR_REASON,
+        };
+      }
+
+      if (
+        (name === 'SyntaxError' ||
+          (name === 'FetchError' && current.type === 'invalid-json')) &&
+        HTML_PARSED_AS_JSON.test(message)
+      ) {
+        return {
+          code: INVALID_RESPONSE_FORMAT_ERROR_CODE,
+          reason: INVALID_RESPONSE_FORMAT_ERROR_REASON,
+        };
+      }
+
+      current = current.cause;
     }
 
-    const code = typeof current.code === 'string' ? current.code : undefined;
-    const name = typeof current.name === 'string' ? current.name : undefined;
-    const message = typeof current.message === 'string' ? current.message : '';
-
-    if (code === 'ENOTFOUND') {
-      return {
-        code: HOST_NOT_FOUND_ERROR_CODE,
-        reason: HOST_NOT_FOUND_ERROR_REASON,
-      };
-    }
-
-    if ((code && REQUEST_TIMEOUT_CODES.has(code)) || name === 'TimeoutError') {
-      return {
-        code: REQUEST_TIMEOUT_ERROR_CODE,
-        reason: REQUEST_TIMEOUT_ERROR_REASON,
-      };
-    }
-
-    if (
-      (code && NETWORK_CONNECTION_CODES.has(code)) ||
-      // undici (Node `fetch`) network failures
-      (name === 'TypeError' &&
-        (message === 'fetch failed' || message === 'terminated'))
-    ) {
-      return {
-        code: NETWORK_CONNECTION_ERROR_CODE,
-        reason: NETWORK_CONNECTION_ERROR_REASON,
-      };
-    }
-
-    if (
-      (name === 'SyntaxError' ||
-        (name === 'FetchError' && current.type === 'invalid-json')) &&
-      HTML_PARSED_AS_JSON.test(message)
-    ) {
-      return {
-        code: INVALID_RESPONSE_FORMAT_ERROR_CODE,
-        reason: INVALID_RESPONSE_FORMAT_ERROR_REASON,
-      };
-    }
-
-    current = current.cause;
+    return fallback;
+  } catch {
+    return undefined;
   }
-
-  return undefined;
 }
 
 export function createErrorEventDescription(

@@ -657,6 +657,26 @@ describe('createErrorEventDescription', () => {
       NETWORK_CONNECTION_ERROR_REASON,
     ],
     [
+      'undici fetch failed with an ENOTFOUND cause',
+      errorWith(
+        'fetch failed',
+        { cause: errorWith('getaddrinfo ENOTFOUND x', { code: 'ENOTFOUND' }) },
+        TypeError,
+      ),
+      HOST_NOT_FOUND_ERROR_CODE,
+      HOST_NOT_FOUND_ERROR_REASON,
+    ],
+    [
+      'undici fetch failed with a connect timeout cause',
+      errorWith(
+        'fetch failed',
+        { cause: errorWith('x', { code: 'UND_ERR_CONNECT_TIMEOUT' }) },
+        TypeError,
+      ),
+      REQUEST_TIMEOUT_ERROR_CODE,
+      REQUEST_TIMEOUT_ERROR_REASON,
+    ],
+    [
       'undici terminated',
       new TypeError('terminated'),
       NETWORK_CONNECTION_ERROR_CODE,
@@ -722,6 +742,23 @@ describe('createErrorEventDescription', () => {
     [
       'an unrelated SyntaxError',
       new SyntaxError('Unexpected end of JSON input'),
+    ],
+    ['a JSX parse error', new SyntaxError("Unexpected token '<'")],
+    [
+      'undici fetch failed with a certificate cause',
+      errorWith(
+        'fetch failed',
+        { cause: errorWith('x', { code: 'SELF_SIGNED_CERT_IN_CHAIN' }) },
+        TypeError,
+      ),
+    ],
+    [
+      'a cause getter that throws',
+      Object.defineProperty(new Error('x'), 'cause', {
+        get() {
+          throw new Error('boom');
+        },
+      }),
     ],
     [
       'a cause chain deeper than the limit',
